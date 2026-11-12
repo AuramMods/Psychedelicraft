@@ -4,10 +4,17 @@
 
 package ivorius.psychedelicraft.entity.drug;
 
+import javax.annotation.Nullable;
+
 import ivorius.psychedelicraft.util.NbtSerialisable;
+import net.minecraft.entity.player.EntityPlayer;
 
 public interface Drug extends NbtSerialisable {
     void update();
+
+    default void update(DrugProperties properties, @Nullable EntityPlayer player) {
+        update();
+    }
 
     void reset();
 
@@ -24,6 +31,10 @@ public interface Drug extends NbtSerialisable {
     }
 
     default float contextualHallucinationStrength() {
+        return 0;
+    }
+
+    default float superSaturationHallucinationStrength() {
         return 0;
     }
 

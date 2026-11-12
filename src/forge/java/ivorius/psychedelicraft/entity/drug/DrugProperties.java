@@ -8,9 +8,11 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import javax.annotation.Nullable;
 
 import ivorius.psychedelicraft.entity.drug.influence.DrugInfluence;
 import ivorius.psychedelicraft.util.NbtSerialisable;
+import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTTagList;
 import net.minecraftforge.common.util.Constants;
@@ -31,10 +33,21 @@ public final class DrugProperties implements NbtSerialisable {
     }
 
     public void tick(int age) {
+        tick(age, null);
+    }
+
+    public void tick(int age, @Nullable EntityPlayer player) {
         if (age % 5 == 0 && influences.removeIf(influence -> influence.update(this))) {
             dirty = true;
         }
-        drugs.values().forEach(Drug::update);
+        for (Drug drug : drugs.values()) {
+            drug.update(this, player);
+        }
+    }
+
+    public double getActiveValue(DrugType type) {
+        Drug drug = drugs.get(type);
+        return drug == null ? 0 : drug.getActiveValue();
     }
 
     public void onAwoken() {
@@ -49,6 +62,13 @@ public final class DrugProperties implements NbtSerialisable {
             value += modifier.get(drug);
         }
         return value;
+    }
+
+    public float getColorIntensification(float strength) {
+        for (Drug drug : drugs.values()) {
+            strength += (1 - strength) * drug.superSaturationHallucinationStrength();
+        }
+        return strength;
     }
 
     public boolean takeDirty() {

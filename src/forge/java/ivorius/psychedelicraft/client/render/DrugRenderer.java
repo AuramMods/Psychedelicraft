@@ -5,6 +5,7 @@
 package ivorius.psychedelicraft.client.render;
 
 import ivorius.psychedelicraft.Psychedelicraft;
+import ivorius.psychedelicraft.client.render.HallucinationManager.Effect;
 import ivorius.psychedelicraft.client.render.shader.ColorPostEffect;
 import ivorius.psychedelicraft.entity.drug.Drug;
 import ivorius.psychedelicraft.entity.drug.DrugCapability;
@@ -103,7 +104,11 @@ public final class DrugRenderer {
 
     private static void renderPost(Minecraft client, float partialTicks) {
         if (player != null && player == client.player && world == client.world) {
-            COLOR_POST.render(client, player.ticksExisted + partialTicks, hallucinations);
+            DrugProperties properties = DrugCapability.get(player);
+            if (properties != null) {
+                float intensification = properties.getColorIntensification(hallucinations.strength(Effect.SUPER_SATURATION));
+                COLOR_POST.render(client, player.ticksExisted + partialTicks, hallucinations, intensification);
+            }
         }
     }
 }

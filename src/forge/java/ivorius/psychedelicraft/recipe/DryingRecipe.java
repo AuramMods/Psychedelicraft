@@ -75,7 +75,10 @@ public final class DryingRecipe {
                 new DryingRecipe("dried_cannabis_leaf", PSItems.CANNABIS_LEAF, PSItems.DRIED_CANNABIS_LEAF),
                 new DryingRecipe("dried_cannabis_buds", PSItems.CANNABIS_BUDS, PSItems.DRIED_CANNABIS_BUDS),
                 new DryingRecipe("tabacco_leaves", PSItems.TOBACCO_LEAVES, PSItems.DRIED_TOBACCO),
-                new DryingRecipe("coca_leaves", PSItems.COCA_LEAVES, PSItems.DRIED_COCA_LEAVES)
+                new DryingRecipe("coca_leaves", PSItems.COCA_LEAVES, PSItems.DRIED_COCA_LEAVES),
+                new DryingRecipe("dried_peyote", PSItems.PEYOTE, PSItems.DRIED_PEYOTE),
+                new DryingRecipe("dried_belladonna", PSItems.BELLADONNA_LEAF, PSItems.DRIED_BELLADONNA_LEAF),
+                new DryingRecipe("dried_jimsonweed", PSItems.JIMSONWEED_LEAF, PSItems.DRIED_JIMSONWEED_LEAF)
         ));
     }
 }

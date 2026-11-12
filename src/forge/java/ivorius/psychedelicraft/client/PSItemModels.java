@@ -6,7 +6,9 @@ import ivorius.psychedelicraft.Psychedelicraft;
 import ivorius.psychedelicraft.block.PSBlocks;
 import ivorius.psychedelicraft.block.TallCropBlock;
 import ivorius.psychedelicraft.block.entity.DryingTableBlockEntity;
+import ivorius.psychedelicraft.block.entity.PeyoteBlockEntity;
 import ivorius.psychedelicraft.client.render.block.DryingTableRenderer;
+import ivorius.psychedelicraft.client.render.block.PeyoteRenderer;
 import ivorius.psychedelicraft.item.PSItems;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.client.renderer.block.model.ModelResourceLocation;
@@ -37,6 +39,7 @@ public final class PSItemModels {
             }
         });
         ClientRegistry.bindTileEntitySpecialRenderer(DryingTableBlockEntity.class, new DryingTableRenderer());
+        ClientRegistry.bindTileEntitySpecialRenderer(PeyoteBlockEntity.class, new PeyoteRenderer());
     }
 
     private static void register(Item item) {

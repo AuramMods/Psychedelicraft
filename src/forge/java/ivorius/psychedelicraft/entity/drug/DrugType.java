@@ -11,6 +11,9 @@ import java.util.function.Supplier;
 
 import ivorius.psychedelicraft.Psychedelicraft;
 import ivorius.psychedelicraft.entity.drug.type.BrownShroomsDrug;
+import ivorius.psychedelicraft.entity.drug.type.CaffeineDrug;
+import ivorius.psychedelicraft.entity.drug.type.LsdDrug;
+import ivorius.psychedelicraft.entity.drug.type.PeyoteDrug;
 import ivorius.psychedelicraft.entity.drug.type.RedShroomsDrug;
 
 public final class DrugType {
@@ -18,6 +21,9 @@ public final class DrugType {
 
     public static final DrugType BROWN_SHROOMS = register("brown_shrooms", () -> new BrownShroomsDrug(1, 0.0002));
     public static final DrugType RED_SHROOMS = register("red_shrooms", () -> new RedShroomsDrug(1, 0.0002));
+    public static final DrugType PEYOTE = register("peyote", () -> new PeyoteDrug(1, 0.0002));
+    public static final DrugType ATROPINE = register("atropine", () -> new LsdDrug(1, 0.0003, true));
+    public static final DrugType CAFFEINE = register("caffeine", () -> new CaffeineDrug(1, 0.0002));
 
     private final String id;
     private final Supplier<Drug> factory;

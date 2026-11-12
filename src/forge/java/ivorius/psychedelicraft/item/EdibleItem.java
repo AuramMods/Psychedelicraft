@@ -5,6 +5,7 @@
 package ivorius.psychedelicraft.item;
 
 import java.util.function.Supplier;
+import javax.annotation.Nullable;
 
 import ivorius.psychedelicraft.entity.drug.DrugCapability;
 import ivorius.psychedelicraft.entity.drug.DrugProperties;
@@ -16,9 +17,14 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.world.World;
 
 public final class EdibleItem extends ItemFood {
+    @Nullable
     private final Supplier<DrugInfluence> influence;
 
-    public EdibleItem(int hunger, float saturation, Supplier<DrugInfluence> influence) {
+    public EdibleItem(int hunger, float saturation) {
+        this(hunger, saturation, null);
+    }
+
+    public EdibleItem(int hunger, float saturation, @Nullable Supplier<DrugInfluence> influence) {
         super(hunger, saturation, false);
         this.influence = influence;
         setAlwaysEdible();
@@ -37,7 +43,7 @@ public final class EdibleItem extends ItemFood {
     @Override
     protected void onFoodEaten(ItemStack stack, World world, EntityPlayer player) {
         super.onFoodEaten(stack, world, player);
-        if (!world.isRemote) {
+        if (!world.isRemote && influence != null) {
             DrugProperties properties = DrugCapability.get(player);
             if (properties != null) {
                 properties.addInfluence(influence.get());

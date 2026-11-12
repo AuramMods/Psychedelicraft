@@ -31,7 +31,7 @@ public final class DrugEvents {
         }
         DrugProperties properties = DrugCapability.get(event.player);
         if (properties != null) {
-            properties.tick(event.player.ticksExisted);
+            properties.tick(event.player.ticksExisted, event.player);
             if (properties.takeDirty() && event.player instanceof EntityPlayerMP) {
                 Channel.sync((EntityPlayerMP) event.player, properties);
             }

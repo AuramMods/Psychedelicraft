@@ -31,8 +31,8 @@ public final class PSItems {
     };
 
     public static final Item COFFEE_BEANS = named("coffee_beans", new Item());
-    public static final Item BROWN_MAGIC_MUSHROOMS = mushroom("brown_magic_mushrooms", DrugType.BROWN_SHROOMS);
-    public static final Item RED_MAGIC_MUSHROOMS = mushroom("red_magic_mushrooms", DrugType.RED_SHROOMS);
+    public static final Item BROWN_MAGIC_MUSHROOMS = edible("brown_magic_mushrooms", 0, 0.1F, DrugType.BROWN_SHROOMS);
+    public static final Item RED_MAGIC_MUSHROOMS = edible("red_magic_mushrooms", 0, 0.1F, DrugType.RED_SHROOMS);
     public static final Item CANNABIS_SEEDS = named("cannabis_seeds", new CropSeedItem(PSBlocks.CANNABIS, "cannabis_seeds"));
     public static final Item CANNABIS_LEAF = named("cannabis_leaf", new Item());
     public static final Item CANNABIS_BUDS = named("cannabis_buds", new Item());
@@ -47,14 +47,28 @@ public final class PSItems {
     public static final Item TOBACCO_LEAVES = named("tobacco", new Item());
     public static final Item DRIED_TOBACCO = named("dried_tobacco", new Item());
     public static final Item COFFEA_CHERRIES = named("coffea_cherries", new CropSeedItem(PSBlocks.COFFEA, "coffea_cherries"));
+    public static final Item PEYOTE = named("peyote", new ItemBlock(PSBlocks.PEYOTE));
+    public static final Item DRIED_PEYOTE = edible("dried_peyote", 0, 0.1F, DrugType.PEYOTE);
+    public static final Item AGAVE_LEAF = named("agave_leaf", new CropSeedItem(PSBlocks.AGAVE_PLANT, "agave_leaf"));
+    public static final Item JIMSONWEED_SEEDS = named("jimsonweed_seeds", new CropSeedItem(PSBlocks.JIMSONWEED, "jimsonweed_seeds"));
+    public static final Item JIMSONWEED_SEED_POD = named("jimsonweed_seed_pod", new Item());
+    public static final Item JIMSONWEED_LEAF = named("jimsonweed_leaf", new Item());
+    public static final Item DRIED_JIMSONWEED_LEAF = named("dried_jimsonweed_leaf", new Item());
+    public static final Item BELLADONNA_SEEDS = named("belladonna_seeds", new CropSeedItem(PSBlocks.BELLADONNA, "belladonna_seeds"));
+    public static final Item BELLADONNA_BERRIES = edible("belladonna_berries", 1, 1.5F, DrugType.ATROPINE);
+    public static final Item BELLADONNA_LEAF = named("belladonna_leaf", new Item());
+    public static final Item DRIED_BELLADONNA_LEAF = named("dried_belladonna_leaf", new Item());
+    public static final Item TOMATO_SEEDS = named("tomato_seeds", new CropSeedItem(PSBlocks.TOMATOES, "tomato_seeds"));
+    public static final Item TOMATO = named("tomato", new EdibleItem(1, 1.9F));
+    public static final Item TOMATO_LEAF = named("tomato_leaf", new Item());
     public static final Item DRYING_TABLE = named("drying_table", new ItemBlock(PSBlocks.DRYING_TABLE));
     public static final Item IRON_DRYING_TABLE = named("iron_drying_table", new ItemBlock(PSBlocks.IRON_DRYING_TABLE));
 
     private PSItems() {
     }
 
-    private static Item mushroom(String name, DrugType type) {
-        return named(name, new EdibleItem(0, 0.1F,
+    private static Item edible(String name, int hunger, float saturation, DrugType type) {
+        return named(name, new EdibleItem(hunger, saturation,
                 () -> new DrugInfluence(type, DrugInfluence.INGESTED_DELAY, 0.005, 0.003, 0.5F)));
     }
 

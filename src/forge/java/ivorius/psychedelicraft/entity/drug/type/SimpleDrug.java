@@ -34,6 +34,10 @@ public class SimpleDrug implements Drug {
         }
     }
 
+    protected final void scaleDesiredValue(double scale) {
+        desired *= scale;
+    }
+
     @Override
     public void update() {
         ticksActive = active > 0 ? ticksActive + 1 : 0;

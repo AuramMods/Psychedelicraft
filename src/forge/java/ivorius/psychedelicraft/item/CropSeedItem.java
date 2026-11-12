@@ -1,7 +1,7 @@
 package ivorius.psychedelicraft.item;
 
 import ivorius.psychedelicraft.Psychedelicraft;
-import ivorius.psychedelicraft.block.TallCropBlock;
+import net.minecraft.block.BlockBush;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.item.ItemBlock;
 import net.minecraft.item.ItemStack;
@@ -11,10 +11,10 @@ import net.minecraftforge.common.EnumPlantType;
 import net.minecraftforge.common.IPlantable;
 
 final class CropSeedItem extends ItemBlock implements IPlantable {
-    private final TallCropBlock crop;
+    private final BlockBush crop;
     private final String name;
 
-    CropSeedItem(TallCropBlock crop, String name) {
+    CropSeedItem(BlockBush crop, String name) {
         super(crop);
         this.crop = crop;
         this.name = "item." + Psychedelicraft.MOD_ID + "." + name;

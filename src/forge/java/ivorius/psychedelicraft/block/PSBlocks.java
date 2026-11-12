@@ -3,6 +3,8 @@ package ivorius.psychedelicraft.block;
 import ivorius.psychedelicraft.Psychedelicraft;
 import ivorius.psychedelicraft.block.TallCropBlock.Crop;
 import ivorius.psychedelicraft.block.entity.DryingTableBlockEntity;
+import ivorius.psychedelicraft.block.entity.PeyoteBlockEntity;
+import ivorius.psychedelicraft.item.PSItems;
 import net.minecraft.block.Block;
 import net.minecraft.block.material.Material;
 import net.minecraft.init.Blocks;
@@ -20,6 +22,14 @@ public final class PSBlocks {
     public static final TallCropBlock COCA = named("coca", new TallCropBlock.Coca());
     public static final TallCropBlock TOBACCO = named("tobacco", new TallCropBlock.TwoPart(Crop.TOBACCO));
     public static final TallCropBlock COFFEA = named("coffea", new TallCropBlock.TwoPart(Crop.COFFEA));
+    public static final PeyoteBlock PEYOTE = named("peyote", new PeyoteBlock());
+    public static final AgavePlantBlock AGAVE_PLANT = named("agave_plant", new AgavePlantBlock());
+    public static final NightshadeBlock JIMSONWEED = named("jimsonweed",
+            new NightshadeBlock(() -> PSItems.JIMSONWEED_SEED_POD, () -> PSItems.JIMSONWEED_LEAF));
+    public static final NightshadeBlock BELLADONNA = named("belladonna",
+            new NightshadeBlock(() -> PSItems.BELLADONNA_BERRIES, () -> PSItems.BELLADONNA_LEAF));
+    public static final NightshadeBlock TOMATOES = named("tomatoes",
+            new NightshadeBlock(() -> PSItems.TOMATO, () -> PSItems.TOMATO_LEAF));
     public static final DryingTableBlock DRYING_TABLE = named("drying_table", new DryingTableBlock(Material.WOOD));
     public static final DryingTableBlock IRON_DRYING_TABLE = named("iron_drying_table", new DryingTableBlock(Material.IRON));
 
@@ -35,8 +45,9 @@ public final class PSBlocks {
     @SubscribeEvent
     public static void registerBlocks(RegistryEvent.Register<Block> event) {
         event.getRegistry().registerAll(CANNABIS, NATURAL_CANNABIS, HOP, COCA, TOBACCO, COFFEA,
-                DRYING_TABLE, IRON_DRYING_TABLE);
+                PEYOTE, AGAVE_PLANT, JIMSONWEED, BELLADONNA, TOMATOES, DRYING_TABLE, IRON_DRYING_TABLE);
         GameRegistry.registerTileEntity(DryingTableBlockEntity.class, Psychedelicraft.id("drying_table"));
+        GameRegistry.registerTileEntity(PeyoteBlockEntity.class, Psychedelicraft.id("peyote"));
         Blocks.FIRE.setFireInfo(DRYING_TABLE, 5, 20);
     }
 }
