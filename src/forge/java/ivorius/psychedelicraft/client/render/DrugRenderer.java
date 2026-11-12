@@ -49,6 +49,7 @@ public final class DrugRenderer {
         if (client.world != world || client.player != player) {
             world = client.world;
             player = client.player;
+            ContextualHallucinations.track(player, world);
             hallucinations = new HallucinationManager();
             environment = new EnvironmentEffects();
             pauseBlurProgress = 0F;
@@ -59,6 +60,7 @@ public final class DrugRenderer {
         if (player != null && world != null && !client.isGamePaused()) {
             DrugProperties properties = DrugCapability.get(player);
             if (properties != null) {
+                ContextualHallucinations.tick(properties, hallucinations.strength(Effect.ENTITIES) * 0.4F);
                 hallucinations.update(properties, player.getRNG(), player.ticksExisted);
             }
         }
@@ -104,6 +106,7 @@ public final class DrugRenderer {
     @SubscribeEvent(priority = EventPriority.LOWEST)
     public static void afterWorld(RenderWorldLastEvent event) {
         Minecraft client = Minecraft.getMinecraft();
+        ContextualHallucinations.render(client, event.getPartialTicks());
         if (PSConfig.visual.shader2DEnabled && player != null && player == client.player && world == client.world) {
             DrugProperties properties = DrugCapability.get(player);
             HarmoniumDrug harmonium = properties == null ? null : properties.getHarmonium();

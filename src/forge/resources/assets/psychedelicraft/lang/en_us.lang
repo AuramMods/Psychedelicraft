@@ -363,3 +363,6 @@ distortion.psychedelicraft.hics.2=*burp*
 distortion.psychedelicraft.hics.3=*h-cup*
 distortion.psychedelicraft.hics.4=*hup*
 gui.psychedelicraft.options.themes=Drug Theme Music
+commands.psychedelicraft.hallucinate.usage=/hallucinate <type> [<player> or <x> <y> <z>]
+commands.psychedelicraft.hallucinate.unknown=Unknown hallucination: %s
+commands.psychedelicraft.hallucinate.success=Summoned a hallucination

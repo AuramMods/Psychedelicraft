@@ -18,19 +18,34 @@ import org.objectweb.asm.tree.VarInsnNode;
 public final class ClientEffectsTransformer implements IClassTransformer {
     private static final String SOUND_MANAGER = "net.minecraft.client.audio.SoundManager";
     private static final String CHAT = "net.minecraft.client.gui.GuiNewChat";
+    private static final String RENDER_MANAGER = "net.minecraft.client.renderer.entity.RenderManager";
     private static final String SOUND_HOOK = "ivorius/psychedelicraft/client/ClientSoundEffects";
     private static final String CHAT_HOOK = "ivorius/psychedelicraft/client/ClientChatEffects";
 
     @Override
     public byte[] transform(String name, String transformedName, byte[] bytes) {
-        if (bytes == null || !SOUND_MANAGER.equals(transformedName) && !CHAT.equals(transformedName)) return bytes;
+        if (bytes == null || !SOUND_MANAGER.equals(transformedName) && !CHAT.equals(transformedName)
+                && !RENDER_MANAGER.equals(transformedName)) return bytes;
         ClassNode type = new ClassNode(Opcodes.ASM5);
         new ClassReader(bytes).accept(type, 0);
         if (SOUND_MANAGER.equals(transformedName)) patchSound(type);
-        else patchChat(type);
+        else if (CHAT.equals(transformedName)) patchChat(type);
+        else patchEntityRender(type);
         ClassWriter writer = new ClassWriter(ClassWriter.COMPUTE_MAXS);
         type.accept(writer);
         return writer.toByteArray();
+    }
+
+    private static void patchEntityRender(ClassNode type) {
+        MethodNode render = method(type, "renderEntity", "func_188391_a", "(Lnet/minecraft/entity/Entity;DDDFFZ)V");
+        Type entity = Type.getArgumentTypes(render.desc)[0];
+        InsnList hook = new InsnList();
+        hook.add(new VarInsnNode(Opcodes.ALOAD, 1));
+        hook.add(new MethodInsnNode(Opcodes.INVOKESTATIC,
+                "ivorius/psychedelicraft/client/render/ContextualHallucinations", "forRender",
+                Type.getMethodDescriptor(entity, entity), false));
+        hook.add(new VarInsnNode(Opcodes.ASTORE, 1));
+        render.instructions.insert(hook);
     }
 
     private static void patchSound(ClassNode type) {

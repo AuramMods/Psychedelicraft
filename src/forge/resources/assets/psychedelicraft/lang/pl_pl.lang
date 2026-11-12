@@ -361,3 +361,6 @@ distortion.psychedelicraft.hics.0=*hic*
 distortion.psychedelicraft.hics.1=*beeek*
 distortion.psychedelicraft.hics.2=*hip*
 gui.psychedelicraft.options.themes=Muzyka narkotyków
+commands.psychedelicraft.hallucinate.usage=/hallucinate <typ> [<gracz> lub <x> <y> <z>]
+commands.psychedelicraft.hallucinate.unknown=Nieznana halucynacja: %s
+commands.psychedelicraft.hallucinate.success=Przywołano halucynację
