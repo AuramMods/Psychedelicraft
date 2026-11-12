@@ -26,6 +26,12 @@ public final class PSConfig {
         @Config.Comment("Allow novice farmers to sell Psychedelicraft goods.")
         public boolean farmerDrugDeals = true;
 
+        @Config.Comment("Add Psychedelicraft loot to dungeon and mineshaft chests when loot tables load.")
+        public boolean dungeonChests = true;
+
+        @Config.Comment("Add Psychedelicraft loot to village blacksmith chests when loot tables load.")
+        public boolean villageChests = true;
+
         public final Feature juniper = new Feature();
         public final Feature cannabis = new Feature();
         public final Feature hop = new Feature();

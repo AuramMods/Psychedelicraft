@@ -1,0 +1,9 @@
+{
+  "pools": [
+    {
+      "name": "psychedelicraft:village_profile",
+      "rolls": { "min": 3, "max": 8 },
+      "entries": []
+    }
+  ]
+}

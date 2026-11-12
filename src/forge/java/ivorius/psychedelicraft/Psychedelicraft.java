@@ -10,6 +10,7 @@ import ivorius.psychedelicraft.item.PSItems;
 import ivorius.psychedelicraft.network.Channel;
 import ivorius.psychedelicraft.recipe.JuniperWoodRecipes;
 import ivorius.psychedelicraft.screen.PSGuiHandler;
+import ivorius.psychedelicraft.world.gen.ChestLoot;
 import ivorius.psychedelicraft.world.gen.VillageGarden;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.ResourceLocation;
@@ -29,6 +30,7 @@ public class Psychedelicraft {
     public void preInit(FMLPreInitializationEvent event) {
         DrugCapability.register();
         Channel.register();
+        ChestLoot.register();
         VillageGarden.register();
         NetworkRegistry.INSTANCE.registerGuiHandler(this, new PSGuiHandler());
     }

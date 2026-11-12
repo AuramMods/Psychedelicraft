@@ -93,7 +93,7 @@ public final class PlantWorldGenerator {
         }
     }
 
-    private static BlockPos motionBlockingSurface(World world, BlockPos column) {
+    static BlockPos motionBlockingSurface(World world, BlockPos column) {
         Chunk chunk = world.getChunkFromBlockCoords(column);
         int top = Math.min(world.getActualHeight() - 1, chunk.getTopFilledSegment() + 15);
         BlockPos.MutableBlockPos probe = new BlockPos.MutableBlockPos(column.getX(), top, column.getZ());
@@ -107,7 +107,7 @@ public final class PlantWorldGenerator {
         return column;
     }
 
-    private static void placeLowPatch(World world, BlockPos surface, Random random, Block plant, int maxAge) {
+    static void placeLowPatch(World world, BlockPos surface, Random random, Block plant, int maxAge) {
         for (int attempt = 0; attempt < LOW_ATTEMPTS; attempt++) {
             BlockPos pos = surface.add(offset(random, LOW_XZ_SPREAD), offset(random, LOW_Y_SPREAD),
                     offset(random, LOW_XZ_SPREAD));
