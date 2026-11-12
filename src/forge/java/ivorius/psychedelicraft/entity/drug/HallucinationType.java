@@ -7,6 +7,8 @@ import javax.annotation.Nullable;
 
 public enum HallucinationType {
     RASTA_HEAD("rasta_head"),
+    SINGLE_ENTITY("single_entity"),
+    MULTIPLE_ENTITY("multiple_entity"),
     HOSTILE_VILLAGERS("hostile_villagers"),
     FRIENDLY_ZOMBIES("friendly_zombies");
 

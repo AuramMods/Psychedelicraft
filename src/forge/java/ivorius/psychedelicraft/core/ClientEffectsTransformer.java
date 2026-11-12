@@ -19,18 +19,24 @@ public final class ClientEffectsTransformer implements IClassTransformer {
     private static final String SOUND_MANAGER = "net.minecraft.client.audio.SoundManager";
     private static final String CHAT = "net.minecraft.client.gui.GuiNewChat";
     private static final String RENDER_MANAGER = "net.minecraft.client.renderer.entity.RenderManager";
+    private static final String RENDER_LIVING = "net.minecraft.client.renderer.entity.RenderLivingBase";
+    private static final String ENDERMAN_EYES = "net.minecraft.client.renderer.entity.layers.LayerEndermanEyes";
+    private static final String APPARITION_RENDER = "ivorius/psychedelicraft/client/render/ApparitionRender";
     private static final String SOUND_HOOK = "ivorius/psychedelicraft/client/ClientSoundEffects";
     private static final String CHAT_HOOK = "ivorius/psychedelicraft/client/ClientChatEffects";
 
     @Override
     public byte[] transform(String name, String transformedName, byte[] bytes) {
         if (bytes == null || !SOUND_MANAGER.equals(transformedName) && !CHAT.equals(transformedName)
-                && !RENDER_MANAGER.equals(transformedName)) return bytes;
+                && !RENDER_MANAGER.equals(transformedName) && !RENDER_LIVING.equals(transformedName)
+                && !ENDERMAN_EYES.equals(transformedName)) return bytes;
         ClassNode type = new ClassNode(Opcodes.ASM5);
         new ClassReader(bytes).accept(type, 0);
         if (SOUND_MANAGER.equals(transformedName)) patchSound(type);
         else if (CHAT.equals(transformedName)) patchChat(type);
-        else patchEntityRender(type);
+        else if (RENDER_MANAGER.equals(transformedName)) patchEntityRender(type);
+        else if (RENDER_LIVING.equals(transformedName)) patchLivingLayers(type);
+        else patchEndermanEyes(type);
         ClassWriter writer = new ClassWriter(ClassWriter.COMPUTE_MAXS);
         type.accept(writer);
         return writer.toByteArray();
@@ -46,6 +52,35 @@ public final class ClientEffectsTransformer implements IClassTransformer {
                 Type.getMethodDescriptor(entity, entity), false));
         hook.add(new VarInsnNode(Opcodes.ASTORE, 1));
         render.instructions.insert(hook);
+    }
+
+    private static void patchLivingLayers(ClassNode type) {
+        MethodNode render = method(type, "renderLayers", "func_177093_a", "(Lnet/minecraft/entity/EntityLivingBase;FFFFFFF)V");
+        for (AbstractInsnNode instruction : render.instructions.toArray()) {
+            if (instruction.getOpcode() != Opcodes.INVOKEINTERFACE) continue;
+            MethodInsnNode call = (MethodInsnNode) instruction;
+            if ("(Lnet/minecraft/entity/EntityLivingBase;FFFFFFF)V".equals(
+                    FMLDeobfuscatingRemapper.INSTANCE.mapMethodDesc(call.desc))) {
+                render.instructions.insertBefore(call, new MethodInsnNode(Opcodes.INVOKESTATIC, APPARITION_RENDER,
+                        "prepareLayer", "()V", false));
+                return;
+            }
+        }
+        throw new IllegalStateException("Could not locate Forge 1.12 entity layer rendering");
+    }
+
+    private static void patchEndermanEyes(ClassNode type) {
+        MethodNode render = method(type, "doRenderLayer", "func_177141_a", "(Lnet/minecraft/entity/monster/EntityEnderman;FFFFFFF)V");
+        for (AbstractInsnNode instruction : render.instructions.toArray()) {
+            if (!(instruction instanceof MethodInsnNode)) continue;
+            MethodInsnNode call = (MethodInsnNode) instruction;
+            if ("(Lnet/minecraft/entity/Entity;FFFFFF)V".equals(FMLDeobfuscatingRemapper.INSTANCE.mapMethodDesc(call.desc))) {
+                render.instructions.insertBefore(call, new MethodInsnNode(Opcodes.INVOKESTATIC, APPARITION_RENDER,
+                        "prepareLayer", "()V", false));
+                return;
+            }
+        }
+        throw new IllegalStateException("Could not locate Forge 1.12 Enderman eye model");
     }
 
     private static void patchSound(ClassNode type) {
