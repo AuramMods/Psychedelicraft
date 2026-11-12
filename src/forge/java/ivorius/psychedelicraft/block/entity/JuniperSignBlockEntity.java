@@ -27,6 +27,7 @@ public final class JuniperSignBlockEntity extends TileEntity {
     private final JuniperSignText frontText = new JuniperSignText();
     private final JuniperSignText backText = new JuniperSignText();
     private boolean waxed;
+    private boolean attachedChains;
     private UUID placementEditor;
     private UUID editor;
     private long editToken;
@@ -44,6 +45,15 @@ public final class JuniperSignBlockEntity extends TileEntity {
 
     public boolean isWaxed() {
         return waxed;
+    }
+
+    public boolean hasAttachedChains() {
+        return attachedChains;
+    }
+
+    public void setAttachedChains(boolean attachedChains) {
+        this.attachedChains = attachedChains;
+        markDirty();
     }
 
     public boolean wax() {
@@ -115,7 +125,7 @@ public final class JuniperSignBlockEntity extends TileEntity {
         editor = player.getUniqueID();
         editToken = world.rand.nextLong();
         editingFront = front;
-        Channel.openSignEditor(player, pos, editToken, front, ((JuniperSignBlock) state.getBlock()).isStanding(), face);
+        Channel.openSignEditor(player, pos, editToken, front, ((JuniperSignBlock) state.getBlock()).form(), face);
         return true;
     }
 
@@ -142,15 +152,15 @@ public final class JuniperSignBlockEntity extends TileEntity {
         return executed;
     }
 
-    private ICommandSender commandSource(EntityPlayerMP player) {
+    private ICommandSender commandSource(@Nullable EntityPlayerMP player) {
         return new ICommandSender() {
-            @Override public String getName() { return player.getName(); }
+            @Override public String getName() { return player == null ? "Sign" : player.getName(); }
             @Override public boolean canUseCommand(int level, String name) { return level <= 2; }
             @Override public BlockPos getPosition() { return pos; }
             @Override public Vec3d getPositionVector() { return new Vec3d(pos).addVector(0.5, 0.5, 0.5); }
             @Override public World getEntityWorld() { return world; }
             @Override public Entity getCommandSenderEntity() { return player; }
-            @Override public MinecraftServer getServer() { return player.getServer(); }
+            @Override public MinecraftServer getServer() { return world.getMinecraftServer(); }
         };
     }
 
@@ -163,11 +173,22 @@ public final class JuniperSignBlockEntity extends TileEntity {
     }
 
     @Override
+    protected void setWorldCreate(World world) {
+        setWorld(world);
+    }
+
+    @Override
     public void readFromNBT(NBTTagCompound tag) {
         super.readFromNBT(tag);
         frontText.read(tag.getCompoundTag("FrontText"));
         backText.read(tag.getCompoundTag("BackText"));
         waxed = tag.getBoolean("Waxed");
+        attachedChains = tag.getBoolean("AttachedChains");
+        if (world != null && !world.isRemote && world.getMinecraftServer() != null) {
+            ICommandSender source = commandSource(null);
+            frontText.resolve(source);
+            backText.resolve(source);
+        }
         placementEditor = null;
         editor = null;
     }
@@ -178,6 +199,7 @@ public final class JuniperSignBlockEntity extends TileEntity {
         tag.setTag("FrontText", frontText.write());
         tag.setTag("BackText", backText.write());
         tag.setBoolean("Waxed", waxed);
+        tag.setBoolean("AttachedChains", attachedChains);
         return tag;
     }
 

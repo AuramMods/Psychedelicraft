@@ -4,6 +4,7 @@ import java.util.List;
 
 import ivorius.psychedelicraft.Psychedelicraft;
 import ivorius.psychedelicraft.block.JuniperSignBlock;
+import ivorius.psychedelicraft.block.JuniperSignBlock.Form;
 import ivorius.psychedelicraft.block.entity.JuniperSignBlockEntity;
 import ivorius.psychedelicraft.block.entity.JuniperSignText;
 import net.minecraft.client.gui.FontRenderer;
@@ -20,7 +21,7 @@ import org.lwjgl.opengl.GL11;
 
 public final class JuniperSignRenderer extends TileEntitySpecialRenderer<JuniperSignBlockEntity> {
     public static final ResourceLocation TEXTURE = Psychedelicraft.id("textures/entity/signs/juniper.png");
-    public static final int TEXT_WIDTH = 90;
+    private static final ResourceLocation HANGING_TEXTURE = Psychedelicraft.id("textures/entity/signs/hanging/juniper.png");
     private static final float MODEL_SCALE = 2F / 3F;
     private static final float TEXT_SCALE = MODEL_SCALE / 64F;
     private static final int[] DYE_TEXT_COLORS = {
@@ -28,6 +29,7 @@ public final class JuniperSignRenderer extends TileEntitySpecialRenderer<Juniper
             13882323, 65535, 10494192, 255, 9127187, 65280, 16711680, 0
     };
     private final ModelSign model = new ModelSign();
+    private final JuniperHangingSignModel hangingModel = new JuniperHangingSignModel();
 
     @Override
     public void render(JuniperSignBlockEntity sign, double x, double y, double z, float partialTicks, int destroyStage, float alpha) {
@@ -35,11 +37,11 @@ public final class JuniperSignRenderer extends TileEntitySpecialRenderer<Juniper
             return;
         }
         JuniperSignBlock block = (JuniperSignBlock) sign.getBlockType();
+        Form form = block.form();
         GlStateManager.pushMatrix();
-        GlStateManager.translate(x + 0.5, y + 0.5, z + 0.5);
+        GlStateManager.translate(x + 0.5, y + (form.isHanging() ? 0.625 : 0.5), z + 0.5);
         GlStateManager.rotate(-block.rotationDegrees(sign.getWorld().getBlockState(sign.getPos())), 0, 1, 0);
-        model.signStick.showModel = block.isStanding();
-        if (!block.isStanding()) {
+        if (form == Form.WALL) {
             GlStateManager.translate(0, -0.3125, -0.4375);
         }
         if (destroyStage >= 0) {
@@ -50,13 +52,12 @@ public final class JuniperSignRenderer extends TileEntitySpecialRenderer<Juniper
             GlStateManager.translate(0.0625, 0.0625, 0.0625);
             GlStateManager.matrixMode(GL11.GL_MODELVIEW);
         } else {
-            bindTexture(TEXTURE);
+            bindTexture(form.isHanging() ? HANGING_TEXTURE : TEXTURE);
         }
         GlStateManager.color(1, 1, 1, alpha);
         GlStateManager.enableRescaleNormal();
         GlStateManager.pushMatrix();
-        GlStateManager.scale(MODEL_SCALE, -MODEL_SCALE, -MODEL_SCALE);
-        model.renderSign();
+        renderModel(form, sign.hasAttachedChains());
         GlStateManager.popMatrix();
         GlStateManager.disableRescaleNormal();
         if (destroyStage >= 0) {
@@ -70,8 +71,8 @@ public final class JuniperSignRenderer extends TileEntitySpecialRenderer<Juniper
             }
             GlStateManager.depthMask(false);
             boolean nearby = x * x + y * y + z * z < 256;
-            drawFace(sign.text(true), true, nearby);
-            drawFace(sign.text(false), false, nearby);
+            drawFace(form, sign.text(true), true, nearby);
+            drawFace(form, sign.text(false), false, nearby);
             GlStateManager.depthMask(true);
             if (lighting) {
                 GlStateManager.enableLighting();
@@ -81,7 +82,25 @@ public final class JuniperSignRenderer extends TileEntitySpecialRenderer<Juniper
         GlStateManager.popMatrix();
     }
 
-    private void drawFace(JuniperSignText text, boolean front, boolean nearby) {
+    private void renderModel(Form form, boolean attached) {
+        if (form.isHanging()) {
+            GlStateManager.scale(1, -1, -1);
+            boolean culling = GL11.glIsEnabled(GL11.GL_CULL_FACE);
+            if (culling) {
+                GlStateManager.disableCull();
+            }
+            hangingModel.render(form == Form.HANGING_WALL, form == Form.HANGING_CEILING && attached);
+            if (culling) {
+                GlStateManager.enableCull();
+            }
+        } else {
+            GlStateManager.scale(MODEL_SCALE, -MODEL_SCALE, -MODEL_SCALE);
+            model.signStick.showModel = form == Form.STANDING;
+            model.renderSign();
+        }
+    }
+
+    private void drawFace(Form form, JuniperSignText text, boolean front, boolean nearby) {
         if (!text.hasText()) {
             return;
         }
@@ -89,8 +108,14 @@ public final class JuniperSignRenderer extends TileEntitySpecialRenderer<Juniper
         if (!front) {
             GlStateManager.rotate(180, 0, 1, 0);
         }
-        GlStateManager.translate(0, 1F / 3F, 0.046666667F);
-        GlStateManager.scale(TEXT_SCALE, -TEXT_SCALE, TEXT_SCALE);
+        float scale = TEXT_SCALE;
+        if (form.isHanging()) {
+            GlStateManager.translate(0, -0.32F, 0.073F);
+            scale = 0.9F / 64F;
+        } else {
+            GlStateManager.translate(0, 1F / 3F, 0.046666667F);
+        }
+        GlStateManager.scale(scale, -scale, scale);
         float brightnessX = OpenGlHelper.lastBrightnessX;
         float brightnessY = OpenGlHelper.lastBrightnessY;
         if (text.isGlowing()) {
@@ -100,11 +125,11 @@ public final class JuniperSignRenderer extends TileEntitySpecialRenderer<Juniper
         int color = textColor(text.color(), text.isGlowing());
         boolean outline = text.isGlowing() && (nearby || text.color() == EnumDyeColor.BLACK);
         for (int index = 0; index < JuniperSignText.LINE_COUNT; index++) {
-            List<ITextComponent> parts = GuiUtilRenderComponents.splitText(text.line(index), TEXT_WIDTH, font, false, true);
+            List<ITextComponent> parts = GuiUtilRenderComponents.splitText(text.line(index), form.textWidth(), font, false, true);
             if (!parts.isEmpty()) {
                 String line = parts.get(0).getFormattedText();
                 int x = -font.getStringWidth(line) / 2;
-                int y = index * 10 - 20;
+                int y = (index - 2) * form.textLineHeight();
                 if (outline) {
                     drawOutline(font, line, x, y, text.color());
                 }

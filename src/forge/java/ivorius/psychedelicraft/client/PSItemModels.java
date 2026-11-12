@@ -62,6 +62,8 @@ public final class PSItemModels {
                 .ignore(JuniperLeavesBlock.DISTANCE, JuniperLeavesBlock.PERSISTENT).build());
         ModelLoader.setCustomStateMapper(PSBlocks.JUNIPER_SIGN, new StateMap.Builder().ignore(JuniperSignBlock.ROTATION).build());
         ModelLoader.setCustomStateMapper(PSBlocks.JUNIPER_WALL_SIGN, new StateMap.Builder().ignore(JuniperSignBlock.FACING).build());
+        ModelLoader.setCustomStateMapper(PSBlocks.JUNIPER_HANGING_SIGN, new StateMap.Builder().ignore(JuniperSignBlock.ROTATION).build());
+        ModelLoader.setCustomStateMapper(PSBlocks.JUNIPER_WALL_HANGING_SIGN, new StateMap.Builder().ignore(JuniperSignBlock.FACING).build());
         ClientRegistry.bindTileEntitySpecialRenderer(JuniperSignBlockEntity.class, new JuniperSignRenderer());
         ClientRegistry.bindTileEntitySpecialRenderer(DryingTableBlockEntity.class, new DryingTableRenderer());
         ClientRegistry.bindTileEntitySpecialRenderer(PeyoteBlockEntity.class, new PeyoteRenderer());

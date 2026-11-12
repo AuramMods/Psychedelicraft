@@ -1,6 +1,7 @@
 package ivorius.psychedelicraft.network;
 
 import ivorius.psychedelicraft.Psychedelicraft;
+import ivorius.psychedelicraft.block.JuniperSignBlock.Form;
 import ivorius.psychedelicraft.block.entity.JuniperSignText;
 import ivorius.psychedelicraft.entity.drug.DrugCapability;
 import ivorius.psychedelicraft.entity.drug.DrugProperties;
@@ -37,8 +38,8 @@ public final class Channel {
     }
 
     public static void openSignEditor(EntityPlayerMP player, BlockPos pos, long token, boolean front,
-                                      boolean standing, JuniperSignText text) {
-        network.sendTo(new MsgOpenJuniperSign(pos, player.dimension, token, front, standing, text), player);
+                                      Form form, JuniperSignText text) {
+        network.sendTo(new MsgOpenJuniperSign(pos, player.dimension, token, front, form, text), player);
     }
 
     public static void submitSignEdit(BlockPos pos, int dimension, long token, String[] lines) {

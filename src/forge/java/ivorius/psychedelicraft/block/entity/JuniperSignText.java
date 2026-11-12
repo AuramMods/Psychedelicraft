@@ -1,11 +1,15 @@
 package ivorius.psychedelicraft.block.entity;
 
 import com.google.gson.JsonParseException;
+import net.minecraft.command.CommandException;
+import net.minecraft.command.ICommandSender;
 import net.minecraft.item.EnumDyeColor;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.ChatAllowedCharacters;
 import net.minecraft.util.text.ITextComponent;
 import net.minecraft.util.text.TextComponentString;
+import net.minecraft.util.text.TextComponentUtils;
+import net.minecraft.util.text.event.ClickEvent;
 
 public final class JuniperSignText {
     public static final int LINE_COUNT = 4;
@@ -32,6 +36,26 @@ public final class JuniperSignText {
             }
         }
         return false;
+    }
+
+    public boolean hasClickCommands() {
+        for (ITextComponent line : lines) {
+            ClickEvent click = line.getStyle().getClickEvent();
+            if (click != null && click.getAction() == ClickEvent.Action.RUN_COMMAND) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    void resolve(ICommandSender source) {
+        for (int index = 0; index < lines.length; index++) {
+            try {
+                lines[index] = TextComponentUtils.processComponent(source, lines[index], null);
+            } catch (CommandException ignored) {
+                // Keep the authored component if the referenced entity or score cannot be resolved.
+            }
+        }
     }
 
     boolean isEditable() {

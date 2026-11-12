@@ -76,6 +76,8 @@ public final class PSBlocks {
             new JuniperBuildingBlocks.PressurePlate());
     public static final JuniperSignBlock JUNIPER_SIGN = named("juniper_sign", new JuniperSignBlock.Standing());
     public static final JuniperSignBlock JUNIPER_WALL_SIGN = named("juniper_wall_sign", new JuniperSignBlock.Wall());
+    public static final JuniperSignBlock JUNIPER_HANGING_SIGN = named("juniper_hanging_sign", new JuniperHangingSigns.Ceiling());
+    public static final JuniperSignBlock JUNIPER_WALL_HANGING_SIGN = named("juniper_wall_hanging_sign", new JuniperHangingSigns.Wall());
     static final List<PottedPlantBlock> POTTED_PLANTS = Collections.unmodifiableList(Arrays.asList(
             named("potted_morning_glory", new PottedPlantBlock(() -> PSItems.MORNING_GLORY_SEEDS)),
             named("potted_juniper_sapling", new PottedPlantBlock(() -> PSItems.JUNIPER_SAPLING)),
@@ -106,7 +108,7 @@ public final class PSBlocks {
                 JUNIPER_LEAVES, FRUITING_JUNIPER_LEAVES, JUNIPER_SAPLING, JUNIPER_PLANKS,
                 JUNIPER_STAIRS, JUNIPER_SLAB, JUNIPER_DOUBLE_SLAB, JUNIPER_FENCE, JUNIPER_FENCE_GATE,
                 JUNIPER_DOOR, JUNIPER_TRAPDOOR, POWERED_JUNIPER_TRAPDOOR, JUNIPER_BUTTON, JUNIPER_PRESSURE_PLATE,
-                JUNIPER_SIGN, JUNIPER_WALL_SIGN);
+                JUNIPER_SIGN, JUNIPER_WALL_SIGN, JUNIPER_HANGING_SIGN, JUNIPER_WALL_HANGING_SIGN);
         for (PottedPlantBlock pot : POTTED_PLANTS) {
             event.getRegistry().register(pot);
         }

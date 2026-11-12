@@ -91,3 +91,9 @@ item.psychedelicraft.juniper_sign.name=Tabliczka z jałowca
 item.psychedelicraft.glowing_ink.name=Świecący atrament
 item.psychedelicraft.sign_wax.name=Wosk do tabliczek
 item.psychedelicraft.sign_black_dye.name=Czarny barwnik do tabliczek
+
+tile.psychedelicraft.juniper_hanging_sign.name=Podwieszana tabliczka z jałowca
+tile.psychedelicraft.juniper_wall_hanging_sign.name=Podwieszana tabliczka z jałowca
+item.psychedelicraft.juniper_hanging_sign.name=Podwieszana tabliczka z jałowca
+item.psychedelicraft.iron_chain.name=Żelazny łańcuch
+gui.psychedelicraft.hanging_sign.edit=Edytuj tekst podwieszanej tabliczki

@@ -91,3 +91,9 @@ item.psychedelicraft.juniper_sign.name=Juniper Sign
 item.psychedelicraft.glowing_ink.name=Glowing Ink
 item.psychedelicraft.sign_wax.name=Sign Wax
 item.psychedelicraft.sign_black_dye.name=Black Sign Dye
+
+tile.psychedelicraft.juniper_hanging_sign.name=Juniper Hanging Sign
+tile.psychedelicraft.juniper_wall_hanging_sign.name=Juniper Hanging Sign
+item.psychedelicraft.juniper_hanging_sign.name=Juniper Hanging Sign
+item.psychedelicraft.iron_chain.name=Iron Chain
+gui.psychedelicraft.hanging_sign.edit=Edit Hanging Sign Message

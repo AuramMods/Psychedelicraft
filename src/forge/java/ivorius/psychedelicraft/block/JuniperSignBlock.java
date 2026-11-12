@@ -38,12 +38,33 @@ public abstract class JuniperSignBlock extends BlockSign {
     public static final PropertyInteger ROTATION = BlockStandingSign.ROTATION;
     public static final PropertyDirection FACING = BlockHorizontal.FACING;
 
-    JuniperSignBlock() {
+    public enum Form {
+        STANDING, WALL, HANGING_CEILING, HANGING_WALL;
+
+        public boolean isHanging() {
+            return this == HANGING_CEILING || this == HANGING_WALL;
+        }
+
+        public int textWidth() {
+            return isHanging() ? 60 : 90;
+        }
+
+        public int textLineHeight() {
+            return isHanging() ? 9 : 10;
+        }
+    }
+
+    private final Form form;
+
+    JuniperSignBlock(Form form) {
+        this.form = form;
         setHardness(1);
         setSoundType(SoundType.WOOD);
     }
 
-    public abstract boolean isStanding();
+    public Form form() {
+        return form;
+    }
 
     public abstract float rotationDegrees(IBlockState state);
 
@@ -59,7 +80,7 @@ public abstract class JuniperSignBlock extends BlockSign {
 
     @Override
     public MapColor getMapColor(IBlockState state, IBlockAccess world, BlockPos pos) {
-        return MapColor.SILVER;
+        return form.isHanging() ? MapColor.CYAN : MapColor.SILVER;
     }
 
     @Override
@@ -69,7 +90,7 @@ public abstract class JuniperSignBlock extends BlockSign {
 
     @Override
     public Item getItemDropped(IBlockState state, Random random, int fortune) {
-        return PSItems.JUNIPER_SIGN;
+        return form.isHanging() ? PSItems.JUNIPER_HANGING_SIGN : PSItems.JUNIPER_SIGN;
     }
 
     @Override
@@ -102,6 +123,12 @@ public abstract class JuniperSignBlock extends BlockSign {
         if (sign == null) {
             return false;
         }
+        boolean front = facesPlayer(world, pos, state, player);
+        ItemStack held = player.getHeldItem(hand);
+        if (held.getItem() == PSItems.JUNIPER_HANGING_SIGN && canChainFrom(state, facing)
+                && !(sign.isWaxed() && sign.text(front).hasClickCommands())) {
+            return false;
+        }
         if (world.isRemote) {
             return true;
         }
@@ -109,7 +136,6 @@ public abstract class JuniperSignBlock extends BlockSign {
             return false;
         }
         EntityPlayerMP serverPlayer = (EntityPlayerMP) player;
-        boolean front = facesPlayer(world, pos, state, player);
         boolean commandsExecuted = sign.executeClickCommands(serverPlayer, front);
         if (sign.isWaxed()) {
             world.playSound(null, pos, SoundEvents.BLOCK_WOOD_HIT, SoundCategory.BLOCKS, 0.5F, 1F);
@@ -118,7 +144,6 @@ public abstract class JuniperSignBlock extends BlockSign {
         if (!sign.canEdit(serverPlayer)) {
             return commandsExecuted;
         }
-        ItemStack held = player.getHeldItem(hand);
         if (applyTreatment(sign, front, held)) {
             player.addStat(StatList.getObjectUseStats(held.getItem()));
             if (!player.capabilities.isCreativeMode) {
@@ -128,6 +153,11 @@ public abstract class JuniperSignBlock extends BlockSign {
             return true;
         }
         return commandsExecuted || sign.openEditor(serverPlayer, front);
+    }
+
+    private boolean canChainFrom(IBlockState state, EnumFacing side) {
+        return form == Form.HANGING_CEILING && side == EnumFacing.DOWN
+                || form == Form.HANGING_WALL && side.getAxis() != state.getValue(FACING).getAxis();
     }
 
     private static boolean applyTreatment(JuniperSignBlockEntity sign, boolean front, ItemStack held) {
@@ -151,8 +181,9 @@ public abstract class JuniperSignBlock extends BlockSign {
         return false;
     }
 
-    static final class Standing extends JuniperSignBlock {
-        Standing() {
+    static abstract class Rotating extends JuniperSignBlock {
+        Rotating(Form form) {
+            super(form);
             setDefaultState(blockState.getBaseState().withProperty(ROTATION, 0));
         }
 
@@ -182,13 +213,14 @@ public abstract class JuniperSignBlock extends BlockSign {
         }
 
         @Override
-        public boolean isStanding() {
-            return true;
-        }
-
-        @Override
         public float rotationDegrees(IBlockState state) {
             return state.getValue(ROTATION) * 22.5F;
+        }
+    }
+
+    static final class Standing extends Rotating {
+        Standing() {
+            super(Form.STANDING);
         }
 
         @Override
@@ -197,13 +229,9 @@ public abstract class JuniperSignBlock extends BlockSign {
         }
     }
 
-    static final class Wall extends JuniperSignBlock {
-        private static final AxisAlignedBB NORTH = new AxisAlignedBB(0, 0.28125, 0.875, 1, 0.78125, 1);
-        private static final AxisAlignedBB SOUTH = new AxisAlignedBB(0, 0.28125, 0, 1, 0.78125, 0.125);
-        private static final AxisAlignedBB WEST = new AxisAlignedBB(0.875, 0.28125, 0, 1, 0.78125, 1);
-        private static final AxisAlignedBB EAST = new AxisAlignedBB(0, 0.28125, 0, 0.125, 0.78125, 1);
-
-        Wall() {
+    static abstract class Horizontal extends JuniperSignBlock {
+        Horizontal(Form form) {
+            super(form);
             setDefaultState(blockState.getBaseState().withProperty(FACING, EnumFacing.NORTH));
         }
 
@@ -234,13 +262,19 @@ public abstract class JuniperSignBlock extends BlockSign {
         }
 
         @Override
-        public boolean isStanding() {
-            return false;
-        }
-
-        @Override
         public float rotationDegrees(IBlockState state) {
             return state.getValue(FACING).getHorizontalAngle();
+        }
+    }
+
+    static final class Wall extends Horizontal {
+        private static final AxisAlignedBB NORTH = new AxisAlignedBB(0, 0.28125, 0.875, 1, 0.78125, 1);
+        private static final AxisAlignedBB SOUTH = new AxisAlignedBB(0, 0.28125, 0, 1, 0.78125, 0.125);
+        private static final AxisAlignedBB WEST = new AxisAlignedBB(0.875, 0.28125, 0, 1, 0.78125, 1);
+        private static final AxisAlignedBB EAST = new AxisAlignedBB(0, 0.28125, 0, 0.125, 0.78125, 1);
+
+        Wall() {
+            super(Form.WALL);
         }
 
         @Override

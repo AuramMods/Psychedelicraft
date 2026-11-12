@@ -2,6 +2,8 @@ package ivorius.psychedelicraft.client.screen;
 
 import java.io.IOException;
 
+import ivorius.psychedelicraft.Psychedelicraft;
+import ivorius.psychedelicraft.block.JuniperSignBlock.Form;
 import ivorius.psychedelicraft.block.entity.JuniperSignText;
 import ivorius.psychedelicraft.client.render.block.JuniperSignRenderer;
 import ivorius.psychedelicraft.network.Channel;
@@ -13,6 +15,7 @@ import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.client.resources.I18n;
 import net.minecraft.item.EnumDyeColor;
 import net.minecraft.network.INetHandler;
+import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.BlockPos;
 import org.lwjgl.input.Keyboard;
 
@@ -20,13 +23,14 @@ public final class JuniperSignScreen extends GuiScreen {
     private static final int BOARD_WIDTH = 144;
     private static final int BOARD_HEIGHT = 72;
     private static final int LINE_HEIGHT = 13;
+    private static final ResourceLocation HANGING_BACKGROUND = Psychedelicraft.id("textures/gui/hanging_signs/juniper.png");
 
     private final INetHandler connection;
     private final BlockPos pos;
     private final int dimension;
     private final long token;
     private final boolean front;
-    private final boolean standing;
+    private final Form form;
     private final EnumDyeColor color;
     private final boolean glowing;
     private final String[] lines;
@@ -35,23 +39,23 @@ public final class JuniperSignScreen extends GuiScreen {
     private int boardTop;
 
     private JuniperSignScreen(INetHandler connection, BlockPos pos, int dimension, long token, boolean front,
-                              boolean standing, EnumDyeColor color, boolean glowing, String[] lines) {
+                              Form form, EnumDyeColor color, boolean glowing, String[] lines) {
         this.connection = connection;
         this.pos = pos;
         this.dimension = dimension;
         this.token = token;
         this.front = front;
-        this.standing = standing;
+        this.form = form;
         this.color = color;
         this.glowing = glowing;
         this.lines = lines;
     }
 
     public static void open(INetHandler connection, BlockPos pos, int dimension, long token, boolean front,
-                            boolean standing, EnumDyeColor color, boolean glowing, String[] lines) {
+                            Form form, EnumDyeColor color, boolean glowing, String[] lines) {
         Minecraft client = Minecraft.getMinecraft();
         if (client.getConnection() == connection && client.world != null && client.world.provider.getDimension() == dimension) {
-            client.displayGuiScreen(new JuniperSignScreen(connection, pos, dimension, token, front, standing, color, glowing, lines));
+            client.displayGuiScreen(new JuniperSignScreen(connection, pos, dimension, token, front, form, color, glowing, lines));
         }
     }
 
@@ -59,12 +63,14 @@ public final class JuniperSignScreen extends GuiScreen {
     public void initGui() {
         Keyboard.enableRepeatEvents(true);
         boardTop = height / 2 - 57;
-        int maxWidth = JuniperSignRenderer.TEXT_WIDTH;
+        int maxWidth = form.textWidth();
+        int textTop = boardTop + (form.isHanging() ? 29 : 13);
+        int lineHeight = lineHeight();
         for (int index = 0; index < fields.length; index++) {
             if (fields[index] != null) {
                 lines[index] = fields[index].getText();
             }
-            GuiTextField field = new GuiTextField(index, fontRenderer, width / 2, boardTop + 13 + index * LINE_HEIGHT, maxWidth, LINE_HEIGHT);
+            GuiTextField field = new GuiTextField(index, fontRenderer, width / 2, textTop + index * lineHeight, maxWidth, lineHeight);
             field.setMaxStringLength(JuniperSignText.MAX_LINE_LENGTH);
             field.setValidator(value -> fontRenderer.getStringWidth(value) <= maxWidth);
             field.setEnableBackgroundDrawing(false);
@@ -74,7 +80,8 @@ public final class JuniperSignScreen extends GuiScreen {
         }
         select(selected);
         buttonList.clear();
-        addButton(new GuiButton(0, width / 2 - 100, Math.min(height - 27, boardTop + 121), I18n.format("gui.done")));
+        int buttonOffset = form.isHanging() ? 95 : 121;
+        addButton(new GuiButton(0, width / 2 - 100, Math.min(height - 27, boardTop + buttonOffset), I18n.format("gui.done")));
     }
 
     @Override
@@ -128,12 +135,13 @@ public final class JuniperSignScreen extends GuiScreen {
     @Override
     protected void mouseClicked(int x, int y, int button) throws IOException {
         super.mouseClicked(x, y, button);
-        if (button != 0 || x < width / 2 - BOARD_WIDTH / 2 || x >= width / 2 + BOARD_WIDTH / 2) {
+        int boardWidth = form.isHanging() ? 72 : BOARD_WIDTH;
+        if (button != 0 || x < width / 2 - boardWidth / 2 || x >= width / 2 + boardWidth / 2) {
             return;
         }
         for (int index = 0; index < fields.length; index++) {
             GuiTextField field = fields[index];
-            if (y >= field.y && y < field.y + LINE_HEIGHT) {
+            if (y >= field.y && y < field.y + lineHeight()) {
                 select(index);
                 if (x < field.x) {
                     field.setCursorPositionZero();
@@ -146,6 +154,10 @@ public final class JuniperSignScreen extends GuiScreen {
         }
     }
 
+    private int lineHeight() {
+        return form.isHanging() ? form.textLineHeight() : LINE_HEIGHT;
+    }
+
     private void select(int index) {
         fields[selected].setFocused(false);
         selected = index;
@@ -155,14 +167,20 @@ public final class JuniperSignScreen extends GuiScreen {
     @Override
     public void drawScreen(int mouseX, int mouseY, float partialTicks) {
         drawDefaultBackground();
-        drawCenteredString(fontRenderer, I18n.format("sign.edit"), width / 2, Math.max(8, boardTop - 21), 0xFFFFFF);
-        mc.getTextureManager().bindTexture(JuniperSignRenderer.TEXTURE);
+        String title = I18n.format(form.isHanging() ? "gui.psychedelicraft.hanging_sign.edit" : "sign.edit");
+        drawCenteredString(fontRenderer, title, width / 2, Math.max(8, boardTop - 21), 0xFFFFFF);
         GlStateManager.color(1, 1, 1, 1);
-        if (standing) {
-            drawScaledCustomSizeModalRect(width / 2 - 6, boardTop + BOARD_HEIGHT, 2, 16, 2, 14, 12, 40, 64, 32);
+        if (form.isHanging()) {
+            mc.getTextureManager().bindTexture(HANGING_BACKGROUND);
+            drawScaledCustomSizeModalRect(width / 2 - 36, boardTop, 0, 0, 16, 16, 72, 72, 16, 16);
+        } else {
+            mc.getTextureManager().bindTexture(JuniperSignRenderer.TEXTURE);
+            if (form == Form.STANDING) {
+                drawScaledCustomSizeModalRect(width / 2 - 6, boardTop + BOARD_HEIGHT, 2, 16, 2, 14, 12, 40, 64, 32);
+            }
+            drawScaledCustomSizeModalRect(width / 2 - BOARD_WIDTH / 2, boardTop, front ? 2 : 28, 2,
+                    24, 12, BOARD_WIDTH, BOARD_HEIGHT, 64, 32);
         }
-        drawScaledCustomSizeModalRect(width / 2 - BOARD_WIDTH / 2, boardTop, front ? 2 : 28, 2,
-                24, 12, BOARD_WIDTH, BOARD_HEIGHT, 64, 32);
         for (GuiTextField field : fields) {
             field.x = width / 2 - fontRenderer.getStringWidth(field.getText()) / 2;
             field.drawTextBox();

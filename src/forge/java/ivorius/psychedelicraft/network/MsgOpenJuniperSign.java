@@ -1,6 +1,7 @@
 package ivorius.psychedelicraft.network;
 
 import io.netty.buffer.ByteBuf;
+import ivorius.psychedelicraft.block.JuniperSignBlock.Form;
 import ivorius.psychedelicraft.block.entity.JuniperSignText;
 import ivorius.psychedelicraft.client.screen.JuniperSignScreen;
 import net.minecraft.item.EnumDyeColor;
@@ -16,7 +17,7 @@ public final class MsgOpenJuniperSign implements IMessage {
     private int dimension;
     private long token;
     private boolean front;
-    private boolean standing;
+    private Form form;
     private EnumDyeColor color;
     private boolean glowing;
     private String[] lines;
@@ -24,12 +25,12 @@ public final class MsgOpenJuniperSign implements IMessage {
     public MsgOpenJuniperSign() {
     }
 
-    MsgOpenJuniperSign(BlockPos pos, int dimension, long token, boolean front, boolean standing, JuniperSignText text) {
+    MsgOpenJuniperSign(BlockPos pos, int dimension, long token, boolean front, Form form, JuniperSignText text) {
         this.pos = pos;
         this.dimension = dimension;
         this.token = token;
         this.front = front;
-        this.standing = standing;
+        this.form = form;
         color = text.color();
         glowing = text.isGlowing();
         lines = new String[JuniperSignText.LINE_COUNT];
@@ -45,7 +46,7 @@ public final class MsgOpenJuniperSign implements IMessage {
         dimension = packet.readInt();
         token = packet.readLong();
         front = packet.readBoolean();
-        standing = packet.readBoolean();
+        form = packet.readEnumValue(Form.class);
         color = EnumDyeColor.byMetadata(packet.readUnsignedByte());
         glowing = packet.readBoolean();
         lines = MsgEditJuniperSign.readLines(packet);
@@ -58,7 +59,7 @@ public final class MsgOpenJuniperSign implements IMessage {
         packet.writeInt(dimension);
         packet.writeLong(token);
         packet.writeBoolean(front);
-        packet.writeBoolean(standing);
+        packet.writeEnumValue(form);
         packet.writeByte(color.getMetadata());
         packet.writeBoolean(glowing);
         MsgEditJuniperSign.writeLines(packet, lines);
@@ -69,7 +70,7 @@ public final class MsgOpenJuniperSign implements IMessage {
         public IMessage onMessage(MsgOpenJuniperSign message, MessageContext context) {
             FMLCommonHandler.instance().getWorldThread(context.netHandler).addScheduledTask(() ->
                     JuniperSignScreen.open(context.netHandler, message.pos, message.dimension, message.token,
-                            message.front, message.standing, message.color, message.glowing, message.lines));
+                            message.front, message.form, message.color, message.glowing, message.lines));
             return null;
         }
     }
