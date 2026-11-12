@@ -19,19 +19,19 @@ The parity baseline is the pinned [plain 1.20.1 snapshot][plain]. During migrati
 | Baseline area | Donor source of truth under `src/main` | Status and evidence |
 | --- | --- | --- |
 | Loader, build, mod metadata and sided initialization | `Psychedelicraft`, `PsychedelicraftClient`, `fabric.mod.json`, access widener, mixin configuration, Gradle and CI | Forge entrypoint, Java 8 build, reobfuscation and client-only model registration in place. `clean build` passed. Remaining hooks are tracked with their features. |
-| Items and creative groups | `item/PSItems`, `PSItemGroups`, item classes, corresponding models and language keys | Partial. The packaged Forge jar registered `psychedelicraft:coffee_beans` in a new world. The user confirmed its texture and creative tab in a screenshot. Remaining items, creative groups and acquisition are open. |
+| Items and creative groups | `item/PSItems`, `PSItemGroups`, item classes, corresponding models and language keys | Partial. Coffee Beans renders in the creative tab. Brown and red magic mushrooms, their models and localized names are registered. Drying recipes and remaining items are open. |
 | Blocks, crops, machine state and inventories | `block/PSBlocks`, `PSWoodTypes`, `block/entity/PSBlockEntities`, blockstate and model assets | Pending. Preserve state, multiblock behavior, inventory access and drops. |
 | Fluid registries and automation | `fluid/PSFluids`, `FluidVolumes`, `container`, `physical`, storage and processing tile entities | Pending. Check amount and NBT conservation, including simulation, partial transfers and item remainders. |
 | Crafting, processing and placed drinks | `recipe/PSRecipes`, mod recipe data, `placeable_drinks`, machine and item interactions | Pending. Cover all 91 donor recipe files and dynamic recipes. |
-| Consumables and player effects | `entity/drug`, consumable item classes, `PSDamageTypes`, `PSGameRules`, relevant common mixins | Pending. Preserve timing, attributes, stomach and sleep interactions, damage and settings. |
-| Persistence and multiplayer | `network/Channel`, `MsgDrugProperties`, `MsgHallucinate`, `MixinPlayerEntity`, lifecycle callbacks in `Psychedelicraft` | Pending. Verify owner and observer synchronization, tracking, death, reconnect, dimension changes and save/reload. |
+| Consumables and player effects | `entity/drug`, consumable item classes, `PSDamageTypes`, `PSGameRules`, relevant common mixins | Partial. The mushroom items queue a server-side influence. The two effect types share the donor onset, buildup and decay rules, with their own modifier values. Stomach integration, visual consumers and other effect types are open. |
+| Persistence and multiplayer | `network/Channel`, `MsgDrugProperties`, `MsgHallucinate`, `MixinPlayerEntity`, lifecycle callbacks in `Psychedelicraft` | Partial. The packaged jar saved active and pending state to a player file and synchronized the owner in an integrated-server test. Unit tests cover state restoration. Dedicated server, observer, death, reconnect and dimension scenarios are open. |
 | Interfaces and settings | `screen/PSScreenHandlers`, `client/screen/PSScreens`, `config/PSConfig`, `PSClientConfig`, `compat/modmenu` | Pending. Port machine containers, configuration screens and setting defaults. |
 | Recipe viewing | `compat/emi` | Pending. Use a 1.12-compatible optional integration. |
 | Shaders, overlays and hallucinations | `client/render/DrugRenderer`, `client/render/effect`, `client/render/shader`, `entity/drug/hallucination`, client mixins and shader assets | Pending. Verify the full effect set in game. |
-| Models, sound and particles | `client/render/PSRenderers`, `client/item/PSModelPredicates`, `PSSounds`, `PSParticles`, client factories and corresponding assets | Pending except for the coffee bean item model. |
+| Models, sound and particles | `client/render/PSRenderers`, `client/item/PSModelPredicates`, `PSSounds`, `PSParticles`, client factories and corresponding assets | Partial. Coffee Beans and both mushroom item models are in the Forge source set. Sound and particle ports are pending. |
 | Worldgen, villagers and other entities | `world/gen/PSWorldGen`, `FeatureRegistry`, `PSTradeOffers`, `PSEntities`, villager mixins, worldgen and structure data | Pending. Audit the village templates, trades, crop/tree generation and entity tracking. |
 | Tags, loot, advancements and commands | `PSTags`, `advancement/PSCriteria`, `command/PSCommands`, namespaces under `resources/data` | Pending. Preserve gameplay acquisition, advancement triggers and command behavior. |
-| Localizations and other assets | `resources/assets` for both English and Polish, models, sprites, sounds and other resources | Partial. Coffee bean and its creative tab names converted to `.lang`. |
+| Localizations and other assets | `resources/assets` for both English and Polish, models, sprites, sounds and other resources | Partial. Coffee Beans, mushroom and creative tab names converted to `.lang`. |
 
 ### Cycle 1 · Forge build and first registered item
 
@@ -41,7 +41,14 @@ The parity baseline is the pinned [plain 1.20.1 snapshot][plain]. During migrati
 - The initial ForgeGradle client run under x86-64 failed at `NetworkRegistry.newChannel:207`. `javap` showed an extra `BUKKIT` enum constant in the generated binary and only `CLIENT` and `SERVER` in the installer jar. Resolving the mapped sources and rebuilding produced a `-recomp.jar` with the two expected constants. `resolveForgeSources` provides the source-resolution step. The server retry used the recompiled jar. [Matching ForgeGradle issue](https://github.com/quat1024/modern-forge-1.12-template/issues/2).
 - The dedicated development server reached the Minecraft EULA prompt. Its local `run/server/eula.txt` still requires the user's acceptance before server tests can proceed. The separate production server is installed for later jar tests.
 
-Next cycle: port a real consumable with its effect state and NBT persistence. Then add synchronization and prove the first post-processing and camera effects.
+### Cycle 2 · Mushroom ingestion, persistent effects and state packets
+
+- Added both mushroom items with the donor food values and independent influences. Translated the 1.20.1 effect and influence math to Java 8. Preserved the five-tick influence cadence, 15-step ingestion delay, per-tick decay, red and brown modifier formulas, and wake-up reset.
+- Attached a Forge capability to players. It writes desired and active strength plus the remaining influence and delay to NBT. Non-death clones copy this state. The server sends snapshots on consumption updates, login, respawn, dimension changes and tracking start. The client applies them on its game thread to the matching player in the matching world.
+- `./gradlew --no-daemon clean build` passed under Java 8, including reobfuscation and six JUnit tests. The tests cover onset timing, compressed NBT and continuation after load, the two modifier profiles, wake-up, expiration and malformed saved influences. The production jar has Java 8 bytecode and excludes the test classes.
+- The packaged jar with SHA-256 `ef94a19db5b603125c3af232f519008674f3a21257be6296f2f7558da9860cd6` passed four runtime checks on the installed Forge 14.23.5.2864 client. A separate test mod created a disposable survival world and invoked the normal right-click and finish-use callbacks at full hunger. One item was consumed, the server effect started after 75 ticks, the saved player file held active and pending NBT, and the local client received the effect. Attempts to automate the held mouse click timed out. This run verifies the item callbacks, integrated-server state and owner sync. The local log is `run/production/runtime-qa-cycle2/callback-pass.log`.
+
+The next rendering cycle will consume synchronized effect state to port the first post-processing and camera effects. Mushroom acquisition through the drying table, stomach behavior and the remaining effect consumers are still open.
 
 ## Repository and branch survey
 

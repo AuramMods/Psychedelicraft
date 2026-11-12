@@ -48,6 +48,7 @@ minecraft {
 
 dependencies {
     minecraft "net.minecraftforge:forge:${forgeVersion}"
+    testImplementation 'junit:junit:4.13.2'
 }
 
 tasks.register('resolveForgeSources') {
