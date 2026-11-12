@@ -2,6 +2,7 @@ package ivorius.psychedelicraft.item;
 
 import ivorius.psychedelicraft.Psychedelicraft;
 import ivorius.psychedelicraft.block.BarrelBlock;
+import ivorius.psychedelicraft.block.PlacedDrinksBlock;
 import ivorius.psychedelicraft.fluid.BrewFluid;
 import ivorius.psychedelicraft.fluid.FluidVessel;
 import ivorius.psychedelicraft.fluid.FluidVesselHandler;
@@ -74,6 +75,12 @@ public final class PortableFluidItem extends Item {
                 && world.isBlockModifiable(player, pos)
                 && FluidUtil.interactWithFluidHandler(player, hand, world, pos, face)
                 ? EnumActionResult.SUCCESS : EnumActionResult.PASS;
+    }
+
+    @Override
+    public EnumActionResult onItemUse(EntityPlayer player, World world, BlockPos pos, EnumHand hand,
+                                      EnumFacing side, float hitX, float hitY, float hitZ) {
+        return PlacedDrinksBlock.placeOnBlock(player, world, pos, hand, side, hitX, hitY, hitZ);
     }
 
     @Override

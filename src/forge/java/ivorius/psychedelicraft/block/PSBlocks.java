@@ -7,6 +7,7 @@ import java.util.List;
 import ivorius.psychedelicraft.Psychedelicraft;
 import ivorius.psychedelicraft.block.TallCropBlock.Crop;
 import ivorius.psychedelicraft.block.entity.BarrelBlockEntity;
+import ivorius.psychedelicraft.block.entity.BottleRackBlockEntity;
 import ivorius.psychedelicraft.block.entity.DistilleryBlockEntity;
 import ivorius.psychedelicraft.block.entity.FlaskBlockEntity;
 import ivorius.psychedelicraft.block.entity.DryingTableBlockEntity;
@@ -14,6 +15,7 @@ import ivorius.psychedelicraft.block.entity.JuniperSignBlockEntity;
 import ivorius.psychedelicraft.block.entity.LatticeCropBlockEntity;
 import ivorius.psychedelicraft.block.entity.MashTubBlockEntity;
 import ivorius.psychedelicraft.block.entity.PeyoteBlockEntity;
+import ivorius.psychedelicraft.block.entity.PlacedDrinkBlockEntity;
 import ivorius.psychedelicraft.item.PSItems;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockButtonWood;
@@ -102,6 +104,8 @@ public final class PSBlocks {
     public static final BarrelBlock DARK_OAK_BARREL = named("dark_oak_barrel", new BarrelBlock());
     public static final FlaskBlock FLASK = named("flask", new FlaskBlock());
     public static final DistilleryBlock DISTILLERY = named("distillery", new DistilleryBlock());
+    public static final PlacedDrinksBlock PLACED_DRINK = named("placed_drink", new PlacedDrinksBlock());
+    public static final BottleRackBlock BOTTLE_RACK = named("bottle_rack", new BottleRackBlock());
     public static final Block COPPER_ORE = named("copper_ore", new CopperOreBlock());
 
     private PSBlocks() {
@@ -119,7 +123,7 @@ public final class PSBlocks {
                 PEYOTE, AGAVE_PLANT, JIMSONWEED, BELLADONNA, TOMATOES, DRYING_TABLE, IRON_DRYING_TABLE,
                 MASH_TUB, MASH_TUB_EDGE,
                 OAK_BARREL, SPRUCE_BARREL, BIRCH_BARREL, JUNGLE_BARREL, ACACIA_BARREL, DARK_OAK_BARREL,
-                FLASK, DISTILLERY, COPPER_ORE,
+                FLASK, DISTILLERY, PLACED_DRINK, BOTTLE_RACK, COPPER_ORE,
                 LATTICE, MORNING_GLORY, MORNING_GLORY_LATTICE, WINE_GRAPE_LATTICE,
                 NATURAL_HOP, NATURAL_COCA, NATURAL_TOBACCO, NATURAL_COFFEA,
                 JUNIPER_LOG, JUNIPER_WOOD, STRIPPED_JUNIPER_LOG, STRIPPED_JUNIPER_WOOD,
@@ -136,10 +140,13 @@ public final class PSBlocks {
         GameRegistry.registerTileEntity(BarrelBlockEntity.class, Psychedelicraft.id("barrel"));
         GameRegistry.registerTileEntity(FlaskBlockEntity.class, Psychedelicraft.id("flask"));
         GameRegistry.registerTileEntity(DistilleryBlockEntity.class, Psychedelicraft.id("distillery"));
+        GameRegistry.registerTileEntity(PlacedDrinkBlockEntity.class, Psychedelicraft.id("placed_drink"));
+        GameRegistry.registerTileEntity(BottleRackBlockEntity.class, Psychedelicraft.id("bottle_rack"));
         GameRegistry.registerTileEntity(LatticeCropBlockEntity.class, Psychedelicraft.id("lattice_crop"));
         GameRegistry.registerTileEntity(PeyoteBlockEntity.class, Psychedelicraft.id("peyote"));
         GameRegistry.registerTileEntity(JuniperSignBlockEntity.class, Psychedelicraft.id("juniper_sign"));
         Blocks.FIRE.setFireInfo(DRYING_TABLE, 5, 20);
+        Blocks.FIRE.setFireInfo(BOTTLE_RACK, 5, 20);
         Blocks.FIRE.setFireInfo(LATTICE, 5, 20);
         Blocks.FIRE.setFireInfo(MORNING_GLORY_LATTICE, 5, 20);
         Blocks.FIRE.setFireInfo(WINE_GRAPE_LATTICE, 5, 20);

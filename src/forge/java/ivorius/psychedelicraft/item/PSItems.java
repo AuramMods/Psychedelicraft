@@ -126,6 +126,7 @@ public final class PSItems {
     public static final FluidMachineItem DARK_OAK_BARREL = barrel(PSBlocks.DARK_OAK_BARREL);
     public static final FluidMachineItem FLASK = named("flask", new FluidMachineItem(PSBlocks.FLASK, FlaskBlockEntity.CAPACITY));
     public static final FluidMachineItem DISTILLERY = named("distillery", new FluidMachineItem(PSBlocks.DISTILLERY, FlaskBlockEntity.CAPACITY));
+    public static final Item BOTTLE_RACK = named("bottle_rack", new ItemBlock(PSBlocks.BOTTLE_RACK));
     public static final Item COPPER_ORE = named("copper_ore", new ItemBlock(PSBlocks.COPPER_ORE));
     public static final Item RAW_COPPER = named("raw_copper", new Item());
     public static final Item COPPER_INGOT = named("copper_ingot", new Item());

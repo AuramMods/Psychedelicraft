@@ -268,3 +268,5 @@ death.attack.psychedelicraft.kidney_failure=Nerki %1$s eksplodowały
 death.attack.psychedelicraft.in_sleep=%1$s zmarł podczas snu
 psychedelicraft.sleep.fail.coccaine=Jesteś zbyt naćpany żeby zasnąć
 psychedelicraft.sleep.fail.caffiene=Nie czujesz zmęczenia
+
+tile.psychedelicraft.bottle_rack.name=Stojak na butelki
