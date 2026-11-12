@@ -9,6 +9,17 @@ uniform float FractureStrength;
 uniform float SurfaceFractalStrength;
 uniform vec4 SurfaceFractalCoords;
 uniform vec2 GeometryCoordinates;
+uniform float EntityModel;
+uniform mat4 EntityViewToWorld;
+uniform float EntityLighting;
+uniform float EntityColorMaterial;
+uniform vec3 EntityMaterialAmbient;
+uniform vec4 EntityMaterialDiffuse;
+uniform vec3 EntityAmbient;
+uniform vec3 EntityLight0;
+uniform vec3 EntityLight1;
+uniform vec3 EntityDiffuse0;
+uniform vec3 EntityDiffuse1;
 
 varying vec2 atlasUv;
 varying vec2 lightmapUv;
@@ -21,16 +32,32 @@ float goldNoise(vec2 xy, float seed) {
   return fract(tan(distance(xy * phi, xy) * seed) * xy.x);
 }
 
+float diffuseLight(vec3 normal, vec3 direction) {
+  return max(0.0, dot(normal, direction) / max(0.00001, length(direction)));
+}
+
 void main() {
+  vec4 view = gl_ModelViewMatrix * gl_Vertex;
   vec3 position = gl_Vertex.xyz;
+  if (EntityModel > 0.0) {
+    position = (EntityViewToWorld * view).xyz;
+  }
   position.xz *= GeometryCoordinates.x;
   position.y += GeometryCoordinates.y;
-  vec4 view = gl_ModelViewMatrix * gl_Vertex;
   gl_Position = ftransform();
   viewPosition = view.xyz;
   atlasUv = (gl_TextureMatrix[0] * gl_MultiTexCoord0).xy;
   lightmapUv = (gl_TextureMatrix[1] * gl_MultiTexCoord1).xy;
   vertexColor = gl_Color;
+  if (EntityModel > 0.0 && EntityLighting > 0.0) {
+    vec3 normal = gl_NormalMatrix * gl_Normal;
+    if (EntityLighting == 2.0) normal = normalize(normal);
+    vec3 ambient = EntityColorMaterial > 0.0 ? gl_Color.rgb : EntityMaterialAmbient;
+    vec4 diffuse = EntityColorMaterial > 0.0 ? gl_Color : EntityMaterialDiffuse;
+    vec3 light = EntityDiffuse0 * diffuseLight(normal, EntityLight0)
+               + EntityDiffuse1 * diffuseLight(normal, EntityLight1);
+    vertexColor = vec4(clamp(ambient * EntityAmbient + diffuse.rgb * light, 0.0, 1.0), diffuse.a);
+  }
   surfaceColor = vec3(0.0);
   if (SurfaceFractalStrength > 0.0) {
     vec2 portalUv = mod(position.xz + position.yy, 4.0) / 4.0;

@@ -8,6 +8,11 @@ uniform float SurfaceFractalStrength;
 uniform vec4 Pulses;
 uniform float FogMode;
 uniform float RadialFog;
+uniform float EntityModel;
+uniform float EntityTextured;
+uniform vec4 EntityOverlay;
+uniform vec4 EntityOutline;
+uniform vec4 EntityTint;
 
 varying vec2 atlasUv;
 varying vec2 lightmapUv;
@@ -23,8 +28,22 @@ void main() {
     light = texture2D(LightmapSampler, vec2(0.5));
   }
   vec4 base = texture2D(ColorSampler, atlasUv);
-  vec4 color = vec4(mix(vertexColor.rgb * light.rgb, surfaceColor, SurfaceFractalStrength),
-                    vertexColor.a * light.a) * base;
+  vec4 color;
+  if (EntityModel > 0.0) {
+    if (EntityTextured == 0.0) base = vec4(1.0);
+    if (EntityOutline.a > 0.0) {
+      gl_FragColor = vec4(EntityOutline.rgb, base.a);
+      return;
+    }
+    color = vec4(mix(vertexColor.rgb, surfaceColor, SurfaceFractalStrength), vertexColor.a) * base;
+    if (EntityOverlay.a > 0.0) {
+      color = vec4(mix(color.rgb, EntityOverlay.rgb, EntityOverlay.a), base.a);
+    }
+    color *= light * EntityTint;
+  } else {
+    color = vec4(mix(vertexColor.rgb * light.rgb, surfaceColor, SurfaceFractalStrength),
+                 vertexColor.a * light.a) * base;
+  }
 
   float distanceToEye = RadialFog > 0.0 ? length(viewPosition) : abs(viewPosition.z);
   float fog = 1.0;

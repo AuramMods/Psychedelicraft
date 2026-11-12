@@ -17,6 +17,7 @@ import ivorius.psychedelicraft.entity.drug.DrugType;
 import ivorius.psychedelicraft.entity.drug.type.HarmoniumDrug;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.entity.EntityPlayerSP;
+import net.minecraft.client.model.ModelBase;
 import net.minecraft.client.multiplayer.WorldClient;
 import net.minecraft.client.renderer.ChunkRenderContainer;
 import net.minecraft.client.renderer.EntityRenderer;
@@ -44,6 +45,7 @@ public final class DrugRenderer {
     private static HallucinationManager hallucinations = new HallucinationManager();
     private static EnvironmentEffects environment = new EnvironmentEffects();
     private static float pauseBlurProgress;
+    private static boolean renderingWorld;
 
     private DrugRenderer() {
     }
@@ -97,6 +99,28 @@ public final class DrugRenderer {
     public static void drawParticles(Tessellator tessellator) {
         try (Scope scope = beginGeometry(Minecraft.getMinecraft(), Material.PARTICLES, 0F)) {
             tessellator.draw();
+        }
+    }
+
+    public static void renderWorld(EntityRenderer renderer, float partialTicks, long finishTime) {
+        renderingWorld = true;
+        try {
+            renderer.renderWorld(partialTicks, finishTime);
+        } finally {
+            renderingWorld = false;
+            GEOMETRY.clearEntityView();
+        }
+    }
+
+    public static void captureEntityView() {
+        if (renderingWorld && PSConfig.visual.shader3DEnabled && player != null) GEOMETRY.captureEntityView();
+    }
+
+    public static void drawEntityModel(ModelBase model, Entity entity, float limbSwing, float swingAmount,
+                                       float age, float headYaw, float headPitch, float scale, boolean glint) {
+        Material material = glint ? Material.ENTITY_GLINT : Material.ENTITY;
+        try (Scope scope = renderingWorld ? beginGeometry(Minecraft.getMinecraft(), material, 0F) : null) {
+            model.render(entity, limbSwing, swingAmount, age, headYaw, headPitch, scale);
         }
     }
 

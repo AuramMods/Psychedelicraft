@@ -32,15 +32,28 @@ public final class WorldGeometryShader implements IResourceManagerReloadListener
     private IResourceManager resources;
     private ShaderManager shader;
     private boolean failed;
+    private final EntityRenderState entityState = new EntityRenderState();
+
+    public void captureEntityView() {
+        entityState.captureView();
+    }
+
+    public void clearEntityView() {
+        entityState.clearView();
+    }
 
     @Nullable
     public Scope begin(Minecraft client, EntityPlayerSP player, HallucinationManager hallucinations,
                        DrugProperties drugs, Material material, float cloudY) {
+        boolean entity = material == Material.ENTITY || material == Material.ENTITY_GLINT;
+        if (entity && !entityState.hasView()) return null;
         float small = hallucinations.strength(Effect.SMALL_WAVES) * 0.5F;
         float big = hallucinations.strength(Effect.BIG_WAVES) * 0.6F;
         float wiggle = hallucinations.strength(Effect.WIGGLE_WAVES) * 0.7F;
         float distant = hallucinations.strength(Effect.DISTANT_WORLD_DEFORMATION);
-        float surface = MathHelper.clamp(hallucinations.strength(Effect.SURFACE_FRACTALS), 0F, 1F);
+        // The donor's glint fragment shader reads its texture and modulation color directly.
+        float surface = material == Material.ENTITY_GLINT ? 0F
+                : MathHelper.clamp(hallucinations.strength(Effect.SURFACE_FRACTALS), 0F, 1F);
         float fracture = (float) drugs.getActiveValue(DrugType.LSD) * 0.06F;
         float[] pulses = hallucinations.pulseColor();
         if (small <= 0F && big <= 0F && wiggle <= 0F && distant <= 0F
@@ -49,20 +62,23 @@ public final class WorldGeometryShader implements IResourceManagerReloadListener
         prepare(client);
         if (shader == null) return null;
 
-        Scope scope = new Scope(GL11.glGetInteger(GL20.GL_CURRENT_PROGRAM));
+        int portalUnit = material == Material.TERRAIN ? 0 : entity ? 3 : 2;
+        Scope scope = new Scope(GL11.glGetInteger(GL20.GL_CURRENT_PROGRAM), GL13.GL_TEXTURE0 + portalUnit);
         try {
             // The caller owns the primary textures, alpha test, blend and depth passes.
             OpenGlHelper.glUseProgram(shader.getProgram());
             setSampler("ColorSampler", 0);
             setSampler("LightmapSampler", 1);
-            setSampler("PortalSampler", material == Material.TERRAIN ? 0 : 2);
+            setSampler("PortalSampler", portalUnit);
             upload("WorldTicks", player.ticksExisted + client.getRenderPartialTicks());
             upload("DistantDeformation", distant);
             upload("SurfaceFractalStrength", surface);
             upload("FractureStrength", fracture);
             upload("FogMode", fogMode());
             upload("RadialFog", radialFog() ? 1F : 0F);
-            upload("LightmapMode", material.lightmapMode);
+            upload("EntityModel", entity ? 1F : 0F);
+            if (entity) entityState.upload(shader);
+            else upload("LightmapMode", material.lightmapMode);
 
             ShaderUniform coordinates = shader.getShaderUniformOrDefault("GeometryCoordinates");
             coordinates.set(material.horizontalScale, cloudY);
@@ -148,6 +164,8 @@ public final class WorldGeometryShader implements IResourceManagerReloadListener
     public enum Material {
         TERRAIN(1F, 1F),
         PARTICLES(1F, 1F),
+        ENTITY(1F, 1F),
+        ENTITY_GLINT(1F, 1F),
         VANILLA_FAST_CLOUDS(0F, 1F / 8F),
         VANILLA_FANCY_CLOUDS(0F, 1F),
         FORGE_FAST_CLOUDS(2F, 1F / 8F),
@@ -164,15 +182,17 @@ public final class WorldGeometryShader implements IResourceManagerReloadListener
 
     public static final class Scope implements AutoCloseable {
         private final int previousProgram;
+        private final int portalUnit;
         private int previousPortalBinding = -1;
 
-        private Scope(int previousProgram) {
+        private Scope(int previousProgram, int portalUnit) {
             this.previousProgram = previousProgram;
+            this.portalUnit = portalUnit;
         }
 
         private void bindPortalAtlas(Minecraft client) {
             int active = GL11.glGetInteger(GL13.GL_ACTIVE_TEXTURE);
-            GlStateManager.setActiveTexture(GL13.GL_TEXTURE2);
+            GlStateManager.setActiveTexture(portalUnit);
             try {
                 previousPortalBinding = GL11.glGetInteger(GL11.GL_TEXTURE_BINDING_2D);
                 client.getTextureManager().bindTexture(TextureMap.LOCATION_BLOCKS_TEXTURE);
@@ -186,7 +206,7 @@ public final class WorldGeometryShader implements IResourceManagerReloadListener
             OpenGlHelper.glUseProgram(previousProgram);
             if (previousPortalBinding != -1) {
                 int active = GL11.glGetInteger(GL13.GL_ACTIVE_TEXTURE);
-                GlStateManager.setActiveTexture(GL13.GL_TEXTURE2);
+                GlStateManager.setActiveTexture(portalUnit);
                 GlStateManager.bindTexture(previousPortalBinding);
                 GlStateManager.setActiveTexture(active);
             }
