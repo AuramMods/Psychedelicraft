@@ -335,7 +335,13 @@ The parity baseline is the pinned [plain 1.20.1 snapshot][plain]. During migrati
 - The packaged jar passed the integrated Forge command and eight framebuffer stages. The server rejected a non-operator, an unknown effect and an out-of-range strength. The fixture used a legacy selector, queried registered strengths, checked completions and verified that the target received the localized command update. Operator commands drove all effect changes over the normal player sync.
 - Zero's full binary stage rendered 262,272 sampled grayscale pixels in three shades. Power changed the frame using both blur passes. The stacked programs survived a resource reload and a resize from `854×480` to `950×544`, and clearing the effects restored unchanged pixels. The tested jar's SHA-256 is `caabb3175cb191ee788f43f25951b22d103866976275c13f1dc77c419d94a1e5`. Evidence is in `run/production/runtime-qa-cycle30/runtime-verified.log` and the `cycle30-*.png` captures under `run/production/client/screenshots`.
 
-Next, connect the Rift Jar and Reality Rift to these effects. Power's particles, lightning, sound attenuation and motion blur, and Zero's chat distortion remain open. The standalone honey source and waterlogging remain open.
+### Cycle 31 · World entry with plant generation
+
+- The reported plant appeared briefly before the game closed. The earlier manual profile recorded server saves and a clean exit. The latest Power and Zero fixture logged its final pass and requested shutdown. A separate environmental fixture produced a macOS AppKit tracking-area crash after beginning shutdown. The available logs leave the reported first-frame freeze unresolved.
+- Reused the world-entry fixture on installed Forge 14.23.5.2864 with the Cycle 30 production jar. The fixture created a fresh default-terrain world with seed `1668388832989348196`, disabled pause on lost focus, and opened and closed the creative inventory. The server reported being 2.273 seconds behind at join. Over the following 105 seconds of observation, the client rendered 11,810 frames and ran 2,100 ticks. The longest frame gap was 919 ms, and the integrated server ran 2,139 ticks. The fixture shut down and saved normally.
+- Native generation completed 576 biome decorations. A scan of 625 saved chunks found 82 mod plant blocks across coffea, cannabis, tobacco, hops and tomatoes. The jar's SHA-256 remains `caabb3175cb191ee788f43f25951b22d103866976275c13f1dc77c419d94a1e5`. Evidence is under `run/production/runtime-qa-cycle31-world-entry` in `runtime-world-entry-normal.log`, `saved-normal-crops.log` and `game-normal/screenshots/entry-normal.png`.
+
+Next, connect the Rift Jar and Reality Rift to Power and Zero. Power's particles, lightning, sound attenuation and motion blur, and Zero's chat distortion remain open. The standalone honey source and waterlogging remain open.
 
 ## Repository and branch survey
 
