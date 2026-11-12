@@ -56,6 +56,16 @@ public final class SleepDeprivationDrug extends SimpleDrug {
     }
 
     @Override
+    public float desaturationHallucinationStrength() {
+        return Math.max(0, ((float) getActiveValue() - 0.5F) * 2);
+    }
+
+    @Override
+    public float soundVolumeModifier() {
+        return 1 + desaturationHallucinationStrength();
+    }
+
+    @Override
     public float movementHallucinationStrength() {
         return Math.max(0, (float) getActiveValue() - 0.8F) * 3;
     }

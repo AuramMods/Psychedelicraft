@@ -58,7 +58,13 @@ public final class PSConfig {
         public int slurryHardeningTime = 30 * MINUTE;
 
         public final FluidProperties fluidAttributes = new FluidProperties();
+        public final MessageDistortion messageDistortion = new MessageDistortion();
         public final Generation worldGeneration = new Generation();
+    }
+
+    public static final class MessageDistortion {
+        public boolean incoming = true;
+        public boolean outgoing = true;
     }
 
     public static final class FluidProperties {

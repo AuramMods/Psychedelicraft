@@ -71,6 +71,22 @@ public class DrugPropertiesTest {
     }
 
     @Test
+    public void soundModifiersMultiplyAfterTheLsdRamp() {
+        DrugProperties properties = new DrugProperties();
+        properties.setDrugValue(DrugType.POWER, 0.4);
+        properties.setDrugValue(DrugType.LSD, 0.8);
+        properties.setDrugValue(DrugType.SLEEP_DEPRIVATION, 0.75);
+        properties.setDrugLocked(DrugType.POWER, true);
+        properties.setDrugLocked(DrugType.LSD, true);
+        properties.setDrugLocked(DrugType.SLEEP_DEPRIVATION, true);
+        tick(properties, 1, 50);
+        assertEquals(0.6F * 1.5F, properties.getMultiplier(Drug::soundVolumeModifier), 0.00001F);
+
+        tick(properties, 51, 300);
+        assertEquals(0.6F * 1.5F * 2.4F, properties.getMultiplier(Drug::soundVolumeModifier), 0.00001F);
+    }
+
+    @Test
     public void ingestionStartsOnTheFifteenthFiveTickUpdate() {
         DrugProperties properties = withMushroom(DrugType.BROWN_SHROOMS);
 

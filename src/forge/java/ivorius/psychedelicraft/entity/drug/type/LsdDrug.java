@@ -11,6 +11,7 @@ import ivorius.psychedelicraft.PSDamageTypes;
 import ivorius.psychedelicraft.entity.drug.DrugProperties;
 import ivorius.psychedelicraft.entity.drug.DrugType;
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.util.math.MathHelper;
 
 public final class LsdDrug extends SimpleDrug {
     private final boolean harmful;
@@ -41,6 +42,12 @@ public final class LsdDrug extends SimpleDrug {
     @Override
     public float movementHallucinationStrength() {
         return (float) Math.max(0, getActiveValue() - 0.6F) * 1.9F;
+    }
+
+    @Override
+    public float soundVolumeModifier() {
+        float ramp = (MathHelper.clamp(ticksActive(), 50, 250) - 50) / 200F;
+        return 1 + (float) getActiveValue() * 1.75F * ramp;
     }
 
     @Override

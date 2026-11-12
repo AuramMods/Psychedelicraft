@@ -19,4 +19,9 @@ public final class PowerDrug extends SimpleDrug {
     public float motionBlur() {
         return (float) getActiveValue() * 0.3F;
     }
+
+    @Override
+    public float soundVolumeModifier() {
+        return 1 - (float) getActiveValue();
+    }
 }

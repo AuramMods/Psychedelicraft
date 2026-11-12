@@ -66,6 +66,10 @@ public interface Drug extends NbtSerialisable {
         return 0;
     }
 
+    default float soundVolumeModifier() {
+        return 1;
+    }
+
     default float viewWobblyness() {
         return 0;
     }
