@@ -110,6 +110,8 @@ public final class PSBlocks {
     public static final DistilleryBlock DISTILLERY = named("distillery", new DistilleryBlock());
     public static final PlacedDrinksBlock PLACED_DRINK = named("placed_drink", new PlacedDrinksBlock());
     public static final BottleRackBlock BOTTLE_RACK = named("bottle_rack", new BottleRackBlock());
+    public static final Block TRAY = named("tray", new LabPropBlock.Tray());
+    public static final Block BUNSEN_BURNER = named("bunsen_burner", LabPropBlock.burner());
     public static final Block COPPER_ORE = named("copper_ore", new CopperOreBlock());
 
     private PSBlocks() {
@@ -127,7 +129,7 @@ public final class PSBlocks {
                 PEYOTE, AGAVE_PLANT, JIMSONWEED, BELLADONNA, TOMATOES, DRYING_TABLE, IRON_DRYING_TABLE,
                 MASH_TUB, MASH_TUB_EDGE,
                 OAK_BARREL, SPRUCE_BARREL, BIRCH_BARREL, JUNGLE_BARREL, ACACIA_BARREL, DARK_OAK_BARREL,
-                FLASK, DISTILLERY, PLACED_DRINK, BOTTLE_RACK, COPPER_ORE,
+                FLASK, DISTILLERY, PLACED_DRINK, BOTTLE_RACK, TRAY, BUNSEN_BURNER, COPPER_ORE,
                 LATTICE, MORNING_GLORY, MORNING_GLORY_LATTICE, WINE_GRAPE_LATTICE,
                 NATURAL_HOP, NATURAL_COCA, NATURAL_TOBACCO, NATURAL_COFFEA,
                 JUNIPER_LOG, JUNIPER_WOOD, STRIPPED_JUNIPER_LOG, STRIPPED_JUNIPER_WOOD,

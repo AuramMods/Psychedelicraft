@@ -270,6 +270,8 @@ psychedelicraft.sleep.fail.coccaine=The drugs in your system keep you awake
 psychedelicraft.sleep.fail.caffiene=You do not feel tired
 
 tile.psychedelicraft.bottle_rack.name=Bottle Rack
+tile.psychedelicraft.tray.name=Tray
+tile.psychedelicraft.bunsen_burner.name=Bunsen Burner
 
 item.psychedelicraft.paper_bag.name=Empty Paper Bag
 item.psychedelicraft.vomit.name=Vomit
