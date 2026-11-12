@@ -29,6 +29,11 @@ public final class AlcoholDrug extends SimpleDrug {
     }
 
     @Override
+    public float motionBlur() {
+        return activeRamp(0.5F) * 0.3F;
+    }
+
+    @Override
     public void update(DrugProperties properties, @Nullable EntityPlayer player) {
         super.update();
         if (player == null || getActiveValue() <= 0) return;

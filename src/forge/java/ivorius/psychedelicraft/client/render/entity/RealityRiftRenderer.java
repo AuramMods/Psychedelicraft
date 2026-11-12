@@ -5,7 +5,7 @@
 package ivorius.psychedelicraft.client.render.entity;
 
 import ivorius.psychedelicraft.Psychedelicraft;
-import ivorius.psychedelicraft.client.render.RiftRenderState;
+import ivorius.psychedelicraft.client.render.TranslucentRenderState;
 import ivorius.psychedelicraft.client.render.shader.ZeroMatterRenderer;
 import ivorius.psychedelicraft.entity.RealityRiftEntity;
 import net.minecraft.client.renderer.BufferBuilder;
@@ -45,7 +45,7 @@ public final class RealityRiftRenderer extends Render<RealityRiftEntity> {
         float brightnessX = OpenGlHelper.lastBrightnessX;
         float brightnessY = OpenGlHelper.lastBrightnessY;
 
-        try (RiftRenderState ignored = new RiftRenderState()) {
+        try (TranslucentRenderState ignored = new TranslucentRenderState()) {
             GlStateManager.disableCull();
             GlStateManager.disableLighting();
             GlStateManager.translate(x, y + rift.height * 0.5, z);

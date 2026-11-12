@@ -4,7 +4,7 @@ import net.minecraft.client.renderer.GlStateManager;
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL14;
 
-public final class RiftRenderState implements AutoCloseable {
+public final class TranslucentRenderState implements AutoCloseable {
     private final boolean blend = GL11.glIsEnabled(GL11.GL_BLEND);
     private final boolean cull = GL11.glIsEnabled(GL11.GL_CULL_FACE);
     private final boolean alpha = GL11.glIsEnabled(GL11.GL_ALPHA_TEST);
@@ -15,7 +15,7 @@ public final class RiftRenderState implements AutoCloseable {
     private final int srcAlpha = GL11.glGetInteger(GL14.GL_BLEND_SRC_ALPHA);
     private final int dstAlpha = GL11.glGetInteger(GL14.GL_BLEND_DST_ALPHA);
 
-    public RiftRenderState() {
+    public TranslucentRenderState() {
         GlStateManager.pushMatrix();
         GlStateManager.enableBlend();
         GlStateManager.tryBlendFuncSeparate(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA, GL11.GL_ONE, GL11.GL_ZERO);

@@ -14,4 +14,9 @@ public final class PowerDrug extends SimpleDrug {
     public float desaturationHallucinationStrength() {
         return (float) getActiveValue() * 0.75F;
     }
+
+    @Override
+    public float motionBlur() {
+        return (float) getActiveValue() * 0.3F;
+    }
 }

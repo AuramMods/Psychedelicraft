@@ -57,6 +57,20 @@ public class DrugPropertiesTest {
     }
 
     @Test
+    public void powerAlcoholAndFatigueStackMotionBlurThroughTheRemainingStrength() {
+        DrugProperties properties = new DrugProperties();
+        properties.setDrugValue(DrugType.POWER, 0.8);
+        properties.setDrugValue(DrugType.ALCOHOL, 0.75);
+        properties.setDrugValue(DrugType.SLEEP_DEPRIVATION, 0.8);
+        properties.setDrugLocked(DrugType.POWER, true);
+        properties.setDrugLocked(DrugType.ALCOHOL, true);
+        properties.setDrugLocked(DrugType.SLEEP_DEPRIVATION, true);
+        tick(properties, 1, 120);
+
+        assertEquals(1F - 0.76F * 0.85F * 0.4F, properties.blendStrength(0F, Drug::motionBlur), 0.00001F);
+    }
+
+    @Test
     public void ingestionStartsOnTheFifteenthFiveTickUpdate() {
         DrugProperties properties = withMushroom(DrugType.BROWN_SHROOMS);
 

@@ -8,7 +8,7 @@ import ivorius.psychedelicraft.Psychedelicraft;
 import ivorius.psychedelicraft.block.PSBlocks;
 import ivorius.psychedelicraft.block.RiftJarBlock;
 import ivorius.psychedelicraft.block.entity.RiftJarBlockEntity;
-import ivorius.psychedelicraft.client.render.RiftRenderState;
+import ivorius.psychedelicraft.client.render.TranslucentRenderState;
 import ivorius.psychedelicraft.client.render.shader.ZeroMatterRenderer;
 import ivorius.psychedelicraft.item.RiftJarItem;
 import net.minecraft.block.state.IBlockState;
@@ -58,7 +58,7 @@ public final class RiftJarRenderer extends TileEntitySpecialRenderer<RiftJarBloc
 
     private void renderJar(double x, double y, double z, EnumFacing facing, float amount,
                            float lid, float handle, float ticks, float time) {
-        try (RiftRenderState ignored = new RiftRenderState()) {
+        try (TranslucentRenderState ignored = new TranslucentRenderState()) {
             GlStateManager.translate(x, y, z);
             GlStateManager.rotate(90 - facing.getHorizontalAngle(), 0, 1, 0);
             if (amount > 0) {

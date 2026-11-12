@@ -51,6 +51,11 @@ public final class SleepDeprivationDrug extends SimpleDrug {
     }
 
     @Override
+    public float motionBlur() {
+        return Math.max(0, (float) getActiveValue() - 0.6F) * 3;
+    }
+
+    @Override
     public float movementHallucinationStrength() {
         return Math.max(0, (float) getActiveValue() - 0.8F) * 3;
     }

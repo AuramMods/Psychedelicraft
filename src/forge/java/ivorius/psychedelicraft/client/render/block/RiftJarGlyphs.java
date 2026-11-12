@@ -1,7 +1,7 @@
 package ivorius.psychedelicraft.client.render.block;
 
 import ivorius.psychedelicraft.block.entity.RiftJarBlockEntity;
-import ivorius.psychedelicraft.client.render.RiftRenderState;
+import ivorius.psychedelicraft.client.render.TranslucentRenderState;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.FontRenderer;
 import net.minecraft.client.renderer.GlStateManager;
@@ -31,7 +31,7 @@ final class RiftJarGlyphs {
 
         float brightnessX = OpenGlHelper.lastBrightnessX;
         float brightnessY = OpenGlHelper.lastBrightnessY;
-        try (RiftRenderState ignored = new RiftRenderState()) {
+        try (TranslucentRenderState ignored = new TranslucentRenderState()) {
             GlStateManager.translate(x, y, z);
             GlStateManager.disableCull();
             GlStateManager.disableLighting();

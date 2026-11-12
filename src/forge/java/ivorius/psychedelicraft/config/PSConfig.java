@@ -18,6 +18,7 @@ public final class PSConfig {
         public boolean doWaterDistortion = true;
         public boolean waterOverlayEnabled = true;
         public boolean hurtOverlayEnabled = true;
+        public boolean doMotionBlur = true;
         @Config.Comment("Blur intensity while the singleplayer game is paused.")
         public float pauseMenuBlur;
         @Config.Comment("Near focus distance in blocks.")

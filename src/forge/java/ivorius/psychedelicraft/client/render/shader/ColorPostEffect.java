@@ -56,6 +56,7 @@ public final class ColorPostEffect implements IResourceManagerReloadListener {
     private final FloatBuffer projection = BufferUtils.createFloatBuffer(16);
     private final int[] boundTextures = new int[3];
     private final boolean[] enabledTextures = new boolean[3];
+    private final MotionBlurHistory motionHistory = new MotionBlurHistory();
 
     private IResourceManager resources;
     private final Map<String, ShaderManager> programs = new HashMap<>();
@@ -68,6 +69,7 @@ public final class ColorPostEffect implements IResourceManagerReloadListener {
     public void render(Minecraft client, float partialTicks, HallucinationManager hallucinations, DrugProperties drugs,
                        EnvironmentEffects environment, float pauseBlur) {
         if (!OpenGlHelper.shadersSupported || !OpenGlHelper.isFramebufferEnabled()) {
+            motionHistory.release();
             return;
         }
         float slow = hallucinations.strength(Effect.SLOW_COLOR_ROTATION);
@@ -94,9 +96,12 @@ public final class ColorPostEffect implements IResourceManagerReloadListener {
         float hurt = environment.hurtOverlay(client.player.hurtTime, client.player.maxHurtTime, drugs.heartbeatPulse(partialTicks));
         boolean colors = slow != 0F || quick != 0F || intensify != 0F || desaturate != 0F || inversion != 0F;
         boolean postProcessing = PSConfig.visual.shader2DEnabled;
+        float motion = PSConfig.visual.doMotionBlur ? drugs.blendStrength(0F, Drug::motionBlur) : 0F;
+        if (motion <= 0) motionHistory.release();
         boolean hasEffects = colors || contrast != null || coloredBloom != null || bloom > 0F || doubleVision > 0F
                 || horizontalBlur > 0F || verticalBlur > 0F || focalBlur || heat > 0F || water > 0F || wet > 0F || digital > 0F;
-        if (hurt == 0F && (!postProcessing || !hasEffects)) {
+        boolean useScratch = hurt > 0F || postProcessing && hasEffects;
+        if (!useScratch && motion <= 0) {
             return;
         }
         prepareResources(client);
@@ -119,16 +124,22 @@ public final class ColorPostEffect implements IResourceManagerReloadListener {
         boolean alpha = GL11.glIsEnabled(GL11.GL_ALPHA_TEST);
         boolean blend = GL11.glIsEnabled(GL11.GL_BLEND);
         boolean cull = GL11.glIsEnabled(GL11.GL_CULL_FACE);
+        int srcRgb = GL11.glGetInteger(GL14.GL_BLEND_SRC_RGB);
+        int dstRgb = GL11.glGetInteger(GL14.GL_BLEND_DST_RGB);
+        int srcAlpha = GL11.glGetInteger(GL14.GL_BLEND_SRC_ALPHA);
+        int dstAlpha = GL11.glGetInteger(GL14.GL_BLEND_DST_ALPHA);
         GL11.glGetInteger(GL11.GL_VIEWPORT, viewport);
         GL11.glGetBoolean(GL11.GL_COLOR_WRITEMASK, colorMask);
         GL11.glGetFloat(GL11.GL_COLOR_CLEAR_VALUE, clearColor);
 
         try {
             Framebuffer main = client.getFramebuffer();
-            if (target == null) {
-                target = new Framebuffer(main.framebufferWidth, main.framebufferHeight, false);
-            } else if (target.framebufferWidth != main.framebufferWidth || target.framebufferHeight != main.framebufferHeight) {
-                target.createBindFramebuffer(main.framebufferWidth, main.framebufferHeight);
+            if (useScratch) {
+                if (target == null) {
+                    target = new Framebuffer(main.framebufferWidth, main.framebufferHeight, false);
+                } else if (target.framebufferWidth != main.framebufferWidth || target.framebufferHeight != main.framebufferHeight) {
+                    target.createBindFramebuffer(main.framebufferWidth, main.framebufferHeight);
+                }
             }
 
             GlStateManager.disableDepth();
@@ -137,6 +148,7 @@ public final class ColorPostEffect implements IResourceManagerReloadListener {
             GlStateManager.disableBlend();
             GlStateManager.colorMask(true, true, true, true);
 
+            if (motion > 0) drawMotion(client, main, ticks, motion);
             boolean hasDepth = depthTexture != 0 && depthWidth == main.framebufferTextureWidth
                     && depthHeight == main.framebufferTextureHeight;
             Framebuffer source = main;
@@ -207,6 +219,7 @@ public final class ColorPostEffect implements IResourceManagerReloadListener {
             GlStateManager.setActiveTexture(activeTexture);
             if (depth) GlStateManager.enableDepth(); else GlStateManager.disableDepth();
             if (alpha) GlStateManager.enableAlpha(); else GlStateManager.disableAlpha();
+            GlStateManager.tryBlendFuncSeparate(srcRgb, dstRgb, srcAlpha, dstAlpha);
             if (blend) GlStateManager.enableBlend(); else GlStateManager.disableBlend();
             if (cull) GlStateManager.enableCull(); else GlStateManager.disableCull();
             GlStateManager.depthMask(depthMask);
@@ -218,6 +231,24 @@ public final class ColorPostEffect implements IResourceManagerReloadListener {
 
     private Framebuffer otherTarget(Framebuffer source, Framebuffer main) {
         return source == main ? target : main;
+    }
+
+    private void drawMotion(Minecraft client, Framebuffer main, float ticks, float strength) throws IOException {
+        ScaledResolution screen = new ScaledResolution(client);
+        ShaderManager shader = program("motion_history");
+        motionHistory.render(main, screen.getScaledWidth(), screen.getScaledHeight(), ticks, strength, (sample, opacity) -> {
+            if (opacity == 0) {
+                GlStateManager.disableDepth();
+                GlStateManager.disableBlend();
+                drawColors(main, sample, ticks, 0F, 0F, 0F, 0F, 0F, null);
+            } else {
+                GlStateManager.enableBlend();
+                GlStateManager.tryBlendFuncSeparate(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA, GL11.GL_ZERO, GL11.GL_ONE);
+                shader.getShaderUniformOrDefault("Opacity").set(opacity);
+                draw(shader, sample, main);
+            }
+        });
+        GlStateManager.disableBlend();
     }
 
     private void prepareResources(Minecraft client) {
@@ -426,6 +457,7 @@ public final class ColorPostEffect implements IResourceManagerReloadListener {
     }
 
     public void releaseTarget() {
+        motionHistory.release();
         if (depthTexture != 0) {
             TextureUtil.deleteTexture(depthTexture);
             depthTexture = 0;

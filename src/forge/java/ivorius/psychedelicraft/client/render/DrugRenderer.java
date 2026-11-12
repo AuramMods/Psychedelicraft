@@ -126,6 +126,7 @@ public final class DrugRenderer {
         if (player != null && player == client.player && world == client.world) {
             DrugProperties properties = DrugCapability.get(player);
             if (properties != null) {
+                PowerOverlay.render(client, player.ticksExisted, partialTicks, (float) properties.getActiveValue(DrugType.POWER));
                 float pauseBlur = PSConfig.visual.pauseMenuBlur * pauseBlurProgress * pauseBlurProgress * pauseBlurProgress;
                 COLOR_POST.render(client, partialTicks, hallucinations, properties, environment, pauseBlur);
             }
