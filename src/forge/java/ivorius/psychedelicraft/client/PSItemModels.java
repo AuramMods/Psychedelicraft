@@ -1,7 +1,5 @@
 package ivorius.psychedelicraft.client;
 
-import java.util.Collections;
-
 import ivorius.psychedelicraft.Psychedelicraft;
 import ivorius.psychedelicraft.block.LatticeCropBlock;
 import ivorius.psychedelicraft.block.PSBlocks;
@@ -39,15 +37,22 @@ public final class PSItemModels {
                 register(item);
             }
         }
-        ModelLoader.setCustomStateMapper(PSBlocks.NATURAL_CANNABIS, new StateMapperBase() {
-            @Override
-            protected ModelResourceLocation getModelResourceLocation(IBlockState state) {
-                return new ModelResourceLocation(PSBlocks.CANNABIS.getRegistryName(),
-                        getPropertyString(Collections.singletonMap(TallCropBlock.AGE, state.getValue(TallCropBlock.AGE))));
-            }
-        });
+        registerWildModel(PSBlocks.NATURAL_CANNABIS, PSBlocks.CANNABIS);
+        registerWildModel(PSBlocks.NATURAL_HOP, PSBlocks.HOP);
+        registerWildModel(PSBlocks.NATURAL_COCA, PSBlocks.COCA);
+        registerWildModel(PSBlocks.NATURAL_TOBACCO, PSBlocks.TOBACCO);
+        registerWildModel(PSBlocks.NATURAL_COFFEA, PSBlocks.COFFEA);
         ClientRegistry.bindTileEntitySpecialRenderer(DryingTableBlockEntity.class, new DryingTableRenderer());
         ClientRegistry.bindTileEntitySpecialRenderer(PeyoteBlockEntity.class, new PeyoteRenderer());
+    }
+
+    private static void registerWildModel(TallCropBlock wild, TallCropBlock cultivated) {
+        ModelLoader.setCustomStateMapper(wild, new StateMapperBase() {
+            @Override
+            protected ModelResourceLocation getModelResourceLocation(IBlockState state) {
+                return new ModelResourceLocation(cultivated.getRegistryName(), getPropertyString(state.getProperties()));
+            }
+        });
     }
 
     private static void register(Item item) {

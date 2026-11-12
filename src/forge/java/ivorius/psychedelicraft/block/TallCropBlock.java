@@ -23,6 +23,7 @@ import net.minecraft.util.EnumFacing;
 import net.minecraft.util.NonNullList;
 import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.MathHelper;
 import net.minecraft.world.IBlockAccess;
 import net.minecraft.world.World;
 import net.minecraftforge.common.EnumPlantType;
@@ -83,6 +84,16 @@ public class TallCropBlock extends BlockBush implements IGrowable {
         return hasTop() ? getDefaultState().withProperty(TOP, height > 0) : getDefaultState();
     }
 
+    public IBlockState stateForHeight(int height, int age) {
+        IBlockState state = stateForHeight(height);
+        return state.withProperty(ageProperty(), MathHelper.clamp(age, 0, maxAge(state)));
+    }
+
+    public static boolean isWildSoil(IBlockState state) {
+        Block block = state.getBlock();
+        return block == Blocks.DIRT || block == Blocks.GRASS || block == Blocks.MYCELIUM;
+    }
+
     @Override
     public AxisAlignedBB getBoundingBox(IBlockState state, IBlockAccess world, BlockPos pos) {
         return OUTLINE;
@@ -100,9 +111,9 @@ public class TallCropBlock extends BlockBush implements IGrowable {
             return true;
         }
         if (natural) {
-            return floor == Blocks.DIRT || floor == Blocks.GRASS;
+            return isWildSoil(soil);
         }
-        return floor == Blocks.FARMLAND || (crop != Crop.CANNABIS && (floor == Blocks.DIRT || floor == Blocks.GRASS));
+        return floor == Blocks.FARMLAND || (crop != Crop.CANNABIS && isWildSoil(soil));
     }
 
     @Override
@@ -161,7 +172,7 @@ public class TallCropBlock extends BlockBush implements IGrowable {
                 break;
             }
             pos = pos.up();
-            // Newly grown sections use the cultivated block, including above natural cannabis.
+            // Newly grown sections use the cultivated block, even above wild plants.
             state = cultivatedBlock().stateForHeight(1);
             world.setBlockState(pos, state, 3);
         }
@@ -184,7 +195,17 @@ public class TallCropBlock extends BlockBush implements IGrowable {
     }
 
     private TallCropBlock cultivatedBlock() {
-        return natural ? PSBlocks.CANNABIS : this;
+        if (!natural) {
+            return this;
+        }
+        switch (crop) {
+            case CANNABIS: return PSBlocks.CANNABIS;
+            case HOP: return PSBlocks.HOP;
+            case COCA: return PSBlocks.COCA;
+            case TOBACCO: return PSBlocks.TOBACCO;
+            case COFFEA: return PSBlocks.COFFEA;
+            default: throw new AssertionError(crop);
+        }
     }
 
     @Override
@@ -255,8 +276,8 @@ public class TallCropBlock extends BlockBush implements IGrowable {
     static final class Coca extends TallCropBlock {
         private static final PropertyInteger COCA_AGE = PropertyInteger.create("age", 0, 12);
 
-        Coca() {
-            super(Crop.COCA, false);
+        Coca(boolean natural) {
+            super(Crop.COCA, natural);
         }
 
         @Override
@@ -268,8 +289,8 @@ public class TallCropBlock extends BlockBush implements IGrowable {
     static final class TwoPart extends TallCropBlock {
         private static final PropertyInteger SHORT_AGE = PropertyInteger.create("age", 0, 7);
 
-        TwoPart(Crop crop) {
-            super(crop, false);
+        TwoPart(Crop crop, boolean natural) {
+            super(crop, natural);
         }
 
         @Override
