@@ -67,13 +67,8 @@ public final class FluidVesselHandler extends FluidHandlerItemStack {
     public static FluidStack contents(ItemStack stack, FluidVessel vessel) {
         NBTTagCompound root = stack.getTagCompound();
         if (root != null && root.hasKey(CONTENTS, 10)) {
-            NBTTagCompound data = root.getCompoundTag(CONTENTS);
-            Fluid fluid = PSFluids.resolve(data.getString("id"));
-            int amount = Math.min(data.getInteger("level"), vessel.capacity);
-            if (fluid != null && amount > 0) {
-                NBTTagCompound attributes = data.getCompoundTag("attributes");
-                return new FluidStack(fluid, amount, attributes.hasNoTags() ? null : attributes);
-            }
+            FluidStack contents = FluidContents.read(root.getCompoundTag(CONTENTS), vessel.capacity);
+            if (contents != null) return contents;
         }
         Item item = stack.getItem();
         if (item == Items.WATER_BUCKET || isWaterBottle(stack)) return new FluidStack(FluidRegistry.WATER, vessel.capacity);
@@ -122,19 +117,13 @@ public final class FluidVesselHandler extends FluidHandlerItemStack {
 
     @Override
     public int fill(@Nullable FluidStack resource, boolean doFill) {
-        return super.fill(normalizeAttributes(resource), doFill);
+        return super.fill(FluidContents.normalize(resource), doFill);
     }
 
     @Override
     @Nullable
     public FluidStack drain(@Nullable FluidStack resource, boolean doDrain) {
-        return super.drain(normalizeAttributes(resource), doDrain);
-    }
-
-    @Nullable
-    private static FluidStack normalizeAttributes(@Nullable FluidStack stack) {
-        return stack != null && stack.tag != null && stack.tag.hasNoTags()
-                ? new FluidStack(stack.getFluid(), stack.amount) : stack;
+        return super.drain(FluidContents.normalize(resource), doDrain);
     }
 
     @Override
@@ -163,13 +152,7 @@ public final class FluidVesselHandler extends FluidHandlerItemStack {
             }
         }
         replace(vessel.taggedItem(container));
-        NBTTagCompound data = new NBTTagCompound();
-        data.setString("id", PSFluids.id(fluid));
-        data.setInteger("level", stack.amount);
-        if (stack.tag != null && !stack.tag.hasNoTags()) {
-            data.setTag("attributes", stack.tag.copy());
-        }
-        container.setTagInfo(CONTENTS, data);
+        container.setTagInfo(CONTENTS, FluidContents.write(stack));
     }
 
     @Override

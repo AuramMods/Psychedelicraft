@@ -1,6 +1,7 @@
 {
   "recipes": {
-    "fill_receptical": "ivorius.psychedelicraft.recipe.FillReceptacleRecipe$Factory"
+    "fill_receptical": "ivorius.psychedelicraft.recipe.FillReceptacleRecipe$Factory",
+    "mashing": "ivorius.psychedelicraft.recipe.MashingRecipe$Factory"
   },
   "ingredients": {
     "filled_vessel": "ivorius.psychedelicraft.recipe.FluidStackIngredient$Factory"

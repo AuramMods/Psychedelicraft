@@ -9,6 +9,7 @@ import ivorius.psychedelicraft.block.TallCropBlock.Crop;
 import ivorius.psychedelicraft.block.entity.DryingTableBlockEntity;
 import ivorius.psychedelicraft.block.entity.JuniperSignBlockEntity;
 import ivorius.psychedelicraft.block.entity.LatticeCropBlockEntity;
+import ivorius.psychedelicraft.block.entity.MashTubBlockEntity;
 import ivorius.psychedelicraft.block.entity.PeyoteBlockEntity;
 import ivorius.psychedelicraft.item.PSItems;
 import net.minecraft.block.Block;
@@ -88,6 +89,8 @@ public final class PSBlocks {
             named("potted_coffea", new PottedPlantBlock(() -> PSItems.COFFEA_CHERRIES))));
     public static final DryingTableBlock DRYING_TABLE = named("drying_table", new DryingTableBlock(Material.WOOD));
     public static final DryingTableBlock IRON_DRYING_TABLE = named("iron_drying_table", new DryingTableBlock(Material.IRON));
+    public static final MashTubBlock MASH_TUB = named("mash_tub", new MashTubBlock(false));
+    public static final MashTubBlock MASH_TUB_EDGE = named("mash_tub_edge", new MashTubBlock(true));
 
     private PSBlocks() {
     }
@@ -102,6 +105,7 @@ public final class PSBlocks {
     public static void registerBlocks(RegistryEvent.Register<Block> event) {
         event.getRegistry().registerAll(CANNABIS, NATURAL_CANNABIS, HOP, COCA, TOBACCO, COFFEA,
                 PEYOTE, AGAVE_PLANT, JIMSONWEED, BELLADONNA, TOMATOES, DRYING_TABLE, IRON_DRYING_TABLE,
+                MASH_TUB, MASH_TUB_EDGE,
                 LATTICE, MORNING_GLORY, MORNING_GLORY_LATTICE, WINE_GRAPE_LATTICE,
                 NATURAL_HOP, NATURAL_COCA, NATURAL_TOBACCO, NATURAL_COFFEA,
                 JUNIPER_LOG, JUNIPER_WOOD, STRIPPED_JUNIPER_LOG, STRIPPED_JUNIPER_WOOD,
@@ -113,6 +117,8 @@ public final class PSBlocks {
             event.getRegistry().register(pot);
         }
         GameRegistry.registerTileEntity(DryingTableBlockEntity.class, Psychedelicraft.id("drying_table"));
+        GameRegistry.registerTileEntity(MashTubBlockEntity.class, Psychedelicraft.id("mash_tub"));
+        GameRegistry.registerTileEntity(MashTubBlock.Edge.class, Psychedelicraft.id("mash_tub_edge"));
         GameRegistry.registerTileEntity(LatticeCropBlockEntity.class, Psychedelicraft.id("lattice_crop"));
         GameRegistry.registerTileEntity(PeyoteBlockEntity.class, Psychedelicraft.id("peyote"));
         GameRegistry.registerTileEntity(JuniperSignBlockEntity.class, Psychedelicraft.id("juniper_sign"));

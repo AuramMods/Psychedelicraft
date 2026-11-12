@@ -1,0 +1,36 @@
+{
+  "type": "psychedelicraft:mashing",
+  "stew_time": 0,
+  "base_fluid": {
+    "fluid": "minecraft:water"
+  },
+  "ingredients": [
+    {
+      "item": "#mash_apples"
+    },
+    {
+      "item": "#mash_apples"
+    },
+    {
+      "item": "#mash_apples"
+    },
+    {
+      "item": "#mash_apples"
+    },
+    {
+      "item": "#mash_apples"
+    },
+    {
+      "item": "#mash_apples"
+    },
+    {
+      "item": "#mash_apples"
+    },
+    {
+      "item": "#mash_apples"
+    }
+  ],
+  "result": {
+    "fluid": "psychedelicraft:apple"
+  }
+}

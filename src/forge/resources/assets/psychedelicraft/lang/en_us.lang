@@ -163,3 +163,6 @@ fluid.psychedelicraft.jimsonweed_extract=Jimsonweed Extract
 item.psychedelicraft.obsidian_bottle.name=Obsidian Bottle
 item.psychedelicraft.obsidian_dust.name=Obsidian Dust
 item.psychedelicraft.cocaine_powder.name=Cocaine Powder
+tile.psychedelicraft.mash_tub.name=Wooden Vat
+tile.psychedelicraft.mash_tub.filled=%s Vat
+psychedelicraft.container.levels=Amount: %d/%d ml

@@ -29,5 +29,20 @@
       {"item": "psychedelicraft:morning_glory"},
       {"item": "psychedelicraft:morning_glory_seeds"}
     ]
+  },
+  {
+    "name": "mash_apples",
+    "ingredient": [
+      {"item": "minecraft:apple"},
+      {"type": "forge:ore_dict", "ore": "cropApple"}
+    ]
+  },
+  {
+    "name": "mash_honey",
+    "ingredient": [
+      {"type": "forge:ore_dict", "ore": "foodHoney"},
+      {"type": "forge:ore_dict", "ore": "dropHoney"},
+      {"type": "forge:ore_dict", "ore": "beeCombHoney"}
+    ]
   }
 ]

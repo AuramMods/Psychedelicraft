@@ -114,6 +114,7 @@ public final class PSItems {
     public static final Item JUNIPER_BERRIES = named("juniper_berries", new QuickFoodItem(1, 0.5F, true));
     public static final Item DRYING_TABLE = named("drying_table", new ItemBlock(PSBlocks.DRYING_TABLE));
     public static final Item IRON_DRYING_TABLE = named("iron_drying_table", new ItemBlock(PSBlocks.IRON_DRYING_TABLE));
+    public static final MashTubItem MASH_TUB = named("mash_tub", new MashTubItem());
 
     private PSItems() {
     }
