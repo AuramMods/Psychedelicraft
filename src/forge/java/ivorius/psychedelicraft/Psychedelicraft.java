@@ -40,6 +40,8 @@ public class Psychedelicraft {
         OreDictionary.registerOre("fenceGateWood", PSItems.JUNIPER_FENCE_GATE);
         OreDictionary.registerOre("doorWood", PSItems.JUNIPER_DOOR);
         JuniperWoodRecipes.preferJuniperRecipes();
+        PSItems.JUNIPER_BOAT.registerDispenserBehavior();
+        PSItems.JUNIPER_CHEST_BOAT.registerDispenserBehavior();
     }
 
     public static ResourceLocation id(String path) {

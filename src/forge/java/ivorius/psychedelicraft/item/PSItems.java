@@ -92,6 +92,8 @@ public final class PSItems {
     public static final Item JUNIPER_PRESSURE_PLATE = named("juniper_pressure_plate", new ItemBlock(PSBlocks.JUNIPER_PRESSURE_PLATE));
     public static final Item JUNIPER_SIGN = named("juniper_sign", new JuniperSignItem(false));
     public static final Item JUNIPER_HANGING_SIGN = named("juniper_hanging_sign", new JuniperSignItem(true));
+    public static final JuniperBoatItem JUNIPER_BOAT = named("juniper_boat", new JuniperBoatItem(false));
+    public static final JuniperBoatItem JUNIPER_CHEST_BOAT = named("juniper_chest_boat", new JuniperBoatItem(true));
     public static final Item IRON_CHAIN = named("iron_chain", new Item());
     public static final Item GLOWING_INK = named("glowing_ink", new Item());
     public static final Item SIGN_WAX = named("sign_wax", new Item());
@@ -108,7 +110,7 @@ public final class PSItems {
                 () -> new DrugInfluence(type, DrugInfluence.INGESTED_DELAY, 0.005, 0.003, 0.5F)));
     }
 
-    private static Item named(String name, Item item) {
+    private static <T extends Item> T named(String name, T item) {
         item.setRegistryName(Psychedelicraft.id(name))
                 .setUnlocalizedName(Psychedelicraft.MOD_ID + "." + name)
                 .setCreativeTab(GENERAL);
@@ -142,6 +144,8 @@ public final class PSItems {
             event.setBurnTime(200);
         } else if (item == JUNIPER_HANGING_SIGN) {
             event.setBurnTime(800);
+        } else if (item == JUNIPER_BOAT || item == JUNIPER_CHEST_BOAT) {
+            event.setBurnTime(1200);
         }
     }
 }

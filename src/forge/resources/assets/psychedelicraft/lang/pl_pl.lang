@@ -97,3 +97,7 @@ tile.psychedelicraft.juniper_wall_hanging_sign.name=Podwieszana tabliczka z jał
 item.psychedelicraft.juniper_hanging_sign.name=Podwieszana tabliczka z jałowca
 item.psychedelicraft.iron_chain.name=Żelazny łańcuch
 gui.psychedelicraft.hanging_sign.edit=Edytuj tekst podwieszanej tabliczki
+item.psychedelicraft.juniper_boat.name=Łódka z jałowca
+entity.psychedelicraft.juniper_boat.name=Łódka z jałowca
+item.psychedelicraft.juniper_chest_boat.name=Łódka ze skrzynią z jałowca
+entity.psychedelicraft.juniper_chest_boat.name=Łódka ze skrzynią z jałowca

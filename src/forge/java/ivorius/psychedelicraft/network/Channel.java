@@ -22,6 +22,7 @@ public final class Channel {
         network.registerMessage(MsgDrugProperties.Handler.class, MsgDrugProperties.class, 0, Side.CLIENT);
         network.registerMessage(MsgOpenJuniperSign.Handler.class, MsgOpenJuniperSign.class, 1, Side.CLIENT);
         network.registerMessage(MsgEditJuniperSign.Handler.class, MsgEditJuniperSign.class, 2, Side.SERVER);
+        network.registerMessage(MsgOpenBoatCargo.Handler.class, MsgOpenBoatCargo.class, 3, Side.SERVER);
     }
 
     public static void sync(EntityPlayerMP player, DrugProperties properties) {
@@ -44,5 +45,9 @@ public final class Channel {
 
     public static void submitSignEdit(BlockPos pos, int dimension, long token, String[] lines) {
         network.sendToServer(new MsgEditJuniperSign(pos, dimension, token, lines));
+    }
+
+    public static void openMountedBoatCargo() {
+        network.sendToServer(new MsgOpenBoatCargo());
     }
 }

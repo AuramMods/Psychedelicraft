@@ -97,3 +97,7 @@ tile.psychedelicraft.juniper_wall_hanging_sign.name=Juniper Hanging Sign
 item.psychedelicraft.juniper_hanging_sign.name=Juniper Hanging Sign
 item.psychedelicraft.iron_chain.name=Iron Chain
 gui.psychedelicraft.hanging_sign.edit=Edit Hanging Sign Message
+item.psychedelicraft.juniper_boat.name=Juniper Boat
+entity.psychedelicraft.juniper_boat.name=Juniper Boat
+item.psychedelicraft.juniper_chest_boat.name=Juniper Chest Boat
+entity.psychedelicraft.juniper_chest_boat.name=Juniper Chest Boat

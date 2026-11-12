@@ -11,18 +11,27 @@ import ivorius.psychedelicraft.block.entity.PeyoteBlockEntity;
 import ivorius.psychedelicraft.client.render.block.DryingTableRenderer;
 import ivorius.psychedelicraft.client.render.block.JuniperSignRenderer;
 import ivorius.psychedelicraft.client.render.block.PeyoteRenderer;
+import ivorius.psychedelicraft.client.render.entity.JuniperBoatRenderer;
+import ivorius.psychedelicraft.entity.EntityJuniperBoat;
+import ivorius.psychedelicraft.entity.EntityJuniperChestBoat;
 import ivorius.psychedelicraft.item.PSItems;
+import ivorius.psychedelicraft.network.Channel;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockDoor;
 import net.minecraft.block.BlockFenceGate;
 import net.minecraft.block.state.IBlockState;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.entity.EntityPlayerSP;
+import net.minecraft.client.gui.inventory.GuiInventory;
 import net.minecraft.client.renderer.block.model.ModelResourceLocation;
 import net.minecraft.client.renderer.block.statemap.StateMap;
 import net.minecraft.client.renderer.block.statemap.StateMapperBase;
 import net.minecraft.item.Item;
+import net.minecraftforge.client.event.GuiOpenEvent;
 import net.minecraftforge.client.event.ModelRegistryEvent;
 import net.minecraftforge.client.model.ModelLoader;
 import net.minecraftforge.fml.client.registry.ClientRegistry;
+import net.minecraftforge.fml.client.registry.RenderingRegistry;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.relauncher.Side;
@@ -67,6 +76,18 @@ public final class PSItemModels {
         ClientRegistry.bindTileEntitySpecialRenderer(JuniperSignBlockEntity.class, new JuniperSignRenderer());
         ClientRegistry.bindTileEntitySpecialRenderer(DryingTableBlockEntity.class, new DryingTableRenderer());
         ClientRegistry.bindTileEntitySpecialRenderer(PeyoteBlockEntity.class, new PeyoteRenderer());
+        RenderingRegistry.registerEntityRenderingHandler(EntityJuniperBoat.class, manager -> new JuniperBoatRenderer(manager, false));
+        RenderingRegistry.registerEntityRenderingHandler(EntityJuniperChestBoat.class, manager -> new JuniperBoatRenderer(manager, true));
+    }
+
+    @SubscribeEvent
+    public static void openMountedInventory(GuiOpenEvent event) {
+        EntityPlayerSP player = Minecraft.getMinecraft().player;
+        if (event.getGui() instanceof GuiInventory && player != null
+                && player.getRidingEntity() instanceof EntityJuniperChestBoat) {
+            event.setCanceled(true);
+            Channel.openMountedBoatCargo();
+        }
     }
 
     private static void shareModel(Block block, Block model) {
