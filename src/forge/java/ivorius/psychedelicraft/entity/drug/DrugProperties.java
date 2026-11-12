@@ -16,6 +16,7 @@ import ivorius.psychedelicraft.util.NbtSerialisable;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTTagList;
+import net.minecraft.util.math.MathHelper;
 import net.minecraftforge.common.util.Constants;
 
 public final class DrugProperties implements NbtSerialisable {
@@ -24,6 +25,8 @@ public final class DrugProperties implements NbtSerialisable {
     private final Stomach stomach = new Stomach();
     private boolean dirty;
     private boolean wakePending;
+    private int smokeTicks;
+    private int smokeColor;
 
     public void addToDrug(DrugType type, double value) {
         drugs.computeIfAbsent(type, DrugType::create).addToDesiredValue(value);
@@ -58,6 +61,21 @@ public final class DrugProperties implements NbtSerialisable {
             stomach.tick(player, getModifier(Drug::hungerSuppression));
             dirty |= stomach.takeDirty();
         }
+        if (smokeTicks > 0) {
+            smokeTicks--;
+            if (smokeTicks > 10 && player != null && !player.world.isRemote) SmokeEffects.exhale(player, smokeColor);
+        }
+    }
+
+    public boolean isBreathingSmoke() {
+        return smokeTicks > 0;
+    }
+
+    public void startBreathingSmoke(EntityPlayer player, int color) {
+        smokeTicks = 20 + player.getRNG().nextInt(10);
+        smokeColor = color;
+        dirty = true;
+        SmokeEffects.playBreath(player);
     }
 
     public Stomach getStomach() {
@@ -119,6 +137,13 @@ public final class DrugProperties implements NbtSerialisable {
         return strength;
     }
 
+    public float getDesaturation(float strength) {
+        for (Drug drug : drugs.values()) {
+            strength += (1 - strength) * drug.desaturationHallucinationStrength();
+        }
+        return strength;
+    }
+
     public boolean takeDirty() {
         boolean changed = dirty;
         dirty = false;
@@ -135,6 +160,10 @@ public final class DrugProperties implements NbtSerialisable {
         influences.forEach(influence -> pending.appendTag(influence.toNbt()));
         tag.setTag("drugInfluences", pending);
         tag.setTag("stomach", stomach.toNbt());
+        if (smokeTicks > 0) {
+            tag.setInteger("smokeTicks", smokeTicks);
+            tag.setInteger("smokeColor", smokeColor);
+        }
     }
 
     @Override
@@ -155,6 +184,8 @@ public final class DrugProperties implements NbtSerialisable {
             DrugInfluence.loadFromNbt(pending.getCompoundTagAt(i)).ifPresent(influences::add);
         }
         stomach.fromNbt(tag.getCompoundTag("stomach"));
+        smokeTicks = MathHelper.clamp(tag.getInteger("smokeTicks"), 0, 29);
+        smokeColor = tag.getInteger("smokeColor") & 0xFFFFFF;
         dirty = false;
     }
 }

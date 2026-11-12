@@ -11,7 +11,11 @@ import ivorius.psychedelicraft.entity.drug.DrugType;
 import net.minecraft.nbt.NBTTagCompound;
 
 public final class DrugInfluence {
+    public static final int IMMEDIATE = 0;
     public static final int INGESTED_DELAY = 15;
+    public static final int INHALED_DELAY = 20;
+    public static final int CONTACT_DELAY = 30;
+    public static final int METABOLISED_DELAY = 60;
 
     private final DrugType drugType;
     private final double influenceSpeed;
@@ -37,6 +41,10 @@ public final class DrugInfluence {
             remaining -= addition;
         }
         return remaining <= 0;
+    }
+
+    public DrugInfluence copy() {
+        return new DrugInfluence(drugType, delay, influenceSpeed, influenceSpeedPlus, remaining);
     }
 
     public NBTTagCompound toNbt() {

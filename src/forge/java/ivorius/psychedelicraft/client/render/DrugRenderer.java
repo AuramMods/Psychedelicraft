@@ -107,7 +107,8 @@ public final class DrugRenderer {
             DrugProperties properties = DrugCapability.get(player);
             if (properties != null) {
                 float intensification = properties.getColorIntensification(hallucinations.strength(Effect.SUPER_SATURATION));
-                COLOR_POST.render(client, player.ticksExisted + partialTicks, hallucinations, intensification);
+                float desaturation = properties.getDesaturation(hallucinations.strength(Effect.DESATURATION));
+                COLOR_POST.render(client, player.ticksExisted + partialTicks, hallucinations, intensification, desaturation);
             }
         }
     }

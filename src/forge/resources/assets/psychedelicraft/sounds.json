@@ -1,0 +1,6 @@
+{
+  "entity.player.breath": {
+    "category": "player",
+    "sounds": ["psychedelicraft:breath"]
+  }
+}

@@ -38,13 +38,12 @@ public final class ColorPostEffect implements IResourceManagerReloadListener {
     private Framebuffer target;
     private boolean failed;
 
-    public void render(Minecraft client, float ticks, HallucinationManager hallucinations, float intensify) {
+    public void render(Minecraft client, float ticks, HallucinationManager hallucinations, float intensify, float desaturate) {
         if (!OpenGlHelper.shadersSupported || !OpenGlHelper.isFramebufferEnabled()) {
             return;
         }
         float slow = hallucinations.strength(Effect.SLOW_COLOR_ROTATION);
         float quick = hallucinations.strength(Effect.QUICK_COLOR_ROTATION);
-        float desaturate = hallucinations.strength(Effect.DESATURATION);
         if (slow == 0F && quick == 0F && intensify == 0F && desaturate == 0F) {
             return;
         }

@@ -16,7 +16,7 @@ import net.minecraft.item.ItemFood;
 import net.minecraft.item.ItemStack;
 import net.minecraft.world.World;
 
-public final class EdibleItem extends ItemFood {
+public class EdibleItem extends ItemFood {
     @Nullable
     private final Supplier<DrugInfluence> influence;
 

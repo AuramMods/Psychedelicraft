@@ -219,7 +219,9 @@ public final class PaperBagItem extends Item {
                 || item == Items.DYE || item == PSItems.IRON_CHAIN || item == PSItems.BOTTLE
                 || item == PSItems.BROWN_MAGIC_MUSHROOMS || item == PSItems.RED_MAGIC_MUSHROOMS
                 || item == PSItems.TOMATO || item == PSItems.BELLADONNA_BERRIES || item == PSItems.AGAVE_LEAF
-                || item == PSItems.SYRINGE || item == PSItems.MORNING_GLORY);
+                || item == PSItems.SYRINGE || item == PSItems.MORNING_GLORY || item == PSItems.HASH_MUFFIN
+                || item == PSItems.COCAINE_POWDER || item == PSItems.OBSIDIAN_DUST || item == PSItems.JOINT
+                || item == PSItems.CIGAR || item == PSItems.CIGARETTE);
     }
 
     private static int capacity(ItemStack stack) {

@@ -42,6 +42,10 @@ public interface Drug extends NbtSerialisable {
         return 0;
     }
 
+    default float desaturationHallucinationStrength() {
+        return 0;
+    }
+
     default float viewWobblyness() {
         return 0;
     }

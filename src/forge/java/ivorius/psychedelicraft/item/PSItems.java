@@ -54,20 +54,35 @@ public final class PSItems {
     public static final Item CANNABIS_BUDS = named("cannabis_buds", new Item());
     public static final Item DRIED_CANNABIS_LEAF = named("dried_cannabis_leaf", new Item());
     public static final Item DRIED_CANNABIS_BUDS = named("dried_cannabis_buds", new Item());
+    public static final Item HASH_MUFFIN = edible("hash_muffin", 2, 0.1F,
+            new DrugInfluence(DrugType.CANNABIS, DrugInfluence.METABOLISED_DELAY, 0.004, 0.002, 0.7));
+    public static final Item JOLLY_RANCHER = edible("jolly_rancher", 0, 0.1F,
+            new DrugInfluence(DrugType.SUGAR, DrugInfluence.INGESTED_DELAY, 0.005, 0.003, 0.05));
+    public static final SmokeableItem JOINT = named("joint", new SmokeableItem(2, 20, 0xe6e6e6,
+            new DrugInfluence(DrugType.CANNABIS, DrugInfluence.INHALED_DELAY, 0.002, 0.001, 0.20)));
     public static final Item HOP_SEEDS = named("hop_seeds", new CropSeedItem(PSBlocks.HOP, "hop_seeds"));
     public static final Item HOP_CONES = named("hop_cones", new Item());
     public static final Item COCA_SEEDS = named("coca_seeds", new CropSeedItem(PSBlocks.COCA, "coca_seeds"));
     public static final Item COCA_LEAVES = named("coca_leaves", new Item());
     public static final Item DRIED_COCA_LEAVES = named("dried_coca_leaves", new Item());
-    public static final Item COCAINE_POWDER = named("cocaine_powder", new Item());
+    public static final Item COCAINE_POWDER = named("cocaine_powder", new PowderItem(
+            new DrugInfluence(DrugType.COCAINE, DrugInfluence.IMMEDIATE, 0.002, 0.003, 0.35)));
     public static final Item OBSIDIAN_BOTTLE = named("obsidian_bottle", new Item().setMaxStackSize(16));
-    public static final Item OBSIDIAN_DUST = named("obsidian_dust", new Item());
+    public static final Item OBSIDIAN_DUST = named("obsidian_dust", new PowderItem(
+            new DrugInfluence(DrugType.BATH_SALTS, DrugInfluence.IMMEDIATE, 0.002, 0.003, 0.35)));
     public static final Item TOBACCO_SEEDS = named("tobacco_seeds", new CropSeedItem(PSBlocks.TOBACCO, "tobacco_seeds"));
     public static final Item TOBACCO_LEAVES = named("tobacco", new Item());
     public static final Item DRIED_TOBACCO = named("dried_tobacco", new Item());
+    public static final SmokeableItem CIGARETTE = named("cigarette", new SmokeableItem(1, 50, 0xffffff,
+            new DrugInfluence(DrugType.TOBACCO, DrugInfluence.IMMEDIATE, 0.1, 0.02, 0.7)));
+    public static final SmokeableItem CIGAR = named("cigar", new SmokeableItem(3, 80, 0x999980,
+            new DrugInfluence(DrugType.TOBACCO, DrugInfluence.IMMEDIATE, 0.1, 0.02, 0.7)));
     public static final Item COFFEA_CHERRIES = named("coffea_cherries", new CropSeedItem(PSBlocks.COFFEA, "coffea_cherries"));
     public static final Item PEYOTE = named("peyote", new ItemBlock(PSBlocks.PEYOTE));
     public static final Item DRIED_PEYOTE = edible("dried_peyote", 0, 0.1F, DrugType.PEYOTE);
+    public static final SmokeableItem PEYOTE_JOINT = named("peyote_joint", new SmokeableItem(2, 20, 0x80e666,
+            new DrugInfluence(DrugType.PEYOTE, DrugInfluence.INHALED_DELAY, 0.003, 0.0015, 0.4),
+            new DrugInfluence(DrugType.TOBACCO, DrugInfluence.IMMEDIATE, 0.1, 0.02, 0.1)));
     public static final Item AGAVE_LEAF = named("agave_leaf", new CropSeedItem(PSBlocks.AGAVE_PLANT, "agave_leaf"));
     public static final Item JIMSONWEED_SEEDS = named("jimsonweed_seeds", new CropSeedItem(PSBlocks.JIMSONWEED, "jimsonweed_seeds"));
     public static final Item JIMSONWEED_SEED_POD = named("jimsonweed_seed_pod", new Item());
@@ -82,6 +97,10 @@ public final class PSItems {
     public static final Item TOMATO_LEAF = named("tomato_leaf", new Item());
     public static final Item LATTICE = named("lattice", new ItemBlock(PSBlocks.LATTICE));
     public static final Item MORNING_GLORY = named("morning_glory", new Item());
+    public static final Item LSA_SQUARE = edible("lsd_square", 0, 0.1F,
+            new DrugInfluence(DrugType.LSD, DrugInfluence.CONTACT_DELAY, 0.05, 0.003, 0.1));
+    public static final Item LSD_PILL = edible("lsd_pill", 0, 0.1F,
+            new DrugInfluence(DrugType.LSD, DrugInfluence.INGESTED_DELAY, 0.05, 0.003, 0.6));
     public static final Item MORNING_GLORY_SEEDS = named("morning_glory_seeds",
             new CropSeedItem(PSBlocks.MORNING_GLORY, "morning_glory_seeds"));
     public static final Item MORNING_GLORY_LATTICE = named("morning_glory_lattice",
@@ -142,8 +161,11 @@ public final class PSItems {
     }
 
     private static Item edible(String name, int hunger, float saturation, DrugType type) {
-        return named(name, new EdibleItem(hunger, saturation,
-                () -> new DrugInfluence(type, DrugInfluence.INGESTED_DELAY, 0.005, 0.003, 0.5F)));
+        return edible(name, hunger, saturation, new DrugInfluence(type, DrugInfluence.INGESTED_DELAY, 0.005, 0.003, 0.5F));
+    }
+
+    private static Item edible(String name, int hunger, float saturation, DrugInfluence influence) {
+        return named(name, new EdibleItem(hunger, saturation, influence::copy));
     }
 
     private static PortableFluidItem vessel(String name, FluidVessel vessel) {

@@ -33,6 +33,7 @@ public final class FluidVesselRecipes {
         event.getRegistry().registerAll(
                 new BottleRecipe().setRegistryName(Psychedelicraft.id("bottle")),
                 new DistilleryRecipe().setRegistryName(Psychedelicraft.id("distillery")),
+                new LsaSquareRecipe().setRegistryName(Psychedelicraft.id("lsa_square")),
                 new PouringRecipe().setRegistryName(Psychedelicraft.id("pouring")));
     }
 

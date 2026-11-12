@@ -7,6 +7,8 @@ import ivorius.psychedelicraft.entity.drug.DrugCapability;
 import ivorius.psychedelicraft.entity.drug.DrugProperties;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.Vec3d;
+import net.minecraft.world.World;
 import net.minecraftforge.fml.common.network.NetworkRegistry;
 import net.minecraftforge.fml.common.network.simpleimpl.SimpleNetworkWrapper;
 import net.minecraftforge.fml.relauncher.Side;
@@ -23,6 +25,13 @@ public final class Channel {
         network.registerMessage(MsgOpenJuniperSign.Handler.class, MsgOpenJuniperSign.class, 1, Side.CLIENT);
         network.registerMessage(MsgEditJuniperSign.Handler.class, MsgEditJuniperSign.class, 2, Side.SERVER);
         network.registerMessage(MsgOpenBoatCargo.Handler.class, MsgOpenBoatCargo.class, 3, Side.SERVER);
+        network.registerMessage(MsgSmoke.Handler.class, MsgSmoke.class, 4, Side.CLIENT);
+    }
+
+    public static void spawnSmoke(World world, Vec3d origin, Vec3d velocity, int color, float scale, int count) {
+        int dimension = world.provider.getDimension();
+        network.sendToAllAround(new MsgSmoke(dimension, origin, velocity, color, scale, count),
+                new NetworkRegistry.TargetPoint(dimension, origin.x, origin.y, origin.z, 32));
     }
 
     public static void sync(EntityPlayerMP player, DrugProperties properties) {
