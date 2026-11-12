@@ -35,7 +35,7 @@ import net.minecraftforge.fml.relauncher.SideOnly;
 import javax.annotation.Nullable;
 import java.util.List;
 
-public final class PortableFluidItem extends Item {
+public class PortableFluidItem extends Item {
     private final FluidVessel vessel;
 
     public PortableFluidItem(FluidVessel vessel) {

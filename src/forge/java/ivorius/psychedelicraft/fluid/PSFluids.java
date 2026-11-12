@@ -9,6 +9,7 @@ import ivorius.psychedelicraft.entity.drug.DrugCapability;
 import ivorius.psychedelicraft.entity.drug.DrugProperties;
 import ivorius.psychedelicraft.entity.drug.DrugType;
 import ivorius.psychedelicraft.entity.drug.influence.DrugInfluence;
+import ivorius.psychedelicraft.fluid.physical.WorldFluid;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.text.translation.I18n;
@@ -17,6 +18,8 @@ import net.minecraftforge.fluids.FluidRegistry;
 import net.minecraftforge.fluids.FluidStack;
 
 import javax.annotation.Nullable;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
@@ -57,7 +60,7 @@ public final class PSFluids {
 
     private static Fluid fluid(String path, String texture, int color, int viscosity) {
         String sprite = "blocks/fluid/" + texture;
-        Fluid fluid = new Fluid(FORGE_PREFIX + path, Psychedelicraft.id(sprite + "_still"), Psychedelicraft.id(sprite + "_flow"), color)
+        Fluid fluid = new WorldFluid(FORGE_PREFIX + path, Psychedelicraft.id(sprite + "_still"), Psychedelicraft.id(sprite + "_flow"), color)
                 .setUnlocalizedName("psychedelicraft." + path).setViscosity(1000 * viscosity);
         return register(path, fluid);
     }
@@ -68,7 +71,7 @@ public final class PSFluids {
     }
 
     private static Fluid extract(String path) {
-        return register(path, new Fluid(FORGE_PREFIX + path,
+        return register(path, new WorldFluid(FORGE_PREFIX + path,
                 BrewFluid.texture("clear", "_still"), BrewFluid.texture("clear", "_flow"), 0x66eee2d3) {
             @Override
             public int getColor(FluidStack stack) {
@@ -82,6 +85,10 @@ public final class PSFluids {
         for (Fluid fluid : FLUIDS.values()) {
             FluidRegistry.registerFluid(fluid);
         }
+    }
+
+    public static Collection<Fluid> all() {
+        return Collections.unmodifiableCollection(FLUIDS.values());
     }
 
     @Nullable

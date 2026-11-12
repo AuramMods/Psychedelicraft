@@ -16,6 +16,9 @@ import ivorius.psychedelicraft.block.entity.LatticeCropBlockEntity;
 import ivorius.psychedelicraft.block.entity.MashTubBlockEntity;
 import ivorius.psychedelicraft.block.entity.PeyoteBlockEntity;
 import ivorius.psychedelicraft.block.entity.PlacedDrinkBlockEntity;
+import ivorius.psychedelicraft.fluid.PSFluids;
+import ivorius.psychedelicraft.fluid.physical.FluidAttributesTile;
+import ivorius.psychedelicraft.fluid.physical.PhysicalFluidBlock;
 import ivorius.psychedelicraft.item.PSItems;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockButtonWood;
@@ -28,6 +31,7 @@ import net.minecraft.block.BlockStairs;
 import net.minecraft.block.BlockTrapDoor;
 import net.minecraft.block.material.Material;
 import net.minecraft.init.Blocks;
+import net.minecraftforge.fluids.Fluid;
 import net.minecraftforge.event.RegistryEvent;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
@@ -134,6 +138,11 @@ public final class PSBlocks {
         for (PottedPlantBlock pot : POTTED_PLANTS) {
             event.getRegistry().register(pot);
         }
+        for (Fluid fluid : PSFluids.all()) {
+            String name = PSFluids.id(fluid);
+            event.getRegistry().register(named(name.substring(name.indexOf(':') + 1), new PhysicalFluidBlock(fluid)));
+        }
+        GameRegistry.registerTileEntity(FluidAttributesTile.class, Psychedelicraft.id("fluid_attributes"));
         GameRegistry.registerTileEntity(DryingTableBlockEntity.class, Psychedelicraft.id("drying_table"));
         GameRegistry.registerTileEntity(MashTubBlockEntity.class, Psychedelicraft.id("mash_tub"));
         GameRegistry.registerTileEntity(MashTubBlock.Edge.class, Psychedelicraft.id("mash_tub_edge"));

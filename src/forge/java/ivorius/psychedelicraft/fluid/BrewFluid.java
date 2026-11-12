@@ -9,11 +9,11 @@ import ivorius.psychedelicraft.config.PSConfig.FluidTicks;
 import ivorius.psychedelicraft.entity.drug.DrugProperties;
 import ivorius.psychedelicraft.entity.drug.DrugType;
 import ivorius.psychedelicraft.entity.drug.influence.DrugInfluence;
+import ivorius.psychedelicraft.fluid.physical.WorldFluid;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.text.TextFormatting;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.text.translation.I18n;
-import net.minecraftforge.fluids.Fluid;
 import net.minecraftforge.fluids.FluidStack;
 
 import javax.annotation.Nullable;
@@ -21,7 +21,7 @@ import java.util.List;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
 
-public final class BrewFluid extends Fluid {
+public final class BrewFluid extends WorldFluid {
     public static final int FERMENTATION_STEPS = 2;
     public static final int MATURATION_STEPS = 16;
     public static final String FERMENTATION = "fermentation";
