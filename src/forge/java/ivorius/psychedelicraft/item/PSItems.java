@@ -56,6 +56,9 @@ public final class PSItems {
     public static final Item COCA_SEEDS = named("coca_seeds", new CropSeedItem(PSBlocks.COCA, "coca_seeds"));
     public static final Item COCA_LEAVES = named("coca_leaves", new Item());
     public static final Item DRIED_COCA_LEAVES = named("dried_coca_leaves", new Item());
+    public static final Item COCAINE_POWDER = named("cocaine_powder", new Item());
+    public static final Item OBSIDIAN_BOTTLE = named("obsidian_bottle", new Item().setMaxStackSize(16));
+    public static final Item OBSIDIAN_DUST = named("obsidian_dust", new Item());
     public static final Item TOBACCO_SEEDS = named("tobacco_seeds", new CropSeedItem(PSBlocks.TOBACCO, "tobacco_seeds"));
     public static final Item TOBACCO_LEAVES = named("tobacco", new Item());
     public static final Item DRIED_TOBACCO = named("dried_tobacco", new Item());

@@ -93,6 +93,15 @@ public final class FluidVesselHandler extends FluidHandlerItemStack {
         return contents(container, vessel);
     }
 
+    /** A filling recipe authors the contents and can replace the existing fluid. */
+    public ItemStack craftContents(Fluid fluid, int amount, @Nullable NBTTagCompound attributes) {
+        FluidStack previous = getFluid();
+        int existing = previous == null ? 0 : previous.amount;
+        int level = amount <= 0 ? capacity : existing + Math.min(amount, capacity - existing);
+        setFluid(new FluidStack(fluid, level, attributes));
+        return getContainer();
+    }
+
     @Override
     public boolean canFillFluidType(FluidStack fluid) {
         return vessel.accepts(fluid.getFluid());

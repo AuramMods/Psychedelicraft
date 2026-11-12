@@ -160,3 +160,6 @@ psychedelicraft.drink.levels=Volume: %d/%d ml
 fluid.psychedelicraft.morning_glory_extract=Morning Glory Extract
 fluid.psychedelicraft.belladonna_extract=Belladonna Extract
 fluid.psychedelicraft.jimsonweed_extract=Jimsonweed Extract
+item.psychedelicraft.obsidian_bottle.name=Obsidian Bottle
+item.psychedelicraft.obsidian_dust.name=Obsidian Dust
+item.psychedelicraft.cocaine_powder.name=Cocaine Powder

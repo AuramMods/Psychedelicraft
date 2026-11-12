@@ -1,0 +1,18 @@
+{
+  "type": "psychedelicraft:fill_receptical",
+  "receptical": {
+    "item": "#drug_recepticals"
+  },
+  "ingredients": [
+    {
+      "item": "minecraft:lava_bucket"
+    },
+    {
+      "item": "psychedelicraft:obsidian_dust"
+    }
+  ],
+  "result": {
+    "fluid": "psychedelicraft:bath_salts",
+    "level": 500
+  }
+}

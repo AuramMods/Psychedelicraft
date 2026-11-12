@@ -1,0 +1,21 @@
+{
+  "type": "psychedelicraft:fill_receptical",
+  "receptical": {
+    "item": "#drink_recepticals"
+  },
+  "ingredients": [
+    {
+      "item": "minecraft:water_bucket"
+    },
+    {
+      "item": "psychedelicraft:coca_leaves"
+    },
+    {
+      "item": "psychedelicraft:coca_leaves"
+    }
+  ],
+  "result": {
+    "fluid": "psychedelicraft:coca_tea",
+    "level": 500
+  }
+}

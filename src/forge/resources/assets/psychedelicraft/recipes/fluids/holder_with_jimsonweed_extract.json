@@ -1,0 +1,24 @@
+{
+  "type": "psychedelicraft:fill_receptical",
+  "receptical": {
+    "item": "#drink_recepticals"
+  },
+  "ingredients": [
+    {
+      "item": "minecraft:water_bucket"
+    },
+    {
+      "item": "psychedelicraft:jimsonweed_seeds"
+    },
+    {
+      "item": "psychedelicraft:jimsonweed_seeds"
+    },
+    {
+      "item": "psychedelicraft:jimsonweed_seeds"
+    }
+  ],
+  "result": {
+    "fluid": "psychedelicraft:jimsonweed_extract",
+    "level": 500
+  }
+}

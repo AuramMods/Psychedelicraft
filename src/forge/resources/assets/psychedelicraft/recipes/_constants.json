@@ -1,0 +1,33 @@
+[
+  {
+    "name": "suitable_hot_drink_recepticals",
+    "ingredient": {"item": "psychedelicraft:stone_cup"}
+  },
+  {
+    "name": "drug_recepticals",
+    "ingredient": {"item": "psychedelicraft:syringe"}
+  },
+  {
+    "name": "drink_recepticals",
+    "ingredient": [
+      {"item": "#suitable_hot_drink_recepticals"},
+      {"item": "psychedelicraft:shot_glass"},
+      {"item": "psychedelicraft:glass_chalice"},
+      {"item": "psychedelicraft:wooden_mug"},
+      {"item": "psychedelicraft:bottle"},
+      {"item": "psychedelicraft:filled_bucket"},
+      {"item": "psychedelicraft:filled_bowl"},
+      {"item": "psychedelicraft:filled_glass_bottle"},
+      {"item": "minecraft:bucket"},
+      {"item": "minecraft:bowl"},
+      {"item": "minecraft:glass_bottle"}
+    ]
+  },
+  {
+    "name": "morning_glories",
+    "ingredient": [
+      {"item": "psychedelicraft:morning_glory"},
+      {"item": "psychedelicraft:morning_glory_seeds"}
+    ]
+  }
+]

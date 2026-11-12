@@ -33,7 +33,8 @@ public enum FluidVessel {
     boolean accepts(Fluid fluid) {
         if (this == SYRINGE) return PSFluids.isInjectable(fluid);
         if (this == BUCKET) return true;
-        if (PSFluids.isInjectable(fluid) || fluid == FluidRegistry.LAVA) return false;
+        if (fluid == FluidRegistry.LAVA) return this == GLASS_BOTTLE;
+        if (PSFluids.isInjectable(fluid)) return false;
         if (fluid == PSFluids.COFFEE) return this == CUP;
         return this != MUG || (fluid != PSFluids.COCA_TEA && fluid != PSFluids.CANNABIS_TEA
                 && fluid != PSFluids.PEYOTE_JUICE && fluid != PSFluids.KAVA);

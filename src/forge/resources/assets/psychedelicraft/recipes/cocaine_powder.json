@@ -1,0 +1,11 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "ingredients": [
+    {
+      "item": "psychedelicraft:dried_coca_leaves"
+    }
+  ],
+  "result": {
+    "item": "psychedelicraft:cocaine_powder"
+  }
+}

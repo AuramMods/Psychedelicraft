@@ -1,0 +1,21 @@
+{
+  "type": "psychedelicraft:fill_receptical",
+  "receptical": {
+    "item": "#drink_recepticals"
+  },
+  "ingredients": [
+    {
+      "item": "minecraft:water_bucket"
+    },
+    {
+      "item": "psychedelicraft:dried_peyote"
+    },
+    {
+      "item": "psychedelicraft:dried_peyote"
+    }
+  ],
+  "result": {
+    "fluid": "psychedelicraft:peyote_juice",
+    "level": 500
+  }
+}

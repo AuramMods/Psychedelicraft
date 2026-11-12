@@ -1,0 +1,11 @@
+{
+  "type": "forge:ore_shapeless",
+  "ingredients": [
+    {
+      "item": "psychedelicraft:obsidian_bottle"
+    }
+  ],
+  "result": {
+    "item": "psychedelicraft:obsidian_dust"
+  }
+}

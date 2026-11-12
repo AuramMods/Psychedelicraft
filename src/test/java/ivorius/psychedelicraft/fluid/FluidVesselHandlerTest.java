@@ -77,4 +77,28 @@ public class FluidVesselHandlerTest {
         assertSame(Items.GLASS_BOTTLE, handler.getContainer().getItem());
         assertEquals("Sample", handler.getContainer().getDisplayName());
     }
+
+    @Test
+    public void authoredRecipeClampsVolumeAndReplacesFluidWithoutMutatingInput() {
+        ItemStack bottle = new ItemStack(PSItems.BOTTLE);
+        bottle.setStackDisplayName("Sample");
+        FluidVesselHandler original = new FluidVesselHandler(bottle, FluidVessel.BOTTLE);
+        assertEquals(300, original.fill(new FluidStack(FluidRegistry.WATER, 300), true));
+        NBTTagCompound attributes = new NBTTagCompound();
+        attributes.setInteger("batch", 17);
+
+        FluidVesselHandler crafted = FluidVesselHandler.forCrafting(bottle);
+        ItemStack output = crafted.craftContents(PSFluids.CANNABIS_TEA, 500, attributes);
+        attributes.setInteger("batch", 18);
+        assertSame(PSFluids.CANNABIS_TEA, crafted.getFluid().getFluid());
+        assertEquals(800, crafted.getFluid().amount);
+        assertEquals(17, crafted.getFluid().tag.getInteger("batch"));
+        assertEquals("Sample", output.getDisplayName());
+        assertSame(FluidRegistry.WATER, original.getFluid().getFluid());
+        assertEquals(300, original.getFluid().amount);
+
+        crafted.craftContents(PSFluids.AGAVE, Integer.MAX_VALUE, null);
+        assertEquals(FluidVessel.BOTTLE.capacity, crafted.getFluid().amount);
+        assertNull(crafted.getFluid().tag);
+    }
 }

@@ -1,0 +1,8 @@
+{
+  "recipes": {
+    "fill_receptical": "ivorius.psychedelicraft.recipe.FillReceptacleRecipe$Factory"
+  },
+  "ingredients": {
+    "filled_vessel": "ivorius.psychedelicraft.recipe.FluidStackIngredient$Factory"
+  }
+}

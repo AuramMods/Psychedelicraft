@@ -2,10 +2,8 @@ package ivorius.psychedelicraft.recipe;
 
 import ivorius.psychedelicraft.Psychedelicraft;
 import ivorius.psychedelicraft.fluid.FluidVesselHandler;
-import ivorius.psychedelicraft.fluid.PSFluids;
 import ivorius.psychedelicraft.item.PSItems;
 import net.minecraft.init.Blocks;
-import net.minecraft.init.Items;
 import net.minecraft.inventory.InventoryCrafting;
 import net.minecraft.item.EnumDyeColor;
 import net.minecraft.item.Item;
@@ -15,12 +13,10 @@ import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.NonNullList;
 import net.minecraft.world.World;
 import net.minecraftforge.event.RegistryEvent;
-import net.minecraftforge.fluids.FluidStack;
 import net.minecraftforge.fluids.FluidUtil;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.oredict.ShapedOreRecipe;
-import net.minecraftforge.oredict.ShapelessOreRecipe;
 import net.minecraftforge.registries.IForgeRegistryEntry;
 
 import javax.annotation.Nullable;
@@ -34,7 +30,6 @@ public final class FluidVesselRecipes {
     public static void register(RegistryEvent.Register<IRecipe> event) {
         event.getRegistry().registerAll(
                 new BottleRecipe().setRegistryName(Psychedelicraft.id("bottle")),
-                new CoffeeRecipe().setRegistryName(Psychedelicraft.id("cold_coffee")),
                 new PouringRecipe().setRegistryName(Psychedelicraft.id("pouring")));
     }
 
@@ -56,40 +51,6 @@ public final class FluidVesselRecipes {
                 }
             }
             return result;
-        }
-    }
-
-    private static final class CoffeeRecipe extends ShapelessOreRecipe {
-        private CoffeeRecipe() {
-            super(null, new ItemStack(PSItems.STONE_CUP), PSItems.STONE_CUP, Items.WATER_BUCKET,
-                    PSItems.COFFEE_BEANS, PSItems.COFFEE_BEANS);
-        }
-
-        @Override
-        public boolean matches(InventoryCrafting inventory, World world) {
-            return super.matches(inventory, world) && !getCraftingResult(inventory).isEmpty();
-        }
-
-        @Override
-        public ItemStack getCraftingResult(InventoryCrafting inventory) {
-            for (int slot = 0; slot < inventory.getSizeInventory(); slot++) {
-                ItemStack cup = inventory.getStackInSlot(slot);
-                if (cup.getItem() == PSItems.STONE_CUP && PSItems.STONE_CUP.contents(cup) == null) {
-                    return brew(cup);
-                }
-            }
-            return ItemStack.EMPTY;
-        }
-
-        @Override
-        public ItemStack getRecipeOutput() {
-            return brew(new ItemStack(PSItems.STONE_CUP));
-        }
-
-        private static ItemStack brew(ItemStack cup) {
-            FluidVesselHandler handler = FluidVesselHandler.forCrafting(cup);
-            handler.fill(new FluidStack(PSFluids.COFFEE, 500), true);
-            return handler.getContainer();
         }
     }
 
