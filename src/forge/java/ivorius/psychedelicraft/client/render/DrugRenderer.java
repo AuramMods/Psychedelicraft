@@ -18,11 +18,16 @@ import ivorius.psychedelicraft.entity.drug.type.HarmoniumDrug;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.entity.EntityPlayerSP;
 import net.minecraft.client.model.ModelBase;
+import net.minecraft.client.model.ModelRenderer;
 import net.minecraft.client.multiplayer.WorldClient;
 import net.minecraft.client.renderer.ChunkRenderContainer;
 import net.minecraft.client.renderer.EntityRenderer;
+import net.minecraft.client.renderer.GlStateManager;
+import net.minecraft.client.renderer.ItemRenderer;
 import net.minecraft.client.renderer.Tessellator;
+import net.minecraft.client.renderer.tileentity.TileEntityItemStackRenderer;
 import net.minecraft.entity.Entity;
+import net.minecraft.item.ItemStack;
 import net.minecraft.util.BlockRenderLayer;
 import net.minecraft.util.math.MathHelper;
 import net.minecraftforge.client.event.EntityViewRenderEvent;
@@ -46,6 +51,7 @@ public final class DrugRenderer {
     private static EnvironmentEffects environment = new EnvironmentEffects();
     private static float pauseBlurProgress;
     private static boolean renderingWorld;
+    private static boolean renderingBuiltInItem;
 
     private DrugRenderer() {
     }
@@ -118,10 +124,59 @@ public final class DrugRenderer {
 
     public static void drawEntityModel(ModelBase model, Entity entity, float limbSwing, float swingAmount,
                                        float age, float headYaw, float headPitch, float scale, boolean glint) {
-        Material material = glint ? Material.ENTITY_GLINT : Material.ENTITY;
-        try (Scope scope = renderingWorld ? beginGeometry(Minecraft.getMinecraft(), material, 0F) : null) {
+        try (Scope scope = beginWorldModel(glint ? Material.ENTITY_GLINT : Material.ENTITY)) {
             model.render(entity, limbSwing, swingAmount, age, headYaw, headPitch, scale);
         }
+    }
+
+    public static void renderFirstPersonItems(ItemRenderer renderer, float partialTicks) {
+        // The hand pass replaces the world model-view matrix before it renders its items and arms.
+        captureEntityView();
+        try {
+            renderer.renderItemInFirstPerson(partialTicks);
+        } finally {
+            GEOMETRY.clearEntityView();
+        }
+    }
+
+    public static void drawItemQuads(Tessellator tessellator, ItemStack stack) {
+        // RenderItem supplies the empty stack for its two color-only glint draws.
+        try (Scope scope = beginWorldModel(stack.isEmpty() ? Material.ENTITY_GLINT : Material.ENTITY)) {
+            tessellator.draw();
+        }
+    }
+
+    public static void drawMapQuads(Tessellator tessellator) {
+        try (Scope scope = beginWorldModel(Material.ENTITY)) {
+            tessellator.draw();
+        }
+    }
+
+    public static void drawHandPart(ModelRenderer model, float scale) {
+        try (Scope scope = beginWorldModel(Material.ENTITY)) {
+            model.render(scale);
+        }
+    }
+
+    public static void renderBuiltInItem(TileEntityItemStackRenderer renderer, ItemStack stack) {
+        boolean previous = renderingBuiltInItem;
+        renderingBuiltInItem = renderingWorld && renderer == TileEntityItemStackRenderer.instance;
+        try {
+            renderer.renderByItem(stack);
+        } finally {
+            renderingBuiltInItem = previous;
+        }
+    }
+
+    public static void drawBuiltInModelList(int list) {
+        try (Scope scope = renderingBuiltInItem ? beginWorldModel(Material.ENTITY) : null) {
+            GlStateManager.callList(list);
+        }
+    }
+
+    @Nullable
+    private static Scope beginWorldModel(Material material) {
+        return renderingWorld ? beginGeometry(Minecraft.getMinecraft(), material, 0F) : null;
     }
 
     public static void drawFastClouds(Tessellator tessellator, double cameraY) {
