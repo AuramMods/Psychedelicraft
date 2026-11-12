@@ -84,3 +84,10 @@ tile.psychedelicraft.juniper_pressure_plate.name=Juniper Pressure Plate
 tile.psychedelicraft.juniper_double_slab.name=Juniper Slab
 item.psychedelicraft.juniper_door.name=Juniper Door
 tile.psychedelicraft.powered_juniper_trapdoor.name=Juniper Trapdoor
+
+tile.psychedelicraft.juniper_sign.name=Juniper Sign
+tile.psychedelicraft.juniper_wall_sign.name=Juniper Sign
+item.psychedelicraft.juniper_sign.name=Juniper Sign
+item.psychedelicraft.glowing_ink.name=Glowing Ink
+item.psychedelicraft.sign_wax.name=Sign Wax
+item.psychedelicraft.sign_black_dye.name=Black Sign Dye

@@ -1,0 +1,261 @@
+package ivorius.psychedelicraft.block;
+
+import java.util.Random;
+
+import ivorius.psychedelicraft.block.entity.JuniperSignBlockEntity;
+import ivorius.psychedelicraft.item.PSItems;
+import net.minecraft.block.Block;
+import net.minecraft.block.BlockHorizontal;
+import net.minecraft.block.BlockSign;
+import net.minecraft.block.BlockStandingSign;
+import net.minecraft.block.SoundType;
+import net.minecraft.block.material.MapColor;
+import net.minecraft.block.properties.PropertyDirection;
+import net.minecraft.block.properties.PropertyInteger;
+import net.minecraft.block.state.BlockStateContainer;
+import net.minecraft.block.state.IBlockState;
+import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.entity.player.EntityPlayerMP;
+import net.minecraft.init.Items;
+import net.minecraft.init.SoundEvents;
+import net.minecraft.item.EnumDyeColor;
+import net.minecraft.item.Item;
+import net.minecraft.item.ItemStack;
+import net.minecraft.stats.StatList;
+import net.minecraft.tileentity.TileEntity;
+import net.minecraft.util.EnumFacing;
+import net.minecraft.util.EnumHand;
+import net.minecraft.util.Mirror;
+import net.minecraft.util.Rotation;
+import net.minecraft.util.SoundCategory;
+import net.minecraft.util.math.AxisAlignedBB;
+import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.MathHelper;
+import net.minecraft.world.IBlockAccess;
+import net.minecraft.world.World;
+
+public abstract class JuniperSignBlock extends BlockSign {
+    public static final PropertyInteger ROTATION = BlockStandingSign.ROTATION;
+    public static final PropertyDirection FACING = BlockHorizontal.FACING;
+
+    JuniperSignBlock() {
+        setHardness(1);
+        setSoundType(SoundType.WOOD);
+    }
+
+    public abstract boolean isStanding();
+
+    public abstract float rotationDegrees(IBlockState state);
+
+    public abstract boolean canStay(World world, BlockPos pos, IBlockState state);
+
+    public boolean facesPlayer(World world, BlockPos pos, IBlockState state, EntityPlayer player) {
+        AxisAlignedBB bounds = state.getBoundingBox(world, pos);
+        double x = player.posX - (pos.getX() + (bounds.minX + bounds.maxX) * 0.5);
+        double z = player.posZ - (pos.getZ() + (bounds.minZ + bounds.maxZ) * 0.5);
+        double angle = Math.toDegrees(MathHelper.atan2(z, x)) - 90;
+        return Math.abs(MathHelper.wrapDegrees(rotationDegrees(state) - angle)) <= 90;
+    }
+
+    @Override
+    public MapColor getMapColor(IBlockState state, IBlockAccess world, BlockPos pos) {
+        return MapColor.SILVER;
+    }
+
+    @Override
+    public TileEntity createNewTileEntity(World world, int metadata) {
+        return new JuniperSignBlockEntity();
+    }
+
+    @Override
+    public Item getItemDropped(IBlockState state, Random random, int fortune) {
+        return PSItems.JUNIPER_SIGN;
+    }
+
+    @Override
+    public ItemStack getItem(World world, BlockPos pos, IBlockState state) {
+        return new ItemStack(getItemDropped(state, world.rand, 0));
+    }
+
+    @Override
+    public void neighborChanged(IBlockState state, World world, BlockPos pos, Block block, BlockPos from) {
+        if (!world.isRemote && !canStay(world, pos, state)) {
+            dropBlockAsItem(world, pos, state, 0);
+            world.setBlockToAir(pos);
+        }
+    }
+
+    @Override
+    public void updateTick(World world, BlockPos pos, IBlockState state, Random random) {
+        if (!world.isRemote) {
+            JuniperSignBlockEntity sign = JuniperSignBlockEntity.get(world, pos);
+            if (sign != null) {
+                sign.openQueuedEditor();
+            }
+        }
+    }
+
+    @Override
+    public boolean onBlockActivated(World world, BlockPos pos, IBlockState state, EntityPlayer player,
+                                    EnumHand hand, EnumFacing facing, float x, float y, float z) {
+        JuniperSignBlockEntity sign = JuniperSignBlockEntity.get(world, pos);
+        if (sign == null) {
+            return false;
+        }
+        if (world.isRemote) {
+            return true;
+        }
+        if (!(player instanceof EntityPlayerMP)) {
+            return false;
+        }
+        EntityPlayerMP serverPlayer = (EntityPlayerMP) player;
+        boolean front = facesPlayer(world, pos, state, player);
+        boolean commandsExecuted = sign.executeClickCommands(serverPlayer, front);
+        if (sign.isWaxed()) {
+            world.playSound(null, pos, SoundEvents.BLOCK_WOOD_HIT, SoundCategory.BLOCKS, 0.5F, 1F);
+            return commandsExecuted;
+        }
+        if (!sign.canEdit(serverPlayer)) {
+            return commandsExecuted;
+        }
+        ItemStack held = player.getHeldItem(hand);
+        if (applyTreatment(sign, front, held)) {
+            player.addStat(StatList.getObjectUseStats(held.getItem()));
+            if (!player.capabilities.isCreativeMode) {
+                held.shrink(1);
+            }
+            world.playSound(null, pos, SoundEvents.BLOCK_WOOD_BUTTON_CLICK_ON, SoundCategory.BLOCKS, 0.6F, 1F);
+            return true;
+        }
+        return commandsExecuted || sign.openEditor(serverPlayer, front);
+    }
+
+    private static boolean applyTreatment(JuniperSignBlockEntity sign, boolean front, ItemStack held) {
+        Item item = held.getItem();
+        if (item == PSItems.SIGN_WAX) {
+            return sign.wax();
+        }
+        if (!sign.text(front).hasText()) {
+            return false;
+        }
+        if (item == PSItems.GLOWING_INK) {
+            return sign.setGlowing(front, true);
+        }
+        if (item == PSItems.SIGN_BLACK_DYE) {
+            return sign.setColor(front, EnumDyeColor.BLACK);
+        }
+        if (item == Items.DYE && !held.isEmpty()) {
+            EnumDyeColor color = EnumDyeColor.byDyeDamage(held.getMetadata());
+            return color == EnumDyeColor.BLACK ? sign.setGlowing(front, false) : sign.setColor(front, color);
+        }
+        return false;
+    }
+
+    static final class Standing extends JuniperSignBlock {
+        Standing() {
+            setDefaultState(blockState.getBaseState().withProperty(ROTATION, 0));
+        }
+
+        @Override
+        protected BlockStateContainer createBlockState() {
+            return new BlockStateContainer(this, ROTATION);
+        }
+
+        @Override
+        public IBlockState getStateFromMeta(int metadata) {
+            return getDefaultState().withProperty(ROTATION, metadata & 15);
+        }
+
+        @Override
+        public int getMetaFromState(IBlockState state) {
+            return state.getValue(ROTATION);
+        }
+
+        @Override
+        public IBlockState withRotation(IBlockState state, Rotation rotation) {
+            return state.withProperty(ROTATION, rotation.rotate(state.getValue(ROTATION), 16));
+        }
+
+        @Override
+        public IBlockState withMirror(IBlockState state, Mirror mirror) {
+            return state.withProperty(ROTATION, mirror.mirrorRotation(state.getValue(ROTATION), 16));
+        }
+
+        @Override
+        public boolean isStanding() {
+            return true;
+        }
+
+        @Override
+        public float rotationDegrees(IBlockState state) {
+            return state.getValue(ROTATION) * 22.5F;
+        }
+
+        @Override
+        public boolean canStay(World world, BlockPos pos, IBlockState state) {
+            return world.getBlockState(pos.down()).getMaterial().isSolid();
+        }
+    }
+
+    static final class Wall extends JuniperSignBlock {
+        private static final AxisAlignedBB NORTH = new AxisAlignedBB(0, 0.28125, 0.875, 1, 0.78125, 1);
+        private static final AxisAlignedBB SOUTH = new AxisAlignedBB(0, 0.28125, 0, 1, 0.78125, 0.125);
+        private static final AxisAlignedBB WEST = new AxisAlignedBB(0.875, 0.28125, 0, 1, 0.78125, 1);
+        private static final AxisAlignedBB EAST = new AxisAlignedBB(0, 0.28125, 0, 0.125, 0.78125, 1);
+
+        Wall() {
+            setDefaultState(blockState.getBaseState().withProperty(FACING, EnumFacing.NORTH));
+        }
+
+        @Override
+        protected BlockStateContainer createBlockState() {
+            return new BlockStateContainer(this, FACING);
+        }
+
+        @Override
+        public IBlockState getStateFromMeta(int metadata) {
+            EnumFacing facing = EnumFacing.getFront(metadata);
+            return getDefaultState().withProperty(FACING, facing.getAxis().isHorizontal() ? facing : EnumFacing.NORTH);
+        }
+
+        @Override
+        public int getMetaFromState(IBlockState state) {
+            return state.getValue(FACING).getIndex();
+        }
+
+        @Override
+        public IBlockState withRotation(IBlockState state, Rotation rotation) {
+            return state.withProperty(FACING, rotation.rotate(state.getValue(FACING)));
+        }
+
+        @Override
+        public IBlockState withMirror(IBlockState state, Mirror mirror) {
+            return withRotation(state, mirror.toRotation(state.getValue(FACING)));
+        }
+
+        @Override
+        public boolean isStanding() {
+            return false;
+        }
+
+        @Override
+        public float rotationDegrees(IBlockState state) {
+            return state.getValue(FACING).getHorizontalAngle();
+        }
+
+        @Override
+        public boolean canStay(World world, BlockPos pos, IBlockState state) {
+            return world.getBlockState(pos.offset(state.getValue(FACING).getOpposite())).getMaterial().isSolid();
+        }
+
+        @Override
+        public AxisAlignedBB getBoundingBox(IBlockState state, IBlockAccess world, BlockPos pos) {
+            switch (state.getValue(FACING)) {
+                case SOUTH: return SOUTH;
+                case WEST: return WEST;
+                case EAST: return EAST;
+                default: return NORTH;
+            }
+        }
+    }
+}

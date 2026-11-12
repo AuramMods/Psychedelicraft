@@ -90,6 +90,10 @@ public final class PSItems {
     public static final Item JUNIPER_TRAPDOOR = named("juniper_trapdoor", new ItemBlock(PSBlocks.JUNIPER_TRAPDOOR));
     public static final Item JUNIPER_BUTTON = named("juniper_button", new ItemBlock(PSBlocks.JUNIPER_BUTTON));
     public static final Item JUNIPER_PRESSURE_PLATE = named("juniper_pressure_plate", new ItemBlock(PSBlocks.JUNIPER_PRESSURE_PLATE));
+    public static final Item JUNIPER_SIGN = named("juniper_sign", new JuniperSignItem());
+    public static final Item GLOWING_INK = named("glowing_ink", new Item());
+    public static final Item SIGN_WAX = named("sign_wax", new Item());
+    public static final Item SIGN_BLACK_DYE = named("sign_black_dye", new Item());
     public static final Item JUNIPER_BERRIES = named("juniper_berries", new QuickFoodItem(1, 0.5F, true));
     public static final Item DRYING_TABLE = named("drying_table", new ItemBlock(PSBlocks.DRYING_TABLE));
     public static final Item IRON_DRYING_TABLE = named("iron_drying_table", new ItemBlock(PSBlocks.IRON_DRYING_TABLE));
@@ -132,7 +136,7 @@ public final class PSItems {
             event.setBurnTime(100);
         } else if (item == JUNIPER_SLAB) {
             event.setBurnTime(150);
-        } else if (item == JUNIPER_DOOR) {
+        } else if (item == JUNIPER_DOOR || item == JUNIPER_SIGN) {
             event.setBurnTime(200);
         }
     }

@@ -84,3 +84,10 @@ tile.psychedelicraft.juniper_pressure_plate.name=Płytka naciskowa z jałowca
 tile.psychedelicraft.juniper_double_slab.name=Płyta z jałowca
 item.psychedelicraft.juniper_door.name=Drzwi z jałowca
 tile.psychedelicraft.powered_juniper_trapdoor.name=Klapa z jałowca
+
+tile.psychedelicraft.juniper_sign.name=Tabliczka z jałowca
+tile.psychedelicraft.juniper_wall_sign.name=Tabliczka z jałowca
+item.psychedelicraft.juniper_sign.name=Tabliczka z jałowca
+item.psychedelicraft.glowing_ink.name=Świecący atrament
+item.psychedelicraft.sign_wax.name=Wosk do tabliczek
+item.psychedelicraft.sign_black_dye.name=Czarny barwnik do tabliczek

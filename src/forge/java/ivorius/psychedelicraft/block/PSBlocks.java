@@ -7,6 +7,7 @@ import java.util.List;
 import ivorius.psychedelicraft.Psychedelicraft;
 import ivorius.psychedelicraft.block.TallCropBlock.Crop;
 import ivorius.psychedelicraft.block.entity.DryingTableBlockEntity;
+import ivorius.psychedelicraft.block.entity.JuniperSignBlockEntity;
 import ivorius.psychedelicraft.block.entity.LatticeCropBlockEntity;
 import ivorius.psychedelicraft.block.entity.PeyoteBlockEntity;
 import ivorius.psychedelicraft.item.PSItems;
@@ -73,6 +74,8 @@ public final class PSBlocks {
     public static final BlockButtonWood JUNIPER_BUTTON = named("juniper_button", new JuniperButtonBlock());
     public static final BlockPressurePlate JUNIPER_PRESSURE_PLATE = named("juniper_pressure_plate",
             new JuniperBuildingBlocks.PressurePlate());
+    public static final JuniperSignBlock JUNIPER_SIGN = named("juniper_sign", new JuniperSignBlock.Standing());
+    public static final JuniperSignBlock JUNIPER_WALL_SIGN = named("juniper_wall_sign", new JuniperSignBlock.Wall());
     static final List<PottedPlantBlock> POTTED_PLANTS = Collections.unmodifiableList(Arrays.asList(
             named("potted_morning_glory", new PottedPlantBlock(() -> PSItems.MORNING_GLORY_SEEDS)),
             named("potted_juniper_sapling", new PottedPlantBlock(() -> PSItems.JUNIPER_SAPLING)),
@@ -102,13 +105,15 @@ public final class PSBlocks {
                 JUNIPER_LOG, JUNIPER_WOOD, STRIPPED_JUNIPER_LOG, STRIPPED_JUNIPER_WOOD,
                 JUNIPER_LEAVES, FRUITING_JUNIPER_LEAVES, JUNIPER_SAPLING, JUNIPER_PLANKS,
                 JUNIPER_STAIRS, JUNIPER_SLAB, JUNIPER_DOUBLE_SLAB, JUNIPER_FENCE, JUNIPER_FENCE_GATE,
-                JUNIPER_DOOR, JUNIPER_TRAPDOOR, POWERED_JUNIPER_TRAPDOOR, JUNIPER_BUTTON, JUNIPER_PRESSURE_PLATE);
+                JUNIPER_DOOR, JUNIPER_TRAPDOOR, POWERED_JUNIPER_TRAPDOOR, JUNIPER_BUTTON, JUNIPER_PRESSURE_PLATE,
+                JUNIPER_SIGN, JUNIPER_WALL_SIGN);
         for (PottedPlantBlock pot : POTTED_PLANTS) {
             event.getRegistry().register(pot);
         }
         GameRegistry.registerTileEntity(DryingTableBlockEntity.class, Psychedelicraft.id("drying_table"));
         GameRegistry.registerTileEntity(LatticeCropBlockEntity.class, Psychedelicraft.id("lattice_crop"));
         GameRegistry.registerTileEntity(PeyoteBlockEntity.class, Psychedelicraft.id("peyote"));
+        GameRegistry.registerTileEntity(JuniperSignBlockEntity.class, Psychedelicraft.id("juniper_sign"));
         Blocks.FIRE.setFireInfo(DRYING_TABLE, 5, 20);
         Blocks.FIRE.setFireInfo(LATTICE, 5, 20);
         Blocks.FIRE.setFireInfo(MORNING_GLORY_LATTICE, 5, 20);

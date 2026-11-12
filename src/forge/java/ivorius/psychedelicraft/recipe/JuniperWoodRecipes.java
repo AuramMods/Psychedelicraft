@@ -22,6 +22,7 @@ public final class JuniperWoodRecipes extends ShapedRecipes {
         preferJuniperRecipe("trapdoor", "juniper_trapdoor");
         preferJuniperRecipe("wooden_button", "juniper_button");
         preferJuniperRecipe("wooden_pressure_plate", "juniper_pressure_plate");
+        preferJuniperRecipe("sign", "juniper_sign");
     }
 
     private static void preferJuniperRecipe(String genericId, String juniperId) {

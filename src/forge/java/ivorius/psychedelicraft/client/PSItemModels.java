@@ -2,11 +2,14 @@ package ivorius.psychedelicraft.client;
 
 import ivorius.psychedelicraft.Psychedelicraft;
 import ivorius.psychedelicraft.block.JuniperLeavesBlock;
+import ivorius.psychedelicraft.block.JuniperSignBlock;
 import ivorius.psychedelicraft.block.LatticeCropBlock;
 import ivorius.psychedelicraft.block.PSBlocks;
 import ivorius.psychedelicraft.block.entity.DryingTableBlockEntity;
+import ivorius.psychedelicraft.block.entity.JuniperSignBlockEntity;
 import ivorius.psychedelicraft.block.entity.PeyoteBlockEntity;
 import ivorius.psychedelicraft.client.render.block.DryingTableRenderer;
+import ivorius.psychedelicraft.client.render.block.JuniperSignRenderer;
 import ivorius.psychedelicraft.client.render.block.PeyoteRenderer;
 import ivorius.psychedelicraft.item.PSItems;
 import net.minecraft.block.Block;
@@ -57,6 +60,9 @@ public final class PSItemModels {
                 .ignore(JuniperLeavesBlock.DISTANCE, JuniperLeavesBlock.PERSISTENT).build());
         ModelLoader.setCustomStateMapper(PSBlocks.FRUITING_JUNIPER_LEAVES, new StateMap.Builder()
                 .ignore(JuniperLeavesBlock.DISTANCE, JuniperLeavesBlock.PERSISTENT).build());
+        ModelLoader.setCustomStateMapper(PSBlocks.JUNIPER_SIGN, new StateMap.Builder().ignore(JuniperSignBlock.ROTATION).build());
+        ModelLoader.setCustomStateMapper(PSBlocks.JUNIPER_WALL_SIGN, new StateMap.Builder().ignore(JuniperSignBlock.FACING).build());
+        ClientRegistry.bindTileEntitySpecialRenderer(JuniperSignBlockEntity.class, new JuniperSignRenderer());
         ClientRegistry.bindTileEntitySpecialRenderer(DryingTableBlockEntity.class, new DryingTableRenderer());
         ClientRegistry.bindTileEntitySpecialRenderer(PeyoteBlockEntity.class, new PeyoteRenderer());
     }
