@@ -20,6 +20,7 @@ public class HallucinationManagerTest {
         assertInactive(hallucinations);
         assertNull(hallucinations.bloomColor(null));
         assertNull(hallucinations.contrastColor(null));
+        assertNull(hallucinations.pulseColor());
     }
 
     @Test
@@ -38,6 +39,25 @@ public class HallucinationManagerTest {
         properties.onAwoken();
         update(properties, hallucinations, random, 201, 700);
         assertInactive(hallucinations);
+        assertNull(hallucinations.pulseColor());
+    }
+
+    @Test
+    public void terrainPulsesUseTheMindColorAndClampTheirOpacity() {
+        DrugProperties properties = new DrugProperties();
+        properties.addToDrug(DrugType.BROWN_SHROOMS, 1);
+        properties.addToDrug(DrugType.RED_SHROOMS, 1);
+        HallucinationManager hallucinations = new HallucinationManager();
+        update(properties, hallucinations, new Random(72), 1, 420);
+
+        float strength = hallucinations.strength(Effect.PULSES);
+        assertTrue(strength > 1F);
+        float[] pulse = hallucinations.pulseColor();
+        float[] contrast = hallucinations.contrastColor(null);
+        for (int channel = 0; channel < 3; channel++) {
+            assertEquals(contrast[channel], pulse[channel], 0F);
+        }
+        assertEquals(1F, pulse[3], 0F);
     }
 
     @Test

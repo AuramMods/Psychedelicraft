@@ -71,6 +71,12 @@ public final class HallucinationManager {
     }
 
     @Nullable
+    public float[] pulseColor() {
+        float strength = MathHelper.clamp(strength(Effect.PULSES), 0F, 1F);
+        return strength > 0F ? new float[]{mindColor[0], mindColor[1], mindColor[2], strength} : null;
+    }
+
+    @Nullable
     private float[] mixMindColor(@Nullable HarmoniumDrug harmonium, float multiplier, float randomStrength, boolean clampAlpha) {
         float dyeStrength = harmonium == null ? 0F : (float) harmonium.getActiveValue() * multiplier;
         float strength = dyeStrength + randomStrength;

@@ -7,6 +7,7 @@ package ivorius.psychedelicraft.client.render;
 import ivorius.psychedelicraft.Psychedelicraft;
 import ivorius.psychedelicraft.client.render.HallucinationManager.Effect;
 import ivorius.psychedelicraft.client.render.shader.ColorPostEffect;
+import ivorius.psychedelicraft.client.render.shader.TerrainShader;
 import ivorius.psychedelicraft.config.PSConfig;
 import ivorius.psychedelicraft.entity.drug.DrugCapability;
 import ivorius.psychedelicraft.entity.drug.DrugProperties;
@@ -15,7 +16,9 @@ import ivorius.psychedelicraft.entity.drug.type.HarmoniumDrug;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.entity.EntityPlayerSP;
 import net.minecraft.client.multiplayer.WorldClient;
+import net.minecraft.client.renderer.ChunkRenderContainer;
 import net.minecraft.client.renderer.EntityRenderer;
+import net.minecraft.util.BlockRenderLayer;
 import net.minecraft.util.math.MathHelper;
 import net.minecraftforge.client.event.EntityViewRenderEvent;
 import net.minecraftforge.client.event.RenderGameOverlayEvent;
@@ -29,6 +32,7 @@ import net.minecraftforge.fml.relauncher.Side;
 @Mod.EventBusSubscriber(modid = Psychedelicraft.MOD_ID, value = Side.CLIENT)
 public final class DrugRenderer {
     private static final ColorPostEffect COLOR_POST = new ColorPostEffect();
+    private static final TerrainShader TERRAIN = new TerrainShader();
     private static WorldClient world;
     private static EntityPlayerSP player;
     private static HallucinationManager hallucinations = new HallucinationManager();
@@ -76,6 +80,15 @@ public final class DrugRenderer {
         if (event.getType() == RenderGameOverlayEvent.ElementType.ALL) {
             renderPost(Minecraft.getMinecraft(), event.getPartialTicks());
         }
+    }
+
+    public static void drawTerrain(ChunkRenderContainer chunks, BlockRenderLayer layer) {
+        Minecraft client = Minecraft.getMinecraft();
+        if (PSConfig.visual.shader3DEnabled && player != null && player == client.player && world == client.world) {
+            DrugProperties properties = DrugCapability.get(player);
+            if (properties != null && TERRAIN.draw(client, player, hallucinations, properties, chunks, layer)) return;
+        }
+        chunks.renderChunkLayer(layer);
     }
 
     @SubscribeEvent(priority = EventPriority.LOWEST)

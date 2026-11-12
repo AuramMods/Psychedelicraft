@@ -14,6 +14,8 @@ public final class PSConfig {
 
     public static final class Visual {
         public boolean shader2DEnabled = true;
+        @Config.LangKey("gui.psychedelicraft.option.shaders_3d")
+        public boolean shader3DEnabled = true;
         public boolean doHeatDistortion = true;
         public boolean doWaterDistortion = true;
         public boolean waterOverlayEnabled = true;

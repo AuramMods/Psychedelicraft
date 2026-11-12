@@ -16,6 +16,7 @@ public final class PsychedelicraftCore implements IFMLLoadingPlugin {
                 "ivorius.psychedelicraft.core.SmokingPoseTransformer",
                 "ivorius.psychedelicraft.core.ClientEffectsTransformer",
                 "ivorius.psychedelicraft.core.CameraEffectsTransformer",
+                "ivorius.psychedelicraft.core.TerrainShaderTransformer",
                 "ivorius.psychedelicraft.core.VillagerCareersTransformer"};
     }
 
