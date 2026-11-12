@@ -242,7 +242,7 @@ public class TallCropBlock extends BlockBush implements IGrowable {
         }
     }
 
-    private static int bonusCount(Random random, int fortune) {
+    static int bonusCount(Random random, int fortune) {
         int count = 1;
         for (int trial = 0; trial < fortune + 3; trial++) {
             if (random.nextFloat() < 0.5714286F) {

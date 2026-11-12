@@ -3,6 +3,7 @@ package ivorius.psychedelicraft.client;
 import java.util.Collections;
 
 import ivorius.psychedelicraft.Psychedelicraft;
+import ivorius.psychedelicraft.block.LatticeCropBlock;
 import ivorius.psychedelicraft.block.PSBlocks;
 import ivorius.psychedelicraft.block.TallCropBlock;
 import ivorius.psychedelicraft.block.entity.DryingTableBlockEntity;
@@ -29,7 +30,14 @@ public final class PSItemModels {
     @SubscribeEvent
     public static void registerModels(ModelRegistryEvent event) {
         for (Item item : PSItems.items()) {
-            register(item);
+            if (item == PSItems.MORNING_GLORY_LATTICE || item == PSItems.WINE_GRAPE_LATTICE) {
+                for (int age = 0; age <= LatticeCropBlock.MAX_AGE; age++) {
+                    ModelLoader.setCustomModelResourceLocation(item, age, new ModelResourceLocation(
+                            Psychedelicraft.id(item.getRegistryName().getResourcePath() + "_" + age), "inventory"));
+                }
+            } else {
+                register(item);
+            }
         }
         ModelLoader.setCustomStateMapper(PSBlocks.NATURAL_CANNABIS, new StateMapperBase() {
             @Override

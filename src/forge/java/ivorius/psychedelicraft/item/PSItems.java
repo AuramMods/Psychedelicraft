@@ -17,6 +17,7 @@ import net.minecraft.item.Item;
 import net.minecraft.item.ItemBlock;
 import net.minecraft.item.ItemStack;
 import net.minecraftforge.event.RegistryEvent;
+import net.minecraftforge.event.furnace.FurnaceFuelBurnTimeEvent;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 
@@ -61,6 +62,15 @@ public final class PSItems {
     public static final Item TOMATO_SEEDS = named("tomato_seeds", new CropSeedItem(PSBlocks.TOMATOES, "tomato_seeds"));
     public static final Item TOMATO = named("tomato", new EdibleItem(1, 1.9F));
     public static final Item TOMATO_LEAF = named("tomato_leaf", new Item());
+    public static final Item LATTICE = named("lattice", new ItemBlock(PSBlocks.LATTICE));
+    public static final Item MORNING_GLORY = named("morning_glory", new Item());
+    public static final Item MORNING_GLORY_SEEDS = named("morning_glory_seeds",
+            new CropSeedItem(PSBlocks.MORNING_GLORY, "morning_glory_seeds"));
+    public static final Item MORNING_GLORY_LATTICE = named("morning_glory_lattice",
+            new LatticeCropItem(PSBlocks.MORNING_GLORY_LATTICE)).setCreativeTab(null);
+    public static final Item WINE_GRAPE_LATTICE = named("wine_grape_lattice",
+            new LatticeCropItem(PSBlocks.WINE_GRAPE_LATTICE)).setCreativeTab(null);
+    public static final Item WINE_GRAPES = named("wine_grapes", new WineGrapesItem());
     public static final Item DRYING_TABLE = named("drying_table", new ItemBlock(PSBlocks.DRYING_TABLE));
     public static final Item IRON_DRYING_TABLE = named("iron_drying_table", new ItemBlock(PSBlocks.IRON_DRYING_TABLE));
 
@@ -88,6 +98,16 @@ public final class PSItems {
     public static void registerItems(RegistryEvent.Register<Item> event) {
         for (Item item : ITEMS) {
             event.getRegistry().register(item);
+        }
+    }
+
+    @SubscribeEvent
+    public static void furnaceFuel(FurnaceFuelBurnTimeEvent event) {
+        Item item = event.getItemStack().getItem();
+        if (item == LATTICE) {
+            event.setBurnTime(700);
+        } else if (item == MORNING_GLORY_LATTICE || item == WINE_GRAPE_LATTICE) {
+            event.setBurnTime(0);
         }
     }
 }

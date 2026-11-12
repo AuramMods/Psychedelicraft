@@ -1,0 +1,15 @@
+{
+  "type": "forge:ore_shaped",
+  "pattern": [
+    "III",
+    "IOI",
+    "OIO"
+  ],
+  "key": {
+    "I": { "item": "minecraft:stick" },
+    "O": { "type": "forge:ore_dict", "ore": "plankWood" }
+  },
+  "result": {
+    "item": "psychedelicraft:lattice"
+  }
+}

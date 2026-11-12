@@ -3,6 +3,7 @@ package ivorius.psychedelicraft.block;
 import ivorius.psychedelicraft.Psychedelicraft;
 import ivorius.psychedelicraft.block.TallCropBlock.Crop;
 import ivorius.psychedelicraft.block.entity.DryingTableBlockEntity;
+import ivorius.psychedelicraft.block.entity.LatticeCropBlockEntity;
 import ivorius.psychedelicraft.block.entity.PeyoteBlockEntity;
 import ivorius.psychedelicraft.item.PSItems;
 import net.minecraft.block.Block;
@@ -30,6 +31,12 @@ public final class PSBlocks {
             new NightshadeBlock(() -> PSItems.BELLADONNA_BERRIES, () -> PSItems.BELLADONNA_LEAF));
     public static final NightshadeBlock TOMATOES = named("tomatoes",
             new NightshadeBlock(() -> PSItems.TOMATO, () -> PSItems.TOMATO_LEAF));
+    public static final LatticeBlock LATTICE = named("lattice", new LatticeBlock());
+    public static final VineStemBlock MORNING_GLORY = named("morning_glory", new VineStemBlock());
+    public static final LatticeCropBlock MORNING_GLORY_LATTICE = named("morning_glory_lattice",
+            new LatticeCropBlock(true, 2, () -> PSItems.MORNING_GLORY));
+    public static final LatticeCropBlock WINE_GRAPE_LATTICE = named("wine_grape_lattice",
+            new LatticeCropBlock(false, 1, () -> PSItems.WINE_GRAPES));
     public static final DryingTableBlock DRYING_TABLE = named("drying_table", new DryingTableBlock(Material.WOOD));
     public static final DryingTableBlock IRON_DRYING_TABLE = named("iron_drying_table", new DryingTableBlock(Material.IRON));
 
@@ -45,9 +52,14 @@ public final class PSBlocks {
     @SubscribeEvent
     public static void registerBlocks(RegistryEvent.Register<Block> event) {
         event.getRegistry().registerAll(CANNABIS, NATURAL_CANNABIS, HOP, COCA, TOBACCO, COFFEA,
-                PEYOTE, AGAVE_PLANT, JIMSONWEED, BELLADONNA, TOMATOES, DRYING_TABLE, IRON_DRYING_TABLE);
+                PEYOTE, AGAVE_PLANT, JIMSONWEED, BELLADONNA, TOMATOES, DRYING_TABLE, IRON_DRYING_TABLE,
+                LATTICE, MORNING_GLORY, MORNING_GLORY_LATTICE, WINE_GRAPE_LATTICE);
         GameRegistry.registerTileEntity(DryingTableBlockEntity.class, Psychedelicraft.id("drying_table"));
+        GameRegistry.registerTileEntity(LatticeCropBlockEntity.class, Psychedelicraft.id("lattice_crop"));
         GameRegistry.registerTileEntity(PeyoteBlockEntity.class, Psychedelicraft.id("peyote"));
         Blocks.FIRE.setFireInfo(DRYING_TABLE, 5, 20);
+        Blocks.FIRE.setFireInfo(LATTICE, 5, 20);
+        Blocks.FIRE.setFireInfo(MORNING_GLORY_LATTICE, 5, 20);
+        Blocks.FIRE.setFireInfo(WINE_GRAPE_LATTICE, 5, 20);
     }
 }
