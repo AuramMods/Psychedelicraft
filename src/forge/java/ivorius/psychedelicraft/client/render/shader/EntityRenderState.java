@@ -34,10 +34,14 @@ final class EntityRenderState {
         return hasView;
     }
 
-    void upload(ShaderManager shader) {
+    void uploadView(ShaderManager shader) {
         ShaderUniform matrix = shader.getShaderUniformOrDefault("EntityViewToWorld");
         matrix.set(viewToWorld);
         matrix.upload();
+    }
+
+    void upload(ShaderManager shader) {
+        uploadView(shader);
         uploadTextures(shader);
         if (GL11.glIsEnabled(GL11.GL_LIGHTING)) {
             boolean normalize = GL11.glIsEnabled(GL11.GL_NORMALIZE) || GL11.glIsEnabled(GL12.GL_RESCALE_NORMAL);

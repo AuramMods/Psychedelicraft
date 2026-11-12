@@ -26,6 +26,7 @@ import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.client.renderer.ItemRenderer;
 import net.minecraft.client.renderer.Tessellator;
 import net.minecraft.client.renderer.tileentity.TileEntityItemStackRenderer;
+import net.minecraft.client.shader.ShaderManager;
 import net.minecraft.entity.Entity;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.BlockRenderLayer;
@@ -175,6 +176,17 @@ public final class DrugRenderer {
     }
 
     @Nullable
+    public static Scope beginWorldModel() {
+        return beginWorldModel(Material.ENTITY);
+    }
+
+    public static Scope beginZeroMatter(ShaderManager program) {
+        Minecraft client = Minecraft.getMinecraft();
+        DrugProperties drugs = renderingWorld ? geometryDrugs(client) : null;
+        return GEOMETRY.beginZeroMatter(program, client, player, hallucinations, drugs);
+    }
+
+    @Nullable
     private static Scope beginWorldModel(Material material) {
         return renderingWorld ? beginGeometry(Minecraft.getMinecraft(), material, 0F) : null;
     }
@@ -211,9 +223,14 @@ public final class DrugRenderer {
 
     @Nullable
     private static Scope beginGeometry(Minecraft client, Material material, float cloudY) {
+        DrugProperties drugs = geometryDrugs(client);
+        return drugs == null ? null : GEOMETRY.begin(client, player, hallucinations, drugs, material, cloudY);
+    }
+
+    @Nullable
+    private static DrugProperties geometryDrugs(Minecraft client) {
         if (PSConfig.visual.shader3DEnabled && player != null && player == client.player && world == client.world) {
-            DrugProperties properties = DrugCapability.get(player);
-            if (properties != null) return GEOMETRY.begin(client, player, hallucinations, properties, material, cloudY);
+            return DrugCapability.get(player);
         }
         return null;
     }

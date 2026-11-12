@@ -1,11 +1,16 @@
 #version 120
 
 uniform sampler2D ScreenSampler;
-uniform sampler2D PortalSampler;
+uniform sampler2D EndPortalSampler;
 uniform float GameTime;
+uniform float SurfaceFractalStrength;
+uniform float WorldTicks;
+uniform vec4 Pulses;
 
 varying vec4 screenProjection;
 varying vec4 vertexColor;
+varying vec3 surfaceColor;
+varying vec3 viewPosition;
 
 const mat4 SCALE_TRANSLATE = mat4(
     0.5, 0.0, 0.0, 0.25,
@@ -30,7 +35,9 @@ void main() {
     vec4 scale = vec4(1.25, 1.25, 0.25, 0.25);
     vec3 color = texture2DProj(ScreenSampler, screenProjection * scale).rgb;
     for (int i = 1; i <= 15; ++i) {
-        color += texture2DProj(PortalSampler, screenProjection * portalLayer(float(i)) * scale).rgb;
+        color += texture2DProj(EndPortalSampler, screenProjection * portalLayer(float(i)) * scale).rgb;
     }
-    gl_FragColor = vec4(color, 1.0) * vertexColor;
+    color *= mix(vertexColor.rgb, surfaceColor, SurfaceFractalStrength);
+    float pulse = max(0.0, sin((abs(viewPosition.z) - WorldTicks) / 5.0) - 0.4) * Pulses.a;
+    gl_FragColor = vec4(mix(color, (color + 1.0) * Pulses.rgb, pulse), vertexColor.a);
 }

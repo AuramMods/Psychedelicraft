@@ -1,7 +1,9 @@
 package ivorius.psychedelicraft.client.render.block;
 
 import ivorius.psychedelicraft.block.entity.RiftJarBlockEntity;
+import ivorius.psychedelicraft.client.render.DrugRenderer;
 import ivorius.psychedelicraft.client.render.TranslucentRenderState;
+import ivorius.psychedelicraft.client.render.shader.WorldGeometryShader.Scope;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.FontRenderer;
 import net.minecraft.client.renderer.GlStateManager;
@@ -37,13 +39,15 @@ final class RiftJarGlyphs {
             GlStateManager.disableLighting();
             OpenGlHelper.setLightmapTextureCoords(OpenGlHelper.lightmapTexUnit, 240, 240);
 
-            if (outgoing > 0) draw(SPIRAL_TEXT, OUTGOING, -ticks * 0.002, outgoing, 0);
-            for (RiftJarBlockEntity.Connection connection : jar.getConnections()) {
-                Vec3d target = connection.getPosition().subtract(jar.getPos().getX() + 0.5,
-                        jar.getPos().getY() + 0.6, jar.getPos().getZ() + 0.5);
-                double strength = connection.getStrength();
-                draw(SPIRAL_TEXT, t -> spiral(t, target, 0.1, 0.5, 8), -ticks * 0.002, strength, 0);
-                draw(CIRCLE_TEXT, t -> SPHERE.apply(t).add(target), -ticks * 0.002, 1, 1 - strength);
+            try (Scope scope = DrugRenderer.beginWorldModel()) {
+                if (outgoing > 0) draw(SPIRAL_TEXT, OUTGOING, -ticks * 0.002, outgoing, 0);
+                for (RiftJarBlockEntity.Connection connection : jar.getConnections()) {
+                    Vec3d target = connection.getPosition().subtract(jar.getPos().getX() + 0.5,
+                            jar.getPos().getY() + 0.6, jar.getPos().getZ() + 0.5);
+                    double strength = connection.getStrength();
+                    draw(SPIRAL_TEXT, t -> spiral(t, target, 0.1, 0.5, 8), -ticks * 0.002, strength, 0);
+                    draw(CIRCLE_TEXT, t -> SPHERE.apply(t).add(target), -ticks * 0.002, 1, 1 - strength);
+                }
             }
         } finally {
             OpenGlHelper.setLightmapTextureCoords(OpenGlHelper.lightmapTexUnit, brightnessX, brightnessY);

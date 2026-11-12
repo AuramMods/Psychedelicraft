@@ -1,6 +1,7 @@
 package ivorius.psychedelicraft.client.render.shader;
 
 import ivorius.psychedelicraft.Psychedelicraft;
+import ivorius.psychedelicraft.client.render.DrugRenderer;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.client.renderer.OpenGlHelper;
@@ -61,11 +62,13 @@ public final class ZeroMatterRenderer implements IResourceManagerReloadListener 
             textures.bindTexture(screen);
             textures.bindTexture(PORTAL);
             shader.addSamplerTexture("ScreenSampler", textures.getTexture(screen));
-            shader.addSamplerTexture("PortalSampler", textures.getTexture(PORTAL));
+            shader.addSamplerTexture("EndPortalSampler", textures.getTexture(PORTAL));
             shader.getShaderUniformOrDefault("GameTime").set(gameTime);
             shader.useShader();
             GlStateManager.setActiveTexture(OpenGlHelper.defaultTexUnit);
-            geometry.run();
+            try (WorldGeometryShader.Scope scope = DrugRenderer.beginZeroMatter(shader)) {
+                geometry.run();
+            }
         } finally {
             shader.endShader();
             OpenGlHelper.glUseProgram(program);
@@ -93,7 +96,12 @@ public final class ZeroMatterRenderer implements IResourceManagerReloadListener 
         }
         if (shader == null && !failed) {
             try {
-                shader = new ShaderManager(resources, Psychedelicraft.id("zero_matter").toString());
+                ShaderManager program = new ShaderManager(resources, Psychedelicraft.id("zero_matter").toString());
+                if (OpenGlHelper.glGetProgrami(program.getProgram(), GL20.GL_LINK_STATUS) == GL11.GL_FALSE) {
+                    program.deleteShader();
+                    throw new IOException("The Zero matter shader program failed to link");
+                }
+                shader = program;
             } catch (IOException failure) {
                 failed = true;
                 LogManager.getLogger(Psychedelicraft.MOD_ID).warn("Could not load the Zero matter shader", failure);

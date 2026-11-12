@@ -45,52 +45,73 @@ public final class WorldGeometryShader implements IResourceManagerReloadListener
     @Nullable
     public Scope begin(Minecraft client, EntityPlayerSP player, HallucinationManager hallucinations,
                        DrugProperties drugs, Material material, float cloudY) {
-        boolean entity = material == Material.ENTITY || material == Material.ENTITY_GLINT;
-        if (entity && !entityState.hasView()) return null;
-        float small = hallucinations.strength(Effect.SMALL_WAVES) * 0.5F;
-        float big = hallucinations.strength(Effect.BIG_WAVES) * 0.6F;
-        float wiggle = hallucinations.strength(Effect.WIGGLE_WAVES) * 0.7F;
-        float distant = hallucinations.strength(Effect.DISTANT_WORLD_DEFORMATION);
-        // The donor's glint fragment shader reads its texture and modulation color directly.
-        float surface = material == Material.ENTITY_GLINT ? 0F
-                : MathHelper.clamp(hallucinations.strength(Effect.SURFACE_FRACTALS), 0F, 1F);
-        float fracture = (float) drugs.getActiveValue(DrugType.LSD) * 0.06F;
-        float[] pulses = hallucinations.pulseColor();
-        if (small <= 0F && big <= 0F && wiggle <= 0F && distant <= 0F
-                && surface <= 0F && fracture <= 0F && pulses == null) return null;
+        return begin(client, player, hallucinations, drugs, material, cloudY, null);
+    }
 
-        prepare(client);
-        if (shader == null) return null;
+    public Scope beginZeroMatter(ShaderManager program, Minecraft client, @Nullable EntityPlayerSP player,
+                                 HallucinationManager hallucinations, @Nullable DrugProperties drugs) {
+        return begin(client, player, hallucinations, drugs, Material.ENTITY, 0F, program);
+    }
+
+    @Nullable
+    private Scope begin(Minecraft client, @Nullable EntityPlayerSP player, HallucinationManager hallucinations,
+                        @Nullable DrugProperties drugs, Material material, float cloudY, @Nullable ShaderManager zeroMatter) {
+        boolean entity = material == Material.ENTITY || material == Material.ENTITY_GLINT;
+        boolean deform = player != null && drugs != null && (!entity || entityState.hasView());
+        if (!deform && zeroMatter == null) return null;
+        float small = deform ? hallucinations.strength(Effect.SMALL_WAVES) * 0.5F : 0F;
+        float big = deform ? hallucinations.strength(Effect.BIG_WAVES) * 0.6F : 0F;
+        float wiggle = deform ? hallucinations.strength(Effect.WIGGLE_WAVES) * 0.7F : 0F;
+        float distant = deform ? hallucinations.strength(Effect.DISTANT_WORLD_DEFORMATION) : 0F;
+        // The donor's glint fragment shader reads its texture and modulation color directly.
+        float surface = !deform || material == Material.ENTITY_GLINT ? 0F
+                : MathHelper.clamp(hallucinations.strength(Effect.SURFACE_FRACTALS), 0F, 1F);
+        float fracture = deform ? (float) drugs.getActiveValue(DrugType.LSD) * 0.06F : 0F;
+        float[] pulses = deform ? hallucinations.pulseColor() : null;
+
+        ShaderManager program = zeroMatter;
+        if (program == null) {
+            if (small <= 0F && big <= 0F && wiggle <= 0F && distant <= 0F
+                    && surface <= 0F && fracture <= 0F && pulses == null) return null;
+            prepare(client);
+            program = shader;
+            if (program == null) return null;
+        }
 
         int portalUnit = material == Material.TERRAIN ? 0 : entity ? 3 : 2;
         Scope scope = new Scope(GL11.glGetInteger(GL20.GL_CURRENT_PROGRAM), GL13.GL_TEXTURE0 + portalUnit);
         try {
             // The caller owns the primary textures, alpha test, blend and depth passes.
-            OpenGlHelper.glUseProgram(shader.getProgram());
-            setSampler("ColorSampler", 0);
-            setSampler("LightmapSampler", 1);
-            setSampler("PortalSampler", portalUnit);
-            upload("WorldTicks", player.ticksExisted + client.getRenderPartialTicks());
-            upload("DistantDeformation", distant);
-            upload("SurfaceFractalStrength", surface);
-            upload("FractureStrength", fracture);
-            upload("FogMode", fogMode());
-            upload("RadialFog", radialFog() ? 1F : 0F);
-            upload("EntityModel", entity ? 1F : 0F);
-            if (entity) entityState.upload(shader);
-            else upload("LightmapMode", material.lightmapMode);
+            if (zeroMatter == null) {
+                OpenGlHelper.glUseProgram(program.getProgram());
+                setSampler(program, "ColorSampler", 0);
+                setSampler(program, "LightmapSampler", 1);
+                upload(program, "FogMode", fogMode());
+                upload(program, "RadialFog", radialFog() ? 1F : 0F);
+                if (entity) entityState.upload(program);
+                else upload(program, "LightmapMode", material.lightmapMode);
+            } else if (deform) {
+                entityState.uploadView(program);
+            }
+            // The projected material always has a valid texture on unit zero, even with the atlas unused.
+            setSampler(program, "PortalSampler", zeroMatter != null && surface <= 0F ? 0 : portalUnit);
+            upload(program, "WorldTicks", deform ? player.ticksExisted + client.getRenderPartialTicks() : 0F);
+            upload(program, "DistantDeformation", distant);
+            upload(program, "SurfaceFractalStrength", surface);
+            upload(program, "FractureStrength", fracture);
+            upload(program, "EntityModel", entity && deform ? 1F : 0F);
 
-            ShaderUniform coordinates = shader.getShaderUniformOrDefault("GeometryCoordinates");
+            ShaderUniform coordinates = program.getShaderUniformOrDefault("GeometryCoordinates");
             coordinates.set(material.horizontalScale, cloudY);
             coordinates.upload();
 
-            ShaderUniform waves = shader.getShaderUniformOrDefault("Waves");
+            ShaderUniform waves = program.getShaderUniformOrDefault("Waves");
             waves.set(small, big, wiggle);
             waves.upload();
-            ShaderUniform position = shader.getShaderUniformOrDefault("PlayerXZ");
-            position.set((float) player.posX, (float) player.posZ);
+            ShaderUniform position = program.getShaderUniformOrDefault("PlayerXZ");
+            position.set(deform ? (float) player.posX : 0F, deform ? (float) player.posZ : 0F);
             position.upload();
-            ShaderUniform pulseColor = shader.getShaderUniformOrDefault("Pulses");
+            ShaderUniform pulseColor = program.getShaderUniformOrDefault("Pulses");
             if (pulses == null) pulseColor.set(0F, 0F, 0F, 0F);
             else pulseColor.set(pulses);
             pulseColor.upload();
@@ -98,7 +119,7 @@ public final class WorldGeometryShader implements IResourceManagerReloadListener
                 if (material != Material.TERRAIN) scope.bindPortalAtlas(client);
                 TextureAtlasSprite sprite = client.getBlockRendererDispatcher().getBlockModelShapes()
                         .getTexture(Blocks.PORTAL.getDefaultState());
-                ShaderUniform coords = shader.getShaderUniformOrDefault("SurfaceFractalCoords");
+                ShaderUniform coords = program.getShaderUniformOrDefault("SurfaceFractalCoords");
                 coords.set(sprite.getMinU(), sprite.getMinV(), sprite.getMaxU(), sprite.getMaxV());
                 coords.upload();
             }
@@ -109,12 +130,12 @@ public final class WorldGeometryShader implements IResourceManagerReloadListener
         }
     }
 
-    private void setSampler(String name, int unit) {
-        OpenGlHelper.glUniform1i(OpenGlHelper.glGetUniformLocation(shader.getProgram(), name), unit);
+    private static void setSampler(ShaderManager program, String name, int unit) {
+        OpenGlHelper.glUniform1i(OpenGlHelper.glGetUniformLocation(program.getProgram(), name), unit);
     }
 
-    private void upload(String name, float value) {
-        ShaderUniform uniform = shader.getShaderUniformOrDefault(name);
+    private static void upload(ShaderManager program, String name, float value) {
+        ShaderUniform uniform = program.getShaderUniformOrDefault(name);
         uniform.set(value);
         uniform.upload();
     }

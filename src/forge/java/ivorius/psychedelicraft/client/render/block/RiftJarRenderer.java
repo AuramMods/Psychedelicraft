@@ -8,7 +8,9 @@ import ivorius.psychedelicraft.Psychedelicraft;
 import ivorius.psychedelicraft.block.PSBlocks;
 import ivorius.psychedelicraft.block.RiftJarBlock;
 import ivorius.psychedelicraft.block.entity.RiftJarBlockEntity;
+import ivorius.psychedelicraft.client.render.DrugRenderer;
 import ivorius.psychedelicraft.client.render.TranslucentRenderState;
+import ivorius.psychedelicraft.client.render.shader.WorldGeometryShader.Scope;
 import ivorius.psychedelicraft.client.render.shader.ZeroMatterRenderer;
 import ivorius.psychedelicraft.item.RiftJarItem;
 import net.minecraft.block.state.IBlockState;
@@ -75,11 +77,13 @@ public final class RiftJarRenderer extends TileEntitySpecialRenderer<RiftJarBloc
 
             Minecraft.getMinecraft().getTextureManager().bindTexture(GLASS);
             GlStateManager.color(1, 1, 1, 1);
-            model.render();
-            if (amount > 0.5F) {
-                Minecraft.getMinecraft().getTextureManager().bindTexture(CRACKED);
-                GlStateManager.color(1, 1, 1, Math.min((amount - 0.5F) * 2, 1));
+            try (Scope scope = DrugRenderer.beginWorldModel()) {
                 model.render();
+                if (amount > 0.5F) {
+                    Minecraft.getMinecraft().getTextureManager().bindTexture(CRACKED);
+                    GlStateManager.color(1, 1, 1, Math.min((amount - 0.5F) * 2, 1));
+                    model.render();
+                }
             }
         }
     }

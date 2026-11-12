@@ -26,6 +26,7 @@ varying vec2 lightmapUv;
 varying vec4 vertexColor;
 varying vec3 viewPosition;
 varying vec3 surfaceColor;
+varying vec4 screenProjection;
 
 float goldNoise(vec2 xy, float seed) {
   const float phi = 1.61803398874989484820459;
@@ -45,6 +46,7 @@ void main() {
   position.xz *= GeometryCoordinates.x;
   position.y += GeometryCoordinates.y;
   gl_Position = ftransform();
+  screenProjection = vec4((gl_Position.xy + gl_Position.ww) * 0.5, gl_Position.zw);
   viewPosition = view.xyz;
   atlasUv = (gl_TextureMatrix[0] * gl_MultiTexCoord0).xy;
   lightmapUv = (gl_TextureMatrix[1] * gl_MultiTexCoord1).xy;

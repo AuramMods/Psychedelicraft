@@ -5,7 +5,9 @@
 package ivorius.psychedelicraft.client.render.entity;
 
 import ivorius.psychedelicraft.Psychedelicraft;
+import ivorius.psychedelicraft.client.render.DrugRenderer;
 import ivorius.psychedelicraft.client.render.TranslucentRenderState;
+import ivorius.psychedelicraft.client.render.shader.WorldGeometryShader.Scope;
 import ivorius.psychedelicraft.client.render.shader.ZeroMatterRenderer;
 import ivorius.psychedelicraft.entity.RealityRiftEntity;
 import net.minecraft.client.renderer.BufferBuilder;
@@ -69,7 +71,9 @@ public final class RealityRiftRenderer extends Render<RealityRiftEntity> {
             vertex(buffer, 2.5, -2.5, 0, 1, 1, 1);
             vertex(buffer, 2.5, 2.5, 0, 1, 0, 1);
             vertex(buffer, -2.5, 2.5, 0, 0, 0, 1);
-            tessellator.draw();
+            try (Scope scope = DrugRenderer.beginWorldModel()) {
+                tessellator.draw();
+            }
         } finally {
             OpenGlHelper.setLightmapTextureCoords(OpenGlHelper.lightmapTexUnit, brightnessX, brightnessY);
         }
