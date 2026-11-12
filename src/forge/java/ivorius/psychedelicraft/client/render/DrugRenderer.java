@@ -10,6 +10,7 @@ import ivorius.psychedelicraft.client.render.shader.ColorPostEffect;
 import ivorius.psychedelicraft.entity.drug.Drug;
 import ivorius.psychedelicraft.entity.drug.DrugCapability;
 import ivorius.psychedelicraft.entity.drug.DrugProperties;
+import ivorius.psychedelicraft.entity.drug.type.HarmoniumDrug;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.entity.EntityPlayerSP;
 import net.minecraft.client.multiplayer.WorldClient;
@@ -95,6 +96,11 @@ public final class DrugRenderer {
     @SubscribeEvent(priority = EventPriority.LOWEST)
     public static void afterWorld(RenderWorldLastEvent event) {
         Minecraft client = Minecraft.getMinecraft();
+        if (player != null && player == client.player && world == client.world) {
+            DrugProperties properties = DrugCapability.get(player);
+            HarmoniumDrug harmonium = properties == null ? null : properties.getHarmonium();
+            if (harmonium != null && harmonium.getActiveValue() > 0) COLOR_POST.captureDepth(client);
+        }
         // F1 suppresses the HUD event, so use the final world pass in that case.
         if (client.gameSettings.hideGUI && client.currentScreen == null
                 && (!client.gameSettings.anaglyph || EntityRenderer.anaglyphField == 1)) {
@@ -108,7 +114,8 @@ public final class DrugRenderer {
             if (properties != null) {
                 float intensification = properties.getColorIntensification(hallucinations.strength(Effect.SUPER_SATURATION));
                 float desaturation = properties.getDesaturation(hallucinations.strength(Effect.DESATURATION));
-                COLOR_POST.render(client, player.ticksExisted + partialTicks, hallucinations, intensification, desaturation);
+                HarmoniumDrug harmonium = properties.getHarmonium();
+                COLOR_POST.render(client, player.ticksExisted + partialTicks, hallucinations, intensification, desaturation, harmonium);
             }
         }
     }

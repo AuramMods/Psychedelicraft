@@ -221,7 +221,7 @@ public final class PaperBagItem extends Item {
                 || item == PSItems.TOMATO || item == PSItems.BELLADONNA_BERRIES || item == PSItems.AGAVE_LEAF
                 || item == PSItems.SYRINGE || item == PSItems.MORNING_GLORY || item == PSItems.HASH_MUFFIN
                 || item == PSItems.COCAINE_POWDER || item == PSItems.OBSIDIAN_DUST || item == PSItems.JOINT
-                || item == PSItems.CIGAR || item == PSItems.CIGARETTE);
+                || item == PSItems.CIGAR || item == PSItems.CIGARETTE || item == PSItems.SMOKING_PIPE);
     }
 
     private static int capacity(ItemStack stack) {

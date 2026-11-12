@@ -1,8 +1,10 @@
 #version 120
 
 uniform sampler2D DiffuseSampler;
+uniform sampler2D DepthSampler;
 uniform float Ticks;
 uniform vec4 ColorStrengths;
+uniform vec4 WorldColor;
 varying vec2 texCoord;
 
 vec3 rotateColor(vec3 color, float phase) {
@@ -20,6 +22,18 @@ float brightness(vec3 color) {
     return dot(color, vec3(0.3086, 0.6084, 0.0820));
 }
 
+vec3 harmonize(vec3 color, float phase) {
+    vec3 distance = abs(color - WorldColor.rgb);
+    float strength = 3.0 * pow(clamp(distance.r + distance.g + distance.b, 0.0, 1.0), 16.0);
+    strength += (sin(phase * 0.1434234) - 0.4) * 0.8;
+    strength += (sin(phase * -0.12313) - 0.2) * 0.8;
+    strength += sin(phase * -0.051233) * 0.2 * sin(Ticks * 0.1321334);
+    strength = clamp(strength, 0.0, 3.0);
+    vec3 tint = strength < 1.0 ? mix(WorldColor.rgb, vec3(0.5), strength)
+            : mix(vec3(0.5), vec3(1.0) - WorldColor.rgb, (strength - 1.0) * 0.5);
+    return mix(color, tint, WorldColor.a);
+}
+
 void main() {
     vec4 texel = texture2D(DiffuseSampler, texCoord);
     vec3 color = texel.rgb;
@@ -35,6 +49,9 @@ void main() {
     }
     if (ColorStrengths.w > 0.0) {
         color = mix(color, vec3(brightness(color)), ColorStrengths.w);
+    }
+    if (WorldColor.a > 0.0) {
+        color = harmonize(color, texture2D(DepthSampler, texCoord).r - Ticks);
     }
     gl_FragColor = vec4(color, texel.a);
 }

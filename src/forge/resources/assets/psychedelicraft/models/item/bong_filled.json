@@ -1,0 +1,6 @@
+{
+  "parent": "psychedelicraft:item/smoking_pipe",
+  "textures": {
+    "layer0": "psychedelicraft:items/bong_filled"
+  }
+}

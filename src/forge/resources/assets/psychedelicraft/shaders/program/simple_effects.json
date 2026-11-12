@@ -2,10 +2,11 @@
   "vertex": "psychedelicraft:fullscreen",
   "fragment": "psychedelicraft:simple_effects",
   "cull": false,
-  "samplers": [{ "name": "DiffuseSampler" }],
+  "samplers": [{ "name": "DiffuseSampler" }, { "name": "DepthSampler" }],
   "uniforms": [
     { "name": "TextureScale", "type": "float", "count": 2, "values": [1.0, 1.0] },
     { "name": "Ticks", "type": "float", "count": 1, "values": [0.0] },
-    { "name": "ColorStrengths", "type": "float", "count": 4, "values": [0.0, 0.0, 0.0, 0.0] }
+    { "name": "ColorStrengths", "type": "float", "count": 4, "values": [0.0, 0.0, 0.0, 0.0] },
+    { "name": "WorldColor", "type": "float", "count": 4, "values": [0.0, 0.0, 0.0, 0.0] }
   ]
 }

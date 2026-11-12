@@ -92,6 +92,19 @@ public final class PSItems {
     public static final Item BELLADONNA_BERRIES = edible("belladonna_berries", 1, 1.5F, DrugType.ATROPINE);
     public static final Item BELLADONNA_LEAF = named("belladonna_leaf", new Item());
     public static final Item DRIED_BELLADONNA_LEAF = named("dried_belladonna_leaf", new Item());
+    public static final HarmoniumItem HARMONIUM = named("harmonium", new HarmoniumItem());
+    public static final BongItem SMOKING_PIPE = named("smoking_pipe", new BongItem(50, 200, false))
+            .consumes(DRIED_CANNABIS_BUDS, new DrugInfluence(DrugType.CANNABIS, DrugInfluence.INHALED_DELAY, 0.002, 0.001, 0.25))
+            .consumes(DRIED_TOBACCO, new DrugInfluence(DrugType.TOBACCO, DrugInfluence.INHALED_DELAY, 0.1, 0.02, 0.8))
+            .consumes(DRIED_BELLADONNA_LEAF, new DrugInfluence(DrugType.ATROPINE, DrugInfluence.INHALED_DELAY, 0.4, 0.1, 0.9))
+            .consumes(DRIED_JIMSONWEED_LEAF, new DrugInfluence(DrugType.ATROPINE, DrugInfluence.INHALED_DELAY, 0.5, 0.1, 0.2))
+            .consumes(HARMONIUM, stack -> DrugInfluence.harmonium(DrugInfluence.INHALED_DELAY, 0.65, HarmoniumItem.getColor(stack)));
+    public static final BongItem BONG = named("bong", new BongItem(128, 0, true))
+            .consumes(DRIED_CANNABIS_BUDS, new DrugInfluence(DrugType.CANNABIS, DrugInfluence.IMMEDIATE, 0.002, 0.001, 0.2))
+            .consumes(DRIED_TOBACCO, new DrugInfluence(DrugType.TOBACCO, DrugInfluence.IMMEDIATE, 0.1, 0.02, 0.6))
+            .consumes(DRIED_BELLADONNA_LEAF, new DrugInfluence(DrugType.ATROPINE, DrugInfluence.IMMEDIATE, 0.4, 0.1, 0.4))
+            .consumes(DRIED_JIMSONWEED_LEAF, new DrugInfluence(DrugType.ATROPINE, DrugInfluence.IMMEDIATE, 0.5, 0.1, 0.1))
+            .consumes(HARMONIUM, stack -> DrugInfluence.harmonium(DrugInfluence.IMMEDIATE, 0.9, HarmoniumItem.getColor(stack)));
     public static final Item TOMATO_SEEDS = named("tomato_seeds", new CropSeedItem(PSBlocks.TOMATOES, "tomato_seeds"));
     public static final Item TOMATO = named("tomato", new EdibleItem(1, 1.9F));
     public static final Item TOMATO_LEAF = named("tomato_leaf", new Item());

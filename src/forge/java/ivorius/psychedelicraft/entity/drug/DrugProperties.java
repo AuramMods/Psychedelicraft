@@ -11,6 +11,7 @@ import java.util.Map;
 import javax.annotation.Nullable;
 
 import ivorius.psychedelicraft.entity.drug.influence.DrugInfluence;
+import ivorius.psychedelicraft.entity.drug.type.HarmoniumDrug;
 import ivorius.psychedelicraft.entity.drug.type.SleepDeprivationDrug;
 import ivorius.psychedelicraft.util.NbtSerialisable;
 import net.minecraft.entity.player.EntityPlayer;
@@ -31,6 +32,16 @@ public final class DrugProperties implements NbtSerialisable {
     public void addToDrug(DrugType type, double value) {
         drugs.computeIfAbsent(type, DrugType::create).addToDesiredValue(value);
         dirty = true;
+    }
+
+    public void addToHarmonium(double value, int color) {
+        addToDrug(DrugType.HARMONIUM, value);
+        ((HarmoniumDrug) drugs.get(DrugType.HARMONIUM)).mixColor(value, color);
+    }
+
+    @Nullable
+    public HarmoniumDrug getHarmonium() {
+        return (HarmoniumDrug) drugs.get(DrugType.HARMONIUM);
     }
 
     public void addInfluence(DrugInfluence influence) {

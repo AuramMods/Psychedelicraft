@@ -12,6 +12,9 @@ public final class PSConfig {
     }
 
     public static final class Balancing {
+        @Config.Comment("Show colored Harmonium variants in the creative inventory and enable dealer offers for them.")
+        public boolean enableHarmonium;
+
         @Config.Comment("Ticks at maximum heat to finish one wooden drying table batch.")
         @Config.RangeInt(min = 1)
         public int dryingTableTickDuration = 16 * 60 * 20;

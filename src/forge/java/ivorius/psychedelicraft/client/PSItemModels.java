@@ -1,6 +1,7 @@
 package ivorius.psychedelicraft.client;
 
 import ivorius.psychedelicraft.Psychedelicraft;
+import ivorius.psychedelicraft.item.HarmoniumItem;
 import ivorius.psychedelicraft.block.BarrelBlock;
 import ivorius.psychedelicraft.block.JuniperLeavesBlock;
 import ivorius.psychedelicraft.block.JuniperSignBlock;
@@ -63,6 +64,8 @@ public final class PSItemModels {
 
     @SubscribeEvent
     public static void registerItemColors(ColorHandlerEvent.Item event) {
+        event.getItemColors().registerItemColorHandler((stack, layer) -> layer == 0 ? HarmoniumItem.getColor(stack) : -1,
+                PSItems.HARMONIUM);
         for (Item item : PSItems.items()) {
             if (!(item instanceof PortableFluidItem)) continue;
             PortableFluidItem vessel = (PortableFluidItem) item;

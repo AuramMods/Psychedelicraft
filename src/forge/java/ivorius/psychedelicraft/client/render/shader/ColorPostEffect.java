@@ -8,24 +8,30 @@ import java.nio.IntBuffer;
 import ivorius.psychedelicraft.Psychedelicraft;
 import ivorius.psychedelicraft.client.render.HallucinationManager;
 import ivorius.psychedelicraft.client.render.HallucinationManager.Effect;
+import ivorius.psychedelicraft.entity.drug.type.HarmoniumDrug;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.BufferBuilder;
 import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.client.renderer.OpenGlHelper;
 import net.minecraft.client.renderer.Tessellator;
+import net.minecraft.client.renderer.texture.TextureUtil;
 import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
 import net.minecraft.client.resources.IReloadableResourceManager;
 import net.minecraft.client.resources.IResourceManager;
 import net.minecraft.client.resources.IResourceManagerReloadListener;
 import net.minecraft.client.shader.Framebuffer;
 import net.minecraft.client.shader.ShaderManager;
+import net.minecraft.util.math.MathHelper;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.lwjgl.BufferUtils;
 import org.lwjgl.opengl.EXTFramebufferObject;
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL13;
+import org.lwjgl.opengl.GL14;
 import org.lwjgl.opengl.GL20;
+
+import javax.annotation.Nullable;
 
 public final class ColorPostEffect implements IResourceManagerReloadListener {
     private static final Logger LOGGER = LogManager.getLogger(Psychedelicraft.MOD_ID);
@@ -35,22 +41,25 @@ public final class ColorPostEffect implements IResourceManagerReloadListener {
 
     private IResourceManager resources;
     private ShaderManager shader;
+    private ShaderManager coloredBloom;
     private Framebuffer target;
+    private int depthTexture;
+    private int depthWidth;
+    private int depthHeight;
     private boolean failed;
 
-    public void render(Minecraft client, float ticks, HallucinationManager hallucinations, float intensify, float desaturate) {
+    public void render(Minecraft client, float ticks, HallucinationManager hallucinations, float intensify, float desaturate,
+                       @Nullable HarmoniumDrug harmonium) {
         if (!OpenGlHelper.shadersSupported || !OpenGlHelper.isFramebufferEnabled()) {
             return;
         }
         float slow = hallucinations.strength(Effect.SLOW_COLOR_ROTATION);
         float quick = hallucinations.strength(Effect.QUICK_COLOR_ROTATION);
-        if (slow == 0F && quick == 0F && intensify == 0F && desaturate == 0F) {
+        float harmoniumStrength = harmonium == null ? 0F : (float) harmonium.getActiveValue();
+        if (slow == 0F && quick == 0F && intensify == 0F && desaturate == 0F && harmoniumStrength == 0F) {
             return;
         }
-        if (resources != client.getResourceManager()) {
-            resources = client.getResourceManager();
-            ((IReloadableResourceManager) resources).registerReloadListener(this);
-        }
+        prepareResources(client);
         if (failed) {
             return;
         }
@@ -61,6 +70,10 @@ public final class ColorPostEffect implements IResourceManagerReloadListener {
         GlStateManager.setActiveTexture(OpenGlHelper.defaultTexUnit);
         int boundTexture = GL11.glGetInteger(GL11.GL_TEXTURE_BINDING_2D);
         boolean texture = GL11.glIsEnabled(GL11.GL_TEXTURE_2D);
+        GlStateManager.setActiveTexture(OpenGlHelper.defaultTexUnit + 1);
+        int secondaryTexture = GL11.glGetInteger(GL11.GL_TEXTURE_BINDING_2D);
+        boolean secondaryEnabled = GL11.glIsEnabled(GL11.GL_TEXTURE_2D);
+        GlStateManager.setActiveTexture(OpenGlHelper.defaultTexUnit);
         boolean depth = GL11.glIsEnabled(GL11.GL_DEPTH_TEST);
         boolean depthMask = GL11.glGetBoolean(GL11.GL_DEPTH_WRITEMASK);
         boolean alpha = GL11.glIsEnabled(GL11.GL_ALPHA_TEST);
@@ -87,9 +100,13 @@ public final class ColorPostEffect implements IResourceManagerReloadListener {
             GlStateManager.disableBlend();
             GlStateManager.colorMask(true, true, true, true);
 
-            draw(main, target, ticks, slow, quick, intensify, desaturate);
+            float[] color = harmoniumStrength > 0F ? harmonium.color() : null;
+            boolean hasDepth = depthTexture != 0 && depthWidth == main.framebufferTextureWidth
+                    && depthHeight == main.framebufferTextureHeight;
+            drawColors(main, target, ticks, slow, quick, intensify, desaturate, hasDepth ? color : null, harmoniumStrength);
             // Copy back with neutral uniforms, without clearing the world's depth buffer.
-            draw(target, main, ticks, 0F, 0F, 0F, 0F);
+            drawColors(target, main, ticks, 0F, 0F, 0F, 0F, null, 0F);
+            if (color != null) renderColoredBloom(main, color, harmoniumStrength * 3F);
         } catch (IOException | RuntimeException ex) {
             failed = true;
             LOGGER.warn("Could not render Psychedelicraft color effects", ex);
@@ -101,6 +118,9 @@ public final class ColorPostEffect implements IResourceManagerReloadListener {
             GlStateManager.setActiveTexture(OpenGlHelper.defaultTexUnit);
             GlStateManager.bindTexture(boundTexture);
             if (texture) GlStateManager.enableTexture2D(); else GlStateManager.disableTexture2D();
+            GlStateManager.setActiveTexture(OpenGlHelper.defaultTexUnit + 1);
+            GlStateManager.bindTexture(secondaryTexture);
+            if (secondaryEnabled) GlStateManager.enableTexture2D(); else GlStateManager.disableTexture2D();
             GlStateManager.setActiveTexture(activeTexture);
             if (depth) GlStateManager.enableDepth(); else GlStateManager.disableDepth();
             if (alpha) GlStateManager.enableAlpha(); else GlStateManager.disableAlpha();
@@ -113,18 +133,78 @@ public final class ColorPostEffect implements IResourceManagerReloadListener {
         }
     }
 
-    private void draw(Framebuffer input, Framebuffer output, float ticks, float slow, float quick,
-                      float intensify, float desaturate) {
-        output.bindFramebuffer(true);
-        shader.addSamplerTexture("DiffuseSampler", input);
+    private void prepareResources(Minecraft client) {
+        if (resources != client.getResourceManager()) {
+            resources = client.getResourceManager();
+            ((IReloadableResourceManager) resources).registerReloadListener(this);
+        }
+    }
+
+    public void captureDepth(Minecraft client) {
+        if (!OpenGlHelper.shadersSupported || !OpenGlHelper.isFramebufferEnabled()) return;
+        prepareResources(client);
+        if (failed) return;
+
+        int framebuffer = currentFramebuffer();
+        int activeTexture = GL11.glGetInteger(GL13.GL_ACTIVE_TEXTURE);
+        GlStateManager.setActiveTexture(OpenGlHelper.defaultTexUnit);
+        int boundTexture = GL11.glGetInteger(GL11.GL_TEXTURE_BINDING_2D);
+        try {
+            // Forge dispatches RenderWorldLast before the hand pass clears world depth.
+            copyDepth(client.getFramebuffer());
+        } finally {
+            OpenGlHelper.glBindFramebuffer(OpenGlHelper.GL_FRAMEBUFFER, framebuffer);
+            GlStateManager.bindTexture(boundTexture);
+            GlStateManager.setActiveTexture(activeTexture);
+        }
+    }
+
+    private void copyDepth(Framebuffer input) {
+        input.bindFramebuffer(false);
+        if (depthTexture == 0) depthTexture = TextureUtil.glGenTextures();
+        GlStateManager.bindTexture(depthTexture);
+        if (depthWidth != input.framebufferTextureWidth || depthHeight != input.framebufferTextureHeight) {
+            depthWidth = input.framebufferTextureWidth;
+            depthHeight = input.framebufferTextureHeight;
+            GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MIN_FILTER, GL11.GL_NEAREST);
+            GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MAG_FILTER, GL11.GL_NEAREST);
+            GL11.glTexImage2D(GL11.GL_TEXTURE_2D, 0, GL14.GL_DEPTH_COMPONENT24, depthWidth, depthHeight, 0,
+                    GL11.GL_DEPTH_COMPONENT, GL11.GL_UNSIGNED_INT, (IntBuffer) null);
+        }
+        GL11.glCopyTexSubImage2D(GL11.GL_TEXTURE_2D, 0, 0, 0, 0, 0, input.framebufferWidth, input.framebufferHeight);
+    }
+
+    private void drawColors(Framebuffer input, Framebuffer output, float ticks, float slow, float quick,
+                            float intensify, float desaturate, @Nullable float[] color, float strength) {
+        shader.addSamplerTexture("DepthSampler", color == null ? input : depthTexture);
         shader.getShaderUniformOrDefault("Ticks").set(ticks);
         shader.getShaderUniformOrDefault("ColorStrengths").set(slow, quick, intensify, desaturate);
-        shader.getShaderUniformOrDefault("TextureScale").set(
+        if (color == null) shader.getShaderUniformOrDefault("WorldColor").set(0F, 0F, 0F, 0F);
+        else shader.getShaderUniformOrDefault("WorldColor").set(color[0], color[1], color[2], strength);
+        draw(shader, input, output);
+    }
+
+    private void renderColoredBloom(Framebuffer main, float[] color, float strength) throws IOException {
+        if (coloredBloom == null) coloredBloom = new ShaderManager(resources, Psychedelicraft.id("colored_bloom").toString());
+        coloredBloom.getShaderUniformOrDefault("BloomColor").set(color[0], color[1], color[2]);
+        for (int pass = 0; pass < MathHelper.ceil(strength); pass++) {
+            coloredBloom.getShaderUniformOrDefault("TotalAlpha").set(Math.max(1F, strength - pass));
+            coloredBloom.getShaderUniformOrDefault("Direction").set(1F / main.framebufferTextureWidth, 0F);
+            draw(coloredBloom, main, target);
+            coloredBloom.getShaderUniformOrDefault("Direction").set(0F, 1F / target.framebufferTextureHeight);
+            draw(coloredBloom, target, main);
+        }
+    }
+
+    private void draw(ShaderManager program, Framebuffer input, Framebuffer output) {
+        output.bindFramebuffer(true);
+        program.addSamplerTexture("DiffuseSampler", input);
+        program.getShaderUniformOrDefault("TextureScale").set(
                 (float) input.framebufferWidth / input.framebufferTextureWidth,
                 (float) input.framebufferHeight / input.framebufferTextureHeight);
 
         try {
-            shader.useShader();
+            program.useShader();
             Tessellator tessellator = Tessellator.getInstance();
             BufferBuilder vertices = tessellator.getBuffer();
             vertices.begin(GL11.GL_QUADS, DefaultVertexFormats.POSITION);
@@ -134,11 +214,17 @@ public final class ColorPostEffect implements IResourceManagerReloadListener {
             vertices.pos(-1, 1, 0).endVertex();
             tessellator.draw();
         } finally {
-            shader.endShader();
+            program.endShader();
         }
     }
 
     public void releaseTarget() {
+        if (depthTexture != 0) {
+            TextureUtil.deleteTexture(depthTexture);
+            depthTexture = 0;
+            depthWidth = 0;
+            depthHeight = 0;
+        }
         if (target != null && OpenGlHelper.isFramebufferEnabled()) {
             int framebuffer = currentFramebuffer();
             int texture = GL11.glGetInteger(GL11.GL_TEXTURE_BINDING_2D);
@@ -157,6 +243,10 @@ public final class ColorPostEffect implements IResourceManagerReloadListener {
         if (shader != null) {
             shader.deleteShader();
             shader = null;
+        }
+        if (coloredBloom != null) {
+            coloredBloom.deleteShader();
+            coloredBloom = null;
         }
         failed = false;
     }

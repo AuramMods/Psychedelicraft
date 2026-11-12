@@ -12,7 +12,8 @@ public final class PsychedelicraftCore implements IFMLLoadingPlugin {
     @Override
     public String[] getASMTransformerClass() {
         return new String[]{"ivorius.psychedelicraft.core.FurnaceRecipeTransformer",
-                "ivorius.psychedelicraft.core.PlayerMechanicsTransformer"};
+                "ivorius.psychedelicraft.core.PlayerMechanicsTransformer",
+                "ivorius.psychedelicraft.core.SmokingPoseTransformer"};
     }
 
     @Override

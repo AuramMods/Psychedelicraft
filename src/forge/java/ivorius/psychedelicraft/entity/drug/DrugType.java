@@ -18,6 +18,7 @@ import ivorius.psychedelicraft.entity.drug.type.SleepDeprivationDrug;
 import ivorius.psychedelicraft.entity.drug.type.TobaccoDrug;
 import ivorius.psychedelicraft.entity.drug.type.BrownShroomsDrug;
 import ivorius.psychedelicraft.entity.drug.type.CaffeineDrug;
+import ivorius.psychedelicraft.entity.drug.type.HarmoniumDrug;
 import ivorius.psychedelicraft.entity.drug.type.LsdDrug;
 import ivorius.psychedelicraft.entity.drug.type.PeyoteDrug;
 import ivorius.psychedelicraft.entity.drug.type.RedShroomsDrug;
@@ -40,6 +41,7 @@ public final class DrugType {
     public static final DrugType BATH_SALTS = register("bath_salts", BathSaltsDrug::new);
     public static final DrugType LSD = register("lsd", () -> new LsdDrug(1, 0.0003, false));
     public static final DrugType SUGAR = register("sugar", () -> new CaffeineDrug(1, 0.0002));
+    public static final DrugType HARMONIUM = register("harmonium", HarmoniumDrug::new);
     public static final DrugType SLEEP_DEPRIVATION = register("sleep_deprivation", SleepDeprivationDrug::new);
 
     private final String id;
