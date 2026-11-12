@@ -5,10 +5,12 @@
 package ivorius.psychedelicraft;
 
 import ivorius.psychedelicraft.entity.drug.DrugCapability;
+import ivorius.psychedelicraft.entity.FarmerTrades;
 import ivorius.psychedelicraft.item.PSItems;
 import ivorius.psychedelicraft.network.Channel;
 import ivorius.psychedelicraft.recipe.JuniperWoodRecipes;
 import ivorius.psychedelicraft.screen.PSGuiHandler;
+import ivorius.psychedelicraft.world.gen.VillageGarden;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.fml.common.Mod;
@@ -27,6 +29,7 @@ public class Psychedelicraft {
     public void preInit(FMLPreInitializationEvent event) {
         DrugCapability.register();
         Channel.register();
+        VillageGarden.register();
         NetworkRegistry.INSTANCE.registerGuiHandler(this, new PSGuiHandler());
     }
 
@@ -42,6 +45,7 @@ public class Psychedelicraft {
         JuniperWoodRecipes.preferJuniperRecipes();
         PSItems.JUNIPER_BOAT.registerDispenserBehavior();
         PSItems.JUNIPER_CHEST_BOAT.registerDispenserBehavior();
+        FarmerTrades.register();
     }
 
     public static ResourceLocation id(String path) {

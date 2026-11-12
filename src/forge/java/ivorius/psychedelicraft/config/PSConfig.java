@@ -23,6 +23,9 @@ public final class PSConfig {
     }
 
     public static final class Generation {
+        @Config.Comment("Allow novice farmers to sell Psychedelicraft goods.")
+        public boolean farmerDrugDeals = true;
+
         public final Feature juniper = new Feature();
         public final Feature cannabis = new Feature();
         public final Feature hop = new Feature();
