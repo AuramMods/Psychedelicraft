@@ -33,5 +33,14 @@
     "sounds": [
       "psychedelicraft:rift_jar/jar_open"
     ]
+  },
+  "drug.generic": {
+    "category": "ambient",
+    "sounds": [
+      {
+        "name": "psychedelicraft:drugs/generic",
+        "stream": true
+      }
+    ]
   }
 }

@@ -13,6 +13,7 @@ public final class PSSounds {
     public static final SoundEvent RIFT_JAR_TOGGLE = sound("block.rift_jar.toggle");
     public static final SoundEvent RIFT_JAR_OPEN = sound("block.rift_jar.open");
     public static final SoundEvent RIFT_JAR_CLOSE = sound("block.rift_jar.close");
+    public static final SoundEvent DRUG_GENERIC = sound("drug.generic");
 
     private PSSounds() {
     }
@@ -24,6 +25,6 @@ public final class PSSounds {
 
     @SubscribeEvent
     public static void registerSounds(RegistryEvent.Register<SoundEvent> event) {
-        event.getRegistry().registerAll(BREATH, HEARTBEAT, RIFT_JAR_TOGGLE, RIFT_JAR_OPEN, RIFT_JAR_CLOSE);
+        event.getRegistry().registerAll(BREATH, HEARTBEAT, RIFT_JAR_TOGGLE, RIFT_JAR_OPEN, RIFT_JAR_CLOSE, DRUG_GENERIC);
     }
 }

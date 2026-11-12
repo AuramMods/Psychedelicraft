@@ -29,7 +29,8 @@ import net.minecraftforge.fml.common.registry.GameRegistry;
 import net.minecraftforge.oredict.OreDictionary;
 
 @Mod(modid = Psychedelicraft.MOD_ID, name = "Psychedelicraft", useMetadata = true,
-        acceptedMinecraftVersions = "[1.12.2]")
+        acceptedMinecraftVersions = "[1.12.2]",
+        guiFactory = "ivorius.psychedelicraft.client.PSConfigGuiFactory")
 public class Psychedelicraft {
     public static final String MOD_ID = "psychedelicraft";
 
