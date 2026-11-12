@@ -45,6 +45,22 @@ public final class LsdDrug extends SimpleDrug {
     }
 
     @Override
+    public float weightlessness() {
+        double active = getActiveValue();
+        return (float) active * (active > 0.6F ? 0.8F : 0.2F);
+    }
+
+    @Override
+    public float handTrembleStrength() {
+        return activeRamp(0.6F);
+    }
+
+    @Override
+    public float viewTrembleStrength() {
+        return activeRamp(0.8F);
+    }
+
+    @Override
     public float soundVolumeModifier() {
         float ramp = (MathHelper.clamp(ticksActive(), 50, 250) - 50) / 200F;
         return 1 + (float) getActiveValue() * 1.75F * ramp;

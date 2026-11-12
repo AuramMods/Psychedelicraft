@@ -39,6 +39,21 @@ public final class CocaineDrug extends SimpleDrug {
     }
 
     @Override
+    public float handTrembleStrength() {
+        return activeRamp(0.6F);
+    }
+
+    @Override
+    public float viewTrembleStrength() {
+        return activeRamp(0.8F);
+    }
+
+    @Override
+    public float headMotionInertia() {
+        return (float) getActiveValue() * 10F;
+    }
+
+    @Override
     public float bloomStrength() {
         return Math.min(1F, (float) getActiveValue() / 0.6F) * 1.5F;
     }

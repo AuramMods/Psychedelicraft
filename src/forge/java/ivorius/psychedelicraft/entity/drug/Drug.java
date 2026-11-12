@@ -74,6 +74,22 @@ public interface Drug extends NbtSerialisable {
         return 0;
     }
 
+    default float weightlessness() {
+        return 0;
+    }
+
+    default float headMotionInertia() {
+        return 0;
+    }
+
+    default float viewTrembleStrength() {
+        return 0;
+    }
+
+    default float handTrembleStrength() {
+        return 0;
+    }
+
     default float hungerSuppression() {
         return 0;
     }

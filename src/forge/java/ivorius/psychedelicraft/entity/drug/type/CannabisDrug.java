@@ -59,6 +59,11 @@ public final class CannabisDrug extends SimpleDrug {
     }
 
     @Override
+    public float headMotionInertia() {
+        return (float) getActiveValue() * 8F;
+    }
+
+    @Override
     public float hungerSuppression() {
         return (float) getActiveValue() * -0.2F;
     }

@@ -41,6 +41,16 @@ public final class CaffeineDrug extends SimpleDrug {
     }
 
     @Override
+    public float handTrembleStrength() {
+        return activeRamp(0.6F);
+    }
+
+    @Override
+    public float viewTrembleStrength() {
+        return activeRamp(0.8F);
+    }
+
+    @Override
     public float speedModifier() {
         return 1 + (float) getActiveValue() * 0.2F;
     }

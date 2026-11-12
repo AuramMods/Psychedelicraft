@@ -8,7 +8,6 @@ import ivorius.psychedelicraft.Psychedelicraft;
 import ivorius.psychedelicraft.client.render.HallucinationManager.Effect;
 import ivorius.psychedelicraft.client.render.shader.ColorPostEffect;
 import ivorius.psychedelicraft.config.PSConfig;
-import ivorius.psychedelicraft.entity.drug.Drug;
 import ivorius.psychedelicraft.entity.drug.DrugCapability;
 import ivorius.psychedelicraft.entity.drug.DrugProperties;
 import ivorius.psychedelicraft.entity.drug.DrugType;
@@ -17,7 +16,6 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.entity.EntityPlayerSP;
 import net.minecraft.client.multiplayer.WorldClient;
 import net.minecraft.client.renderer.EntityRenderer;
-import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.util.math.MathHelper;
 import net.minecraftforge.client.event.EntityViewRenderEvent;
 import net.minecraftforge.client.event.RenderGameOverlayEvent;
@@ -50,6 +48,7 @@ public final class DrugRenderer {
             world = client.world;
             player = client.player;
             ContextualHallucinations.track(player, world);
+            CameraEffects.reset(player);
             hallucinations = new HallucinationManager();
             environment = new EnvironmentEffects();
             pauseBlurProgress = 0F;
@@ -60,40 +59,16 @@ public final class DrugRenderer {
         if (player != null && world != null && !client.isGamePaused()) {
             DrugProperties properties = DrugCapability.get(player);
             if (properties != null) {
+                CameraEffects.tick(player, properties);
                 ContextualHallucinations.tick(properties, hallucinations.strength(Effect.ENTITIES) * 0.4F);
                 hallucinations.update(properties, player.getRNG(), player.ticksExisted);
             }
         }
     }
 
-    @SubscribeEvent
+    @SubscribeEvent(priority = EventPriority.LOWEST)
     public static void onCameraSetup(EntityViewRenderEvent.CameraSetup event) {
-        Minecraft client = Minecraft.getMinecraft();
-        DrugProperties properties = client.player == null ? null : DrugCapability.get(client.player);
-        if (properties == null) {
-            return;
-        }
-
-        float wobble = Math.min(1F, properties.getModifier(Drug::viewWobblyness));
-        if (wobble <= 0) {
-            return;
-        }
-        float tick = client.player.ticksExisted + (float) event.getRenderPartialTicks();
-        float base = 5F / (wobble * wobble + 5F) - wobble * 0.04F;
-        float square = base * base;
-        float angle = tick * 3F;
-
-        // The donor applies Ry * Rz, nonuniform scaling, then the inverse rotations.
-        GlStateManager.rotate(angle, 0, 1, 0);
-        GlStateManager.rotate(angle, 0, 0, 1);
-        GlStateManager.scale(axisScale(tick, 150F, wobble, square),
-                axisScale(tick, 170F, wobble, square), axisScale(tick, 190F, wobble, square));
-        GlStateManager.rotate(-angle, 0, 0, 1);
-        GlStateManager.rotate(-angle, 0, 1, 0);
-    }
-
-    private static float axisScale(float tick, float period, float wobble, float square) {
-        return 1F / (square + wobble * MathHelper.sin(tick / period * (float) Math.PI) / 2F);
+        CameraEffects.transformView(event);
     }
 
     @SubscribeEvent(priority = EventPriority.HIGHEST)

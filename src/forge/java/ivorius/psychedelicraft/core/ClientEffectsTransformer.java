@@ -142,7 +142,7 @@ public final class ClientEffectsTransformer implements IClassTransformer {
         hook.add(new FieldInsnNode(Opcodes.GETFIELD, type.name, field.name, field.desc));
     }
 
-    private static MethodNode method(ClassNode type, String name, String srg, String descriptor) {
+    static MethodNode method(ClassNode type, String name, String srg, String descriptor) {
         FMLDeobfuscatingRemapper remapper = FMLDeobfuscatingRemapper.INSTANCE;
         for (MethodNode method : type.methods) {
             String mapped = remapper.mapMethodName(type.name, method.name, method.desc);
@@ -153,7 +153,7 @@ public final class ClientEffectsTransformer implements IClassTransformer {
         throw new IllegalStateException("Could not locate Forge 1.12 method " + type.name + "." + name);
     }
 
-    private static FieldNode field(ClassNode type, String name, String srg) {
+    static FieldNode field(ClassNode type, String name, String srg) {
         FMLDeobfuscatingRemapper remapper = FMLDeobfuscatingRemapper.INSTANCE;
         for (FieldNode field : type.fields) {
             String mapped = remapper.mapFieldName(type.name, field.name, field.desc);
