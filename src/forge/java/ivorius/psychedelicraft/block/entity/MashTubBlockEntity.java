@@ -24,7 +24,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-public final class MashTubBlockEntity extends FluidMachineBlockEntity {
+public final class MashTubBlockEntity extends FluidProcessingBlockEntity {
     public static final int CAPACITY = 32000;
 
     private final List<ItemStack> supplied = new ArrayList<>();
@@ -43,6 +43,11 @@ public final class MashTubBlockEntity extends FluidMachineBlockEntity {
 
     public float getStewProgress() {
         return totalPulses > 0 ? 1 - (float) pulsesLeft / totalPulses : 0;
+    }
+
+    @Override
+    public float getProcessingProgress() {
+        return activeRecipe != null ? getStewProgress() : super.getProcessingProgress();
     }
 
     public boolean addIngredient(ItemStack held) {
@@ -91,7 +96,11 @@ public final class MashTubBlockEntity extends FluidMachineBlockEntity {
     @Override
     protected void tickProcessing() {
         updateLight();
-        if (activeRecipe == null || world.getTotalWorldTime() % 30 != 0) return;
+        if (activeRecipe == null) {
+            processFluid(false);
+            return;
+        }
+        if (world.getTotalWorldTime() % 30 != 0) return;
         IRecipe entry = ForgeRegistries.RECIPES.getValue(activeRecipe);
         if (!(entry instanceof MashingRecipe)) {
             endStew();

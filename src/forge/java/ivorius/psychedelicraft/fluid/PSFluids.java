@@ -11,6 +11,7 @@ import ivorius.psychedelicraft.entity.drug.DrugType;
 import ivorius.psychedelicraft.entity.drug.influence.DrugInfluence;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.util.math.MathHelper;
+import net.minecraft.util.text.translation.I18n;
 import net.minecraftforge.fluids.Fluid;
 import net.minecraftforge.fluids.FluidRegistry;
 import net.minecraftforge.fluids.FluidStack;
@@ -23,21 +24,21 @@ public final class PSFluids {
     private static final String FORGE_PREFIX = Psychedelicraft.MOD_ID + "_";
     private static final Map<String, Fluid> FLUIDS = new LinkedHashMap<>();
 
-    public static final Fluid WHEAT_HOP = fluid("wheat_hop", "beer", 0xaafeaa08, 1);
-    public static final Fluid WHEAT = fluid("wheat", "beer", 0xaafeaa08, 1);
-    public static final Fluid POTATO = fluid("potato", "beer", 0xaafeaa08, 2);
-    public static final Fluid TOMATO = fluid("tomato", "tomato_juice", 0xaaffaa08, 1);
-    public static final Fluid RED_GRAPES = fluid("red_grapes", "wine", 0xaafeaa08, 1);
-    public static final Fluid RICE = fluid("rice", "rice_wine", 0xeecac4b2, 1);
-    public static final Fluid JUNIPER = fluid("juniper", "slurry", 0xcc704e21, 1);
-    public static final Fluid HONEY = fluid("honey", "mead", 0xbbe9ae3b, 5);
-    public static final Fluid SUGAR_CANE = fluid("sugar_cane", "clear", 0xaafeaa08, 1);
-    public static final Fluid CORN = fluid("corn", "beer", 0xaafeaa08, 1);
-    public static final Fluid APPLE = fluid("apple", "cider", 0x99edc13b, 1);
-    public static final Fluid PINEAPPLE = fluid("pineapple", "cider", 0x99edc13b, 2);
-    public static final Fluid BANANA = fluid("banana", "mead", 0xbbe9ae3b, 3);
-    public static final Fluid MILK = fluid("milk", "rice_wine", 0x88ffffff, 2);
-    public static final Fluid AGAVE = fluid("agave", "tea", 0x779bab62, 1);
+    public static final BrewFluid WHEAT_HOP = register("wheat_hop", BrewProfiles.wheatHop());
+    public static final BrewFluid WHEAT = register("wheat", BrewProfiles.wheat());
+    public static final BrewFluid POTATO = register("potato", BrewProfiles.potato());
+    public static final BrewFluid TOMATO = register("tomato", BrewProfiles.tomato());
+    public static final BrewFluid RED_GRAPES = register("red_grapes", BrewProfiles.redGrapes());
+    public static final BrewFluid RICE = register("rice", BrewProfiles.rice());
+    public static final BrewFluid JUNIPER = register("juniper", BrewProfiles.juniper());
+    public static final BrewFluid HONEY = register("honey", BrewProfiles.honey());
+    public static final BrewFluid SUGAR_CANE = register("sugar_cane", BrewProfiles.sugarCane());
+    public static final BrewFluid CORN = register("corn", BrewProfiles.corn());
+    public static final BrewFluid APPLE = register("apple", BrewProfiles.apple());
+    public static final BrewFluid PINEAPPLE = register("pineapple", BrewProfiles.pineapple());
+    public static final BrewFluid BANANA = register("banana", BrewProfiles.banana());
+    public static final BrewFluid MILK = register("milk", BrewProfiles.milk());
+    public static final BrewFluid AGAVE = register("agave", BrewProfiles.agave());
     public static final Fluid COFFEE = fluid("coffee", "coffee", 0xffa77d55, 1);
     public static final Fluid COCA_TEA = fluid("coca_tea", "tea", 0x44787a36, 1);
     public static final Fluid CANNABIS_TEA = fluid("cannabis_tea", "tea", 0x446d6f3c, 1);
@@ -55,11 +56,14 @@ public final class PSFluids {
     }
 
     private static Fluid fluid(String path, String texture, int color, int viscosity) {
-        String id = Psychedelicraft.id(path).toString();
         String sprite = "blocks/fluid/" + texture;
         Fluid fluid = new Fluid(FORGE_PREFIX + path, Psychedelicraft.id(sprite + "_still"), Psychedelicraft.id(sprite + "_flow"), color)
                 .setUnlocalizedName("psychedelicraft." + path).setViscosity(1000 * viscosity);
-        FLUIDS.put(id, fluid);
+        return register(path, fluid);
+    }
+
+    private static <T extends Fluid> T register(String path, T fluid) {
+        FLUIDS.put(Psychedelicraft.id(path).toString(), fluid);
         return fluid;
     }
 
@@ -118,8 +122,9 @@ public final class PSFluids {
         return stack.tag == null ? 0 : MathHelper.clamp(stack.tag.getInteger("warmth"), 0, 2);
     }
 
-    public static String name(FluidStack stack) {
-        return stack.getFluid() == COFFEE ? "fluid.psychedelicraft.coffee.temperature." + warmth(stack)
-                : stack.getUnlocalizedName();
+    public static String displayName(FluidStack stack) {
+        return stack.getFluid() == COFFEE
+                ? I18n.translateToLocal("fluid.psychedelicraft.coffee.temperature." + warmth(stack))
+                : stack.getLocalizedName();
     }
 }

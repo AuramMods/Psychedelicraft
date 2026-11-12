@@ -1,6 +1,8 @@
 package ivorius.psychedelicraft.item;
 
 import ivorius.psychedelicraft.Psychedelicraft;
+import ivorius.psychedelicraft.block.BarrelBlock;
+import ivorius.psychedelicraft.fluid.BrewFluid;
 import ivorius.psychedelicraft.fluid.FluidVessel;
 import ivorius.psychedelicraft.fluid.FluidVesselHandler;
 import ivorius.psychedelicraft.fluid.PSFluids;
@@ -62,7 +64,8 @@ public final class PortableFluidItem extends Item {
     @Override
     public EnumActionResult onItemUseFirst(EntityPlayer player, World world, BlockPos pos, EnumFacing face,
                                           float x, float y, float z, EnumHand hand) {
-        return !world.isRemote && world.isBlockModifiable(player, pos)
+        return !world.isRemote && !(world.getBlockState(pos).getBlock() instanceof BarrelBlock)
+                && world.isBlockModifiable(player, pos)
                 && FluidUtil.interactWithFluidHandler(player, hand, world, pos, face)
                 ? EnumActionResult.SUCCESS : EnumActionResult.PASS;
     }
@@ -121,8 +124,7 @@ public final class PortableFluidItem extends Item {
     public String getItemStackDisplayName(ItemStack stack) {
         FluidStack fluid = contents(stack);
         return fluid == null ? super.getItemStackDisplayName(stack)
-                : I18n.translateToLocalFormatted(getUnlocalizedName(stack) + ".filled",
-                        I18n.translateToLocal(PSFluids.name(fluid)));
+                : I18n.translateToLocalFormatted(getUnlocalizedName(stack) + ".filled", PSFluids.displayName(fluid));
     }
 
     @Override
@@ -131,6 +133,7 @@ public final class PortableFluidItem extends Item {
         FluidStack fluid = contents(stack);
         tooltip.add(TextFormatting.GRAY + I18n.translateToLocalFormatted("psychedelicraft.drink.levels",
                 fluid == null ? 0 : fluid.amount, vessel.capacity));
+        if (fluid != null && fluid.getFluid() instanceof BrewFluid) BrewFluid.appendAttributes(fluid, tooltip);
         if (flag.isAdvanced() && fluid != null) {
             tooltip.add(TextFormatting.DARK_GRAY + PSFluids.id(fluid.getFluid()));
         }

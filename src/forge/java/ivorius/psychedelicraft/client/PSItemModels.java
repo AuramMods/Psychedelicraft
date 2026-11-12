@@ -1,22 +1,26 @@
 package ivorius.psychedelicraft.client;
 
 import ivorius.psychedelicraft.Psychedelicraft;
+import ivorius.psychedelicraft.block.BarrelBlock;
 import ivorius.psychedelicraft.block.JuniperLeavesBlock;
 import ivorius.psychedelicraft.block.JuniperSignBlock;
 import ivorius.psychedelicraft.block.LatticeCropBlock;
 import ivorius.psychedelicraft.block.MashTubBlock;
 import ivorius.psychedelicraft.block.PSBlocks;
 import ivorius.psychedelicraft.block.entity.DryingTableBlockEntity;
+import ivorius.psychedelicraft.block.entity.BarrelBlockEntity;
 import ivorius.psychedelicraft.block.entity.JuniperSignBlockEntity;
 import ivorius.psychedelicraft.block.entity.MashTubBlockEntity;
 import ivorius.psychedelicraft.block.entity.PeyoteBlockEntity;
 import ivorius.psychedelicraft.client.render.block.DryingTableRenderer;
+import ivorius.psychedelicraft.client.render.block.BarrelRenderer;
 import ivorius.psychedelicraft.client.render.block.JuniperSignRenderer;
 import ivorius.psychedelicraft.client.render.block.MashTubRenderer;
 import ivorius.psychedelicraft.client.render.block.PeyoteRenderer;
 import ivorius.psychedelicraft.client.render.entity.JuniperBoatRenderer;
 import ivorius.psychedelicraft.entity.EntityJuniperBoat;
 import ivorius.psychedelicraft.entity.EntityJuniperChestBoat;
+import ivorius.psychedelicraft.fluid.BrewFluid;
 import ivorius.psychedelicraft.item.PSItems;
 import ivorius.psychedelicraft.item.PortableFluidItem;
 import ivorius.psychedelicraft.network.Channel;
@@ -75,6 +79,13 @@ public final class PSItemModels {
                 event.getMap().registerSprite(fluid.getFlowing());
             }
         }
+        for (String texture : new String[]{"rum_mature", "rum_semi_mature", "ketchup", "clear", "slurry", "wine", "beer", "rice_wine", "cider", "mead", "tomato_juice"}) {
+            event.getMap().registerSprite(BrewFluid.texture(texture, "_still"));
+            event.getMap().registerSprite(BrewFluid.texture(texture, "_flow"));
+        }
+        for (String symbol : new String[]{"beer", "gin", "mead", "rum", "vodka", "whiskey", "wine"}) {
+            event.getMap().registerSprite(Psychedelicraft.id("fluid/" + symbol));
+        }
     }
 
     @SubscribeEvent
@@ -111,6 +122,11 @@ public final class PSItemModels {
         ModelLoader.setCustomStateMapper(PSBlocks.JUNIPER_WALL_HANGING_SIGN, new StateMap.Builder().ignore(JuniperSignBlock.FACING).build());
         ModelLoader.setCustomStateMapper(PSBlocks.MASH_TUB, new StateMap.Builder().ignore(MashTubBlock.OFFSET).build());
         ModelLoader.setCustomStateMapper(PSBlocks.MASH_TUB_EDGE, new StateMap.Builder().ignore(MashTubBlock.OFFSET).build());
+        for (Block barrel : new Block[]{PSBlocks.OAK_BARREL, PSBlocks.SPRUCE_BARREL, PSBlocks.BIRCH_BARREL,
+                PSBlocks.JUNGLE_BARREL, PSBlocks.ACACIA_BARREL, PSBlocks.DARK_OAK_BARREL}) {
+            ModelLoader.setCustomStateMapper(barrel, new StateMap.Builder().ignore(BarrelBlock.FACING, BarrelBlock.TAPPED).build());
+        }
+        ClientRegistry.bindTileEntitySpecialRenderer(BarrelBlockEntity.class, new BarrelRenderer());
         ClientRegistry.bindTileEntitySpecialRenderer(MashTubBlockEntity.class, new MashTubRenderer());
         ClientRegistry.bindTileEntitySpecialRenderer(JuniperSignBlockEntity.class, new JuniperSignRenderer());
         ClientRegistry.bindTileEntitySpecialRenderer(DryingTableBlockEntity.class, new DryingTableRenderer());

@@ -10,6 +10,8 @@ import java.util.List;
 
 import ivorius.psychedelicraft.Psychedelicraft;
 import ivorius.psychedelicraft.block.PSBlocks;
+import ivorius.psychedelicraft.block.BarrelBlock;
+import ivorius.psychedelicraft.block.entity.BarrelBlockEntity;
 import ivorius.psychedelicraft.entity.drug.DrugType;
 import ivorius.psychedelicraft.entity.drug.influence.DrugInfluence;
 import ivorius.psychedelicraft.fluid.FluidVessel;
@@ -115,8 +117,18 @@ public final class PSItems {
     public static final Item DRYING_TABLE = named("drying_table", new ItemBlock(PSBlocks.DRYING_TABLE));
     public static final Item IRON_DRYING_TABLE = named("iron_drying_table", new ItemBlock(PSBlocks.IRON_DRYING_TABLE));
     public static final MashTubItem MASH_TUB = named("mash_tub", new MashTubItem());
+    public static final FluidMachineItem OAK_BARREL = barrel(PSBlocks.OAK_BARREL);
+    public static final FluidMachineItem SPRUCE_BARREL = barrel(PSBlocks.SPRUCE_BARREL);
+    public static final FluidMachineItem BIRCH_BARREL = barrel(PSBlocks.BIRCH_BARREL);
+    public static final FluidMachineItem JUNGLE_BARREL = barrel(PSBlocks.JUNGLE_BARREL);
+    public static final FluidMachineItem ACACIA_BARREL = barrel(PSBlocks.ACACIA_BARREL);
+    public static final FluidMachineItem DARK_OAK_BARREL = barrel(PSBlocks.DARK_OAK_BARREL);
 
     private PSItems() {
+    }
+
+    private static FluidMachineItem barrel(BarrelBlock block) {
+        return named(block.getRegistryName().getResourcePath(), new FluidMachineItem(block, BarrelBlockEntity.CAPACITY));
     }
 
     private static Item edible(String name, int hunger, float saturation, DrugType type) {

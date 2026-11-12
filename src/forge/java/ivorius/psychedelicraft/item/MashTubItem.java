@@ -7,68 +7,22 @@ package ivorius.psychedelicraft.item;
 import ivorius.psychedelicraft.block.MashTubBlock;
 import ivorius.psychedelicraft.block.PSBlocks;
 import ivorius.psychedelicraft.block.entity.MashTubBlockEntity;
-import ivorius.psychedelicraft.fluid.FluidContents;
-import ivorius.psychedelicraft.fluid.PSFluids;
 import net.minecraft.advancements.CriteriaTriggers;
 import net.minecraft.block.SoundType;
 import net.minecraft.block.state.IBlockState;
-import net.minecraft.client.util.ITooltipFlag;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
-import net.minecraft.item.ItemBlock;
 import net.minecraft.item.ItemStack;
-import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.EnumActionResult;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.util.EnumHand;
 import net.minecraft.util.SoundCategory;
 import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.text.translation.I18n;
 import net.minecraft.world.World;
-import net.minecraftforge.fluids.FluidStack;
-import net.minecraftforge.fml.relauncher.Side;
-import net.minecraftforge.fml.relauncher.SideOnly;
 
-import javax.annotation.Nullable;
-import java.util.List;
-
-public final class MashTubItem extends ItemBlock {
+public final class MashTubItem extends FluidMachineItem {
     public MashTubItem() {
-        super(PSBlocks.MASH_TUB);
-        setMaxStackSize(16);
-    }
-
-    public int getCapacity() {
-        return MashTubBlockEntity.CAPACITY;
-    }
-
-    @Nullable
-    private FluidStack contents(ItemStack stack) {
-        NBTTagCompound data = stack.getSubCompound("fluid");
-        return data == null ? null : FluidContents.read(data, getCapacity());
-    }
-
-    @Override
-    public int getItemStackLimit(ItemStack stack) {
-        return contents(stack) == null ? super.getItemStackLimit(stack) : 1;
-    }
-
-    @Override
-    public String getItemStackDisplayName(ItemStack stack) {
-        FluidStack fluid = contents(stack);
-        return fluid == null ? super.getItemStackDisplayName(stack)
-                : I18n.translateToLocalFormatted("tile.psychedelicraft.mash_tub.filled",
-                        I18n.translateToLocal(PSFluids.name(fluid)));
-    }
-
-    @Override
-    @SideOnly(Side.CLIENT)
-    public void addInformation(ItemStack stack, @Nullable World world, List<String> tooltip, ITooltipFlag flag) {
-        FluidStack fluid = contents(stack);
-        if (fluid != null || flag.isAdvanced()) {
-            tooltip.add(I18n.translateToLocalFormatted("psychedelicraft.container.levels",
-                    fluid == null ? 0 : fluid.amount, getCapacity()));
-        }
+        super(PSBlocks.MASH_TUB, MashTubBlockEntity.CAPACITY);
     }
 
     @Override

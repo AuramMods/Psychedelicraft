@@ -36,6 +36,7 @@ public enum FluidVessel {
         if (fluid == FluidRegistry.LAVA) return this == GLASS_BOTTLE;
         if (PSFluids.isInjectable(fluid)) return false;
         if (fluid == PSFluids.COFFEE) return this == CUP;
+        if (fluid instanceof BrewFluid) return this != CUP;
         return this != MUG || (fluid != PSFluids.COCA_TEA && fluid != PSFluids.CANNABIS_TEA
                 && fluid != PSFluids.PEYOTE_JUICE && fluid != PSFluids.KAVA);
     }

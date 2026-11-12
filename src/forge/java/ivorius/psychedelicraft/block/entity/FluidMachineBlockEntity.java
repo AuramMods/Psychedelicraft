@@ -66,7 +66,10 @@ public abstract class FluidMachineBlockEntity extends TileEntity implements ITic
     private final IItemHandler both = automationSlots(INPUT, 2);
 
     protected FluidMachineBlockEntity(int capacity) {
-        tank = new ProcessingTank(capacity, this::changed);
+        tank = new ProcessingTank(capacity, () -> {
+            onTankContentsChanged();
+            changed();
+        });
     }
 
     public final ProcessingTank getTank() {
@@ -83,19 +86,25 @@ public abstract class FluidMachineBlockEntity extends TileEntity implements ITic
     }
 
     public final boolean depositHeldFluid(EntityPlayer player, EnumHand hand) {
+        if (!transferHeldFluid(player, hand, Integer.MAX_VALUE, false)) return false;
+        world.playSound(null, pos, SoundEvents.ITEM_BUCKET_FILL, SoundCategory.BLOCKS, 1, 1);
+        return true;
+    }
+
+    protected final boolean transferHeldFluid(EntityPlayer player, EnumHand hand, int amount, boolean drainTank) {
         ItemStack held = player.getHeldItem(hand);
         IFluidHandlerItem vessel = itemHandler(held);
-        if (vessel == null || FluidUtil.tryFluidTransfer(tank, vessel, Integer.MAX_VALUE, true) == null) return false;
-        if (!player.capabilities.isCreativeMode) {
-            ItemStack remainder = vessel.getContainer();
-            if (held.getCount() == 1) {
-                player.setHeldItem(hand, remainder);
-            } else {
+        if (vessel == null) return false;
+        FluidStack moved = drainTank ? FluidUtil.tryFluidTransfer(vessel, tank, amount, true)
+                : FluidUtil.tryFluidTransfer(tank, vessel, amount, true);
+        if (moved == null) return false;
+        if (drainTank || !player.capabilities.isCreativeMode) {
+            if (held.getCount() == 1) player.setHeldItem(hand, vessel.getContainer());
+            else {
                 held.shrink(1);
-                ItemHandlerHelper.giveItemToPlayer(player, remainder);
+                ItemHandlerHelper.giveItemToPlayer(player, vessel.getContainer());
             }
         }
-        world.playSound(null, pos, SoundEvents.ITEM_BUCKET_FILL, SoundCategory.BLOCKS, 1, 1);
         return true;
     }
 
@@ -117,6 +126,9 @@ public abstract class FluidMachineBlockEntity extends TileEntity implements ITic
     }
 
     protected abstract void tickProcessing();
+
+    protected void onTankContentsChanged() {
+    }
 
     protected void tickClient() {
     }
@@ -190,9 +202,15 @@ public abstract class FluidMachineBlockEntity extends TileEntity implements ITic
 
     @Nullable
     private IItemHandler automation(@Nullable EnumFacing side) {
+        side = relativeSide(side);
         if (side == EnumFacing.EAST) return input;
         if (side == EnumFacing.WEST) return output;
         return side == null || side.getAxis().isVertical() ? both : null;
+    }
+
+    @Nullable
+    protected EnumFacing relativeSide(@Nullable EnumFacing side) {
+        return side;
     }
 
     @Override

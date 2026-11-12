@@ -14,6 +14,7 @@ import net.minecraft.client.renderer.texture.TextureAtlasSprite;
 import net.minecraft.client.renderer.texture.TextureMap;
 import net.minecraft.client.renderer.tileentity.TileEntitySpecialRenderer;
 import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
+import net.minecraft.init.Blocks;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.math.MathHelper;
 import net.minecraftforge.fluids.FluidStack;
@@ -29,7 +30,13 @@ public final class MashTubRenderer extends TileEntitySpecialRenderer<MashTubBloc
         float height = 0.1F;
         if (fluid != null) {
             height = 0.3F + 0.6F * fluid.amount / vat.getTank().getCapacity();
-            drawFluid(fluid, x, y + height, z);
+            TextureAtlasSprite sprite = Minecraft.getMinecraft().getTextureMapBlocks()
+                    .getAtlasSprite(fluid.getFluid().getStill(fluid).toString());
+            drawSurface(sprite, fluid.getFluid().getColor(fluid), x, y + height, z);
+        } else if (!vat.getSolidOutput().isEmpty()) {
+            TextureAtlasSprite sprite = Minecraft.getMinecraft().getBlockRendererDispatcher()
+                    .getModelForState(Blocks.DIRT.getDefaultState()).getParticleTexture();
+            drawSurface(sprite, 0xffffffff, x, y + 0.5, z);
         }
         Random random = new Random(vat.getPos().toLong() + 1);
         float ticks = vat.getWorld().getTotalWorldTime() % 3600 + partialTicks;
@@ -52,10 +59,7 @@ public final class MashTubRenderer extends TileEntitySpecialRenderer<MashTubBloc
         }
     }
 
-    private void drawFluid(FluidStack fluid, double x, double y, double z) {
-        TextureMap atlas = Minecraft.getMinecraft().getTextureMapBlocks();
-        TextureAtlasSprite sprite = atlas.getAtlasSprite(fluid.getFluid().getStill(fluid).toString());
-        int color = fluid.getFluid().getColor(fluid);
+    private void drawSurface(TextureAtlasSprite sprite, int color, double x, double y, double z) {
         int red = color >> 16 & 255, green = color >> 8 & 255, blue = color & 255, alpha = color >>> 24;
         bindTexture(TextureMap.LOCATION_BLOCKS_TEXTURE);
         GlStateManager.enableBlend();

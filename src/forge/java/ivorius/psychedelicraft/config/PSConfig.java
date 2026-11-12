@@ -5,6 +5,7 @@ import net.minecraftforge.common.config.Config;
 
 @Config(modid = Psychedelicraft.MOD_ID)
 public final class PSConfig {
+    private static final int MINUTE = 60 * 20;
     public static final Balancing balancing = new Balancing();
 
     private PSConfig() {
@@ -19,7 +20,48 @@ public final class PSConfig {
         @Config.RangeInt(min = 1)
         public int ironDryingTableTickDuration = 12 * 60 * 20;
 
+        @Config.RangeInt(min = 1)
+        public int slurryHardeningTime = 30 * MINUTE;
+
+        public final FluidProperties fluidAttributes = new FluidProperties();
         public final Generation worldGeneration = new Generation();
+    }
+
+    public static final class FluidProperties {
+        public final FluidTicks wheatHop = new FluidTicks(30, 100, 30);
+        public final FluidTicks agave = new FluidTicks(30, 40, 90);
+        public final FluidTicks wheat = new FluidTicks();
+        public final FluidTicks potato = new FluidTicks();
+        public final FluidTicks tomato = new FluidTicks();
+        public final FluidTicks redGrapes = new FluidTicks();
+        public final FluidTicks rice = new FluidTicks();
+        public final FluidTicks juniper = new FluidTicks();
+        public final FluidTicks honey = new FluidTicks();
+        public final FluidTicks sugarCane = new FluidTicks();
+        public final FluidTicks corn = new FluidTicks();
+        public final FluidTicks apple = new FluidTicks();
+        public final FluidTicks pineapple = new FluidTicks();
+        public final FluidTicks banana = new FluidTicks();
+        public final FluidTicks milk = new FluidTicks();
+    }
+
+    public static final class FluidTicks {
+        @Config.RangeInt(min = 1)
+        public int ticksPerFermentation;
+        @Config.RangeInt(min = 1)
+        public int ticksPerMaturation;
+        @Config.RangeInt(min = 1)
+        public int ticksUntilAcetification;
+
+        FluidTicks() {
+            this(40, 30, 30);
+        }
+
+        FluidTicks(int fermentationMinutes, int maturationMinutes, int acetificationMinutes) {
+            ticksPerFermentation = fermentationMinutes * MINUTE;
+            ticksPerMaturation = maturationMinutes * MINUTE;
+            ticksUntilAcetification = acetificationMinutes * MINUTE;
+        }
     }
 
     public static final class Generation {

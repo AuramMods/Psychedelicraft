@@ -2,7 +2,7 @@
 	"texture_size": [128, 64],
 	"textures": {
 		"texture": "psychedelicraft:blocks/wooden_vat",
-		"particle": "#texture"
+		"particle": "psychedelicraft:blocks/wooden_vat"
 	},
 	"elements": [
 		{

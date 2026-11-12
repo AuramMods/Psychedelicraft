@@ -6,7 +6,8 @@ package ivorius.psychedelicraft.client.screen;
 
 import ivorius.psychedelicraft.Psychedelicraft;
 import ivorius.psychedelicraft.block.entity.FluidMachineBlockEntity;
-import ivorius.psychedelicraft.block.entity.MashTubBlockEntity;
+import ivorius.psychedelicraft.block.entity.FluidProcessingBlockEntity;
+import ivorius.psychedelicraft.fluid.BrewProcess;
 import ivorius.psychedelicraft.fluid.PSFluids;
 import ivorius.psychedelicraft.screen.FluidMachineContainer;
 import net.minecraft.client.gui.inventory.GuiContainer;
@@ -17,21 +18,28 @@ import net.minecraft.client.resources.I18n;
 import net.minecraft.entity.player.InventoryPlayer;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.ResourceLocation;
+import net.minecraft.util.StringUtils;
 import net.minecraftforge.fluids.FluidStack;
 
 import java.util.ArrayList;
 import java.util.List;
 
-public final class MashTubScreen extends GuiContainer {
-    private static final ResourceLocation TEXTURE = Psychedelicraft.id("textures/gui/wooden_vat.png");
+public final class FluidProcessingScreen extends GuiContainer {
+    private final ResourceLocation texture;
+    private final int progressX;
+    private final int progressY;
 
     private final InventoryPlayer inventory;
-    private final MashTubBlockEntity vat;
+    private final FluidProcessingBlockEntity machine;
 
-    public MashTubScreen(InventoryPlayer inventory, MashTubBlockEntity vat) {
-        super(new FluidMachineContainer(inventory, vat));
+    public FluidProcessingScreen(InventoryPlayer inventory, FluidProcessingBlockEntity machine,
+                                 String background, int progressX, int progressY) {
+        super(new FluidMachineContainer(inventory, machine));
         this.inventory = inventory;
-        this.vat = vat;
+        this.machine = machine;
+        this.texture = Psychedelicraft.id("textures/gui/" + background + ".png");
+        this.progressX = progressX;
+        this.progressY = progressY;
     }
 
     @Override
@@ -40,17 +48,22 @@ public final class MashTubScreen extends GuiContainer {
         super.drawScreen(mouseX, mouseY, partialTicks);
         renderHoveredToolTip(mouseX, mouseY);
         if (isPointInRegion(65, 33, 40, 30, mouseX, mouseY) && inventory.getItemStack().isEmpty()) {
-            FluidStack fluid = vat.getTank().getFluid();
+            FluidStack fluid = machine.getTank().getFluid();
             List<String> info = new ArrayList<>();
-            if (fluid != null) info.add(I18n.format(PSFluids.name(fluid)));
-            info.add(I18n.format("psychedelicraft.container.levels", vat.getTank().getFluidAmount(), vat.getTank().getCapacity()));
+            if (fluid != null) info.add(PSFluids.displayName(fluid));
+            info.add(I18n.format("psychedelicraft.container.levels", machine.getTank().getFluidAmount(), machine.getTank().getCapacity()));
+            BrewProcess stage = machine.getStage();
+            if (stage != BrewProcess.IDLE) {
+                info.add(I18n.format("fluid.status", I18n.format("fluid.status." + stage.key())));
+                info.add(I18n.format("time.until." + stage.key(), StringUtils.ticksToElapsedTime(machine.getRemainingTicks())));
+            }
             drawHoveringText(info, mouseX, mouseY);
         }
     }
 
     @Override
     protected void drawGuiContainerForegroundLayer(int mouseX, int mouseY) {
-        String title = I18n.format("tile.psychedelicraft.mash_tub.name");
+        String title = I18n.format(machine.getBlockType().getUnlocalizedName() + ".name");
         fontRenderer.drawString(title, 83 - fontRenderer.getStringWidth(title) / 2, 10, 0x404040);
         fontRenderer.drawString(inventory.getDisplayName().getFormattedText(), 8, ySize - 94, 0x404040);
     }
@@ -58,12 +71,12 @@ public final class MashTubScreen extends GuiContainer {
     @Override
     protected void drawGuiContainerBackgroundLayer(float partialTicks, int mouseX, int mouseY) {
         GlStateManager.color(1, 1, 1, 1);
-        mc.getTextureManager().bindTexture(TEXTURE);
+        mc.getTextureManager().bindTexture(texture);
         drawTexturedModalRect(guiLeft + 30, guiTop + 20, 0, ySize, 110, 50);
 
-        FluidStack fluid = vat.getTank().getFluid();
+        FluidStack fluid = machine.getTank().getFluid();
         if (fluid != null) {
-            int height = Math.max(1, 27 * fluid.amount / vat.getTank().getCapacity());
+            int height = Math.max(1, 27 * fluid.amount / machine.getTank().getCapacity());
             int color = fluid.getFluid().getColor(fluid);
             GlStateManager.color((color >> 16 & 255) / 255F, (color >> 8 & 255) / 255F, (color & 255) / 255F, 1);
             mc.getTextureManager().bindTexture(TextureMap.LOCATION_BLOCKS_TEXTURE);
@@ -76,21 +89,21 @@ public final class MashTubScreen extends GuiContainer {
         }
         GlStateManager.color(1, 1, 1, 1);
         GlStateManager.enableBlend();
-        mc.getTextureManager().bindTexture(TEXTURE);
+        mc.getTextureManager().bindTexture(texture);
         drawTexturedModalRect(guiLeft, guiTop, 0, 0, xSize, ySize);
-        float stew = vat.getStewProgress();
-        if (stew > 0 && stew < 1) {
-            drawTexturedModalRect(guiLeft + 140, guiTop + 14, 233, 22, 23, 22);
-            int unfilled = (int) (22 * (1 - stew));
-            drawTexturedModalRect(guiLeft + 140, guiTop + 15 + unfilled, 233, unfilled, 23, 23 - unfilled);
+        float progress = machine.getProcessingProgress();
+        if (progress > 0 && progress < 1) {
+            drawTexturedModalRect(guiLeft + progressX, guiTop + progressY, 233, 22, 23, 22);
+            int unfilled = (int) (22 * (1 - progress));
+            drawTexturedModalRect(guiLeft + progressX, guiTop + progressY + unfilled, 233, unfilled, 23, 23 - unfilled);
         }
-        ItemStack inputStack = vat.getVessels().getStackInSlot(FluidMachineBlockEntity.INPUT);
+        ItemStack inputStack = machine.getVessels().getStackInSlot(FluidMachineBlockEntity.INPUT);
         float input = 1 - FluidMachineBlockEntity.fillRatio(inputStack);
         if (!inputStack.isEmpty() && input > 0 && input < 1) {
             int width = (int) (45 * input);
             drawTexturedModalRect(guiLeft + 20 + width, guiTop + 40, 176 + width, 0, 45 - width, 16);
         }
-        float output = FluidMachineBlockEntity.fillRatio(vat.getVessels().getStackInSlot(FluidMachineBlockEntity.OUTPUT));
+        float output = FluidMachineBlockEntity.fillRatio(machine.getVessels().getStackInSlot(FluidMachineBlockEntity.OUTPUT));
         if (output > 0 && output < 1) {
             drawTexturedModalRect(guiLeft + 68, guiTop + 60, 176, 17, (int) (53 * output), 20);
         }

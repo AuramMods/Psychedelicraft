@@ -163,6 +163,7 @@ public final class MashTubBlock extends BlockContainer {
         if (vat == null) return false;
         if (!world.isRemote && !vat.depositHeldFluid(player, hand)) {
             ItemStack held = player.getHeldItem(hand);
+            if (held.isEmpty() && vat.collectSolidOutput(player)) return true;
             if (vat.addIngredient(held)) {
                 if (!player.capabilities.isCreativeMode) held.shrink(1);
             } else {
@@ -200,6 +201,7 @@ public final class MashTubBlock extends BlockContainer {
                 if (!vessel.isEmpty()) drops.add(vessel.copy());
             }
             for (ItemStack ingredient : vat.getSuppliedIngredients()) drops.add(ingredient.copy());
+            if (!vat.getSolidOutput().isEmpty()) drops.add(vat.getSolidOutput().copy());
         }
         drops.add(stack);
     }
