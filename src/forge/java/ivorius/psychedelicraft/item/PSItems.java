@@ -12,6 +12,7 @@ import ivorius.psychedelicraft.Psychedelicraft;
 import ivorius.psychedelicraft.block.PSBlocks;
 import ivorius.psychedelicraft.entity.drug.DrugType;
 import ivorius.psychedelicraft.entity.drug.influence.DrugInfluence;
+import ivorius.psychedelicraft.fluid.FluidVessel;
 import net.minecraft.creativetab.CreativeTabs;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemBlock;
@@ -34,6 +35,15 @@ public final class PSItems {
     };
 
     public static final Item COFFEE_BEANS = named("coffee_beans", new Item());
+    public static final PortableFluidItem WOODEN_MUG = vessel("wooden_mug", FluidVessel.MUG);
+    public static final PortableFluidItem STONE_CUP = vessel("stone_cup", FluidVessel.CUP);
+    public static final PortableFluidItem GLASS_CHALICE = vessel("glass_chalice", FluidVessel.CHALICE);
+    public static final PortableFluidItem SHOT_GLASS = vessel("shot_glass", FluidVessel.SHOT_GLASS);
+    public static final PortableFluidItem BOTTLE = vessel("bottle", FluidVessel.BOTTLE);
+    public static final PortableFluidItem SYRINGE = vessel("syringe", FluidVessel.SYRINGE);
+    public static final PortableFluidItem FILLED_BOWL = vessel("filled_bowl", FluidVessel.BOWL);
+    public static final PortableFluidItem FILLED_GLASS_BOTTLE = vessel("filled_glass_bottle", FluidVessel.GLASS_BOTTLE);
+    public static final PortableFluidItem FILLED_BUCKET = vessel("filled_bucket", FluidVessel.BUCKET);
     public static final Item BROWN_MAGIC_MUSHROOMS = edible("brown_magic_mushrooms", 0, 0.1F, DrugType.BROWN_SHROOMS);
     public static final Item RED_MAGIC_MUSHROOMS = edible("red_magic_mushrooms", 0, 0.1F, DrugType.RED_SHROOMS);
     public static final Item CANNABIS_SEEDS = named("cannabis_seeds", new CropSeedItem(PSBlocks.CANNABIS, "cannabis_seeds"));
@@ -110,6 +120,12 @@ public final class PSItems {
                 () -> new DrugInfluence(type, DrugInfluence.INGESTED_DELAY, 0.005, 0.003, 0.5F)));
     }
 
+    private static PortableFluidItem vessel(String name, FluidVessel vessel) {
+        PortableFluidItem item = named(name, new PortableFluidItem(vessel));
+        if (vessel.emptyItem() != null) item.setCreativeTab(null);
+        return item;
+    }
+
     private static <T extends Item> T named(String name, T item) {
         item.setRegistryName(Psychedelicraft.id(name))
                 .setUnlocalizedName(Psychedelicraft.MOD_ID + "." + name)
@@ -134,6 +150,8 @@ public final class PSItems {
         Item item = event.getItemStack().getItem();
         if (item == LATTICE) {
             event.setBurnTime(700);
+        } else if (item == WOODEN_MUG) {
+            event.setBurnTime(50);
         } else if (item == MORNING_GLORY_LATTICE || item == WINE_GRAPE_LATTICE) {
             event.setBurnTime(0);
         } else if (item == JUNIPER_SAPLING || item == JUNIPER_BUTTON) {

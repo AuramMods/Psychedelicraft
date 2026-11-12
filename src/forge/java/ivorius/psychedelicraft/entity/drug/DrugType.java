@@ -15,6 +15,7 @@ import ivorius.psychedelicraft.entity.drug.type.CaffeineDrug;
 import ivorius.psychedelicraft.entity.drug.type.LsdDrug;
 import ivorius.psychedelicraft.entity.drug.type.PeyoteDrug;
 import ivorius.psychedelicraft.entity.drug.type.RedShroomsDrug;
+import ivorius.psychedelicraft.entity.drug.type.WarmthDrug;
 
 public final class DrugType {
     private static final Map<String, DrugType> REGISTRY = new LinkedHashMap<>();
@@ -24,6 +25,7 @@ public final class DrugType {
     public static final DrugType PEYOTE = register("peyote", () -> new PeyoteDrug(1, 0.0002));
     public static final DrugType ATROPINE = register("atropine", () -> new LsdDrug(1, 0.0003, true));
     public static final DrugType CAFFEINE = register("caffeine", () -> new CaffeineDrug(1, 0.0002));
+    public static final DrugType WARMTH = register("warmth", WarmthDrug::new);
 
     private final String id;
     private final Supplier<Drug> factory;

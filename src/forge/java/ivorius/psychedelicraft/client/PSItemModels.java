@@ -15,6 +15,7 @@ import ivorius.psychedelicraft.client.render.entity.JuniperBoatRenderer;
 import ivorius.psychedelicraft.entity.EntityJuniperBoat;
 import ivorius.psychedelicraft.entity.EntityJuniperChestBoat;
 import ivorius.psychedelicraft.item.PSItems;
+import ivorius.psychedelicraft.item.PortableFluidItem;
 import ivorius.psychedelicraft.network.Channel;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockDoor;
@@ -28,8 +29,13 @@ import net.minecraft.client.renderer.block.statemap.StateMap;
 import net.minecraft.client.renderer.block.statemap.StateMapperBase;
 import net.minecraft.item.Item;
 import net.minecraftforge.client.event.GuiOpenEvent;
+import net.minecraftforge.client.event.ColorHandlerEvent;
 import net.minecraftforge.client.event.ModelRegistryEvent;
+import net.minecraftforge.client.event.TextureStitchEvent;
 import net.minecraftforge.client.model.ModelLoader;
+import net.minecraftforge.fluids.Fluid;
+import net.minecraftforge.fluids.FluidRegistry;
+import net.minecraftforge.fluids.FluidStack;
 import net.minecraftforge.fml.client.registry.ClientRegistry;
 import net.minecraftforge.fml.client.registry.RenderingRegistry;
 import net.minecraftforge.fml.common.Mod;
@@ -39,6 +45,33 @@ import net.minecraftforge.fml.relauncher.Side;
 @Mod.EventBusSubscriber(modid = Psychedelicraft.MOD_ID, value = Side.CLIENT)
 public final class PSItemModels {
     private PSItemModels() {
+    }
+
+    @SubscribeEvent
+    public static void registerItemColors(ColorHandlerEvent.Item event) {
+        for (Item item : PSItems.items()) {
+            if (!(item instanceof PortableFluidItem)) continue;
+            PortableFluidItem vessel = (PortableFluidItem) item;
+            event.getItemColors().registerItemColorHandler((stack, layer) -> {
+                if (vessel == PSItems.BOTTLE && layer == 0) {
+                    return stack.hasTagCompound() && stack.getTagCompound().getCompoundTag("display").hasKey("color", 99)
+                            ? stack.getTagCompound().getCompoundTag("display").getInteger("color") : 0xA06540;
+                }
+                int fluidLayer = vessel == PSItems.FILLED_GLASS_BOTTLE ? 0 : 1;
+                FluidStack fluid = layer == fluidLayer ? vessel.contents(stack) : null;
+                return fluid == null ? -1 : fluid.getFluid().getColor(fluid);
+            }, vessel);
+        }
+    }
+
+    @SubscribeEvent
+    public static void stitchFluids(TextureStitchEvent.Pre event) {
+        for (Fluid fluid : FluidRegistry.getRegisteredFluids().values()) {
+            if (fluid.getStill() != null && Psychedelicraft.MOD_ID.equals(fluid.getStill().getResourceDomain())) {
+                event.getMap().registerSprite(fluid.getStill());
+                event.getMap().registerSprite(fluid.getFlowing());
+            }
+        }
     }
 
     @SubscribeEvent

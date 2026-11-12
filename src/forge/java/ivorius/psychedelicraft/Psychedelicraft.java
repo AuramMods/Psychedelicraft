@@ -6,6 +6,7 @@ package ivorius.psychedelicraft;
 
 import ivorius.psychedelicraft.entity.drug.DrugCapability;
 import ivorius.psychedelicraft.entity.FarmerTrades;
+import ivorius.psychedelicraft.fluid.PSFluids;
 import ivorius.psychedelicraft.item.PSItems;
 import ivorius.psychedelicraft.network.Channel;
 import ivorius.psychedelicraft.recipe.JuniperWoodRecipes;
@@ -28,6 +29,7 @@ public class Psychedelicraft {
 
     @Mod.EventHandler
     public void preInit(FMLPreInitializationEvent event) {
+        PSFluids.register();
         DrugCapability.register();
         Channel.register();
         ChestLoot.register();
