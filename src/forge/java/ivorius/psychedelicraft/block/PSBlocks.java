@@ -7,6 +7,8 @@ import java.util.List;
 import ivorius.psychedelicraft.Psychedelicraft;
 import ivorius.psychedelicraft.block.TallCropBlock.Crop;
 import ivorius.psychedelicraft.block.entity.BarrelBlockEntity;
+import ivorius.psychedelicraft.block.entity.DistilleryBlockEntity;
+import ivorius.psychedelicraft.block.entity.FlaskBlockEntity;
 import ivorius.psychedelicraft.block.entity.DryingTableBlockEntity;
 import ivorius.psychedelicraft.block.entity.JuniperSignBlockEntity;
 import ivorius.psychedelicraft.block.entity.LatticeCropBlockEntity;
@@ -98,6 +100,9 @@ public final class PSBlocks {
     public static final BarrelBlock JUNGLE_BARREL = named("jungle_barrel", new BarrelBlock());
     public static final BarrelBlock ACACIA_BARREL = named("acacia_barrel", new BarrelBlock());
     public static final BarrelBlock DARK_OAK_BARREL = named("dark_oak_barrel", new BarrelBlock());
+    public static final FlaskBlock FLASK = named("flask", new FlaskBlock());
+    public static final DistilleryBlock DISTILLERY = named("distillery", new DistilleryBlock());
+    public static final Block COPPER_ORE = named("copper_ore", new CopperOreBlock());
 
     private PSBlocks() {
     }
@@ -114,6 +119,7 @@ public final class PSBlocks {
                 PEYOTE, AGAVE_PLANT, JIMSONWEED, BELLADONNA, TOMATOES, DRYING_TABLE, IRON_DRYING_TABLE,
                 MASH_TUB, MASH_TUB_EDGE,
                 OAK_BARREL, SPRUCE_BARREL, BIRCH_BARREL, JUNGLE_BARREL, ACACIA_BARREL, DARK_OAK_BARREL,
+                FLASK, DISTILLERY, COPPER_ORE,
                 LATTICE, MORNING_GLORY, MORNING_GLORY_LATTICE, WINE_GRAPE_LATTICE,
                 NATURAL_HOP, NATURAL_COCA, NATURAL_TOBACCO, NATURAL_COFFEA,
                 JUNIPER_LOG, JUNIPER_WOOD, STRIPPED_JUNIPER_LOG, STRIPPED_JUNIPER_WOOD,
@@ -128,6 +134,8 @@ public final class PSBlocks {
         GameRegistry.registerTileEntity(MashTubBlockEntity.class, Psychedelicraft.id("mash_tub"));
         GameRegistry.registerTileEntity(MashTubBlock.Edge.class, Psychedelicraft.id("mash_tub_edge"));
         GameRegistry.registerTileEntity(BarrelBlockEntity.class, Psychedelicraft.id("barrel"));
+        GameRegistry.registerTileEntity(FlaskBlockEntity.class, Psychedelicraft.id("flask"));
+        GameRegistry.registerTileEntity(DistilleryBlockEntity.class, Psychedelicraft.id("distillery"));
         GameRegistry.registerTileEntity(LatticeCropBlockEntity.class, Psychedelicraft.id("lattice_crop"));
         GameRegistry.registerTileEntity(PeyoteBlockEntity.class, Psychedelicraft.id("peyote"));
         GameRegistry.registerTileEntity(JuniperSignBlockEntity.class, Psychedelicraft.id("juniper_sign"));

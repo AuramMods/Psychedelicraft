@@ -58,30 +58,39 @@ public abstract class FluidProcessingBlockEntity extends FluidMachineBlockEntity
     }
 
     protected final void processFluid(boolean aging) {
-        FluidStack contents = getTank().getFluid();
-        BrewProcess next = BrewProcess.find(contents, aging, solidOutput.getCount() < 64);
+        processFluid(BrewProcess.find(getTank().getFluid(), aging, solidOutput.getCount() < 64), 1, true);
+    }
+
+    protected final void processFluid(BrewProcess next, int tickRate, boolean ready) {
         if (next == BrewProcess.IDLE) {
             if (stage != BrewProcess.IDLE) reset(BrewProcess.IDLE, 0);
             return;
         }
 
+        FluidStack contents = getTank().getFluid();
         int ticks = Math.max(1, next.duration(contents));
         if (next != stage) reset(next, ticks);
         else if (duration != ticks) {
             duration = ticks;
             changed();
         }
-        elapsed++;
+        if (!ready) return;
+        int previous = elapsed;
+        elapsed += Math.min(tickRate, duration - elapsed);
         if (elapsed >= duration) {
-            getTank().replace(next.finish(contents));
-            if (next == BrewProcess.HARDEN) {
-                if (solidOutput.isEmpty()) solidOutput = new ItemStack(Blocks.DIRT);
-                else solidOutput.grow(1);
-            }
-            reset(BrewProcess.IDLE, 0);
-        } else if (elapsed % 20 == 0) {
+            if (completeProcess(next, contents)) reset(BrewProcess.IDLE, 0);
+        } else if (previous / 20 != elapsed / 20) {
             changed();
         }
+    }
+
+    protected boolean completeProcess(BrewProcess process, FluidStack contents) {
+        getTank().replace(process.finish(contents));
+        if (process == BrewProcess.HARDEN) {
+            if (solidOutput.isEmpty()) solidOutput = new ItemStack(Blocks.DIRT);
+            else solidOutput.grow(1);
+        }
+        return true;
     }
 
     private void reset(BrewProcess next, int ticks) {

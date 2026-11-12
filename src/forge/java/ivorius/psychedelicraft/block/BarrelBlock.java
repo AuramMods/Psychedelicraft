@@ -4,11 +4,8 @@
 
 package ivorius.psychedelicraft.block;
 
-import ivorius.psychedelicraft.Psychedelicraft;
 import ivorius.psychedelicraft.block.entity.BarrelBlockEntity;
-import ivorius.psychedelicraft.fluid.FluidContents;
 import ivorius.psychedelicraft.screen.PSGuiHandler;
-import net.minecraft.block.BlockContainer;
 import net.minecraft.block.BlockHopper;
 import net.minecraft.block.SoundType;
 import net.minecraft.block.material.Material;
@@ -19,14 +16,11 @@ import net.minecraft.block.state.IBlockState;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.item.Item;
-import net.minecraft.item.ItemStack;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.EnumBlockRenderType;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.util.EnumHand;
 import net.minecraft.util.Mirror;
-import net.minecraft.util.NonNullList;
 import net.minecraft.util.Rotation;
 import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
@@ -36,7 +30,7 @@ import net.minecraft.world.World;
 import javax.annotation.Nullable;
 import java.util.List;
 
-public final class BarrelBlock extends BlockContainer {
+public final class BarrelBlock extends FluidMachineBlock {
     public static final PropertyDirection FACING = BlockHopper.FACING;
     public static final PropertyBool TAPPED = PropertyBool.create("tapped");
     private static final AxisAlignedBB[][] SHAPES = {
@@ -50,7 +44,6 @@ public final class BarrelBlock extends BlockContainer {
         setDefaultState(blockState.getBaseState().withProperty(FACING, EnumFacing.NORTH).withProperty(TAPPED, true));
         setHardness(2);
         setSoundType(SoundType.WOOD);
-        setLightOpacity(0);
     }
 
     @Override
@@ -98,16 +91,6 @@ public final class BarrelBlock extends BlockContainer {
     }
 
     @Override
-    public boolean isOpaqueCube(IBlockState state) {
-        return false;
-    }
-
-    @Override
-    public boolean isFullCube(IBlockState state) {
-        return false;
-    }
-
-    @Override
     public AxisAlignedBB getBoundingBox(IBlockState state, IBlockAccess world, BlockPos pos) {
         AxisAlignedBB[] parts = SHAPES[state.getValue(FACING).getAxis().ordinal()];
         return parts[0].union(parts[1]);
@@ -134,47 +117,9 @@ public final class BarrelBlock extends BlockContainer {
             if (state.getValue(TAPPED) && state.getValue(FACING).getAxis().isHorizontal()
                     && barrel.dispense(player, hand)) return true;
             if (player.getHeldItem(hand).isEmpty() && barrel.collectSolidOutput(player)) return true;
-            player.openGui(Psychedelicraft.MOD_ID, PSGuiHandler.BARREL, world, pos.getX(), pos.getY(), pos.getZ());
+            openMachine(world, pos, player, PSGuiHandler.BARREL);
         }
         return true;
-    }
-
-    @Override
-    public void onBlockPlacedBy(World world, BlockPos pos, IBlockState state, EntityLivingBase placer, ItemStack stack) {
-        BarrelBlockEntity barrel = getBarrel(world, pos);
-        if (!world.isRemote && barrel != null && stack.getSubCompound("fluid") != null) {
-            barrel.getTank().replace(FluidContents.read(stack.getSubCompound("fluid"), BarrelBlockEntity.CAPACITY));
-        }
-    }
-
-    @Override
-    public void getDrops(NonNullList<ItemStack> drops, IBlockAccess world, BlockPos pos, IBlockState state, int fortune) {
-        ItemStack stack = new ItemStack(Item.getItemFromBlock(this));
-        BarrelBlockEntity barrel = getBarrel(world, pos);
-        if (barrel != null) {
-            if (barrel.getTank().getFluid() != null) {
-                stack.setTagInfo("fluid", FluidContents.write(barrel.getTank().getFluid()));
-            }
-            for (int slot = 0; slot < barrel.getVessels().getSlots(); slot++) {
-                ItemStack vessel = barrel.getVessels().getStackInSlot(slot);
-                if (!vessel.isEmpty()) drops.add(vessel.copy());
-            }
-            if (!barrel.getSolidOutput().isEmpty()) drops.add(barrel.getSolidOutput().copy());
-        }
-        drops.add(stack);
-    }
-
-    @Override
-    public boolean removedByPlayer(IBlockState state, World world, BlockPos pos, EntityPlayer player,
-                                   boolean willHarvest) {
-        return willHarvest || super.removedByPlayer(state, world, pos, player, false);
-    }
-
-    @Override
-    public void harvestBlock(World world, EntityPlayer player, BlockPos pos, IBlockState state,
-                             @Nullable TileEntity tile, ItemStack tool) {
-        super.harvestBlock(world, player, pos, state, tile, tool);
-        world.setBlockToAir(pos);
     }
 
     @Nullable

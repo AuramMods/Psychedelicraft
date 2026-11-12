@@ -1,0 +1,90 @@
+/*
+ * Copyright (c) 2014, Lukas Tenbrink.
+ */
+
+package ivorius.psychedelicraft.client.render.block;
+
+import ivorius.psychedelicraft.block.entity.DistilleryBlockEntity;
+import ivorius.psychedelicraft.block.entity.FluidMachineBlockEntity;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.renderer.BufferBuilder;
+import net.minecraft.client.renderer.GlStateManager;
+import net.minecraft.client.renderer.Tessellator;
+import net.minecraft.client.renderer.texture.TextureAtlasSprite;
+import net.minecraft.client.renderer.texture.TextureMap;
+import net.minecraft.client.renderer.tileentity.TileEntitySpecialRenderer;
+import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
+import net.minecraftforge.fluids.FluidStack;
+import org.lwjgl.opengl.GL11;
+
+public final class FlaskRenderer extends TileEntitySpecialRenderer<FluidMachineBlockEntity> {
+    private static final double UNIT = 0.124;
+
+    @Override
+    public void render(FluidMachineBlockEntity machine, double x, double y, double z, float partialTicks,
+                       int destroyStage, float alpha) {
+        FluidStack contents = machine.getTank().getFluid();
+        if (contents == null) return;
+        TextureAtlasSprite sprite = Minecraft.getMinecraft().getTextureMapBlocks()
+                .getAtlasSprite(contents.getFluid().getStill(contents).toString());
+        int color = contents.getFluid().getColor(contents);
+        bindTexture(TextureMap.LOCATION_BLOCKS_TEXTURE);
+        GlStateManager.pushMatrix();
+        GlStateManager.enableBlend();
+        GlStateManager.tryBlendFuncSeparate(GlStateManager.SourceFactor.SRC_ALPHA, GlStateManager.DestFactor.ONE_MINUS_SRC_ALPHA,
+                GlStateManager.SourceFactor.ONE, GlStateManager.DestFactor.ZERO);
+        GlStateManager.disableLighting();
+        try {
+            GlStateManager.translate(x + 0.5, y + 0.002, z + 0.5);
+            GlStateManager.scale(UNIT, UNIT, UNIT);
+            Tessellator tessellator = Tessellator.getInstance();
+            BufferBuilder buffer = tessellator.getBuffer();
+            buffer.begin(GL11.GL_QUADS, DefaultVertexFormats.POSITION_TEX_COLOR);
+            float fill = (float) contents.amount / machine.getTank().getCapacity();
+            chamber(buffer, sprite, color, 0, fill * 2, 2);
+            if (fill > 0.5F) {
+                double neck = machine instanceof DistilleryBlockEntity ? 4.5 : 3.5;
+                chamber(buffer, sprite, color, neck, (fill - 0.5F) * 2, 1.5);
+            }
+            tessellator.draw();
+        } finally {
+            GlStateManager.enableLighting();
+            GlStateManager.disableBlend();
+            GlStateManager.popMatrix();
+        }
+    }
+
+    private static void chamber(BufferBuilder buffer, TextureAtlasSprite sprite, int color,
+                                double bottom, double height, double edge) {
+        double top = bottom + height;
+        top(buffer, sprite, color, -1, 1, -edge, edge, top);
+        top(buffer, sprite, color, -edge, -1, -1, 1, top);
+        top(buffer, sprite, color, 1, edge, -1, 1, top);
+        wall(buffer, sprite, color, 1, -edge, -1, -edge, bottom, top);
+        wall(buffer, sprite, color, -1, edge, 1, edge, bottom, top);
+        wall(buffer, sprite, color, -edge, -1, -edge, 1, bottom, top);
+        wall(buffer, sprite, color, edge, 1, edge, -1, bottom, top);
+    }
+
+    private static void top(BufferBuilder buffer, TextureAtlasSprite sprite, int color, double left, double right,
+                            double front, double back, double y) {
+        vertex(buffer, sprite, color, left, y, front, 0, 0);
+        vertex(buffer, sprite, color, left, y, back, 0, 16);
+        vertex(buffer, sprite, color, right, y, back, 16, 16);
+        vertex(buffer, sprite, color, right, y, front, 16, 0);
+    }
+
+    private static void wall(BufferBuilder buffer, TextureAtlasSprite sprite, int color, double x1, double z1,
+                             double x2, double z2, double bottom, double top) {
+        vertex(buffer, sprite, color, x1, bottom, z1, 0, 16);
+        vertex(buffer, sprite, color, x2, bottom, z2, 16, 16);
+        vertex(buffer, sprite, color, x2, top, z2, 16, 0);
+        vertex(buffer, sprite, color, x1, top, z1, 0, 0);
+    }
+
+    private static void vertex(BufferBuilder buffer, TextureAtlasSprite sprite, int color,
+                               double x, double y, double z, int u, int v) {
+        buffer.pos(x, y, z).tex(sprite.getInterpolatedU(u), sprite.getInterpolatedV(v))
+                .color(color >> 16 & 255, color >> 8 & 255, color & 255, color >>> 24).endVertex();
+    }
+}

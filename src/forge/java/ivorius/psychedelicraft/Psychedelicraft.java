@@ -12,6 +12,7 @@ import ivorius.psychedelicraft.network.Channel;
 import ivorius.psychedelicraft.recipe.JuniperWoodRecipes;
 import ivorius.psychedelicraft.screen.PSGuiHandler;
 import ivorius.psychedelicraft.world.gen.ChestLoot;
+import ivorius.psychedelicraft.world.gen.CopperOreGenerator;
 import ivorius.psychedelicraft.world.gen.VillageGarden;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.ResourceLocation;
@@ -40,6 +41,11 @@ public class Psychedelicraft {
     @Mod.EventHandler
     public void init(FMLInitializationEvent event) {
         GameRegistry.addSmelting(new ItemStack(PSItems.COFFEA_CHERRIES), new ItemStack(PSItems.COFFEE_BEANS), 0.2F);
+        GameRegistry.addSmelting(new ItemStack(PSItems.RAW_COPPER), new ItemStack(PSItems.COPPER_INGOT), 0.7F);
+        GameRegistry.addSmelting(new ItemStack(PSItems.COPPER_ORE), new ItemStack(PSItems.COPPER_INGOT), 0.7F);
+        OreDictionary.registerOre("oreCopper", PSItems.COPPER_ORE);
+        OreDictionary.registerOre("ingotCopper", PSItems.COPPER_INGOT);
+        GameRegistry.registerWorldGenerator(new CopperOreGenerator(), 0);
         OreDictionary.registerOre("plankWood", PSItems.JUNIPER_PLANKS);
         OreDictionary.registerOre("stairWood", PSItems.JUNIPER_STAIRS);
         OreDictionary.registerOre("slabWood", PSItems.JUNIPER_SLAB);

@@ -32,7 +32,7 @@ public final class FluidContents {
     }
 
     @Nullable
-    static FluidStack normalize(@Nullable FluidStack stack) {
+    public static FluidStack normalize(@Nullable FluidStack stack) {
         return stack != null && stack.tag != null && stack.tag.hasNoTags()
                 ? new FluidStack(stack.getFluid(), stack.amount) : stack;
     }

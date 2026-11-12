@@ -2,6 +2,7 @@ package ivorius.psychedelicraft.recipe;
 
 import ivorius.psychedelicraft.Psychedelicraft;
 import ivorius.psychedelicraft.fluid.FluidVesselHandler;
+import ivorius.psychedelicraft.item.FluidMachineItem;
 import ivorius.psychedelicraft.item.PSItems;
 import net.minecraft.init.Blocks;
 import net.minecraft.inventory.InventoryCrafting;
@@ -14,6 +15,7 @@ import net.minecraft.util.NonNullList;
 import net.minecraft.world.World;
 import net.minecraftforge.event.RegistryEvent;
 import net.minecraftforge.fluids.FluidUtil;
+import net.minecraftforge.fluids.capability.IFluidHandlerItem;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.oredict.ShapedOreRecipe;
@@ -30,7 +32,27 @@ public final class FluidVesselRecipes {
     public static void register(RegistryEvent.Register<IRecipe> event) {
         event.getRegistry().registerAll(
                 new BottleRecipe().setRegistryName(Psychedelicraft.id("bottle")),
+                new DistilleryRecipe().setRegistryName(Psychedelicraft.id("distillery")),
                 new PouringRecipe().setRegistryName(Psychedelicraft.id("pouring")));
+    }
+
+    private static final class DistilleryRecipe extends ShapedOreRecipe {
+        private DistilleryRecipe() {
+            super(null, new ItemStack(PSItems.DISTILLERY), "##", "D ", '#', "ingotCopper", 'D', PSItems.FLASK);
+        }
+
+        @Override
+        public ItemStack getCraftingResult(InventoryCrafting inventory) {
+            ItemStack result = super.getCraftingResult(inventory);
+            for (int slot = 0; slot < inventory.getSizeInventory(); slot++) {
+                ItemStack input = inventory.getStackInSlot(slot);
+                if (input.getItem() == PSItems.FLASK && input.getSubCompound("fluid") != null) {
+                    result.setTagInfo("fluid", input.getSubCompound("fluid").copy());
+                    break;
+                }
+            }
+            return result;
+        }
     }
 
     private static final class BottleRecipe extends ShapedOreRecipe {
@@ -91,13 +113,14 @@ public final class FluidVesselRecipes {
 
         @Nullable
         private static Pour pour(InventoryCrafting inventory) {
-            FluidVesselHandler source = null;
-            FluidVesselHandler target = null;
+            IFluidHandlerItem source = null;
+            IFluidHandlerItem target = null;
             int sourceSlot = -1;
             for (int slot = 0; slot < inventory.getSizeInventory(); slot++) {
                 ItemStack input = inventory.getStackInSlot(slot);
                 if (input.isEmpty()) continue;
-                FluidVesselHandler vessel = FluidVesselHandler.forCrafting(input);
+                IFluidHandlerItem vessel = input.getItem() instanceof FluidMachineItem
+                        ? FluidVesselHandler.forTransfer(input) : FluidVesselHandler.forCrafting(input);
                 if (vessel == null || target != null) return null;
                 if (source == null) {
                     source = vessel;

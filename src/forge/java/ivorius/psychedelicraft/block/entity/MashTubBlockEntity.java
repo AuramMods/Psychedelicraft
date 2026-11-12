@@ -5,6 +5,7 @@
 package ivorius.psychedelicraft.block.entity;
 
 import ivorius.psychedelicraft.fluid.PSFluids;
+import ivorius.psychedelicraft.fluid.FluidVesselHandler;
 import ivorius.psychedelicraft.recipe.MashingRecipe;
 import net.minecraft.init.SoundEvents;
 import net.minecraft.item.ItemStack;
@@ -52,7 +53,7 @@ public final class MashTubBlockEntity extends FluidProcessingBlockEntity {
 
     public boolean addIngredient(ItemStack held) {
         FluidStack contents = getTank().getFluid();
-        if (activeRecipe != null || held.isEmpty() || contents == null || itemHandler(held) != null) return false;
+        if (activeRecipe != null || held.isEmpty() || contents == null || FluidVesselHandler.forTransfer(held) != null) return false;
         List<MashingRecipe> recipes = new ArrayList<>();
         boolean valid = false;
         for (IRecipe entry : ForgeRegistries.RECIPES.getValuesCollection()) {

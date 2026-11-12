@@ -47,9 +47,9 @@ public final class PSFluids {
     public static final Fluid COCAINE = fluid("cocaine", "clear", 0x44e8f4f8, 1);
     public static final Fluid CAFFEINE = fluid("caffeine", "clear", 0x66eee2d3, 1);
     public static final Fluid BATH_SALTS = fluid("bath_salts", "clear", 0x2233f4f8, 1);
-    public static final Fluid MORNING_GLORY_EXTRACT = fluid("morning_glory_extract", "clear", 0x66eee2d3, 1);
-    public static final Fluid BELLADONNA_EXTRACT = fluid("belladonna_extract", "clear", 0x66eee2d3, 1);
-    public static final Fluid JIMSONWEED_EXTRACT = fluid("jimsonweed_extract", "clear", 0x66eee2d3, 1);
+    public static final Fluid MORNING_GLORY_EXTRACT = extract("morning_glory_extract");
+    public static final Fluid BELLADONNA_EXTRACT = extract("belladonna_extract");
+    public static final Fluid JIMSONWEED_EXTRACT = extract("jimsonweed_extract");
     public static final Fluid SLURRY = fluid("slurry", "slurry", 0xcc704e21, 4);
 
     private PSFluids() {
@@ -65,6 +65,17 @@ public final class PSFluids {
     private static <T extends Fluid> T register(String path, T fluid) {
         FLUIDS.put(Psychedelicraft.id(path).toString(), fluid);
         return fluid;
+    }
+
+    private static Fluid extract(String path) {
+        return register(path, new Fluid(FORGE_PREFIX + path,
+                BrewFluid.texture("clear", "_still"), BrewFluid.texture("clear", "_flow"), 0x66eee2d3) {
+            @Override
+            public int getColor(FluidStack stack) {
+                return BrewFluid.blend(super.getColor(stack), 0xffffffff,
+                        BrewFluid.stage(stack, BrewFluid.DISTILLATION, 2) / 16F);
+            }
+        }.setUnlocalizedName(Psychedelicraft.MOD_ID + "." + path));
     }
 
     public static void register() {
@@ -96,6 +107,10 @@ public final class PSFluids {
         return fluid == COCAINE || fluid == CAFFEINE || fluid == BATH_SALTS || fluid == MORNING_GLORY_EXTRACT;
     }
 
+    public static boolean isFlowerExtract(Fluid fluid) {
+        return fluid == MORNING_GLORY_EXTRACT || fluid == BELLADONNA_EXTRACT || fluid == JIMSONWEED_EXTRACT;
+    }
+
     public static boolean canConsume(Fluid fluid, boolean injection) {
         return injection ? fluid == CAFFEINE : fluid == COFFEE || fluid == PEYOTE_JUICE;
     }
@@ -123,6 +138,10 @@ public final class PSFluids {
     }
 
     public static String displayName(FluidStack stack) {
+        if (isFlowerExtract(stack.getFluid())) {
+            return I18n.translateToLocal(stack.getUnlocalizedName() + ".distilled."
+                    + BrewFluid.stage(stack, BrewFluid.DISTILLATION, 2));
+        }
         return stack.getFluid() == COFFEE
                 ? I18n.translateToLocal("fluid.psychedelicraft.coffee.temperature." + warmth(stack))
                 : stack.getLocalizedName();

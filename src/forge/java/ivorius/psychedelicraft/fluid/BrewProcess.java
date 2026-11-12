@@ -18,7 +18,8 @@ public enum BrewProcess {
     ACETIFY,
     MATURE,
     HARDEN,
-    COOL;
+    COOL,
+    DISTILL;
 
     public static final int SLURRY_PER_DIRT = 4 * Fluid.BUCKET_VOLUME;
 
@@ -41,6 +42,11 @@ public enum BrewProcess {
             case MATURE: return ((BrewFluid) contents.getFluid()).getTicks().ticksPerMaturation;
             case HARDEN: return PSConfig.balancing.slurryHardeningTime;
             case COOL: return 300;
+            case DISTILL:
+                if (contents.getFluid() instanceof BrewFluid) {
+                    return ((BrewFluid) contents.getFluid()).getTicks().ticksPerDistillation;
+                }
+                return PSConfig.balancing.fluidAttributes.flowerExtractDistillationTicks * (1 + distillation(contents));
             default: return 0;
         }
     }
@@ -50,6 +56,10 @@ public enum BrewProcess {
         FluidStack result = contents.copy();
         if (this == HARDEN) {
             result.amount -= SLURRY_PER_DIRT;
+            return result.amount > 0 ? result : null;
+        }
+        if (this == DISTILL && PSFluids.isFlowerExtract(contents.getFluid())) {
+            result.amount -= 2;
             return result.amount > 0 ? result : null;
         }
         if (result.tag == null) result.tag = new NBTTagCompound();
@@ -68,10 +78,41 @@ public enum BrewProcess {
             case COOL:
                 result.tag.setInteger("warmth", 1);
                 break;
+            case DISTILL:
+                if (contents.amount > 1) result.amount--;
+                result.tag.setInteger(BrewFluid.DISTILLATION, distillation(contents) + 1);
+                break;
             default:
                 return contents.copy();
         }
         return result;
+    }
+
+    public static BrewProcess findDistillation(@Nullable FluidStack contents) {
+        if (contents == null) return IDLE;
+        Fluid fluid = contents.getFluid();
+        if (PSFluids.isFlowerExtract(fluid)) {
+            return contents.amount >= 2 && distillation(contents) < 2 ? DISTILL : IDLE;
+        }
+        if (!(fluid instanceof BrewFluid)) return IDLE;
+        return BrewFluid.stage(contents, BrewFluid.FERMENTATION, BrewFluid.FERMENTATION_STEPS) > 0
+                && BrewFluid.stage(contents, BrewFluid.MATURATION, BrewFluid.MATURATION_STEPS) == 0
+                && distillation(contents) < 16 ? DISTILL : IDLE;
+    }
+
+    @Nullable
+    public static FluidStack distillationOutput(FluidStack contents) {
+        if (PSFluids.isFlowerExtract(contents.getFluid())) {
+            FluidStack output = new FluidStack(contents, 1);
+            if (output.tag == null) output.tag = new NBTTagCompound();
+            output.tag.setInteger(BrewFluid.DISTILLATION, distillation(contents) + 1);
+            return output;
+        }
+        return contents.amount > 1 ? new FluidStack(PSFluids.SLURRY, 1) : null;
+    }
+
+    private static int distillation(FluidStack fluid) {
+        return BrewFluid.stage(fluid, BrewFluid.DISTILLATION, PSFluids.isFlowerExtract(fluid.getFluid()) ? 2 : 16);
     }
 
     public String key() {

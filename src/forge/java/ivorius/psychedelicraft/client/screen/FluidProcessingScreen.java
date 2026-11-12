@@ -6,8 +6,10 @@ package ivorius.psychedelicraft.client.screen;
 
 import ivorius.psychedelicraft.Psychedelicraft;
 import ivorius.psychedelicraft.block.entity.FluidMachineBlockEntity;
+import ivorius.psychedelicraft.block.entity.DistilleryBlockEntity;
 import ivorius.psychedelicraft.block.entity.FluidProcessingBlockEntity;
 import ivorius.psychedelicraft.fluid.BrewProcess;
+import ivorius.psychedelicraft.fluid.BrewFluid;
 import ivorius.psychedelicraft.fluid.PSFluids;
 import ivorius.psychedelicraft.screen.FluidMachineContainer;
 import net.minecraft.client.gui.inventory.GuiContainer;
@@ -30,9 +32,9 @@ public final class FluidProcessingScreen extends GuiContainer {
     private final int progressY;
 
     private final InventoryPlayer inventory;
-    private final FluidProcessingBlockEntity machine;
+    private final FluidMachineBlockEntity machine;
 
-    public FluidProcessingScreen(InventoryPlayer inventory, FluidProcessingBlockEntity machine,
+    public FluidProcessingScreen(InventoryPlayer inventory, FluidMachineBlockEntity machine,
                                  String background, int progressX, int progressY) {
         super(new FluidMachineContainer(inventory, machine));
         this.inventory = inventory;
@@ -52,10 +54,25 @@ public final class FluidProcessingScreen extends GuiContainer {
             List<String> info = new ArrayList<>();
             if (fluid != null) info.add(PSFluids.displayName(fluid));
             info.add(I18n.format("psychedelicraft.container.levels", machine.getTank().getFluidAmount(), machine.getTank().getCapacity()));
-            BrewProcess stage = machine.getStage();
-            if (stage != BrewProcess.IDLE) {
-                info.add(I18n.format("fluid.status", I18n.format("fluid.status." + stage.key())));
-                info.add(I18n.format("time.until." + stage.key(), StringUtils.ticksToElapsedTime(machine.getRemainingTicks())));
+            if (machine instanceof FluidProcessingBlockEntity) {
+                FluidProcessingBlockEntity processor = (FluidProcessingBlockEntity) machine;
+                BrewProcess stage = processor.getStage();
+                if (stage != BrewProcess.IDLE) {
+                    info.add(I18n.format("fluid.status", I18n.format("fluid.status." + stage.key())));
+                    info.add(I18n.format("time.until." + stage.key(), StringUtils.ticksToElapsedTime(processor.getRemainingTicks())));
+                }
+            }
+            if (machine instanceof DistilleryBlockEntity) {
+                DistilleryBlockEntity.Outlet outlet = ((DistilleryBlockEntity) machine).getOutlet();
+                if (outlet != DistilleryBlockEntity.Outlet.READY) info.add(I18n.format(outlet.key()));
+                if (fluid != null && fluid.getFluid() instanceof BrewFluid) {
+                    if (BrewFluid.stage(fluid, BrewFluid.FERMENTATION, BrewFluid.FERMENTATION_STEPS) == 0) {
+                        info.add(I18n.format("psychedelicraft.distillery.requires_fermentation"));
+                    }
+                    if (BrewFluid.stage(fluid, BrewFluid.MATURATION, BrewFluid.MATURATION_STEPS) > 0) {
+                        info.add(I18n.format("psychedelicraft.distillery.requires_unaged"));
+                    }
+                }
             }
             drawHoveringText(info, mouseX, mouseY);
         }
@@ -91,8 +108,9 @@ public final class FluidProcessingScreen extends GuiContainer {
         GlStateManager.enableBlend();
         mc.getTextureManager().bindTexture(texture);
         drawTexturedModalRect(guiLeft, guiTop, 0, 0, xSize, ySize);
-        float progress = machine.getProcessingProgress();
-        if (progress > 0 && progress < 1) {
+        float progress = machine instanceof FluidProcessingBlockEntity
+                ? ((FluidProcessingBlockEntity) machine).getProcessingProgress() : 0;
+        if (machine instanceof DistilleryBlockEntity || progress > 0 && progress < 1) {
             drawTexturedModalRect(guiLeft + progressX, guiTop + progressY, 233, 22, 23, 22);
             int unfilled = (int) (22 * (1 - progress));
             drawTexturedModalRect(guiLeft + progressX, guiTop + progressY + unfilled, 233, unfilled, 23, 23 - unfilled);

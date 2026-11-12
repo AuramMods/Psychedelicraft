@@ -18,6 +18,8 @@ import net.minecraft.util.EnumFacing;
 import net.minecraft.util.EnumHand;
 import net.minecraft.util.ITickable;
 import net.minecraft.util.SoundCategory;
+import net.minecraft.util.math.BlockPos;
+import net.minecraft.world.World;
 import net.minecraftforge.common.capabilities.Capability;
 import net.minecraftforge.fluids.FluidStack;
 import net.minecraftforge.fluids.FluidUtil;
@@ -47,7 +49,7 @@ public abstract class FluidMachineBlockEntity extends TileEntity implements ITic
 
         @Override
         public boolean isItemValid(int slot, ItemStack stack) {
-            IFluidHandlerItem vessel = itemHandler(stack);
+            IFluidHandlerItem vessel = FluidVesselHandler.forTransfer(stack);
             return vessel != null && (slot == INPUT ? hasFluid(vessel) : hasRoom(vessel));
         }
 
@@ -80,6 +82,11 @@ public abstract class FluidMachineBlockEntity extends TileEntity implements ITic
         return vessels;
     }
 
+    @Override
+    public boolean shouldRefresh(World world, BlockPos pos, IBlockState oldState, IBlockState newState) {
+        return oldState.getBlock() != newState.getBlock();
+    }
+
     public final boolean isUsableByPlayer(EntityPlayer player) {
         return !isInvalid() && world.getTileEntity(pos) == this
                 && player.getDistanceSq(pos.getX() + 0.5, pos.getY() + 0.5, pos.getZ() + 0.5) <= 64;
@@ -93,7 +100,7 @@ public abstract class FluidMachineBlockEntity extends TileEntity implements ITic
 
     protected final boolean transferHeldFluid(EntityPlayer player, EnumHand hand, int amount, boolean drainTank) {
         ItemStack held = player.getHeldItem(hand);
-        IFluidHandlerItem vessel = itemHandler(held);
+        IFluidHandlerItem vessel = FluidVesselHandler.forTransfer(held);
         if (vessel == null) return false;
         FluidStack moved = drainTank ? FluidUtil.tryFluidTransfer(vessel, tank, amount, true)
                 : FluidUtil.tryFluidTransfer(tank, vessel, amount, true);
@@ -135,12 +142,12 @@ public abstract class FluidMachineBlockEntity extends TileEntity implements ITic
 
     private boolean transferVessels() {
         boolean transferred = false;
-        IFluidHandlerItem target = itemHandler(vessels.getStackInSlot(OUTPUT));
+        IFluidHandlerItem target = FluidVesselHandler.forTransfer(vessels.getStackInSlot(OUTPUT));
         if (target != null && FluidUtil.tryFluidTransfer(target, tank, TRANSFER_RATE, true) != null) {
             vessels.setStackInSlot(OUTPUT, target.getContainer());
             transferred = true;
         }
-        IFluidHandlerItem source = itemHandler(vessels.getStackInSlot(INPUT));
+        IFluidHandlerItem source = FluidVesselHandler.forTransfer(vessels.getStackInSlot(INPUT));
         if (source != null && FluidUtil.tryFluidTransfer(tank, source, TRANSFER_RATE, true) != null) {
             vessels.setStackInSlot(INPUT, source.getContainer());
             transferred = true;
@@ -159,23 +166,13 @@ public abstract class FluidMachineBlockEntity extends TileEntity implements ITic
         return new RangedWrapper(vessels, first, end) {
             @Override
             public ItemStack extractItem(int slot, int amount, boolean simulate) {
-                IFluidHandlerItem vessel = itemHandler(getStackInSlot(slot));
+                IFluidHandlerItem vessel = FluidVesselHandler.forTransfer(getStackInSlot(slot));
                 if (vessel == null || (slot + first == INPUT ? hasFluid(vessel) : hasRoom(vessel))) {
                     return ItemStack.EMPTY;
                 }
                 return super.extractItem(slot, amount, simulate);
             }
         };
-    }
-
-    @Nullable
-    public static IFluidHandlerItem itemHandler(ItemStack stack) {
-        if (stack.isEmpty()) return null;
-        FluidVesselHandler vessel = FluidVesselHandler.forCrafting(stack);
-        if (vessel != null) return vessel;
-        ItemStack single = stack.copy();
-        single.setCount(1);
-        return FluidUtil.getFluidHandler(single);
     }
 
     private static boolean hasFluid(IFluidHandlerItem vessel) {
@@ -191,7 +188,7 @@ public abstract class FluidMachineBlockEntity extends TileEntity implements ITic
     }
 
     public static float fillRatio(ItemStack stack) {
-        IFluidHandlerItem vessel = itemHandler(stack);
+        IFluidHandlerItem vessel = FluidVesselHandler.forTransfer(stack);
         if (vessel == null) return 0;
         for (IFluidTankProperties property : vessel.getTankProperties()) {
             FluidStack contents = property.getContents();

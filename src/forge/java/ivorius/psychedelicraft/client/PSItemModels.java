@@ -9,11 +9,14 @@ import ivorius.psychedelicraft.block.MashTubBlock;
 import ivorius.psychedelicraft.block.PSBlocks;
 import ivorius.psychedelicraft.block.entity.DryingTableBlockEntity;
 import ivorius.psychedelicraft.block.entity.BarrelBlockEntity;
+import ivorius.psychedelicraft.block.entity.DistilleryBlockEntity;
+import ivorius.psychedelicraft.block.entity.FlaskBlockEntity;
 import ivorius.psychedelicraft.block.entity.JuniperSignBlockEntity;
 import ivorius.psychedelicraft.block.entity.MashTubBlockEntity;
 import ivorius.psychedelicraft.block.entity.PeyoteBlockEntity;
 import ivorius.psychedelicraft.client.render.block.DryingTableRenderer;
 import ivorius.psychedelicraft.client.render.block.BarrelRenderer;
+import ivorius.psychedelicraft.client.render.block.FlaskRenderer;
 import ivorius.psychedelicraft.client.render.block.JuniperSignRenderer;
 import ivorius.psychedelicraft.client.render.block.MashTubRenderer;
 import ivorius.psychedelicraft.client.render.block.PeyoteRenderer;
@@ -127,6 +130,9 @@ public final class PSItemModels {
             ModelLoader.setCustomStateMapper(barrel, new StateMap.Builder().ignore(BarrelBlock.FACING, BarrelBlock.TAPPED).build());
         }
         ClientRegistry.bindTileEntitySpecialRenderer(BarrelBlockEntity.class, new BarrelRenderer());
+        FlaskRenderer flaskRenderer = new FlaskRenderer();
+        ClientRegistry.bindTileEntitySpecialRenderer(FlaskBlockEntity.class, flaskRenderer);
+        ClientRegistry.bindTileEntitySpecialRenderer(DistilleryBlockEntity.class, flaskRenderer);
         ClientRegistry.bindTileEntitySpecialRenderer(MashTubBlockEntity.class, new MashTubRenderer());
         ClientRegistry.bindTileEntitySpecialRenderer(JuniperSignBlockEntity.class, new JuniperSignRenderer());
         ClientRegistry.bindTileEntitySpecialRenderer(DryingTableBlockEntity.class, new DryingTableRenderer());

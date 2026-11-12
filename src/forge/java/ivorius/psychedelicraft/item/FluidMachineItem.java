@@ -14,6 +14,8 @@ import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.text.translation.I18n;
 import net.minecraft.world.World;
 import net.minecraftforge.fluids.FluidStack;
+import net.minecraftforge.common.capabilities.ICapabilityProvider;
+import net.minecraftforge.fluids.capability.templates.FluidHandlerItemStack;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 
@@ -37,6 +39,40 @@ public class FluidMachineItem extends ItemBlock {
     private FluidStack contents(ItemStack stack) {
         NBTTagCompound data = stack.getSubCompound("fluid");
         return data == null ? null : FluidContents.read(data, capacity);
+    }
+
+    @Override
+    public ICapabilityProvider initCapabilities(ItemStack stack, @Nullable NBTTagCompound tag) {
+        return new FluidHandlerItemStack(stack, capacity) {
+            @Override
+            public int fill(@Nullable FluidStack resource, boolean doFill) {
+                return super.fill(FluidContents.normalize(resource), doFill);
+            }
+
+            @Override
+            public FluidStack drain(@Nullable FluidStack resource, boolean doDrain) {
+                return super.drain(FluidContents.normalize(resource), doDrain);
+            }
+
+            @Override
+            public FluidStack getFluid() {
+                return contents(container);
+            }
+
+            @Override
+            protected void setFluid(FluidStack fluid) {
+                container.setTagInfo("fluid", FluidContents.write(fluid));
+            }
+
+            @Override
+            protected void setContainerToEmpty() {
+                NBTTagCompound data = container.getTagCompound();
+                if (data != null) {
+                    data.removeTag("fluid");
+                    if (data.hasNoTags()) container.setTagCompound(null);
+                }
+            }
+        };
     }
 
     @Override

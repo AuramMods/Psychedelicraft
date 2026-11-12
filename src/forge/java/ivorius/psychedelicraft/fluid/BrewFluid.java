@@ -110,7 +110,7 @@ public final class BrewFluid extends Fluid {
         return styles[0];
     }
 
-    private static int blend(int start, int end, float progress) {
+    static int blend(int start, int end, float progress) {
         int result = 0;
         for (int shift = 0; shift < 32; shift += 8) {
             int first = start >>> shift & 255;
