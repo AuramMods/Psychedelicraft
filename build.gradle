@@ -38,9 +38,11 @@ minecraft {
     runs {
         client {
             workingDirectory file('run/client')
+            property 'fml.coreMods.load', 'ivorius.psychedelicraft.core.PsychedelicraftCore'
         }
         server {
             workingDirectory file('run/server')
+            property 'fml.coreMods.load', 'ivorius.psychedelicraft.core.PsychedelicraftCore'
             args 'nogui'
         }
     }
@@ -73,6 +75,11 @@ processResources {
         expand version: project.version
     }
     from 'LICENSE'
+}
+
+jar {
+    manifest.attributes('FMLCorePlugin': 'ivorius.psychedelicraft.core.PsychedelicraftCore',
+            'FMLCorePluginContainsFMLMod': 'true')
 }
 
 jar.finalizedBy('reobfJar')

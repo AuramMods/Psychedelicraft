@@ -112,15 +112,26 @@ public final class PSFluids {
     }
 
     public static boolean canConsume(Fluid fluid, boolean injection) {
-        return injection ? fluid == CAFFEINE : fluid == COFFEE || fluid == PEYOTE_JUICE;
+        return injection ? isInjectable(fluid)
+                : fluid instanceof BrewFluid || isFlowerExtract(fluid) || fluid == COFFEE || fluid == COCA_TEA
+                || fluid == CANNABIS_TEA || fluid == PEYOTE_JUICE || fluid == KAVA;
     }
 
     public static void consume(EntityPlayer player, FluidStack portion) {
         DrugProperties properties = DrugCapability.get(player);
-        if (properties == null) return;
+        if (properties != null) addServingInfluences(portion, properties);
+    }
+
+    public static void addServingInfluences(FluidStack portion, DrugProperties properties) {
         double buckets = portion.amount / (double) Fluid.BUCKET_VOLUME;
         Fluid fluid = portion.getFluid();
-        if (fluid == COFFEE) {
+        if (fluid instanceof BrewFluid) {
+            ((BrewFluid) fluid).addServingInfluences(portion, buckets, properties);
+        } else if (isFlowerExtract(fluid)) {
+            int concentration = BrewFluid.stage(portion, BrewFluid.DISTILLATION, 2);
+            DrugType type = fluid == MORNING_GLORY_EXTRACT ? DrugType.LSD : DrugType.ATROPINE;
+            properties.addInfluence(new DrugInfluence(type, 3, 0, 0.03, Math.pow(96, concentration) * buckets));
+        } else if (fluid == COFFEE) {
             double warmth = warmth(portion) / 2.0;
             properties.addInfluence(new DrugInfluence(DrugType.CAFFEINE, 20, 0.002, 0.001, (0.25 + warmth * 0.05) * buckets));
             if (warmth > 0) {
@@ -130,10 +141,20 @@ public final class PSFluids {
             properties.addInfluence(new DrugInfluence(DrugType.PEYOTE, 15, 0.005, 0.003, 2 * buckets));
         } else if (fluid == CAFFEINE) {
             properties.addInfluence(new DrugInfluence(DrugType.CAFFEINE, 0, 0.005, 0.01, 85 * buckets));
+        } else if (fluid == COCA_TEA) {
+            properties.addInfluence(new DrugInfluence(DrugType.COCAINE, 60, 0.005, 0.002, 0.2 * buckets));
+        } else if (fluid == CANNABIS_TEA) {
+            properties.addInfluence(new DrugInfluence(DrugType.CANNABIS, 60, 0.005, 0.002, 0.25 * buckets));
+        } else if (fluid == KAVA) {
+            properties.addInfluence(new DrugInfluence(DrugType.KAVA, 20, 0.005, 0.003, 2 * buckets));
+        } else if (fluid == COCAINE) {
+            properties.addInfluence(new DrugInfluence(DrugType.COCAINE, 0, 0.005, 0.01, 50 * buckets));
+        } else if (fluid == BATH_SALTS) {
+            properties.addInfluence(new DrugInfluence(DrugType.BATH_SALTS, 0, 0.005, 0.01, 50 * buckets));
         }
     }
 
-    private static int warmth(FluidStack stack) {
+    public static int warmth(FluidStack stack) {
         return stack.tag == null ? 0 : MathHelper.clamp(stack.tag.getInteger("warmth"), 0, 2);
     }
 

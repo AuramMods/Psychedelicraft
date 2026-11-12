@@ -26,6 +26,7 @@ final class BrewProfiles {
     static BrewFluid wheatHop() {
         return new BrewFluid("wheat_hop", "beer", 0xaafeaa08, 1,
                 () -> PSConfig.balancing.fluidAttributes.wheatHop, DISTILLED_COLOR, MATURE_COLOR,
+                0.25, 1.7, 0.1,
                 style("wort", "bitter", "beer", "wort", BASE),
                 style("beer_vinegar", "bitter", "clear", "vinegar", VINEGAR),
                 style("beer", null, "clear", "beer", DISTILLED),
@@ -37,6 +38,7 @@ final class BrewProfiles {
     static BrewFluid wheat() {
         return new BrewFluid("wheat", "beer", 0xaafeaa08, 1,
                 () -> PSConfig.balancing.fluidAttributes.wheat, DISTILLED_COLOR, MATURE_COLOR,
+                0.25, 1.7, 0.1,
                 style("wort", null, "beer", "wort", BASE),
                 style("beer_vinegar", null, "clear", "vinegar", VINEGAR),
                 style("wheat_whiskey", null, "clear", "whiskey", s -> !s.vinegar && s.maturation > 0 && s.distillation > 0),
@@ -49,6 +51,7 @@ final class BrewProfiles {
     static BrewFluid potato() {
         return new BrewFluid("potato", "beer", 0xaafeaa08, 2,
                 () -> PSConfig.balancing.fluidAttributes.potato, DISTILLED_COLOR, MATURE_COLOR,
+                0.45, 1.9, 0.15,
                 style("wort", null, "beer", "wort", BASE),
                 style("vinegar", null, "clear", "vinegar", VINEGAR),
                 style("poteen", null, "rum_semi_mature", "poteen", s -> !s.vinegar && s.maturation > 0 && s.distillation > 0),
@@ -61,6 +64,7 @@ final class BrewProfiles {
     static BrewFluid tomato() {
         return new BrewFluid("tomato", "tomato_juice", 0xaaffaa08, 1,
                 () -> PSConfig.balancing.fluidAttributes.tomato, 0xaaff0000, 0xaaff3300,
+                0.15, 0.9, 0.05,
                 style("ketchup", null, "ketchup", "ketchup", s -> s.vinegar && s.fermentation == 0 && s.maturation >= 1 && s.maturation <= 4),
                 style("whiskey", null, "rum_semi_mature", "whiskey", s -> !s.vinegar && s.fermentation > 0 && s.maturation >= 6 && s.distillation >= 3),
                 style("mead", null, "mead", "mead", s -> !s.vinegar && s.fermentation > 0 && s.maturation >= 5 && s.distillation == 0),
@@ -73,6 +77,7 @@ final class BrewProfiles {
     static BrewFluid redGrapes() {
         return new BrewFluid("red_grapes", "wine", 0xaafeaa08, 1,
                 () -> PSConfig.balancing.fluidAttributes.redGrapes, 0x993f0822, 0xee3f0822,
+                0.55, 1.7, 0.2,
                 style("juice", null, "wine", "juice", BASE),
                 style("vinegar", null, "clear", "vinegar", VINEGAR),
                 style("brandy", null, "rum_semi_mature", "brandy", DISTILLED),
@@ -88,6 +93,7 @@ final class BrewProfiles {
     static BrewFluid rice() {
         return new BrewFluid("rice", "rice_wine", 0xeecac4b2, 1,
                 () -> PSConfig.balancing.fluidAttributes.rice, DISTILLED_COLOR, 0x88d6bc90,
+                0.25, 1.7, 0.1,
                 style("wort", null, "rice_wine", "wort", BASE),
                 style("vinegar", null, "clear", "vinegar", VINEGAR),
                 style("brandy", null, "clear", "brandy", DISTILLED),
@@ -99,6 +105,7 @@ final class BrewProfiles {
     static BrewFluid juniper() {
         return new BrewFluid("juniper", "slurry", 0xcc704e21, 1,
                 () -> PSConfig.balancing.fluidAttributes.juniper, DISTILLED_COLOR, MATURE_COLOR,
+                0.4, 1.7, 0.1,
                 style("wort", null, "slurry", "wort", BASE),
                 style("vinegar", null, "clear", "vinegar", VINEGAR),
                 style("gin", null, "clear", "gin", DISTILLED),
@@ -110,6 +117,7 @@ final class BrewProfiles {
     static BrewFluid honey() {
         return new BrewFluid("honey", "mead", 0xbbe9ae3b, 5,
                 () -> PSConfig.balancing.fluidAttributes.honey, 0x99e9ae3b, 0xaad1984d,
+                0.35, 1.7, 0.1,
                 style("wort", null, "mead", "wort", BASE),
                 style("vinegar", null, "mead", "vinegar", VINEGAR),
                 style("brandy", null, "mead", "brandy", DISTILLED),
@@ -121,6 +129,7 @@ final class BrewProfiles {
     static BrewFluid sugarCane() {
         return new BrewFluid("sugar_cane", "clear", 0xaafeaa08, 1,
                 () -> PSConfig.balancing.fluidAttributes.sugarCane, DISTILLED_COLOR, MATURE_COLOR,
+                0.35, 1.7, 0.1,
                 style("wort", null, "clear", "wort", BASE),
                 style("vinegar", null, "clear", "vinegar", VINEGAR),
                 style("rum", "young", "rum_semi_mature", "rum", s -> !s.vinegar && s.distillation > 0 && s.maturation == 0),
@@ -133,6 +142,7 @@ final class BrewProfiles {
     static BrewFluid corn() {
         return new BrewFluid("corn", "beer", 0xaafeaa08, 1,
                 () -> PSConfig.balancing.fluidAttributes.corn, DISTILLED_COLOR, MATURE_COLOR,
+                0.25, 1.7, 0.1,
                 style("wort", null, "beer", "wort", BASE),
                 style("vinegar", null, "clear", "vinegar", VINEGAR),
                 style("vodka", null, "clear", "vodka", s -> !s.vinegar && s.maturation == 0 && s.distillation > 0),
@@ -145,6 +155,7 @@ final class BrewProfiles {
     static BrewFluid apple() {
         return new BrewFluid("apple", "cider", 0x99edc13b, 1,
                 () -> PSConfig.balancing.fluidAttributes.apple, 0x66edc13b, 0x88edc13b,
+                0.35, 1.7, 0.1,
                 style("cider", "sweet", "cider", "cider", BASE),
                 style("vinegar", null, "clear", "vinegar", VINEGAR),
                 style("brandy", null, "cider", "brandy", DISTILLED),
@@ -156,6 +167,7 @@ final class BrewProfiles {
     static BrewFluid pineapple() {
         return new BrewFluid("pineapple", "cider", 0x99edc13b, 2,
                 () -> PSConfig.balancing.fluidAttributes.pineapple, 0x66edc13b, 0x88edc13b,
+                0.35, 1.7, 0.1,
                 style("juice", null, "cider", "juice", BASE),
                 style("vinegar", null, "clear", "vinegar", VINEGAR),
                 style("brandy", null, "cider", "brandy", DISTILLED),
@@ -167,6 +179,7 @@ final class BrewProfiles {
     static BrewFluid banana() {
         return new BrewFluid("banana", "mead", 0xbbe9ae3b, 3,
                 () -> PSConfig.balancing.fluidAttributes.banana, 0x99e9ae3b, 0xaad1984d,
+                0.35, 1.7, 0.1,
                 style("juice", null, "mead", "juice", BASE),
                 style("vinegar", null, "clear", "vinegar", VINEGAR),
                 style("brandy", null, "mead", "brandy", DISTILLED),
@@ -178,6 +191,7 @@ final class BrewProfiles {
     static BrewFluid milk() {
         return new BrewFluid("milk", "rice_wine", 0x88ffffff, 2,
                 () -> PSConfig.balancing.fluidAttributes.milk, 0x77cac4b2, 0x88d6bc90,
+                0.35, 1.7, 0.1,
                 style("wort", null, "rice_wine", "wort", BASE),
                 style("vinegar", null, "rice_wine", "vinegar", VINEGAR),
                 style("arkhi", null, "rice_wine", "arkhi", DISTILLED),
@@ -189,6 +203,7 @@ final class BrewProfiles {
     static BrewFluid agave() {
         return new BrewFluid("agave", "tea", 0x779bab62, 1,
                 () -> PSConfig.balancing.fluidAttributes.agave, 0x779beb62, 0x779beb62,
+                0.15, 1.5, 0.05,
                 style("mezcal", null, "rum_semi_mature", "mezcal", s -> !s.vinegar && s.fermentation > 0 && s.maturation == 0 && s.distillation == 1),
                 style("tequila", "blanco", "clear", "tequila", s -> !s.vinegar && s.fermentation > 0 && s.maturation == 0 && s.distillation >= 2),
                 style("tequila", "reposado", "clear", "tequila", s -> !s.vinegar && s.fermentation > 0 && s.maturation > 0 && s.distillation >= 2),

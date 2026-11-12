@@ -18,6 +18,10 @@ public interface Drug extends NbtSerialisable {
 
     void reset();
 
+    default void onWakeUp(DrugProperties properties, @Nullable EntityPlayer player) {
+        reset();
+    }
+
     double getActiveValue();
 
     void addToDesiredValue(double value);
@@ -44,6 +48,19 @@ public interface Drug extends NbtSerialisable {
 
     default float hungerSuppression() {
         return 0;
+    }
+
+    default float speedModifier() {
+        return 1;
+    }
+
+    default float digSpeedModifier() {
+        return 1;
+    }
+
+    @Nullable
+    default String sleepWarning() {
+        return null;
     }
 
     @FunctionalInterface

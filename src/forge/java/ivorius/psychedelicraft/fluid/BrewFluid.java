@@ -6,6 +6,9 @@ package ivorius.psychedelicraft.fluid;
 
 import ivorius.psychedelicraft.Psychedelicraft;
 import ivorius.psychedelicraft.config.PSConfig.FluidTicks;
+import ivorius.psychedelicraft.entity.drug.DrugProperties;
+import ivorius.psychedelicraft.entity.drug.DrugType;
+import ivorius.psychedelicraft.entity.drug.influence.DrugInfluence;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.text.TextFormatting;
 import net.minecraft.util.math.MathHelper;
@@ -29,16 +32,23 @@ public final class BrewFluid extends Fluid {
     private final Supplier<FluidTicks> ticks;
     private final int distilledColor;
     private final int matureColor;
+    private final double fermentationAlcohol;
+    private final double distillationAlcohol;
+    private final double maturationAlcohol;
     private final Style[] styles;
 
     BrewFluid(String path, String texture, int color, int viscosity, Supplier<FluidTicks> ticks,
-              int distilledColor, int matureColor, Style... styles) {
+              int distilledColor, int matureColor, double fermentationAlcohol,
+              double distillationAlcohol, double maturationAlcohol, Style... styles) {
         super(Psychedelicraft.MOD_ID + "_" + path, texture(texture, "_still"), texture(texture, "_flow"), color);
         setUnlocalizedName(Psychedelicraft.MOD_ID + "." + path);
         setViscosity(viscosity * 1000);
         this.ticks = ticks;
         this.distilledColor = distilledColor;
         this.matureColor = matureColor;
+        this.fermentationAlcohol = fermentationAlcohol;
+        this.distillationAlcohol = distillationAlcohol;
+        this.maturationAlcohol = maturationAlcohol;
         this.styles = styles;
     }
 
@@ -85,6 +95,22 @@ public final class BrewFluid extends Fluid {
         return style(stack).symbol;
     }
 
+    void addServingInfluences(FluidStack stack, double buckets, DrugProperties properties) {
+        State state = new State(stack);
+        Style style = style(state);
+        if (!state.vinegar && !style.name.endsWith("vinegar")) {
+            double alcohol = fermentationAlcohol * state.fermentation / FERMENTATION_STEPS
+                    + distillationAlcohol * (1 - 1D / (1 + state.distillation))
+                    + maturationAlcohol * (1 - 1D / (1 + state.maturation * 0.2));
+            if (alcohol > 0) {
+                properties.addInfluence(new DrugInfluence(DrugType.ALCOHOL, 20, 0.003, 0.002, alcohol * buckets));
+            }
+        }
+        if ("ketchup".equals(style.name)) {
+            properties.addInfluence(new DrugInfluence(DrugType.SUGAR, 20, 0.003, 0.002, 0.3 * buckets));
+        }
+    }
+
     public static void appendAttributes(FluidStack stack, List<String> tooltip) {
         State state = new State(stack);
         if (state.distillation > 0) {
@@ -103,7 +129,10 @@ public final class BrewFluid extends Fluid {
     }
 
     private Style style(FluidStack stack) {
-        State state = new State(stack);
+        return style(new State(stack));
+    }
+
+    private Style style(State state) {
         for (Style style : styles) {
             if (style.matches.test(state)) return style;
         }

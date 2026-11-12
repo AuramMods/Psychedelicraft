@@ -11,6 +11,7 @@ import java.util.Map;
 import javax.annotation.Nullable;
 
 import ivorius.psychedelicraft.entity.drug.influence.DrugInfluence;
+import ivorius.psychedelicraft.entity.drug.type.SleepDeprivationDrug;
 import ivorius.psychedelicraft.util.NbtSerialisable;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.nbt.NBTTagCompound;
@@ -21,6 +22,7 @@ public final class DrugProperties implements NbtSerialisable {
     private final Map<DrugType, Drug> drugs = new LinkedHashMap<>();
     private final List<DrugInfluence> influences = new ArrayList<>();
     private boolean dirty;
+    private boolean wakePending;
 
     public void addToDrug(DrugType type, double value) {
         drugs.computeIfAbsent(type, DrugType::create).addToDesiredValue(value);
@@ -37,6 +39,14 @@ public final class DrugProperties implements NbtSerialisable {
     }
 
     public void tick(int age, @Nullable EntityPlayer player) {
+        if (player != null && wakePending && !player.isPlayerSleeping()) {
+            wakePending = false;
+            onAwoken(player);
+        }
+        if (player != null && player.world.getGameRules().getBoolean(SleepDeprivationDrug.GAME_RULE)) {
+            if (!drugs.containsKey(DrugType.SLEEP_DEPRIVATION)) addToDrug(DrugType.SLEEP_DEPRIVATION, 0);
+            if (age % 100 == 0) dirty = true;
+        }
         if (age % 5 == 0 && influences.removeIf(influence -> influence.update(this))) {
             dirty = true;
         }
@@ -51,9 +61,33 @@ public final class DrugProperties implements NbtSerialisable {
     }
 
     public void onAwoken() {
-        drugs.values().forEach(Drug::reset);
+        onAwoken(null);
+    }
+
+    void queueWakeUp() {
+        wakePending = true;
+    }
+
+    private void onAwoken(@Nullable EntityPlayer player) {
+        // A hangover can create a new effect while the current effects wake up.
+        for (Drug drug : new ArrayList<>(drugs.values())) drug.onWakeUp(this, player);
         influences.clear();
         dirty = true;
+    }
+
+    @Nullable
+    public String sleepWarning() {
+        for (Drug drug : drugs.values()) {
+            String warning = drug.sleepWarning();
+            if (warning != null) return warning;
+        }
+        return null;
+    }
+
+    public float getMultiplier(Drug.Modifier modifier) {
+        float value = 1;
+        for (Drug drug : drugs.values()) value *= modifier.get(drug);
+        return value;
     }
 
     public float getModifier(Drug.Modifier modifier) {

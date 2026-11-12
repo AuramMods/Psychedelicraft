@@ -38,6 +38,10 @@ public class SimpleDrug implements Drug {
         desired *= scale;
     }
 
+    protected final void clearActiveValue() {
+        if (!locked) active = 0;
+    }
+
     @Override
     public void update() {
         ticksActive = active > 0 ? ticksActive + 1 : 0;

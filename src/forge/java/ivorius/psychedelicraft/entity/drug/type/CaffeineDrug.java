@@ -6,9 +6,27 @@ package ivorius.psychedelicraft.entity.drug.type;
 
 import net.minecraft.util.math.MathHelper;
 
+import javax.annotation.Nullable;
+
 public final class CaffeineDrug extends SimpleDrug {
     public CaffeineDrug(double decreaseSpeed, double decreaseSpeedPlus) {
         super(decreaseSpeed, decreaseSpeedPlus);
+    }
+
+    @Override
+    public float speedModifier() {
+        return 1 + (float) getActiveValue() * 0.2F;
+    }
+
+    @Override
+    public float digSpeedModifier() {
+        return speedModifier();
+    }
+
+    @Override
+    @Nullable
+    public String sleepWarning() {
+        return getActiveValue() > 0.1 ? "psychedelicraft.sleep.fail.caffiene" : null;
     }
 
     @Override
