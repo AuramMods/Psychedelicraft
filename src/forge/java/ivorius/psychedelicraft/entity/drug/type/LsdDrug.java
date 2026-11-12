@@ -52,4 +52,14 @@ public final class LsdDrug extends SimpleDrug {
     public float hungerSuppression() {
         return (float) getActiveValue() * 0.2F;
     }
+
+    @Override
+    public float heartbeatVolume() {
+        return harmful ? activeRamp(0.4F) + ticksActive() * 0.0001F * 1.2F : 0F;
+    }
+
+    @Override
+    public float heartbeatSpeed() {
+        return harmful ? (float) getActiveValue() * 0.1F + ticksActive() * 0.0001F : 0F;
+    }
 }

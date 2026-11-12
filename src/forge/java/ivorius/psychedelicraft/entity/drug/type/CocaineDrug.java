@@ -19,6 +19,26 @@ public final class CocaineDrug extends SimpleDrug {
     }
 
     @Override
+    public float heartbeatVolume() {
+        return activeRamp(0.4F) + ticksActive() * 0.0001F * 1.2F;
+    }
+
+    @Override
+    public float heartbeatSpeed() {
+        return (float) getActiveValue() * 0.1F + ticksActive() * 0.0001F;
+    }
+
+    @Override
+    public float breathVolume() {
+        return activeRamp(0.4F) * 1.5F;
+    }
+
+    @Override
+    public float breathSpeed() {
+        return (float) getActiveValue() * 0.8F;
+    }
+
+    @Override
     public void update(DrugProperties properties, @Nullable EntityPlayer player) {
         super.update();
         if (player == null || player.world.isRemote || getActiveValue() <= 0.8 || player.ticksExisted % 20 != 0) return;

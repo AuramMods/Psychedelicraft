@@ -19,6 +19,7 @@ import ivorius.psychedelicraft.entity.drug.type.TobaccoDrug;
 import ivorius.psychedelicraft.entity.drug.type.BrownShroomsDrug;
 import ivorius.psychedelicraft.entity.drug.type.CaffeineDrug;
 import ivorius.psychedelicraft.entity.drug.type.HarmoniumDrug;
+import ivorius.psychedelicraft.entity.drug.type.KavaDrug;
 import ivorius.psychedelicraft.entity.drug.type.LsdDrug;
 import ivorius.psychedelicraft.entity.drug.type.PeyoteDrug;
 import ivorius.psychedelicraft.entity.drug.type.RedShroomsDrug;
@@ -34,13 +35,13 @@ public final class DrugType {
     public static final DrugType CAFFEINE = register("caffeine", () -> new CaffeineDrug(1, 0.0002));
     public static final DrugType WARMTH = register("warmth", WarmthDrug::new);
     public static final DrugType ALCOHOL = register("alcohol", AlcoholDrug::new);
-    public static final DrugType KAVA = register("kava", AlcoholDrug::new);
+    public static final DrugType KAVA = register("kava", KavaDrug::new);
     public static final DrugType CANNABIS = register("cannabis", CannabisDrug::new);
     public static final DrugType TOBACCO = register("tobacco", TobaccoDrug::new);
     public static final DrugType COCAINE = register("coccaine", CocaineDrug::new);
     public static final DrugType BATH_SALTS = register("bath_salts", BathSaltsDrug::new);
     public static final DrugType LSD = register("lsd", () -> new LsdDrug(1, 0.0003, false));
-    public static final DrugType SUGAR = register("sugar", () -> new CaffeineDrug(1, 0.0002));
+    public static final DrugType SUGAR = register("sugar", () -> new CaffeineDrug(1, 0.0002, 0F));
     public static final DrugType HARMONIUM = register("harmonium", HarmoniumDrug::new);
     public static final DrugType SLEEP_DEPRIVATION = register("sleep_deprivation", SleepDeprivationDrug::new);
 

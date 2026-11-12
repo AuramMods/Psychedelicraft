@@ -7,8 +7,16 @@ import net.minecraftforge.common.config.Config;
 public final class PSConfig {
     private static final int MINUTE = 60 * 20;
     public static final Balancing balancing = new Balancing();
+    public static final Visual visual = new Visual();
 
     private PSConfig() {
+    }
+
+    public static final class Visual {
+        public boolean doHeatDistortion = true;
+        public boolean doWaterDistortion = true;
+        public boolean waterOverlayEnabled = true;
+        public boolean hurtOverlayEnabled = true;
     }
 
     public static final class Balancing {

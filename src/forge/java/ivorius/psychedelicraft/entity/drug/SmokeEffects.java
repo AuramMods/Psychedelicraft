@@ -4,39 +4,26 @@
 
 package ivorius.psychedelicraft.entity.drug;
 
-import ivorius.psychedelicraft.Psychedelicraft;
+import ivorius.psychedelicraft.PSSounds;
 import ivorius.psychedelicraft.item.SmokeableItem;
 import ivorius.psychedelicraft.network.Channel;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.tileentity.TileEntityFurnace;
 import net.minecraft.util.SoundCategory;
-import net.minecraft.util.SoundEvent;
 import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
-import net.minecraftforge.event.RegistryEvent;
-import net.minecraftforge.fml.common.Mod;
-import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 
 import java.util.Random;
 
-@Mod.EventBusSubscriber(modid = Psychedelicraft.MOD_ID)
 public final class SmokeEffects {
-    private static final SoundEvent BREATH = new SoundEvent(Psychedelicraft.id("entity.player.breath"))
-            .setRegistryName(Psychedelicraft.id("entity.player.breath"));
-
     private SmokeEffects() {
-    }
-
-    @SubscribeEvent
-    public static void registerSounds(RegistryEvent.Register<SoundEvent> event) {
-        event.getRegistry().register(BREATH);
     }
 
     public static void playBreath(EntityPlayer player) {
         if (!player.world.isRemote) {
-            player.world.playSound(null, player.posX, player.posY, player.posZ, BREATH, SoundCategory.PLAYERS, 0.02F, 1.5F);
+            player.world.playSound(null, player.posX, player.posY, player.posZ, PSSounds.BREATH, SoundCategory.PLAYERS, 0.02F, 1.5F);
         }
     }
 

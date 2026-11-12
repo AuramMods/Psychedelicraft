@@ -1,4 +1,8 @@
 {
+  "entity.player.heartbeat": {
+    "category": "player",
+    "sounds": ["psychedelicraft:heart_beat"]
+  },
   "entity.player.breath": {
     "category": "player",
     "sounds": ["psychedelicraft:breath"]

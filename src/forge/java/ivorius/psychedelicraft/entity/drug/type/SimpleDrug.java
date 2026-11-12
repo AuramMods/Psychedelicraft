@@ -27,6 +27,14 @@ public class SimpleDrug implements Drug {
         return active;
     }
 
+    protected final int ticksActive() {
+        return ticksActive;
+    }
+
+    protected final float activeRamp(float start) {
+        return MathHelper.clamp(((float) active - start) / (1F - start), 0F, 1F);
+    }
+
     @Override
     public void addToDesiredValue(double value) {
         if (!locked) {

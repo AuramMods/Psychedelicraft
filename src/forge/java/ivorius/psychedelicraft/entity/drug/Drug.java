@@ -54,6 +54,22 @@ public interface Drug extends NbtSerialisable {
         return 0;
     }
 
+    default float heartbeatVolume() {
+        return 0;
+    }
+
+    default float heartbeatSpeed() {
+        return 0;
+    }
+
+    default float breathVolume() {
+        return 0;
+    }
+
+    default float breathSpeed() {
+        return 0;
+    }
+
     default float speedModifier() {
         return 1;
     }

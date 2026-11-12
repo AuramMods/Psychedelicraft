@@ -24,6 +24,7 @@ public final class DrugProperties implements NbtSerialisable {
     private final Map<DrugType, Drug> drugs = new LinkedHashMap<>();
     private final List<DrugInfluence> influences = new ArrayList<>();
     private final Stomach stomach = new Stomach();
+    private final DrugSounds sounds = new DrugSounds();
     private boolean dirty;
     private boolean wakePending;
     private int smokeTicks;
@@ -71,6 +72,7 @@ public final class DrugProperties implements NbtSerialisable {
         if (player != null) {
             stomach.tick(player, getModifier(Drug::hungerSuppression));
             dirty |= stomach.takeDirty();
+            sounds.tick(this, player);
         }
         if (smokeTicks > 0) {
             smokeTicks--;
@@ -91,6 +93,10 @@ public final class DrugProperties implements NbtSerialisable {
 
     public Stomach getStomach() {
         return stomach;
+    }
+
+    public float heartbeatPulse(float partialTicks) {
+        return sounds.pulse(partialTicks);
     }
 
     public boolean isTripping() {

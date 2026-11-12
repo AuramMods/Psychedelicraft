@@ -1,0 +1,11 @@
+{
+  "vertex": "psychedelicraft:fullscreen",
+  "fragment": "psychedelicraft:heat_distortion",
+  "cull": false,
+  "samplers": [{ "name": "DiffuseSampler" }, { "name": "DepthSampler" }, { "name": "NoiseSampler" }],
+  "uniforms": [
+    { "name": "TextureScale", "type": "float", "count": 2, "values": [1.0, 1.0] },
+    { "name": "Ticks", "type": "float", "count": 1, "values": [0.0] },
+    { "name": "Strength", "type": "float", "count": 1, "values": [0.0] }
+  ]
+}

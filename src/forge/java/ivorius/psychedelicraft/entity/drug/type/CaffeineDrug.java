@@ -9,8 +9,35 @@ import net.minecraft.util.math.MathHelper;
 import javax.annotation.Nullable;
 
 public final class CaffeineDrug extends SimpleDrug {
+    private final float breathMultiplier;
+
     public CaffeineDrug(double decreaseSpeed, double decreaseSpeedPlus) {
+        this(decreaseSpeed, decreaseSpeedPlus, 1F);
+    }
+
+    public CaffeineDrug(double decreaseSpeed, double decreaseSpeedPlus, float breathMultiplier) {
         super(decreaseSpeed, decreaseSpeedPlus);
+        this.breathMultiplier = breathMultiplier;
+    }
+
+    @Override
+    public float heartbeatVolume() {
+        return breathMultiplier * activeRamp(0.6F) + ticksActive() * 0.001F;
+    }
+
+    @Override
+    public float heartbeatSpeed() {
+        return breathMultiplier * (float) getActiveValue() * 0.2F + ticksActive() * 0.001F;
+    }
+
+    @Override
+    public float breathVolume() {
+        return breathMultiplier * activeRamp(0.4F) * 0.5F;
+    }
+
+    @Override
+    public float breathSpeed() {
+        return breathMultiplier * (float) getActiveValue() * 0.3F;
     }
 
     @Override

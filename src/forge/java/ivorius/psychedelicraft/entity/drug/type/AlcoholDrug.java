@@ -13,7 +13,7 @@ import net.minecraft.util.math.MathHelper;
 import javax.annotation.Nullable;
 import java.util.Random;
 
-public final class AlcoholDrug extends SimpleDrug {
+public class AlcoholDrug extends SimpleDrug {
     public AlcoholDrug() {
         super(1, 0.0002);
     }

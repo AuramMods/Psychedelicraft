@@ -285,4 +285,8 @@ public final class PhysicalFluidBlock extends BlockFluidClassic {
     public Boolean isAABBInsideMaterial(World world, BlockPos pos, AxisAlignedBB box, Material material) {
         return material == Material.WATER && waterLike ? box.minY < pos.getY() + getFilledPercentage(world, pos) : null;
     }
+
+    public boolean isWaterLike() {
+        return waterLike;
+    }
 }

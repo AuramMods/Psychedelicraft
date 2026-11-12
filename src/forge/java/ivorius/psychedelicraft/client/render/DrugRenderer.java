@@ -5,11 +5,11 @@
 package ivorius.psychedelicraft.client.render;
 
 import ivorius.psychedelicraft.Psychedelicraft;
-import ivorius.psychedelicraft.client.render.HallucinationManager.Effect;
 import ivorius.psychedelicraft.client.render.shader.ColorPostEffect;
 import ivorius.psychedelicraft.entity.drug.Drug;
 import ivorius.psychedelicraft.entity.drug.DrugCapability;
 import ivorius.psychedelicraft.entity.drug.DrugProperties;
+import ivorius.psychedelicraft.entity.drug.DrugType;
 import ivorius.psychedelicraft.entity.drug.type.HarmoniumDrug;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.entity.EntityPlayerSP;
@@ -32,6 +32,7 @@ public final class DrugRenderer {
     private static WorldClient world;
     private static EntityPlayerSP player;
     private static HallucinationManager hallucinations = new HallucinationManager();
+    private static EnvironmentEffects environment = new EnvironmentEffects();
 
     private DrugRenderer() {
     }
@@ -46,8 +47,10 @@ public final class DrugRenderer {
             world = client.world;
             player = client.player;
             hallucinations = new HallucinationManager();
+            environment = new EnvironmentEffects();
             COLOR_POST.releaseTarget();
         }
+        if (player != null && world != null) environment.update(player);
         if (player != null && world != null && !client.isGamePaused()) {
             DrugProperties properties = DrugCapability.get(player);
             if (properties != null) {
@@ -99,7 +102,11 @@ public final class DrugRenderer {
         if (player != null && player == client.player && world == client.world) {
             DrugProperties properties = DrugCapability.get(player);
             HarmoniumDrug harmonium = properties == null ? null : properties.getHarmonium();
-            if (harmonium != null && harmonium.getActiveValue() > 0) COLOR_POST.captureDepth(client);
+            float peyote = properties == null ? 0F : (float) properties.getActiveValue(DrugType.PEYOTE);
+            if (environment.heatDistortion() > 0F || environment.waterDistortion(peyote) > 0F
+                    || (harmonium != null && harmonium.getActiveValue() > 0F)) {
+                COLOR_POST.captureDepth(client);
+            }
         }
         // F1 suppresses the HUD event, so use the final world pass in that case.
         if (client.gameSettings.hideGUI && client.currentScreen == null
@@ -112,10 +119,7 @@ public final class DrugRenderer {
         if (player != null && player == client.player && world == client.world) {
             DrugProperties properties = DrugCapability.get(player);
             if (properties != null) {
-                float intensification = properties.getColorIntensification(hallucinations.strength(Effect.SUPER_SATURATION));
-                float desaturation = properties.getDesaturation(hallucinations.strength(Effect.DESATURATION));
-                HarmoniumDrug harmonium = properties.getHarmonium();
-                COLOR_POST.render(client, player.ticksExisted + partialTicks, hallucinations, intensification, desaturation, harmonium);
+                COLOR_POST.render(client, partialTicks, hallucinations, properties, environment);
             }
         }
     }
