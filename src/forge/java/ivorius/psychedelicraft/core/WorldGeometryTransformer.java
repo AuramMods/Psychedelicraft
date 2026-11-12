@@ -23,6 +23,10 @@ import static ivorius.psychedelicraft.core.ClientEffectsTransformer.method;
 public final class WorldGeometryTransformer implements IClassTransformer {
     private static final String RENDER_GLOBAL = "net.minecraft.client.renderer.RenderGlobal";
     private static final String FORGE_CLOUDS = "net.minecraftforge.client.CloudRenderer";
+    private static final String ENTITY_RENDERER = "net.minecraft.client.renderer.EntityRenderer";
+    private static final String PARTICLE_MANAGER = "net.minecraft.client.particle.ParticleManager";
+    private static final String BILLBOARD_RENDER = "(Lnet/minecraft/client/renderer/BufferBuilder;"
+            + "Lnet/minecraft/entity/Entity;FFFFFF)V";
     private static final String LAYER_DRAW = "(Lnet/minecraft/util/BlockRenderLayer;)V";
     private static final String VANILLA_CLOUD_DRAW = "(FIDDD)V";
     private static final String HOOKS = "ivorius/psychedelicraft/client/render/DrugRenderer";
@@ -31,15 +35,23 @@ public final class WorldGeometryTransformer implements IClassTransformer {
 
     @Override
     public byte[] transform(String name, String transformedName, byte[] bytes) {
-        if (bytes == null || !RENDER_GLOBAL.equals(transformedName) && !FORGE_CLOUDS.equals(transformedName)) return bytes;
+        if (bytes == null || !RENDER_GLOBAL.equals(transformedName) && !FORGE_CLOUDS.equals(transformedName)
+                && !ENTITY_RENDERER.equals(transformedName) && !PARTICLE_MANAGER.equals(transformedName)
+                && !isStandaloneBillboard(transformedName)) return bytes;
         ClassNode type = new ClassNode(Opcodes.ASM5);
         new ClassReader(bytes).accept(type, 0);
         if (RENDER_GLOBAL.equals(transformedName)) {
             patchTerrain(method(type, "renderBlockLayer", "func_174982_a", LAYER_DRAW));
-            patchFastClouds(method(type, "renderClouds", "func_180447_b", VANILLA_CLOUD_DRAW));
+            patchTessellatorDraws(method(type, "renderClouds", "func_180447_b", VANILLA_CLOUD_DRAW), true);
             wrapClouds(type, method(type, "renderCloudsFancy", "func_180445_c", VANILLA_CLOUD_DRAW), false);
-        } else {
+        } else if (FORGE_CLOUDS.equals(transformedName)) {
             wrapClouds(type, method(type, "render", "render", "(IF)Z"), true);
+        } else if (ENTITY_RENDERER.equals(transformedName)) {
+            patchTessellatorDraws(method(type, "renderRainSnow", "func_78474_d", "(F)V"), false);
+        } else if (PARTICLE_MANAGER.equals(transformedName)) {
+            patchTessellatorDraws(method(type, "renderParticles", "func_78874_a", "(Lnet/minecraft/entity/Entity;F)V"), false);
+        } else {
+            patchTessellatorDraws(method(type, "renderParticle", "func_180434_a", BILLBOARD_RENDER), false);
         }
         ClassWriter writer = new ClassWriter(ClassWriter.COMPUTE_MAXS);
         type.accept(writer);
@@ -64,20 +76,31 @@ public final class WorldGeometryTransformer implements IClassTransformer {
         throw new IllegalStateException("Could not locate Forge 1.12 chunk layer draw");
     }
 
-    private static void patchFastClouds(MethodNode render) {
+    private static boolean isStandaloneBillboard(String name) {
+        return "net.minecraft.client.particle.ParticleExplosionLarge".equals(name)
+                || "net.minecraft.client.particle.ParticleSweepAttack".equals(name)
+                || "net.minecraft.client.particle.ParticleFootStep".equals(name);
+    }
+
+    private static void patchTessellatorDraws(MethodNode render, boolean fastClouds) {
         FMLDeobfuscatingRemapper remapper = FMLDeobfuscatingRemapper.INSTANCE;
+        boolean patched = false;
         for (AbstractInsnNode instruction : render.instructions.toArray()) {
             if (instruction.getOpcode() != Opcodes.INVOKEVIRTUAL) continue;
             MethodInsnNode draw = (MethodInsnNode) instruction;
             String name = remapper.mapMethodName(draw.owner, draw.name, draw.desc);
             if ("net/minecraft/client/renderer/Tessellator".equals(remapper.map(draw.owner))
                     && ("draw".equals(name) || "func_78381_a".equals(name)) && "()V".equals(draw.desc)) {
-                render.instructions.insertBefore(draw, new VarInsnNode(Opcodes.DLOAD, 5));
-                render.instructions.set(draw, hook("drawFastClouds", "(L" + draw.owner + ";D)V"));
-                return;
+                if (fastClouds) {
+                    render.instructions.insertBefore(draw, new VarInsnNode(Opcodes.DLOAD, 5));
+                    render.instructions.set(draw, hook("drawFastClouds", "(L" + draw.owner + ";D)V"));
+                } else {
+                    render.instructions.set(draw, hook("drawParticles", "(L" + draw.owner + ";)V"));
+                }
+                patched = true;
             }
         }
-        throw new IllegalStateException("Could not locate the fast cloud draw");
+        if (!patched) throw new IllegalStateException("Could not locate the tessellator draw in " + render.name);
     }
 
     private static void wrapClouds(ClassNode type, MethodNode render, boolean forge) {

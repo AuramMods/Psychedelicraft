@@ -2,6 +2,7 @@ package ivorius.psychedelicraft.core;
 
 import com.google.common.io.ByteStreams;
 import ivorius.psychedelicraft.client.render.shader.WorldGeometryShader.Scope;
+import net.minecraft.client.renderer.EntityRenderer;
 import org.junit.Test;
 import org.objectweb.asm.ClassReader;
 import org.objectweb.asm.ClassWriter;
@@ -44,13 +45,37 @@ public class WorldGeometryTransformerTest {
         assertEquals(3, closes);
     }
 
+    @Test
+    public void allWeatherFlushesUseTheParticleShaderHook() throws Exception {
+        String name = EntityRenderer.class.getName();
+        ClassNode renderer = new ClassNode();
+        new ClassReader(new WorldGeometryTransformer().transform(name, name, classBytes(EntityRenderer.class)))
+                .accept(renderer, 0);
+        int weatherDraws = 0;
+        for (MethodNode method : renderer.methods) {
+            for (AbstractInsnNode instruction : method.instructions.toArray()) {
+                if (!(instruction instanceof MethodInsnNode)) continue;
+                MethodInsnNode call = (MethodInsnNode) instruction;
+                if ("drawParticles".equals(call.name)) {
+                    assertEquals("renderRainSnow", method.name);
+                    assertEquals("(Lnet/minecraft/client/renderer/Tessellator;)V", call.desc);
+                    weatherDraws++;
+                }
+            }
+        }
+        assertEquals(3, weatherDraws);
+    }
+
+    private static byte[] classBytes(Class<?> type) throws Exception {
+        try (InputStream bytes = type.getResourceAsStream("/" + Type.getInternalName(type) + ".class")) {
+            return ByteStreams.toByteArray(bytes);
+        }
+    }
+
     private static Class<?> transformCloudFixture() throws Exception {
         String name = CloudFixture.class.getName();
-        byte[] wrapped;
-        try (InputStream bytes = CloudFixture.class.getResourceAsStream("/" + Type.getInternalName(CloudFixture.class) + ".class")) {
-            wrapped = new WorldGeometryTransformer().transform(name, "net.minecraftforge.client.CloudRenderer",
-                    ByteStreams.toByteArray(bytes));
-        }
+        byte[] wrapped = new WorldGeometryTransformer().transform(name, "net.minecraftforge.client.CloudRenderer",
+                classBytes(CloudFixture.class));
         ClassNode type = new ClassNode();
         new ClassReader(wrapped).accept(type, 0);
         // Exercise the generated wrapper without creating an OpenGL context.

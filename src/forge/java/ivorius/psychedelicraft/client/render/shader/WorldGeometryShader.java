@@ -147,6 +147,7 @@ public final class WorldGeometryShader implements IResourceManagerReloadListener
 
     public enum Material {
         TERRAIN(1F, 1F),
+        PARTICLES(1F, 1F),
         VANILLA_FAST_CLOUDS(0F, 1F / 8F),
         VANILLA_FANCY_CLOUDS(0F, 1F),
         FORGE_FAST_CLOUDS(2F, 1F / 8F),

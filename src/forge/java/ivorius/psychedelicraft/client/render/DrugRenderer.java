@@ -94,6 +94,12 @@ public final class DrugRenderer {
         }
     }
 
+    public static void drawParticles(Tessellator tessellator) {
+        try (Scope scope = beginGeometry(Minecraft.getMinecraft(), Material.PARTICLES, 0F)) {
+            tessellator.draw();
+        }
+    }
+
     public static void drawFastClouds(Tessellator tessellator, double cameraY) {
         try (Scope scope = beginVanillaClouds(cameraY, false)) {
             tessellator.draw();
