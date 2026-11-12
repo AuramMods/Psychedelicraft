@@ -22,6 +22,12 @@ public final class PSEntities {
                         .id(Psychedelicraft.id("reality_rift"), 2)
                         .name(Psychedelicraft.MOD_ID + ".reality_rift")
                         .tracker(80, 3, false)
+                        .build(),
+                EntityEntryBuilder.<MolotovCocktailEntity>create()
+                        .entity(MolotovCocktailEntity.class)
+                        .id(Psychedelicraft.id("molotov_cocktail"), 3)
+                        .name(Psychedelicraft.MOD_ID + ".molotov_cocktail")
+                        .tracker(64, 10, true)
                         .build());
     }
 

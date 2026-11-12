@@ -39,6 +39,9 @@ public final class PSConfig {
         @Config.Comment("Show empty and filled Rift Jar variants in the creative inventory.")
         public boolean enableRiftJars;
 
+        @Config.Comment("Hide the Molotov Cocktail variants in the creative inventory.")
+        public boolean disableMolotovs;
+
         @Config.Comment("Show colored Harmonium variants in the creative inventory and enable dealer offers for them.")
         public boolean enableHarmonium;
 

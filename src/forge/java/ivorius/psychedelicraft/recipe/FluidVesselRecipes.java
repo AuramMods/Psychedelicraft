@@ -4,6 +4,8 @@ import ivorius.psychedelicraft.Psychedelicraft;
 import ivorius.psychedelicraft.fluid.FluidVesselHandler;
 import ivorius.psychedelicraft.item.FluidMachineItem;
 import ivorius.psychedelicraft.item.PSItems;
+import ivorius.psychedelicraft.item.PortableFluidItem;
+import net.minecraft.init.Items;
 import net.minecraft.init.Blocks;
 import net.minecraft.inventory.InventoryCrafting;
 import net.minecraft.item.EnumDyeColor;
@@ -15,10 +17,13 @@ import net.minecraft.util.NonNullList;
 import net.minecraft.world.World;
 import net.minecraftforge.event.RegistryEvent;
 import net.minecraftforge.fluids.FluidUtil;
+import net.minecraftforge.fluids.FluidStack;
 import net.minecraftforge.fluids.capability.IFluidHandlerItem;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.oredict.ShapedOreRecipe;
+import net.minecraftforge.oredict.ShapelessOreRecipe;
+import net.minecraftforge.oredict.OreDictionary;
 import net.minecraftforge.registries.IForgeRegistryEntry;
 
 import javax.annotation.Nullable;
@@ -31,7 +36,15 @@ public final class FluidVesselRecipes {
     @SubscribeEvent
     public static void register(RegistryEvent.Register<IRecipe> event) {
         event.getRegistry().registerAll(
-                new BottleRecipe().setRegistryName(Psychedelicraft.id("bottle")),
+                new BottleRecipe(new ItemStack(PSItems.BOTTLE, 8), " # ", "# #", "###", '#', "blockGlass")
+                        .setRegistryName(Psychedelicraft.id("bottle")),
+                new BottleRecipe(new ItemStack(PSItems.MOLOTOV_COCKTAIL, 4), "P#", 'P', Items.PAPER, '#', "blockGlass")
+                        .setRegistryName(Psychedelicraft.id("molotov_cocktail")),
+                new BottleConversion(PSItems.BOTTLE, PSItems.MOLOTOV_COCKTAIL,
+                        PSItems.BOTTLE, new ItemStack(Blocks.WOOL, 1, OreDictionary.WILDCARD_VALUE))
+                        .setRegistryName(Psychedelicraft.id("bottle_to_molotov")),
+                new BottleConversion(PSItems.MOLOTOV_COCKTAIL, PSItems.BOTTLE, PSItems.MOLOTOV_COCKTAIL)
+                        .setRegistryName(Psychedelicraft.id("molotov_to_bottle")),
                 new DistilleryRecipe().setRegistryName(Psychedelicraft.id("distillery")),
                 new LsaSquareRecipe().setRegistryName(Psychedelicraft.id("lsa_square")),
                 new PouringRecipe().setRegistryName(Psychedelicraft.id("pouring")));
@@ -57,8 +70,8 @@ public final class FluidVesselRecipes {
     }
 
     private static final class BottleRecipe extends ShapedOreRecipe {
-        private BottleRecipe() {
-            super(null, new ItemStack(PSItems.BOTTLE, 8), " # ", "# #", "###", '#', "blockGlass");
+        private BottleRecipe(ItemStack output, Object... pattern) {
+            super(null, output, pattern);
         }
 
         @Override
@@ -72,6 +85,39 @@ public final class FluidVesselRecipes {
                     result.setTagInfo("display", display);
                     break;
                 }
+            }
+            return result;
+        }
+    }
+
+    private static final class BottleConversion extends ShapelessOreRecipe {
+        private final PortableFluidItem source;
+        private final PortableFluidItem target;
+
+        private BottleConversion(PortableFluidItem source, PortableFluidItem target, Object... ingredients) {
+            super(null, new ItemStack(target), ingredients);
+            this.source = source;
+            this.target = target;
+        }
+
+        @Override
+        public ItemStack getCraftingResult(InventoryCrafting inventory) {
+            ItemStack result = super.getCraftingResult(inventory);
+            for (int slot = 0; slot < inventory.getSizeInventory(); slot++) {
+                ItemStack input = inventory.getStackInSlot(slot);
+                if (input.getItem() != source) continue;
+                FluidStack contents = source.contents(input);
+                if (contents != null) {
+                    result = new FluidVesselHandler(result, target.getVessel())
+                            .craftContents(contents.getFluid(), contents.amount, contents.tag);
+                }
+                NBTTagCompound display = input.getSubCompound("display");
+                if (display != null && display.hasKey("color", 99)) {
+                    NBTTagCompound dye = new NBTTagCompound();
+                    dye.setInteger("color", display.getInteger("color"));
+                    result.setTagInfo("display", dye);
+                }
+                break;
             }
             return result;
         }

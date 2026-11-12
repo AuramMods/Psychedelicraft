@@ -32,6 +32,7 @@ import ivorius.psychedelicraft.client.render.entity.JuniperBoatRenderer;
 import ivorius.psychedelicraft.client.render.entity.RealityRiftRenderer;
 import ivorius.psychedelicraft.entity.EntityJuniperBoat;
 import ivorius.psychedelicraft.entity.EntityJuniperChestBoat;
+import ivorius.psychedelicraft.entity.MolotovCocktailEntity;
 import ivorius.psychedelicraft.entity.RealityRiftEntity;
 import ivorius.psychedelicraft.fluid.BrewFluid;
 import ivorius.psychedelicraft.item.PSItems;
@@ -47,7 +48,9 @@ import net.minecraft.client.gui.inventory.GuiInventory;
 import net.minecraft.client.renderer.block.model.ModelResourceLocation;
 import net.minecraft.client.renderer.block.statemap.StateMap;
 import net.minecraft.client.renderer.block.statemap.StateMapperBase;
+import net.minecraft.client.renderer.entity.RenderSnowball;
 import net.minecraft.item.Item;
+import net.minecraft.item.ItemStack;
 import net.minecraftforge.client.event.GuiOpenEvent;
 import net.minecraftforge.client.event.ColorHandlerEvent;
 import net.minecraftforge.client.event.ModelRegistryEvent;
@@ -75,7 +78,7 @@ public final class PSItemModels {
             if (!(item instanceof PortableFluidItem)) continue;
             PortableFluidItem vessel = (PortableFluidItem) item;
             event.getItemColors().registerItemColorHandler((stack, layer) -> {
-                if (vessel == PSItems.BOTTLE && layer == 0) {
+                if ((vessel == PSItems.BOTTLE || vessel == PSItems.MOLOTOV_COCKTAIL) && layer == 0) {
                     return stack.hasTagCompound() && stack.getTagCompound().getCompoundTag("display").hasKey("color", 99)
                             ? stack.getTagCompound().getCompoundTag("display").getInteger("color") : 0xA06540;
                 }
@@ -158,6 +161,13 @@ public final class PSItemModels {
         ClientRegistry.bindTileEntitySpecialRenderer(RiftJarBlockEntity.class, riftJar);
         PSItems.RIFT_JAR.setTileEntityItemStackRenderer(riftJar.itemRenderer());
         RenderingRegistry.registerEntityRenderingHandler(RealityRiftEntity.class, RealityRiftRenderer::new);
+        RenderingRegistry.registerEntityRenderingHandler(MolotovCocktailEntity.class, manager ->
+                new RenderSnowball<MolotovCocktailEntity>(manager, PSItems.MOLOTOV_COCKTAIL, Minecraft.getMinecraft().getRenderItem()) {
+                    @Override
+                    public ItemStack getStackToRender(MolotovCocktailEntity projectile) {
+                        return projectile.getProjectileStack();
+                    }
+                });
         RenderingRegistry.registerEntityRenderingHandler(EntityJuniperBoat.class, manager -> new JuniperBoatRenderer(manager, false));
         RenderingRegistry.registerEntityRenderingHandler(EntityJuniperChestBoat.class, manager -> new JuniperBoatRenderer(manager, true));
     }

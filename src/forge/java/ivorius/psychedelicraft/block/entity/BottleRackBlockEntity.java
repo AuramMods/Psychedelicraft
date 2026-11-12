@@ -26,7 +26,7 @@ public final class BottleRackBlockEntity extends DrinkDisplayBlockEntity {
 
         @Override
         public boolean isItemValid(int slot, ItemStack stack) {
-            return stack.getItem() == PSItems.BOTTLE;
+            return stack.getItem() == PSItems.BOTTLE || stack.getItem() == PSItems.MOLOTOV_COCKTAIL;
         }
 
         @Override

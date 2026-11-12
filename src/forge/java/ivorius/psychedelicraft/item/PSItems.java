@@ -36,6 +36,12 @@ public final class PSItems {
             return new ItemStack(COFFEE_BEANS);
         }
     };
+    private static final CreativeTabs WEAPONS = new CreativeTabs("psychedelicraft.weapons") {
+        @Override
+        public ItemStack getTabIconItem() {
+            return new ItemStack(MOLOTOV_COCKTAIL);
+        }
+    };
 
     public static final Item COFFEE_BEANS = named("coffee_beans", new Item());
     public static final PortableFluidItem WOODEN_MUG = vessel("wooden_mug", FluidVessel.MUG);
@@ -43,6 +49,7 @@ public final class PSItems {
     public static final PortableFluidItem GLASS_CHALICE = vessel("glass_chalice", FluidVessel.CHALICE);
     public static final PortableFluidItem SHOT_GLASS = vessel("shot_glass", FluidVessel.SHOT_GLASS);
     public static final PortableFluidItem BOTTLE = vessel("bottle", FluidVessel.BOTTLE);
+    public static final MolotovCocktailItem MOLOTOV_COCKTAIL = named("molotov_cocktail", new MolotovCocktailItem(), WEAPONS);
     public static final PortableFluidItem SYRINGE = vessel("syringe", FluidVessel.SYRINGE);
     public static final PortableFluidItem FILLED_BOWL = vessel("filled_bowl", FluidVessel.BOWL);
     public static final PortableFluidItem FILLED_GLASS_BOTTLE = vessel("filled_glass_bottle", FluidVessel.GLASS_BOTTLE);
@@ -191,9 +198,13 @@ public final class PSItems {
     }
 
     private static <T extends Item> T named(String name, T item) {
+        return named(name, item, GENERAL);
+    }
+
+    private static <T extends Item> T named(String name, T item, CreativeTabs tab) {
         item.setRegistryName(Psychedelicraft.id(name))
                 .setUnlocalizedName(Psychedelicraft.MOD_ID + "." + name)
-                .setCreativeTab(GENERAL);
+                .setCreativeTab(tab);
         ITEMS.add(item);
         return item;
     }

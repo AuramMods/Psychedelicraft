@@ -45,6 +45,7 @@ final class DrinkModels {
         register(PSItems.SHOT_GLASS, 0.2F, 0.5F);
         register(PSItems.GLASS_CHALICE, 0.4F, 3.5F);
         register(PSItems.BOTTLE, 0.5F, 0.5F);
+        register(PSItems.MOLOTOV_COCKTAIL, 0.5F, 0.5F);
     }
 
     private DrinkModels() {
@@ -91,14 +92,14 @@ final class DrinkModels {
         Minecraft client = Minecraft.getMinecraft();
         client.getTextureManager().bindTexture(TextureMap.LOCATION_BLOCKS_TEXTURE);
         int tint = item == PSItems.BOTTLE ? client.getItemColors().colorMultiplier(stack, 0) : -1;
-        draw(client, geometry.vessel, tint);
+        draw(client, geometry.vessel, tint, stack);
         if (contents != null) {
             GlStateManager.pushMatrix();
             try {
                 GlStateManager.translate(0, geometry.fluidOrigin, 0);
                 GlStateManager.scale(1, contents.amount / (float) vessel.getVessel().capacity, 1);
                 GlStateManager.translate(0, -geometry.fluidOrigin, 0);
-                draw(client, geometry.fluid, contents.getFluid().getColor(contents));
+                draw(client, geometry.fluid, contents.getFluid().getColor(contents), ItemStack.EMPTY);
             } finally {
                 GlStateManager.popMatrix();
             }
@@ -106,16 +107,16 @@ final class DrinkModels {
         return geometry.height;
     }
 
-    private static void draw(Minecraft client, ModelResourceLocation name, int tint) {
+    private static void draw(Minecraft client, ModelResourceLocation name, int tint, ItemStack stack) {
         RenderItem renderer = client.getRenderItem();
         IBakedModel model = renderer.getItemModelMesher().getModelManager().getModel(name);
         Tessellator tessellator = Tessellator.getInstance();
         BufferBuilder buffer = tessellator.getBuffer();
         buffer.begin(GL11.GL_QUADS, DefaultVertexFormats.ITEM);
         for (EnumFacing face : EnumFacing.VALUES) {
-            renderer.renderQuads(buffer, model.getQuads(null, face, 42), tint | 0xff000000, ItemStack.EMPTY);
+            renderer.renderQuads(buffer, model.getQuads(null, face, 42), tint | 0xff000000, stack);
         }
-        renderer.renderQuads(buffer, model.getQuads(null, null, 42), tint | 0xff000000, ItemStack.EMPTY);
+        renderer.renderQuads(buffer, model.getQuads(null, null, 42), tint | 0xff000000, stack);
         tessellator.draw();
     }
 

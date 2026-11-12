@@ -1,0 +1,23 @@
+{
+  "parent": "item/generated",
+  "textures": {
+    "layer0": "psychedelicraft:items/molotov_cocktail",
+    "layer1": "psychedelicraft:items/molotov_cocktail_overlay",
+    "layer2": "psychedelicraft:items/molotov_cocktail_overlay"
+  },
+  "overrides": [
+    {
+      "predicate": {
+        "psychedelicraft:filled": 1,
+        "psychedelicraft:flying": 0
+      },
+      "model": "psychedelicraft:item/molotov_cocktail_filled"
+    },
+    {
+      "predicate": {
+        "psychedelicraft:flying": 1
+      },
+      "model": "psychedelicraft:item/thrown_molotov_cocktail"
+    }
+  ]
+}

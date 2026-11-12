@@ -4,12 +4,14 @@
 
 package ivorius.psychedelicraft.fluid;
 
+import com.google.common.base.Suppliers;
 import ivorius.psychedelicraft.Psychedelicraft;
 import ivorius.psychedelicraft.config.PSConfig.FluidTicks;
 import ivorius.psychedelicraft.entity.drug.DrugProperties;
 import ivorius.psychedelicraft.entity.drug.DrugType;
 import ivorius.psychedelicraft.entity.drug.influence.DrugInfluence;
 import ivorius.psychedelicraft.fluid.physical.WorldFluid;
+import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.text.TextFormatting;
 import net.minecraft.util.math.MathHelper;
@@ -17,7 +19,11 @@ import net.minecraft.util.text.translation.I18n;
 import net.minecraftforge.fluids.FluidStack;
 
 import javax.annotation.Nullable;
+import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
+import java.util.function.Consumer;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
 
@@ -36,6 +42,7 @@ public final class BrewFluid extends WorldFluid {
     private final double distillationAlcohol;
     private final double maturationAlcohol;
     private final Style[] styles;
+    private final com.google.common.base.Supplier<List<NBTTagCompound>> creativeAttributes = Suppliers.memoize(this::findCreativeAttributes);
 
     BrewFluid(String path, String texture, int color, int viscosity, Supplier<FluidTicks> ticks,
               int distilledColor, int matureColor, double fermentationAlcohol,
@@ -99,9 +106,7 @@ public final class BrewFluid extends WorldFluid {
         State state = new State(stack);
         Style style = style(state);
         if (!state.vinegar && !style.name.endsWith("vinegar")) {
-            double alcohol = fermentationAlcohol * state.fermentation / FERMENTATION_STEPS
-                    + distillationAlcohol * (1 - 1D / (1 + state.distillation))
-                    + maturationAlcohol * (1 - 1D / (1 + state.maturation * 0.2));
+            double alcohol = alcoholPerBucket(state);
             if (alcohol > 0) {
                 properties.addInfluence(new DrugInfluence(DrugType.ALCOHOL, 20, 0.003, 0.002, alcohol * buckets));
             }
@@ -109,6 +114,50 @@ public final class BrewFluid extends WorldFluid {
         if ("ketchup".equals(style.name)) {
             properties.addInfluence(new DrugInfluence(DrugType.SUGAR, 20, 0.003, 0.002, 0.3 * buckets));
         }
+    }
+
+    private double alcoholPerBucket(State state) {
+        return fermentationAlcohol * state.fermentation / FERMENTATION_STEPS
+                + distillationAlcohol * (1 - 1D / (1 + state.distillation))
+                + maturationAlcohol * (1 - 1D / (1 + state.maturation * 0.2));
+    }
+
+    public static float projectileStrength(@Nullable FluidStack contents) {
+        if (contents == null || !(contents.getFluid() instanceof BrewFluid)) return 0;
+        BrewFluid brew = (BrewFluid) contents.getFluid();
+        float buckets = contents.amount / 1000F;
+        return MathHelper.clamp((float) brew.alcoholPerBucket(new State(contents)) * buckets, 0, 1) * buckets;
+    }
+
+    public void addCreativeVariants(int amount, boolean shotGlass, Consumer<FluidStack> add) {
+        for (NBTTagCompound attributes : creativeAttributes.get()) {
+            FluidStack sample = new FluidStack(this, amount, attributes.hasNoTags() ? null : attributes.copy());
+            if (this != PSFluids.AGAVE || shotGlass == "tequila".equals(style(sample).name)) add.accept(sample);
+        }
+    }
+
+    private List<NBTTagCompound> findCreativeAttributes() {
+        List<NBTTagCompound> result = new ArrayList<>();
+        Set<String> seen = new HashSet<>();
+        for (int fermentation = 0; fermentation <= FERMENTATION_STEPS; fermentation++) {
+            for (int maturation = 0; maturation <= MATURATION_STEPS; maturation++) {
+                for (int distillation = 0; distillation <= 16; distillation++) {
+                    for (int vinegar = 0; vinegar <= 1; vinegar++) {
+                        State state = new State(fermentation, distillation, maturation, vinegar != 0);
+                        Style style = style(state);
+                        if (seen.add(style.name + "/" + style.variant)) {
+                            NBTTagCompound tag = new NBTTagCompound();
+                            if (fermentation != 0) tag.setInteger(FERMENTATION, fermentation);
+                            if (distillation != 0) tag.setInteger(DISTILLATION, distillation);
+                            if (maturation != 0) tag.setInteger(MATURATION, maturation);
+                            if (state.vinegar) tag.setBoolean(VINEGAR, true);
+                            result.add(tag);
+                        }
+                    }
+                }
+            }
+        }
+        return result;
     }
 
     public static void appendAttributes(FluidStack stack, List<String> tooltip) {
@@ -160,10 +209,15 @@ public final class BrewFluid extends WorldFluid {
         final boolean vinegar;
 
         State(FluidStack stack) {
-            fermentation = stage(stack, FERMENTATION, FERMENTATION_STEPS);
-            distillation = stage(stack, DISTILLATION, 16);
-            maturation = stage(stack, MATURATION, MATURATION_STEPS);
-            vinegar = isVinegar(stack);
+            this(stage(stack, FERMENTATION, FERMENTATION_STEPS), stage(stack, DISTILLATION, 16),
+                    stage(stack, MATURATION, MATURATION_STEPS), isVinegar(stack));
+        }
+
+        private State(int fermentation, int distillation, int maturation, boolean vinegar) {
+            this.fermentation = fermentation;
+            this.distillation = distillation;
+            this.maturation = maturation;
+            this.vinegar = vinegar;
         }
     }
 

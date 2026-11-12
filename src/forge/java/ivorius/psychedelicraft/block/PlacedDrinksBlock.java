@@ -43,7 +43,7 @@ public final class PlacedDrinksBlock extends Block {
         if (stack.isEmpty()) return false;
         Item item = stack.getItem();
         return item == PSItems.WOODEN_MUG || item == PSItems.STONE_CUP || item == PSItems.GLASS_CHALICE
-                || item == PSItems.SHOT_GLASS || item == PSItems.BOTTLE;
+                || item == PSItems.SHOT_GLASS || item == PSItems.BOTTLE || item == PSItems.MOLOTOV_COCKTAIL;
     }
 
     public static EnumActionResult placeOnBlock(EntityPlayer player, World world, BlockPos pos, EnumHand hand,
