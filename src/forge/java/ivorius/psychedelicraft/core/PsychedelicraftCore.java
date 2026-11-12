@@ -4,14 +4,15 @@ import net.minecraftforge.fml.relauncher.IFMLLoadingPlugin;
 
 import java.util.Map;
 
-@IFMLLoadingPlugin.Name("Psychedelicraft Furnace Recipes")
+@IFMLLoadingPlugin.Name("Psychedelicraft")
 @IFMLLoadingPlugin.MCVersion("1.12.2")
 @IFMLLoadingPlugin.SortingIndex(1001)
 @IFMLLoadingPlugin.TransformerExclusions("ivorius.psychedelicraft.core")
 public final class PsychedelicraftCore implements IFMLLoadingPlugin {
     @Override
     public String[] getASMTransformerClass() {
-        return new String[]{"ivorius.psychedelicraft.core.FurnaceRecipeTransformer"};
+        return new String[]{"ivorius.psychedelicraft.core.FurnaceRecipeTransformer",
+                "ivorius.psychedelicraft.core.PlayerMechanicsTransformer"};
     }
 
     @Override

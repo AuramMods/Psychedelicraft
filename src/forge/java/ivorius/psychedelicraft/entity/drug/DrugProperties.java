@@ -21,6 +21,7 @@ import net.minecraftforge.common.util.Constants;
 public final class DrugProperties implements NbtSerialisable {
     private final Map<DrugType, Drug> drugs = new LinkedHashMap<>();
     private final List<DrugInfluence> influences = new ArrayList<>();
+    private final Stomach stomach = new Stomach();
     private boolean dirty;
     private boolean wakePending;
 
@@ -53,6 +54,19 @@ public final class DrugProperties implements NbtSerialisable {
         for (Drug drug : drugs.values()) {
             drug.update(this, player);
         }
+        if (player != null) {
+            stomach.tick(player, getModifier(Drug::hungerSuppression));
+            dirty |= stomach.takeDirty();
+        }
+    }
+
+    public Stomach getStomach() {
+        return stomach;
+    }
+
+    public boolean isTripping() {
+        return getModifier(Drug::movementHallucinationStrength) + getModifier(Drug::contextualHallucinationStrength)
+                + getModifier(Drug::colorHallucinationStrength) > 0.7F;
     }
 
     public double getActiveValue(DrugType type) {
@@ -120,6 +134,7 @@ public final class DrugProperties implements NbtSerialisable {
         NBTTagList pending = new NBTTagList();
         influences.forEach(influence -> pending.appendTag(influence.toNbt()));
         tag.setTag("drugInfluences", pending);
+        tag.setTag("stomach", stomach.toNbt());
     }
 
     @Override
@@ -139,6 +154,7 @@ public final class DrugProperties implements NbtSerialisable {
         for (int i = 0; i < pending.tagCount(); i++) {
             DrugInfluence.loadFromNbt(pending.getCompoundTagAt(i)).ifPresent(influences::add);
         }
+        stomach.fromNbt(tag.getCompoundTag("stomach"));
         dirty = false;
     }
 }

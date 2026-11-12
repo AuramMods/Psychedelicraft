@@ -270,3 +270,10 @@ psychedelicraft.sleep.fail.coccaine=The drugs in your system keep you awake
 psychedelicraft.sleep.fail.caffiene=You do not feel tired
 
 tile.psychedelicraft.bottle_rack.name=Bottle Rack
+
+item.psychedelicraft.paper_bag.name=Empty Paper Bag
+item.psychedelicraft.vomit.name=Vomit
+item.psychedelicraft.bag_o_vomit.name=Bag of Vomit
+item.psychedelicraft.paper_bag.filled=Bag of %s
+death.attack.psychedelicraft.over_eating=%1$s ate too much
+commands.psychedelicraft.vomit.usage=/vomit [player]

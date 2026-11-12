@@ -9,6 +9,7 @@ public final class PSDamageTypes {
     public static final DamageSource RESPIRATORY_FAILURE = new DamageSource("psychedelicraft.respiratory_failure").setDamageBypassesArmor();
     public static final DamageSource KIDNEY_FAILURE = new DamageSource("psychedelicraft.kidney_failure").setDamageBypassesArmor();
     public static final DamageSource IN_SLEEP = new DamageSource("psychedelicraft.in_sleep").setDamageBypassesArmor();
+    public static final DamageSource OVER_EATING = new DamageSource("psychedelicraft.over_eating").setDamageBypassesArmor();
 
     private PSDamageTypes() {
     }

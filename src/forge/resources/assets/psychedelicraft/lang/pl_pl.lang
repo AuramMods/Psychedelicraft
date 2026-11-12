@@ -270,3 +270,10 @@ psychedelicraft.sleep.fail.coccaine=Jesteś zbyt naćpany żeby zasnąć
 psychedelicraft.sleep.fail.caffiene=Nie czujesz zmęczenia
 
 tile.psychedelicraft.bottle_rack.name=Stojak na butelki
+
+item.psychedelicraft.paper_bag.name=Pusta papierowa torba
+item.psychedelicraft.vomit.name=Żygi
+item.psychedelicraft.bag_o_vomit.name=Torba żygów
+item.psychedelicraft.paper_bag.filled=Torba %s
+death.attack.psychedelicraft.over_eating=%1$s zjadł zbyt dużo
+commands.psychedelicraft.vomit.usage=/vomit [gracz]

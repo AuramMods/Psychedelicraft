@@ -97,6 +97,7 @@ public final class PSItemModels {
 
     @SubscribeEvent
     public static void registerModels(ModelRegistryEvent event) {
+        PSItems.BAG_O_VOMIT.registerDisguise();
         for (Item item : PSItems.items()) {
             if (item == PSItems.MORNING_GLORY_LATTICE || item == PSItems.WINE_GRAPE_LATTICE) {
                 for (int age = 0; age <= LatticeCropBlock.MAX_AGE; age++) {

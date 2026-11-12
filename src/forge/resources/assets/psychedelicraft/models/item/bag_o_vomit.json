@@ -1,0 +1,38 @@
+{
+    "parent": "item/generated",
+    "textures": {
+        "layer0": "psychedelicraft:items/bag_o_vomit"
+    },
+    "overrides": [
+        {
+            "predicate": {
+                "psychedelicraft:disguise": 1
+            },
+            "model": "minecraft:item/cookie"
+        },
+        {
+            "predicate": {
+                "psychedelicraft:disguise": 2
+            },
+            "model": "minecraft:item/mushroom_stew"
+        },
+        {
+            "predicate": {
+                "psychedelicraft:disguise": 3
+            },
+            "model": "minecraft:item/golden_apple"
+        },
+        {
+            "predicate": {
+                "psychedelicraft:disguise": 4
+            },
+            "model": "minecraft:item/cooked_beef"
+        },
+        {
+            "predicate": {
+                "psychedelicraft:disguise": 5
+            },
+            "model": "minecraft:item/cooked_chicken"
+        }
+    ]
+}

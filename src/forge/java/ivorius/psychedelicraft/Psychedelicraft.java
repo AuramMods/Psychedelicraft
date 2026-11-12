@@ -5,10 +5,12 @@
 package ivorius.psychedelicraft;
 
 import ivorius.psychedelicraft.entity.drug.DrugCapability;
+import ivorius.psychedelicraft.command.VomitCommand;
 import ivorius.psychedelicraft.entity.FarmerTrades;
 import ivorius.psychedelicraft.fluid.PSFluids;
 import ivorius.psychedelicraft.item.FilledBucketItem;
 import ivorius.psychedelicraft.item.PSItems;
+import ivorius.psychedelicraft.item.PaperBagItem;
 import ivorius.psychedelicraft.network.Channel;
 import ivorius.psychedelicraft.recipe.JuniperWoodRecipes;
 import ivorius.psychedelicraft.screen.PSGuiHandler;
@@ -20,6 +22,7 @@ import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.common.event.FMLInitializationEvent;
 import net.minecraftforge.fml.common.event.FMLPreInitializationEvent;
+import net.minecraftforge.fml.common.event.FMLServerStartingEvent;
 import net.minecraftforge.fml.common.network.NetworkRegistry;
 import net.minecraftforge.fml.common.registry.GameRegistry;
 import net.minecraftforge.oredict.OreDictionary;
@@ -57,7 +60,13 @@ public class Psychedelicraft {
         PSItems.JUNIPER_BOAT.registerDispenserBehavior();
         PSItems.JUNIPER_CHEST_BOAT.registerDispenserBehavior();
         FilledBucketItem.registerDispenserBehavior();
+        PaperBagItem.registerDispenserBehavior();
         FarmerTrades.register();
+    }
+
+    @Mod.EventHandler
+    public void serverStarting(FMLServerStartingEvent event) {
+        event.registerServerCommand(new VomitCommand());
     }
 
     public static ResourceLocation id(String path) {
