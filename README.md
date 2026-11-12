@@ -5,7 +5,8 @@ Psychedelicraft
 [![Build Status](https://github.com/Sollace/Psychedelicraft/actions/workflows/gradle-build.yml/badge.svg)](https://github.com/Sollace/Psychedelicraft/actions/workflows/gradle-build.yml)
 ![Downloads](https://img.shields.io/github/downloads/Sollace/Psychedelicraft/total.svg?color=yellowgreen)
 ![License](https://img.shields.io/github/license/Sollace/Psychedelicraft)
-![](https://img.shields.io/badge/api-fabric-orange.svg)
+
+This branch is developing the Minecraft 1.12.2 Forge port. See the [port report](docs/PORT_12.md) for current feature coverage and test results.
 
 The One And Only, accept no substitutes!
 
@@ -37,12 +38,16 @@ and you may use this mod in modpacks.
 Contributing
 ============
 
-1. JDK 17 is required. Install it using https://adoptium.net/?variant=openjdk17&jvmVariant=hotspot
+Use a JDK 8 installation for Gradle. The wrapper builds against Forge `14.23.5.2864` with the `20171003-1.12` MCP mappings.
 
-2. Open a terminal window in the same directory as the sources (git clone or extracted from zip). Run the following command (windows).
-
+```sh
+./gradlew clean build
+./gradlew runClient
+./gradlew runServer
 ```
-gradlew build
-```
 
-3. After some time, the built mod will be in `/build/libs`.
+On Windows, use `gradlew.bat`. The reobfuscated development jar is written to `build/libs`. The client uses `run/client` and the dedicated server uses `run/server`.
+
+On Apple Silicon, run the client with an x86-64 JDK 8 under Rosetta. The macOS LWJGL 2 native library in this Minecraft version requires x86-64.
+
+If a fresh ForgeGradle development run fails in `NetworkRegistry.newChannel` at line 207, run `./gradlew resolveForgeSources` and retry the launch. The mapped sources let ForgeGradle recompile its development runtime. See the port report for the observed failure.

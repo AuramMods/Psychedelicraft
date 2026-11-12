@@ -6,11 +6,42 @@ Investigated on **2026-11-11**. Target: Minecraft **1.12.2**, **Forge**, and **J
 
 Use **plain `1.20.1` as the starting point for the easiest modern backport**. It has the modern mod's core gameplay, direct NBT persistence, older rendering interfaces, and substantially less code to translate than `1.21.5`. This is still a substantial platform port: changing the Minecraft version or replacing Fabric's Gradle plugin cannot make it work on 1.12.2.
 
-The new local branch **`codex/1.12.2-forge`** starts at `1.20.1` commit `319a4ea0160d6600cffcd5f5cc9e363ceaab44a1`. This commit adds the investigation only. Its inherited implementation still targets Fabric 1.20.1; a runnable Forge port has not been implemented or tested.
+The local branch **`codex/1.12.2-forge`** starts at `1.20.1` commit `319a4ea0160d6600cffcd5f5cc9e363ceaab44a1`. The initial investigation is commit `e51116f9`. The progress section tracks changes to the Forge port since that commit.
 
 Use **`1.20.1-lts` as the main reference for newer features and fixes**, and `1.21.5` for changes after LTS. If full recent feature parity becomes the overriding requirement, reconsider LTS as the implementation base before doing substantial work. LTS retains Java 17 and the older renderer, but incorporates much of the newer gameplay and an emulation of the component/codec architecture. Starting from plain 1.20.1 prioritizes time to a working port; it does not imply that newer features are permanently excluded.
 
 There is also an old Forge implementation on `master`. Reuse its ideas where helpful, particularly rendering and Forge integration, but do not assume it is a working 1.12 precursor. Its declared build and source APIs disagree. A classic-feature revival from that branch might be competitive, but establishing that would require a separate build/runtime experiment.
+
+## Port progress
+
+The parity baseline is the pinned [plain 1.20.1 snapshot][plain]. During migration, `src/main` holds the donor and Gradle builds `src/forge/java` and `src/forge/resources`. Move the Forge implementation into the standard source directories after the donor tree is no longer needed. Keep each in-progress feature open until its behavior is verified.
+
+| Baseline area | Donor source of truth under `src/main` | Status and evidence |
+| --- | --- | --- |
+| Loader, build, mod metadata and sided initialization | `Psychedelicraft`, `PsychedelicraftClient`, `fabric.mod.json`, access widener, mixin configuration, Gradle and CI | Forge entrypoint, Java 8 build, reobfuscation and client-only model registration in place. `clean build` passed. Remaining hooks are tracked with their features. |
+| Items and creative groups | `item/PSItems`, `PSItemGroups`, item classes, corresponding models and language keys | Partial. The packaged Forge jar registered `psychedelicraft:coffee_beans` in a new world. The user confirmed its texture and creative tab in a screenshot. Remaining items, creative groups and acquisition are open. |
+| Blocks, crops, machine state and inventories | `block/PSBlocks`, `PSWoodTypes`, `block/entity/PSBlockEntities`, blockstate and model assets | Pending. Preserve state, multiblock behavior, inventory access and drops. |
+| Fluid registries and automation | `fluid/PSFluids`, `FluidVolumes`, `container`, `physical`, storage and processing tile entities | Pending. Check amount and NBT conservation, including simulation, partial transfers and item remainders. |
+| Crafting, processing and placed drinks | `recipe/PSRecipes`, mod recipe data, `placeable_drinks`, machine and item interactions | Pending. Cover all 91 donor recipe files and dynamic recipes. |
+| Consumables and player effects | `entity/drug`, consumable item classes, `PSDamageTypes`, `PSGameRules`, relevant common mixins | Pending. Preserve timing, attributes, stomach and sleep interactions, damage and settings. |
+| Persistence and multiplayer | `network/Channel`, `MsgDrugProperties`, `MsgHallucinate`, `MixinPlayerEntity`, lifecycle callbacks in `Psychedelicraft` | Pending. Verify owner and observer synchronization, tracking, death, reconnect, dimension changes and save/reload. |
+| Interfaces and settings | `screen/PSScreenHandlers`, `client/screen/PSScreens`, `config/PSConfig`, `PSClientConfig`, `compat/modmenu` | Pending. Port machine containers, configuration screens and setting defaults. |
+| Recipe viewing | `compat/emi` | Pending. Use a 1.12-compatible optional integration. |
+| Shaders, overlays and hallucinations | `client/render/DrugRenderer`, `client/render/effect`, `client/render/shader`, `entity/drug/hallucination`, client mixins and shader assets | Pending. Verify the full effect set in game. |
+| Models, sound and particles | `client/render/PSRenderers`, `client/item/PSModelPredicates`, `PSSounds`, `PSParticles`, client factories and corresponding assets | Pending except for the coffee bean item model. |
+| Worldgen, villagers and other entities | `world/gen/PSWorldGen`, `FeatureRegistry`, `PSTradeOffers`, `PSEntities`, villager mixins, worldgen and structure data | Pending. Audit the village templates, trades, crop/tree generation and entity tracking. |
+| Tags, loot, advancements and commands | `PSTags`, `advancement/PSCriteria`, `command/PSCommands`, namespaces under `resources/data` | Pending. Preserve gameplay acquisition, advancement triggers and command behavior. |
+| Localizations and other assets | `resources/assets` for both English and Polish, models, sprites, sounds and other resources | Partial. Coffee bean and its creative tab names converted to `.lang`. |
+
+### Cycle 1 · Forge build and first registered item
+
+- Built the stock Forge MDK and then the port with Zulu 8u472. Pinned Forge 14.23.5.2864, ForgeGradle 3.0.197 and Gradle 5.6.4. The port build ran `reobfJar` successfully and packaged Forge metadata, the MIT license and the first item. Updated the GitHub workflow to use Java 8 and build the jar. CI has yet to run remotely.
+- Launched the packaged jar using the official Forge installer in an isolated runtime under `run/production`. The client log recorded five mods loaded, creation of a new world and a player joining. The registry dump listed `psychedelicraft:coffee_beans`. The user's screenshot showed the Psychedelicraft tab and the bean sprite in game. The tested jar's SHA-256 was `32f92d076fa928bcc7f1488393073523bc3758f924f1f092d4bb4105209489b3`. The final build contained identical class and resource bytes, with Java 8 class version 52.
+- The ARM Java client launch failed with `UnsatisfiedLinkError` because `liblwjgl.dylib` lacked ARM code. Temurin x86-64 8u504 under Rosetta reached OpenGL and ran the packaged client. The two Java 8 runtimes are local tools outside the repo.
+- The initial ForgeGradle client run under x86-64 failed at `NetworkRegistry.newChannel:207`. `javap` showed an extra `BUKKIT` enum constant in the generated binary and only `CLIENT` and `SERVER` in the installer jar. Resolving the mapped sources and rebuilding produced a `-recomp.jar` with the two expected constants. `resolveForgeSources` provides the source-resolution step. The server retry used the recompiled jar. [Matching ForgeGradle issue](https://github.com/quat1024/modern-forge-1.12-template/issues/2).
+- The dedicated development server reached the Minecraft EULA prompt. Its local `run/server/eula.txt` still requires the user's acceptance before server tests can proceed. The separate production server is installed for later jar tests.
+
+Next cycle: port a real consumable with its effect state and NBT persistence. Then add synchronization and prove the first post-processing and camera effects.
 
 ## Repository and branch survey
 
