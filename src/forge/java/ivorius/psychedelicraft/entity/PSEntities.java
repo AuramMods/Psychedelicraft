@@ -16,7 +16,13 @@ public final class PSEntities {
     public static void register(RegistryEvent.Register<EntityEntry> event) {
         event.getRegistry().registerAll(
                 boat(EntityJuniperBoat.class, "juniper_boat", 0),
-                boat(EntityJuniperChestBoat.class, "juniper_chest_boat", 1));
+                boat(EntityJuniperChestBoat.class, "juniper_chest_boat", 1),
+                EntityEntryBuilder.<RealityRiftEntity>create()
+                        .entity(RealityRiftEntity.class)
+                        .id(Psychedelicraft.id("reality_rift"), 2)
+                        .name(Psychedelicraft.MOD_ID + ".reality_rift")
+                        .tracker(80, 3, false)
+                        .build());
     }
 
     private static EntityEntry boat(Class<? extends EntityJuniperBoat> type, String name, int networkId) {

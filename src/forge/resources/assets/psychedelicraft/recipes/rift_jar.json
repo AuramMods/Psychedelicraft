@@ -1,0 +1,26 @@
+{
+  "type": "forge:ore_shaped",
+  "pattern": [
+    "O-O",
+    "GO ",
+    "OIO"
+  ],
+  "key": {
+    "O": {
+      "item": "minecraft:glass"
+    },
+    "-": {
+      "type": "forge:ore_dict",
+      "ore": "plankWood"
+    },
+    "G": {
+      "item": "minecraft:gold_ingot"
+    },
+    "I": {
+      "item": "minecraft:iron_ingot"
+    }
+  },
+  "result": {
+    "item": "psychedelicraft:rift_jar"
+  }
+}

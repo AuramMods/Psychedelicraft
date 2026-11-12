@@ -33,6 +33,12 @@ public final class PSConfig {
     }
 
     public static final class Balancing {
+        @Config.Comment("Random chance per player tick to spawn a nearby Reality Rift, expressed as one in this many ticks. Zero disables spawning.")
+        public int randomTicksUntilRiftSpawn = 180 * MINUTE;
+
+        @Config.Comment("Show empty and filled Rift Jar variants in the creative inventory.")
+        public boolean enableRiftJars;
+
         @Config.Comment("Show colored Harmonium variants in the creative inventory and enable dealer offers for them.")
         public boolean enableHarmonium;
 

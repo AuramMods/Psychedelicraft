@@ -16,6 +16,7 @@ import ivorius.psychedelicraft.block.entity.LatticeCropBlockEntity;
 import ivorius.psychedelicraft.block.entity.MashTubBlockEntity;
 import ivorius.psychedelicraft.block.entity.PeyoteBlockEntity;
 import ivorius.psychedelicraft.block.entity.PlacedDrinkBlockEntity;
+import ivorius.psychedelicraft.block.entity.RiftJarBlockEntity;
 import ivorius.psychedelicraft.fluid.PSFluids;
 import ivorius.psychedelicraft.fluid.physical.FluidAttributesTile;
 import ivorius.psychedelicraft.fluid.physical.PhysicalFluidBlock;
@@ -112,6 +113,8 @@ public final class PSBlocks {
     public static final BottleRackBlock BOTTLE_RACK = named("bottle_rack", new BottleRackBlock());
     public static final Block TRAY = named("tray", new LabPropBlock.Tray());
     public static final Block BUNSEN_BURNER = named("bunsen_burner", LabPropBlock.burner());
+    public static final RiftJarBlock RIFT_JAR = named("rift_jar", new RiftJarBlock());
+    public static final Block GLITCH = named("glitch", new GlitchedBlock());
     public static final Block COPPER_ORE = named("copper_ore", new CopperOreBlock());
 
     private PSBlocks() {
@@ -129,7 +132,7 @@ public final class PSBlocks {
                 PEYOTE, AGAVE_PLANT, JIMSONWEED, BELLADONNA, TOMATOES, DRYING_TABLE, IRON_DRYING_TABLE,
                 MASH_TUB, MASH_TUB_EDGE,
                 OAK_BARREL, SPRUCE_BARREL, BIRCH_BARREL, JUNGLE_BARREL, ACACIA_BARREL, DARK_OAK_BARREL,
-                FLASK, DISTILLERY, PLACED_DRINK, BOTTLE_RACK, TRAY, BUNSEN_BURNER, COPPER_ORE,
+                FLASK, DISTILLERY, PLACED_DRINK, BOTTLE_RACK, TRAY, BUNSEN_BURNER, RIFT_JAR, GLITCH, COPPER_ORE,
                 LATTICE, MORNING_GLORY, MORNING_GLORY_LATTICE, WINE_GRAPE_LATTICE,
                 NATURAL_HOP, NATURAL_COCA, NATURAL_TOBACCO, NATURAL_COFFEA,
                 JUNIPER_LOG, JUNIPER_WOOD, STRIPPED_JUNIPER_LOG, STRIPPED_JUNIPER_WOOD,
@@ -156,6 +159,7 @@ public final class PSBlocks {
         GameRegistry.registerTileEntity(LatticeCropBlockEntity.class, Psychedelicraft.id("lattice_crop"));
         GameRegistry.registerTileEntity(PeyoteBlockEntity.class, Psychedelicraft.id("peyote"));
         GameRegistry.registerTileEntity(JuniperSignBlockEntity.class, Psychedelicraft.id("juniper_sign"));
+        GameRegistry.registerTileEntity(RiftJarBlockEntity.class, Psychedelicraft.id("rift_jar"));
         Blocks.FIRE.setFireInfo(DRYING_TABLE, 5, 20);
         Blocks.FIRE.setFireInfo(BOTTLE_RACK, 5, 20);
         Blocks.FIRE.setFireInfo(LATTICE, 5, 20);

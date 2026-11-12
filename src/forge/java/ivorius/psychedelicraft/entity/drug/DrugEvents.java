@@ -1,6 +1,8 @@
 package ivorius.psychedelicraft.entity.drug;
 
 import ivorius.psychedelicraft.Psychedelicraft;
+import ivorius.psychedelicraft.config.PSConfig;
+import ivorius.psychedelicraft.entity.RealityRiftEntity;
 import ivorius.psychedelicraft.network.Channel;
 import ivorius.psychedelicraft.entity.drug.type.SleepDeprivationDrug;
 import net.minecraft.entity.Entity;
@@ -47,6 +49,10 @@ public final class DrugEvents {
                 float speed = properties.getMultiplier(Drug::speedModifier);
                 updateSpeed(event.player.getEntityAttribute(SharedMonsterAttributes.MOVEMENT_SPEED), speed);
                 updateSpeed(event.player.getEntityAttribute(SharedMonsterAttributes.ATTACK_SPEED), speed);
+                int riftSpawnInterval = PSConfig.balancing.randomTicksUntilRiftSpawn;
+                if (riftSpawnInterval > 0 && event.player.getRNG().nextInt(riftSpawnInterval) == 0) {
+                    RealityRiftEntity.spawnNear(event.player);
+                }
             }
             if (properties.takeDirty() && event.player instanceof EntityPlayerMP) {
                 Channel.sync((EntityPlayerMP) event.player, properties);

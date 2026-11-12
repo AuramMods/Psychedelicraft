@@ -10,6 +10,9 @@ import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 public final class PSSounds {
     public static final SoundEvent BREATH = sound("entity.player.breath");
     public static final SoundEvent HEARTBEAT = sound("entity.player.heartbeat");
+    public static final SoundEvent RIFT_JAR_TOGGLE = sound("block.rift_jar.toggle");
+    public static final SoundEvent RIFT_JAR_OPEN = sound("block.rift_jar.open");
+    public static final SoundEvent RIFT_JAR_CLOSE = sound("block.rift_jar.close");
 
     private PSSounds() {
     }
@@ -21,6 +24,6 @@ public final class PSSounds {
 
     @SubscribeEvent
     public static void registerSounds(RegistryEvent.Register<SoundEvent> event) {
-        event.getRegistry().registerAll(BREATH, HEARTBEAT);
+        event.getRegistry().registerAll(BREATH, HEARTBEAT, RIFT_JAR_TOGGLE, RIFT_JAR_OPEN, RIFT_JAR_CLOSE);
     }
 }
