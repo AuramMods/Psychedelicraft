@@ -1,0 +1,6 @@
+{
+  "parent": "minecraft:block/cross",
+  "textures": {
+    "cross": "psychedelicraft:blocks/cannabis_stage2"
+  }
+}

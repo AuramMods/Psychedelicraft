@@ -1,0 +1,6 @@
+{
+  "parent": "minecraft:block/cross",
+  "textures": {
+    "cross": "psychedelicraft:blocks/hop_stage1"
+  }
+}
