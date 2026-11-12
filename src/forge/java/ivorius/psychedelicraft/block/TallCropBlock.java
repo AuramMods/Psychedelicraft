@@ -76,6 +76,10 @@ public class TallCropBlock extends BlockBush implements IGrowable {
         return crop == Crop.COFFEA && state.getValue(TOP) ? 3 : crop.maxAge;
     }
 
+    public boolean isMature(IBlockState state) {
+        return state.getValue(ageProperty()) == maxAge(state);
+    }
+
     public int maxHeight() {
         return crop.height;
     }

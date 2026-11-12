@@ -9,8 +9,10 @@ import ivorius.psychedelicraft.Psychedelicraft;
 import ivorius.psychedelicraft.entity.drug.DrugCapability;
 import ivorius.psychedelicraft.entity.drug.DrugProperties;
 import ivorius.psychedelicraft.entity.drug.influence.DrugInfluence;
+import net.minecraft.advancements.CriteriaTriggers;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.entity.player.InventoryPlayer;
 import net.minecraft.init.SoundEvents;
 import net.minecraft.item.Item;
@@ -80,6 +82,7 @@ public final class BongItem extends SmokingItem {
         }
         ItemStack used = player.inventory.decrStackSize(slot, 1);
         properties.addInfluence(ingredients.get(used.getItem()).apply(used));
+        if (player instanceof EntityPlayerMP) CriteriaTriggers.CONSUME_ITEM.trigger((EntityPlayerMP) player, used);
         properties.startBreathingSmoke(player, 0xffffff);
         recordDraw(player, stack);
         return wear(stack, player);

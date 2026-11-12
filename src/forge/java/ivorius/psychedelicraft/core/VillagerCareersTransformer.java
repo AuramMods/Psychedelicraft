@@ -1,0 +1,93 @@
+package ivorius.psychedelicraft.core;
+
+import net.minecraft.launchwrapper.IClassTransformer;
+import net.minecraftforge.fml.common.asm.transformers.deobf.FMLDeobfuscatingRemapper;
+import org.objectweb.asm.ClassReader;
+import org.objectweb.asm.ClassWriter;
+import org.objectweb.asm.Opcodes;
+import org.objectweb.asm.Type;
+import org.objectweb.asm.tree.AbstractInsnNode;
+import org.objectweb.asm.tree.ClassNode;
+import org.objectweb.asm.tree.FrameNode;
+import org.objectweb.asm.tree.InsnList;
+import org.objectweb.asm.tree.InsnNode;
+import org.objectweb.asm.tree.JumpInsnNode;
+import org.objectweb.asm.tree.LabelNode;
+import org.objectweb.asm.tree.MethodInsnNode;
+import org.objectweb.asm.tree.MethodNode;
+import org.objectweb.asm.tree.VarInsnNode;
+
+public final class VillagerCareersTransformer implements IClassTransformer {
+    private static final String VILLAGER = "net.minecraft.entity.passive.EntityVillager";
+    private static final String ZOMBIE = "net.minecraft.entity.monster.EntityZombieVillager";
+    private static final String VILLAGE = "net.minecraft.world.gen.structure.StructureVillagePieces$Village";
+    private static final String RENDERER = "net.minecraft.client.renderer.entity.RenderLivingBase";
+    private static final String FORGE_REGISTRY = "net/minecraftforge/fml/common/registry/VillagerRegistry";
+    private static final String CAREERS = "ivorius/psychedelicraft/entity/VillagerCareers";
+
+    @Override
+    public byte[] transform(String name, String transformedName, byte[] bytes) {
+        if (bytes == null || !(VILLAGER.equals(transformedName) || ZOMBIE.equals(transformedName)
+                || VILLAGE.equals(transformedName) || RENDERER.equals(transformedName))) return bytes;
+        ClassNode type = new ClassNode(Opcodes.ASM5);
+        new ClassReader(bytes).accept(type, 0);
+        if (RENDERER.equals(transformedName)) {
+            patchShake(type);
+        } else {
+            patchRandomSpawns(type);
+            if (VILLAGER.equals(transformedName)) {
+                prependHandler(type, "useRecipe", "func_70933_a", "(Lnet/minecraft/village/MerchantRecipe;)V", "useRecipe");
+                prependHandler(type, "updateEquipmentIfNeeded", "func_175445_a", "(Lnet/minecraft/entity/item/EntityItem;)V", "collectExtra");
+            }
+        }
+        ClassWriter writer = new ClassWriter(ClassWriter.COMPUTE_MAXS);
+        type.accept(writer);
+        return writer.toByteArray();
+    }
+
+    private static void patchRandomSpawns(ClassNode type) {
+        for (MethodNode method : type.methods) {
+            for (AbstractInsnNode instruction : method.instructions.toArray()) {
+                if (!(instruction instanceof MethodInsnNode)) continue;
+                MethodInsnNode call = (MethodInsnNode) instruction;
+                if (FORGE_REGISTRY.equals(call.owner) && "setRandomProfession".equals(call.name)) call.owner = CAREERS;
+            }
+        }
+    }
+
+    private static void prependHandler(ClassNode type, String name, String srg, String descriptor, String hook) {
+        MethodNode method = find(type, name, srg, descriptor);
+        String handler = "(L" + type.name + ";" + method.desc.substring(1, method.desc.length() - 1) + "Z";
+        LabelNode vanilla = new LabelNode();
+        InsnList instructions = new InsnList();
+        instructions.add(new VarInsnNode(Opcodes.ALOAD, 0));
+        instructions.add(new VarInsnNode(Opcodes.ALOAD, 1));
+        instructions.add(new MethodInsnNode(Opcodes.INVOKESTATIC, CAREERS, hook, handler, false));
+        instructions.add(new JumpInsnNode(Opcodes.IFEQ, vanilla));
+        instructions.add(new InsnNode(Opcodes.RETURN));
+        instructions.add(vanilla);
+        instructions.add(new FrameNode(Opcodes.F_SAME, 0, null, 0, null));
+        method.instructions.insert(instructions);
+    }
+
+    private static void patchShake(ClassNode type) {
+        MethodNode method = find(type, "applyRotations", "func_77043_a", "(Lnet/minecraft/entity/EntityLivingBase;FFF)V");
+        Type entity = Type.getArgumentTypes(method.desc)[0];
+        InsnList instructions = new InsnList();
+        instructions.add(new VarInsnNode(Opcodes.ALOAD, 1));
+        instructions.add(new VarInsnNode(Opcodes.FLOAD, 3));
+        instructions.add(new MethodInsnNode(Opcodes.INVOKESTATIC, "ivorius/psychedelicraft/client/render/VillagerClothes",
+                "shake", Type.getMethodDescriptor(Type.FLOAT_TYPE, entity, Type.FLOAT_TYPE), false));
+        instructions.add(new VarInsnNode(Opcodes.FSTORE, 3));
+        method.instructions.insert(instructions);
+    }
+
+    private static MethodNode find(ClassNode type, String name, String srg, String descriptor) {
+        FMLDeobfuscatingRemapper remapper = FMLDeobfuscatingRemapper.INSTANCE;
+        for (MethodNode method : type.methods) {
+            String mapped = remapper.mapMethodName(type.name, method.name, method.desc);
+            if ((name.equals(mapped) || srg.equals(mapped)) && descriptor.equals(remapper.mapMethodDesc(method.desc))) return method;
+        }
+        throw new IllegalStateException("Could not locate " + type.name + "." + name);
+    }
+}

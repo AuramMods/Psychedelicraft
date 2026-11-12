@@ -1,0 +1,28 @@
+{
+  "parent": "psychedelicraft:hash_a_muffin",
+  "display": {
+    "icon": {
+      "item": "psychedelicraft:hash_muffin"
+    },
+    "title": {
+      "translate": "advancements.psychedelicraft.feed_a_villager.title"
+    },
+    "description": {
+      "translate": "advancements.psychedelicraft.feed_a_villager.description"
+    },
+    "frame": "task",
+    "show_toast": true,
+    "announce_to_chat": true,
+    "hidden": true
+  },
+  "criteria": {
+    "done_the_thing": {
+      "trigger": "minecraft:impossible"
+    }
+  },
+  "requirements": [
+    [
+      "done_the_thing"
+    ]
+  ]
+}

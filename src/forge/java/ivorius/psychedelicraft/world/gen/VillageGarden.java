@@ -5,6 +5,7 @@
 package ivorius.psychedelicraft.world.gen;
 
 import ivorius.psychedelicraft.Psychedelicraft;
+import ivorius.psychedelicraft.entity.VillagerCareers;
 import net.minecraft.block.Block;
 import net.minecraft.init.Blocks;
 import net.minecraft.nbt.NBTTagCompound;
@@ -23,6 +24,7 @@ import net.minecraft.world.gen.structure.template.PlacementSettings;
 import net.minecraft.world.gen.structure.template.Template;
 import net.minecraft.world.gen.structure.template.TemplateManager;
 import net.minecraftforge.fml.common.registry.VillagerRegistry;
+import net.minecraftforge.fml.common.registry.VillagerRegistry.VillagerProfession;
 
 import javax.annotation.Nullable;
 import java.util.Arrays;
@@ -91,6 +93,11 @@ public final class VillageGarden extends StructureVillagePieces.Village {
             spawnVillagers(world, chunkBounds, 4, 2, 10, 1);
         }
         return true;
+    }
+
+    @Override
+    protected VillagerProfession chooseForgeProfession(int count, VillagerProfession profession) {
+        return plot == Plot.VINEYARD ? profession : VillagerCareers.UNEMPLOYED;
     }
 
     enum Plot {

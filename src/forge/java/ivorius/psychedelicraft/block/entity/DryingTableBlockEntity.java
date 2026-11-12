@@ -5,6 +5,7 @@
 package ivorius.psychedelicraft.block.entity;
 
 import javax.annotation.Nullable;
+import java.util.UUID;
 
 import ivorius.psychedelicraft.block.PSBlocks;
 import ivorius.psychedelicraft.config.PSConfig;
@@ -46,6 +47,7 @@ public final class DryingTableBlockEntity extends TileEntity implements ITickabl
     private int ticks;
     private float heat;
     private float progress;
+    private UUID dealer;
 
     public DryingTableBlockEntity() {
         for (EnumFacing facing : EnumFacing.VALUES) {
@@ -136,12 +138,33 @@ public final class DryingTableBlockEntity extends TileEntity implements ITickabl
         return progress;
     }
 
+    public boolean availableTo(UUID villager) {
+        return dealer == null || dealer.equals(villager);
+    }
+
+    public boolean claim(UUID villager) {
+        if (!availableTo(villager)) return false;
+        if (dealer == null) {
+            dealer = villager;
+            markDirty();
+        }
+        return true;
+    }
+
+    public void release(UUID villager) {
+        if (villager.equals(dealer)) {
+            dealer = null;
+            markDirty();
+        }
+    }
+
     @Override
     public NBTTagCompound writeToNBT(NBTTagCompound tag) {
         super.writeToNBT(tag);
         ItemStackHelper.saveAllItems(tag, items);
         tag.setFloat("heatRatio", heat);
         tag.setFloat("dryingProgress", progress);
+        if (dealer != null) tag.setUniqueId("Dealer", dealer);
         return tag;
     }
 
@@ -152,6 +175,7 @@ public final class DryingTableBlockEntity extends TileEntity implements ITickabl
         ItemStackHelper.loadAllItems(tag, items);
         heat = MathHelper.clamp(tag.getFloat("heatRatio"), 0, 1);
         progress = MathHelper.clamp(tag.getFloat("dryingProgress"), 0, 1);
+        dealer = tag.hasUniqueId("Dealer") ? tag.getUniqueId("Dealer") : null;
         if (world != null && !world.isRemote) {
             recipe = DryingRecipe.match(this);
         }
