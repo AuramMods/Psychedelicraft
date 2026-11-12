@@ -8,6 +8,8 @@ package ivorius.psychedelicraft.client.render.block;
 import ivorius.psychedelicraft.Psychedelicraft;
 import ivorius.psychedelicraft.block.BarrelBlock;
 import ivorius.psychedelicraft.block.entity.BarrelBlockEntity;
+import ivorius.psychedelicraft.client.render.DrugRenderer;
+import ivorius.psychedelicraft.client.render.shader.WorldGeometryShader.Scope;
 import ivorius.psychedelicraft.fluid.BrewFluid;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.client.Minecraft;
@@ -87,12 +89,14 @@ public final class BarrelRenderer extends TileEntitySpecialRenderer<BarrelBlockE
             } else {
                 GlStateManager.rotate(180 - facing.getHorizontalAngle(), 0, 1, 0);
             }
-            for (ModelRenderer part : barrel) part.render(UNIT);
-            if (!upright) {
-                for (ModelRenderer part : rack) part.render(UNIT);
-                if (state.getValue(BarrelBlock.TAPPED)) {
-                    tapHandle.rotateAngleY = (float) Math.toRadians(tile.getTapAngle(partialTicks));
-                    for (ModelRenderer part : tap) part.render(UNIT);
+            try (Scope scope = DrugRenderer.beginWorldModel()) {
+                for (ModelRenderer part : barrel) part.render(UNIT);
+                if (!upright) {
+                    for (ModelRenderer part : rack) part.render(UNIT);
+                    if (state.getValue(BarrelBlock.TAPPED)) {
+                        tapHandle.rotateAngleY = (float) Math.toRadians(tile.getTapAngle(partialTicks));
+                        for (ModelRenderer part : tap) part.render(UNIT);
+                    }
                 }
             }
             renderSymbol(tile.getTank().getFluid());
@@ -122,7 +126,7 @@ public final class BarrelRenderer extends TileEntitySpecialRenderer<BarrelBlockE
             buffer.pos(x, 1.0625, -z).tex(sprite.getMaxU(), sprite.getMinV()).endVertex();
             buffer.pos(x, 0.0625, -z).tex(sprite.getMaxU(), sprite.getMaxV()).endVertex();
         }
-        tessellator.draw();
+        DrugRenderer.drawWorldQuads(tessellator);
         GlStateManager.enableLighting();
         GlStateManager.disableBlend();
     }

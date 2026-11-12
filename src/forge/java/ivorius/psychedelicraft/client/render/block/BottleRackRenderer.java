@@ -31,7 +31,7 @@ public final class BottleRackRenderer extends TileEntitySpecialRenderer<BottleRa
                     GlStateManager.translate((1 - slot % 3) * 0.3, (2 - slot / 3) * 5 / 16D + 0.155, 0.27);
                     GlStateManager.rotate(-90, 1, 0, 0);
                     GlStateManager.translate(-0.5, 0, -0.5);
-                    DrinkModels.render(bottle);
+                    DrinkModels.render(bottle, rack.getPos());
                 } finally {
                     GlStateManager.popMatrix();
                 }

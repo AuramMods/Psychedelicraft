@@ -10,6 +10,8 @@ import ivorius.psychedelicraft.Psychedelicraft;
 import ivorius.psychedelicraft.block.PSBlocks;
 import ivorius.psychedelicraft.block.PeyoteBlock;
 import ivorius.psychedelicraft.block.entity.PeyoteBlockEntity;
+import ivorius.psychedelicraft.client.render.DrugRenderer;
+import ivorius.psychedelicraft.client.render.shader.WorldGeometryShader.Scope;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.client.renderer.tileentity.TileEntitySpecialRenderer;
@@ -45,7 +47,7 @@ public final class PeyoteRenderer extends TileEntitySpecialRenderer<PeyoteBlockE
         float turn = new Random(MathHelper.getPositionRandom(pos)).nextInt(4) * 180F;
         bindTexture(textures[age]);
         GlStateManager.pushMatrix();
-        try {
+        try (Scope scope = DrugRenderer.beginWorldModel()) {
             GlStateManager.translate(x + 0.5 + offset.x, y + 1.5 + offset.y, z + 0.5 + offset.z);
             GlStateManager.rotate(turn, 0, 1, 0);
             GlStateManager.rotate(180, 1, 0, 0);

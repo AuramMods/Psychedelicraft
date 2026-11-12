@@ -21,8 +21,10 @@ public final class EntityGeometryTransformer implements IClassTransformer {
     private static final String RENDER_GLOBAL = "net.minecraft.client.renderer.RenderGlobal";
     private static final String RENDER_LIVING = "net.minecraft.client.renderer.entity.RenderLivingBase";
     private static final String RENDER_DRAGON = "net.minecraft.client.renderer.entity.RenderDragon";
+    private static final String RENDER_BOAT = "net.minecraft.client.renderer.entity.RenderBoat";
     private static final String LAYERS = "net.minecraft.client.renderer.entity.layers.";
     private static final String MODEL_BASE = "net/minecraft/client/model/ModelBase";
+    private static final String MULTIPASS_MODEL = "net/minecraft/client/model/IMultipassModel";
     private static final String MODEL_RENDER = "(Lnet/minecraft/entity/Entity;FFFFFF)V";
     private static final String HOOKS = "ivorius/psychedelicraft/client/render/DrugRenderer";
     private static final Set<String> MODEL_LAYERS = ImmutableSet.of(
@@ -33,7 +35,7 @@ public final class EntityGeometryTransformer implements IClassTransformer {
     @Override
     public byte[] transform(String name, String transformedName, byte[] bytes) {
         if (bytes == null || !ENTITY_RENDERER.equals(transformedName) && !RENDER_GLOBAL.equals(transformedName)
-                && !RENDER_LIVING.equals(transformedName) && !RENDER_DRAGON.equals(transformedName)
+                && !RENDER_LIVING.equals(transformedName) && !RENDER_DRAGON.equals(transformedName) && !RENDER_BOAT.equals(transformedName)
                 && !isModelLayer(transformedName)) return bytes;
         ClassNode type = new ClassNode(Opcodes.ASM5);
         new ClassReader(bytes).accept(type, 0);
@@ -45,6 +47,7 @@ public final class EntityGeometryTransformer implements IClassTransformer {
                     .instructions.insert(hook("captureEntityView", "()V"));
         } else {
             patchModels(type);
+            if (RENDER_BOAT.equals(transformedName)) patchBoatMask(type);
         }
         ClassWriter writer = new ClassWriter(ClassWriter.COMPUTE_MAXS);
         type.accept(writer);
@@ -91,6 +94,23 @@ public final class EntityGeometryTransformer implements IClassTransformer {
             }
         }
         if (!patched) throw new IllegalStateException("Could not locate model draws in " + type.name);
+    }
+
+    private static void patchBoatMask(ClassNode type) {
+        FMLDeobfuscatingRemapper remapper = FMLDeobfuscatingRemapper.INSTANCE;
+        for (MethodNode render : type.methods) {
+            for (AbstractInsnNode instruction : render.instructions.toArray()) {
+                if (instruction.getOpcode() != Opcodes.INVOKEINTERFACE) continue;
+                MethodInsnNode draw = (MethodInsnNode) instruction;
+                String name = remapper.mapMethodName(draw.owner, draw.name, draw.desc);
+                if (!MULTIPASS_MODEL.equals(remapper.map(draw.owner))
+                        || !("renderMultipass".equals(name) || "func_187054_b".equals(name))
+                        || !MODEL_RENDER.equals(remapper.mapMethodDesc(draw.desc))) continue;
+                render.instructions.set(draw, hook("drawBoatWaterMask", "(L" + draw.owner + ";" + draw.desc.substring(1)));
+                return;
+            }
+        }
+        throw new IllegalStateException("Could not locate the boat water mask draw");
     }
 
     private static MethodInsnNode hook(String name, String descriptor) {

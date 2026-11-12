@@ -8,6 +8,7 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import ivorius.psychedelicraft.Psychedelicraft;
+import ivorius.psychedelicraft.client.render.DrugRenderer;
 import ivorius.psychedelicraft.item.PSItems;
 import ivorius.psychedelicraft.item.PortableFluidItem;
 import net.minecraft.client.Minecraft;
@@ -26,10 +27,12 @@ import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.util.ResourceLocation;
+import net.minecraft.util.math.BlockPos;
 import net.minecraftforge.fluids.FluidStack;
 import org.apache.logging.log4j.LogManager;
 import org.lwjgl.opengl.GL11;
 
+import javax.annotation.Nullable;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
@@ -83,7 +86,7 @@ final class DrinkModels {
         }
     }
 
-    static float render(ItemStack stack) {
+    static float render(ItemStack stack, @Nullable BlockPos anchor) {
         Item item = stack.getItem();
         Geometry geometry = MODELS.get(item);
         if (geometry == null) return 0;
@@ -92,14 +95,14 @@ final class DrinkModels {
         Minecraft client = Minecraft.getMinecraft();
         client.getTextureManager().bindTexture(TextureMap.LOCATION_BLOCKS_TEXTURE);
         int tint = item == PSItems.BOTTLE ? client.getItemColors().colorMultiplier(stack, 0) : -1;
-        draw(client, geometry.vessel, tint, stack);
+        draw(client, geometry.vessel, tint, stack, anchor);
         if (contents != null) {
             GlStateManager.pushMatrix();
             try {
                 GlStateManager.translate(0, geometry.fluidOrigin, 0);
                 GlStateManager.scale(1, contents.amount / (float) vessel.getVessel().capacity, 1);
                 GlStateManager.translate(0, -geometry.fluidOrigin, 0);
-                draw(client, geometry.fluid, contents.getFluid().getColor(contents), ItemStack.EMPTY);
+                draw(client, geometry.fluid, contents.getFluid().getColor(contents), ItemStack.EMPTY, anchor);
             } finally {
                 GlStateManager.popMatrix();
             }
@@ -107,7 +110,8 @@ final class DrinkModels {
         return geometry.height;
     }
 
-    private static void draw(Minecraft client, ModelResourceLocation name, int tint, ItemStack stack) {
+    private static void draw(Minecraft client, ModelResourceLocation name, int tint, ItemStack stack,
+                             @Nullable BlockPos anchor) {
         RenderItem renderer = client.getRenderItem();
         IBakedModel model = renderer.getItemModelMesher().getModelManager().getModel(name);
         Tessellator tessellator = Tessellator.getInstance();
@@ -117,7 +121,7 @@ final class DrinkModels {
             renderer.renderQuads(buffer, model.getQuads(null, face, 42), tint | 0xff000000, stack);
         }
         renderer.renderQuads(buffer, model.getQuads(null, null, 42), tint | 0xff000000, stack);
-        tessellator.draw();
+        DrugRenderer.drawWorldQuads(tessellator, anchor);
     }
 
     private static final class Geometry {

@@ -11,6 +11,7 @@ import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.client.renderer.OpenGlHelper;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
 import net.minecraft.client.renderer.texture.TextureMap;
+import net.minecraft.client.renderer.tileentity.TileEntityRendererDispatcher;
 import net.minecraft.client.resources.IReloadableResourceManager;
 import net.minecraft.client.resources.IResourceManager;
 import net.minecraft.client.resources.IResourceManagerReloadListener;
@@ -18,6 +19,7 @@ import net.minecraft.client.shader.ShaderManager;
 import net.minecraft.client.shader.ShaderUniform;
 import net.minecraft.init.Blocks;
 import net.minecraft.util.math.MathHelper;
+import net.minecraft.util.math.BlockPos;
 import org.apache.logging.log4j.LogManager;
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL13;
@@ -44,18 +46,19 @@ public final class WorldGeometryShader implements IResourceManagerReloadListener
 
     @Nullable
     public Scope begin(Minecraft client, EntityPlayerSP player, HallucinationManager hallucinations,
-                       DrugProperties drugs, Material material, float cloudY) {
-        return begin(client, player, hallucinations, drugs, material, cloudY, null);
+                       DrugProperties drugs, Material material, float cloudY, @Nullable BlockPos anchor) {
+        return begin(client, player, hallucinations, drugs, material, cloudY, anchor, null);
     }
 
     public Scope beginZeroMatter(ShaderManager program, Minecraft client, @Nullable EntityPlayerSP player,
                                  HallucinationManager hallucinations, @Nullable DrugProperties drugs) {
-        return begin(client, player, hallucinations, drugs, Material.ENTITY, 0F, program);
+        return begin(client, player, hallucinations, drugs, Material.ENTITY, 0F, null, program);
     }
 
     @Nullable
     private Scope begin(Minecraft client, @Nullable EntityPlayerSP player, HallucinationManager hallucinations,
-                        @Nullable DrugProperties drugs, Material material, float cloudY, @Nullable ShaderManager zeroMatter) {
+                        @Nullable DrugProperties drugs, Material material, float cloudY,
+                        @Nullable BlockPos anchor, @Nullable ShaderManager zeroMatter) {
         boolean entity = material == Material.ENTITY || material == Material.ENTITY_GLINT;
         boolean deform = player != null && drugs != null && (!entity || entityState.hasView());
         if (!deform && zeroMatter == null) return null;
@@ -93,17 +96,15 @@ public final class WorldGeometryShader implements IResourceManagerReloadListener
             } else if (deform) {
                 entityState.uploadView(program);
             }
-            // The projected material always has a valid texture on unit zero, even with the atlas unused.
-            setSampler(program, "PortalSampler", zeroMatter != null && surface <= 0F ? 0 : portalUnit);
+            // Keep the inactive atlas sampler on the primary texture rather than an unused texture unit.
+            setSampler(program, "PortalSampler", surface > 0F ? portalUnit : 0);
             upload(program, "WorldTicks", deform ? player.ticksExisted + client.getRenderPartialTicks() : 0F);
             upload(program, "DistantDeformation", distant);
             upload(program, "SurfaceFractalStrength", surface);
             upload(program, "FractureStrength", fracture);
             upload(program, "EntityModel", entity && deform ? 1F : 0F);
 
-            ShaderUniform coordinates = program.getShaderUniformOrDefault("GeometryCoordinates");
-            coordinates.set(material.horizontalScale, cloudY);
-            coordinates.upload();
+            uploadCoordinates(program, material, cloudY, anchor);
 
             ShaderUniform waves = program.getShaderUniformOrDefault("Waves");
             waves.set(small, big, wiggle);
@@ -138,6 +139,19 @@ public final class WorldGeometryShader implements IResourceManagerReloadListener
         ShaderUniform uniform = program.getShaderUniformOrDefault(name);
         uniform.set(value);
         uniform.upload();
+    }
+
+    private static void uploadCoordinates(ShaderManager program, Material material, float cloudY, @Nullable BlockPos anchor) {
+        ShaderUniform coordinates = program.getShaderUniformOrDefault("GeometryCoordinates");
+        if (anchor == null) {
+            coordinates.set(0F, cloudY, 0F, material.horizontalScale);
+        } else {
+            // A chunk buffer stores vertices relative to its section origin. Use that same origin for attached details.
+            coordinates.set((float) (TileEntityRendererDispatcher.staticPlayerX - (anchor.getX() & ~15)),
+                    (float) (TileEntityRendererDispatcher.staticPlayerY - (anchor.getY() & ~15)),
+                    (float) (TileEntityRendererDispatcher.staticPlayerZ - (anchor.getZ() & ~15)), material.horizontalScale);
+        }
+        coordinates.upload();
     }
 
     private static float fogMode() {

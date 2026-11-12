@@ -6,6 +6,7 @@ package ivorius.psychedelicraft.client.render.block;
 
 import ivorius.psychedelicraft.block.entity.DistilleryBlockEntity;
 import ivorius.psychedelicraft.block.entity.FluidMachineBlockEntity;
+import ivorius.psychedelicraft.client.render.DrugRenderer;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.BufferBuilder;
 import net.minecraft.client.renderer.GlStateManager;
@@ -46,7 +47,7 @@ public final class FlaskRenderer extends TileEntitySpecialRenderer<FluidMachineB
                 double neck = machine instanceof DistilleryBlockEntity ? 4.5 : 3.5;
                 chamber(buffer, sprite, color, neck, (fill - 0.5F) * 2, 1.5);
             }
-            tessellator.draw();
+            DrugRenderer.drawWorldQuads(tessellator, machine.getPos());
         } finally {
             GlStateManager.enableLighting();
             GlStateManager.disableBlend();

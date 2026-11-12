@@ -17,6 +17,7 @@ import ivorius.psychedelicraft.entity.drug.DrugType;
 import ivorius.psychedelicraft.entity.drug.type.HarmoniumDrug;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.entity.EntityPlayerSP;
+import net.minecraft.client.model.IMultipassModel;
 import net.minecraft.client.model.ModelBase;
 import net.minecraft.client.model.ModelRenderer;
 import net.minecraft.client.multiplayer.WorldClient;
@@ -24,12 +25,15 @@ import net.minecraft.client.renderer.ChunkRenderContainer;
 import net.minecraft.client.renderer.EntityRenderer;
 import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.client.renderer.ItemRenderer;
+import net.minecraft.client.renderer.RenderItem;
 import net.minecraft.client.renderer.Tessellator;
+import net.minecraft.client.renderer.block.model.ItemCameraTransforms;
 import net.minecraft.client.renderer.tileentity.TileEntityItemStackRenderer;
 import net.minecraft.client.shader.ShaderManager;
 import net.minecraft.entity.Entity;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.BlockRenderLayer;
+import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.MathHelper;
 import net.minecraftforge.client.event.EntityViewRenderEvent;
 import net.minecraftforge.client.event.RenderGameOverlayEvent;
@@ -53,6 +57,8 @@ public final class DrugRenderer {
     private static float pauseBlurProgress;
     private static boolean renderingWorld;
     private static boolean renderingBuiltInItem;
+    @Nullable
+    private static BlockPos blockItemAnchor;
 
     private DrugRenderer() {
     }
@@ -130,6 +136,13 @@ public final class DrugRenderer {
         }
     }
 
+    public static void drawBoatWaterMask(IMultipassModel model, Entity entity, float limbSwing, float swingAmount,
+                                        float age, float headYaw, float headPitch, float scale) {
+        try (Scope scope = beginWorldModel()) {
+            model.renderMultipass(entity, limbSwing, swingAmount, age, headYaw, headPitch, scale);
+        }
+    }
+
     public static void renderFirstPersonItems(ItemRenderer renderer, float partialTicks) {
         // The hand pass replaces the world model-view matrix before it renders its items and arms.
         captureEntityView();
@@ -142,13 +155,31 @@ public final class DrugRenderer {
 
     public static void drawItemQuads(Tessellator tessellator, ItemStack stack) {
         // RenderItem supplies the empty stack for its two color-only glint draws.
-        try (Scope scope = beginWorldModel(stack.isEmpty() ? Material.ENTITY_GLINT : Material.ENTITY)) {
+        try (Scope scope = beginWorldModel(stack.isEmpty() ? Material.ENTITY_GLINT : Material.ENTITY, blockItemAnchor)) {
             tessellator.draw();
         }
     }
 
+    public static void renderBlockItem(RenderItem renderer, ItemStack stack, BlockPos anchor) {
+        BlockPos previous = blockItemAnchor;
+        blockItemAnchor = anchor;
+        try {
+            renderer.renderItem(stack, ItemCameraTransforms.TransformType.FIXED);
+        } finally {
+            blockItemAnchor = previous;
+        }
+    }
+
     public static void drawMapQuads(Tessellator tessellator) {
-        try (Scope scope = beginWorldModel(Material.ENTITY)) {
+        drawWorldQuads(tessellator);
+    }
+
+    public static void drawWorldQuads(Tessellator tessellator) {
+        drawWorldQuads(tessellator, null);
+    }
+
+    public static void drawWorldQuads(Tessellator tessellator, @Nullable BlockPos anchor) {
+        try (Scope scope = beginWorldModel(Material.ENTITY, anchor)) {
             tessellator.draw();
         }
     }
@@ -170,7 +201,7 @@ public final class DrugRenderer {
     }
 
     public static void drawBuiltInModelList(int list) {
-        try (Scope scope = renderingBuiltInItem ? beginWorldModel(Material.ENTITY) : null) {
+        try (Scope scope = renderingBuiltInItem ? beginWorldModel(Material.ENTITY, blockItemAnchor) : null) {
             GlStateManager.callList(list);
         }
     }
@@ -188,7 +219,12 @@ public final class DrugRenderer {
 
     @Nullable
     private static Scope beginWorldModel(Material material) {
-        return renderingWorld ? beginGeometry(Minecraft.getMinecraft(), material, 0F) : null;
+        return beginWorldModel(material, null);
+    }
+
+    @Nullable
+    private static Scope beginWorldModel(Material material, @Nullable BlockPos anchor) {
+        return renderingWorld ? beginGeometry(Minecraft.getMinecraft(), material, 0F, anchor) : null;
     }
 
     public static void drawFastClouds(Tessellator tessellator, double cameraY) {
@@ -223,8 +259,13 @@ public final class DrugRenderer {
 
     @Nullable
     private static Scope beginGeometry(Minecraft client, Material material, float cloudY) {
+        return beginGeometry(client, material, cloudY, null);
+    }
+
+    @Nullable
+    private static Scope beginGeometry(Minecraft client, Material material, float cloudY, @Nullable BlockPos anchor) {
         DrugProperties drugs = geometryDrugs(client);
-        return drugs == null ? null : GEOMETRY.begin(client, player, hallucinations, drugs, material, cloudY);
+        return drugs == null ? null : GEOMETRY.begin(client, player, hallucinations, drugs, material, cloudY, anchor);
     }
 
     @Nullable

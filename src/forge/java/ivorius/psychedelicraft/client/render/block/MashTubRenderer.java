@@ -5,17 +5,18 @@
 package ivorius.psychedelicraft.client.render.block;
 
 import ivorius.psychedelicraft.block.entity.MashTubBlockEntity;
+import ivorius.psychedelicraft.client.render.DrugRenderer;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.BufferBuilder;
 import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.client.renderer.Tessellator;
-import net.minecraft.client.renderer.block.model.ItemCameraTransforms;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
 import net.minecraft.client.renderer.texture.TextureMap;
 import net.minecraft.client.renderer.tileentity.TileEntitySpecialRenderer;
 import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
 import net.minecraft.init.Blocks;
 import net.minecraft.item.ItemStack;
+import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.MathHelper;
 import net.minecraftforge.fluids.FluidStack;
 import org.lwjgl.opengl.GL11;
@@ -26,17 +27,18 @@ public final class MashTubRenderer extends TileEntitySpecialRenderer<MashTubBloc
     @Override
     public void render(MashTubBlockEntity vat, double x, double y, double z, float partialTicks,
                        int destroyStage, float alpha) {
+        BlockPos anchor = vat.getPos();
         FluidStack fluid = vat.getTank().getFluid();
         float height = 0.1F;
         if (fluid != null) {
             height = 0.3F + 0.6F * fluid.amount / vat.getTank().getCapacity();
             TextureAtlasSprite sprite = Minecraft.getMinecraft().getTextureMapBlocks()
                     .getAtlasSprite(fluid.getFluid().getStill(fluid).toString());
-            drawSurface(sprite, fluid.getFluid().getColor(fluid), x, y + height, z);
+            drawSurface(sprite, fluid.getFluid().getColor(fluid), x, y + height, z, anchor);
         } else if (!vat.getSolidOutput().isEmpty()) {
             TextureAtlasSprite sprite = Minecraft.getMinecraft().getBlockRendererDispatcher()
                     .getModelForState(Blocks.DIRT.getDefaultState()).getParticleTexture();
-            drawSurface(sprite, 0xffffffff, x, y + 0.5, z);
+            drawSurface(sprite, 0xffffffff, x, y + 0.5, z, anchor);
         }
         Random random = new Random(vat.getPos().toLong() + 1);
         float ticks = vat.getWorld().getTotalWorldTime() % 3600 + partialTicks;
@@ -52,14 +54,14 @@ public final class MashTubRenderer extends TileEntitySpecialRenderer<MashTubBloc
                 GlStateManager.rotate(rotation + ticks, 0, 1, 0);
                 GlStateManager.rotate(65 + 6 * MathHelper.cos(phase), 1, 0, 0);
                 GlStateManager.scale(0.3, 0.3, 0.3);
-                Minecraft.getMinecraft().getRenderItem().renderItem(stack, ItemCameraTransforms.TransformType.FIXED);
+                DrugRenderer.renderBlockItem(Minecraft.getMinecraft().getRenderItem(), stack, anchor);
             } finally {
                 GlStateManager.popMatrix();
             }
         }
     }
 
-    private void drawSurface(TextureAtlasSprite sprite, int color, double x, double y, double z) {
+    private void drawSurface(TextureAtlasSprite sprite, int color, double x, double y, double z, BlockPos anchor) {
         int red = color >> 16 & 255, green = color >> 8 & 255, blue = color & 255, alpha = color >>> 24;
         bindTexture(TextureMap.LOCATION_BLOCKS_TEXTURE);
         GlStateManager.enableBlend();
@@ -81,7 +83,7 @@ public final class MashTubRenderer extends TileEntitySpecialRenderer<MashTubBloc
                 buffer.pos(right, y, front).tex(sprite.getMaxU(), sprite.getMinV()).color(red, green, blue, alpha).endVertex();
             }
         }
-        tessellator.draw();
+        DrugRenderer.drawWorldQuads(tessellator, anchor);
         GlStateManager.enableLighting();
         GlStateManager.disableBlend();
     }

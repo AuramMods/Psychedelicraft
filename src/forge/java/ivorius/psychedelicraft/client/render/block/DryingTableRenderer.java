@@ -8,9 +8,9 @@ package ivorius.psychedelicraft.client.render.block;
 import java.util.Random;
 
 import ivorius.psychedelicraft.block.entity.DryingTableBlockEntity;
+import ivorius.psychedelicraft.client.render.DrugRenderer;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.GlStateManager;
-import net.minecraft.client.renderer.block.model.ItemCameraTransforms;
 import net.minecraft.client.renderer.tileentity.TileEntitySpecialRenderer;
 import net.minecraft.item.ItemStack;
 
@@ -37,7 +37,7 @@ public final class DryingTableRenderer extends TileEntitySpecialRenderer<DryingT
                 GlStateManager.translate(0, 0, -0.2F);
                 GlStateManager.rotate(90, 1, 0, 0);
                 GlStateManager.rotate(50, 0, 0, 1);
-                Minecraft.getMinecraft().getRenderItem().renderItem(stack, ItemCameraTransforms.TransformType.FIXED);
+                DrugRenderer.renderBlockItem(Minecraft.getMinecraft().getRenderItem(), stack, table.getPos());
             } finally {
                 GlStateManager.popMatrix();
             }

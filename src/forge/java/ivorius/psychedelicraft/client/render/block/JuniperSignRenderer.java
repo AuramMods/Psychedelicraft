@@ -3,6 +3,8 @@ package ivorius.psychedelicraft.client.render.block;
 import java.util.List;
 
 import ivorius.psychedelicraft.Psychedelicraft;
+import ivorius.psychedelicraft.client.render.DrugRenderer;
+import ivorius.psychedelicraft.client.render.shader.WorldGeometryShader.Scope;
 import ivorius.psychedelicraft.block.JuniperSignBlock;
 import ivorius.psychedelicraft.block.JuniperSignBlock.Form;
 import ivorius.psychedelicraft.block.entity.JuniperSignBlockEntity;
@@ -57,9 +59,12 @@ public final class JuniperSignRenderer extends TileEntitySpecialRenderer<Juniper
         GlStateManager.color(1, 1, 1, alpha);
         GlStateManager.enableRescaleNormal();
         GlStateManager.pushMatrix();
-        renderModel(form, sign.hasAttachedChains());
-        GlStateManager.popMatrix();
-        GlStateManager.disableRescaleNormal();
+        try (Scope scope = DrugRenderer.beginWorldModel()) {
+            renderModel(form, sign.hasAttachedChains());
+        } finally {
+            GlStateManager.popMatrix();
+            GlStateManager.disableRescaleNormal();
+        }
         if (destroyStage >= 0) {
             GlStateManager.matrixMode(GL11.GL_TEXTURE);
             GlStateManager.popMatrix();
@@ -124,22 +129,25 @@ public final class JuniperSignRenderer extends TileEntitySpecialRenderer<Juniper
         FontRenderer font = getFontRenderer();
         int color = textColor(text.color(), text.isGlowing());
         boolean outline = text.isGlowing() && (nearby || text.color() == EnumDyeColor.BLACK);
-        for (int index = 0; index < JuniperSignText.LINE_COUNT; index++) {
-            List<ITextComponent> parts = GuiUtilRenderComponents.splitText(text.line(index), form.textWidth(), font, false, true);
-            if (!parts.isEmpty()) {
-                String line = parts.get(0).getFormattedText();
-                int x = -font.getStringWidth(line) / 2;
-                int y = (index - 2) * form.textLineHeight();
-                if (outline) {
-                    drawOutline(font, line, x, y, text.color());
+        try (Scope scope = DrugRenderer.beginWorldModel()) {
+            for (int index = 0; index < JuniperSignText.LINE_COUNT; index++) {
+                List<ITextComponent> parts = GuiUtilRenderComponents.splitText(text.line(index), form.textWidth(), font, false, true);
+                if (!parts.isEmpty()) {
+                    String line = parts.get(0).getFormattedText();
+                    int x = -font.getStringWidth(line) / 2;
+                    int y = (index - 2) * form.textLineHeight();
+                    if (outline) {
+                        drawOutline(font, line, x, y, text.color());
+                    }
+                    font.drawString(line, x, y, color);
                 }
-                font.drawString(line, x, y, color);
             }
+        } finally {
+            if (text.isGlowing()) {
+                OpenGlHelper.setLightmapTextureCoords(OpenGlHelper.lightmapTexUnit, brightnessX, brightnessY);
+            }
+            GlStateManager.popMatrix();
         }
-        if (text.isGlowing()) {
-            OpenGlHelper.setLightmapTextureCoords(OpenGlHelper.lightmapTexUnit, brightnessX, brightnessY);
-        }
-        GlStateManager.popMatrix();
     }
 
     private static void drawOutline(FontRenderer font, String line, int x, int y, EnumDyeColor dye) {

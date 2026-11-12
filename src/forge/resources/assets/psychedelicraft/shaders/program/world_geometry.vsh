@@ -8,7 +8,7 @@ uniform float DistantDeformation;
 uniform float FractureStrength;
 uniform float SurfaceFractalStrength;
 uniform vec4 SurfaceFractalCoords;
-uniform vec2 GeometryCoordinates;
+uniform vec4 GeometryCoordinates;
 uniform float EntityModel;
 uniform mat4 EntityViewToWorld;
 uniform float EntityLighting;
@@ -43,8 +43,8 @@ void main() {
   if (EntityModel > 0.0) {
     position = (EntityViewToWorld * view).xyz;
   }
-  position.xz *= GeometryCoordinates.x;
-  position.y += GeometryCoordinates.y;
+  position.xz *= GeometryCoordinates.w;
+  position += GeometryCoordinates.xyz;
   gl_Position = ftransform();
   screenProjection = vec4((gl_Position.xy + gl_Position.ww) * 0.5, gl_Position.zw);
   viewPosition = view.xyz;

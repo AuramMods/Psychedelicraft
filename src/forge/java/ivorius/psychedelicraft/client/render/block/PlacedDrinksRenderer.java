@@ -49,7 +49,7 @@ public final class PlacedDrinksRenderer extends TileEntitySpecialRenderer<Placed
                     GlStateManager.translate(x + offsetX, y + height, z + offsetZ);
                     GlStateManager.rotate(rotation, 0, 1, 0);
                     GlStateManager.translate(-0.5, 0, -0.5);
-                    return DrinkModels.render(stack);
+                    return DrinkModels.render(stack, null);
                 } finally {
                     GlStateManager.popMatrix();
                 }
