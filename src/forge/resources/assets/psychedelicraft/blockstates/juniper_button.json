@@ -1,0 +1,136 @@
+{
+  "variants": {
+    "axis=x,facing=up,powered=false": {
+      "model": "psychedelicraft:juniper_button",
+      "uvlock": true,
+      "y": 90
+    },
+    "axis=z,facing=up,powered=false": {
+      "model": "psychedelicraft:juniper_button",
+      "uvlock": true
+    },
+    "axis=x,facing=down,powered=false": {
+      "model": "psychedelicraft:juniper_button",
+      "uvlock": true,
+      "x": 180,
+      "y": 90
+    },
+    "axis=z,facing=down,powered=false": {
+      "model": "psychedelicraft:juniper_button",
+      "uvlock": true,
+      "x": 180
+    },
+    "axis=x,facing=east,powered=false": {
+      "model": "psychedelicraft:juniper_button",
+      "uvlock": true,
+      "x": 90,
+      "y": 90
+    },
+    "axis=z,facing=east,powered=false": {
+      "model": "psychedelicraft:juniper_button",
+      "uvlock": true,
+      "x": 90,
+      "y": 90
+    },
+    "axis=x,facing=west,powered=false": {
+      "model": "psychedelicraft:juniper_button",
+      "uvlock": true,
+      "x": 90,
+      "y": 270
+    },
+    "axis=z,facing=west,powered=false": {
+      "model": "psychedelicraft:juniper_button",
+      "uvlock": true,
+      "x": 90,
+      "y": 270
+    },
+    "axis=x,facing=south,powered=false": {
+      "model": "psychedelicraft:juniper_button",
+      "uvlock": true,
+      "x": 90,
+      "y": 180
+    },
+    "axis=z,facing=south,powered=false": {
+      "model": "psychedelicraft:juniper_button",
+      "uvlock": true,
+      "x": 90,
+      "y": 180
+    },
+    "axis=x,facing=north,powered=false": {
+      "model": "psychedelicraft:juniper_button",
+      "uvlock": true,
+      "x": 90
+    },
+    "axis=z,facing=north,powered=false": {
+      "model": "psychedelicraft:juniper_button",
+      "uvlock": true,
+      "x": 90
+    },
+    "axis=x,facing=up,powered=true": {
+      "model": "psychedelicraft:juniper_button_pressed",
+      "uvlock": true,
+      "y": 90
+    },
+    "axis=z,facing=up,powered=true": {
+      "model": "psychedelicraft:juniper_button_pressed",
+      "uvlock": true
+    },
+    "axis=x,facing=down,powered=true": {
+      "model": "psychedelicraft:juniper_button_pressed",
+      "uvlock": true,
+      "x": 180,
+      "y": 90
+    },
+    "axis=z,facing=down,powered=true": {
+      "model": "psychedelicraft:juniper_button_pressed",
+      "uvlock": true,
+      "x": 180
+    },
+    "axis=x,facing=east,powered=true": {
+      "model": "psychedelicraft:juniper_button_pressed",
+      "uvlock": true,
+      "x": 90,
+      "y": 90
+    },
+    "axis=z,facing=east,powered=true": {
+      "model": "psychedelicraft:juniper_button_pressed",
+      "uvlock": true,
+      "x": 90,
+      "y": 90
+    },
+    "axis=x,facing=west,powered=true": {
+      "model": "psychedelicraft:juniper_button_pressed",
+      "uvlock": true,
+      "x": 90,
+      "y": 270
+    },
+    "axis=z,facing=west,powered=true": {
+      "model": "psychedelicraft:juniper_button_pressed",
+      "uvlock": true,
+      "x": 90,
+      "y": 270
+    },
+    "axis=x,facing=south,powered=true": {
+      "model": "psychedelicraft:juniper_button_pressed",
+      "uvlock": true,
+      "x": 90,
+      "y": 180
+    },
+    "axis=z,facing=south,powered=true": {
+      "model": "psychedelicraft:juniper_button_pressed",
+      "uvlock": true,
+      "x": 90,
+      "y": 180
+    },
+    "axis=x,facing=north,powered=true": {
+      "model": "psychedelicraft:juniper_button_pressed",
+      "uvlock": true,
+      "x": 90
+    },
+    "axis=z,facing=north,powered=true": {
+      "model": "psychedelicraft:juniper_button_pressed",
+      "uvlock": true,
+      "x": 90
+    }
+  }
+}

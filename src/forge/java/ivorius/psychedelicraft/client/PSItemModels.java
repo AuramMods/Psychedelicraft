@@ -4,12 +4,14 @@ import ivorius.psychedelicraft.Psychedelicraft;
 import ivorius.psychedelicraft.block.JuniperLeavesBlock;
 import ivorius.psychedelicraft.block.LatticeCropBlock;
 import ivorius.psychedelicraft.block.PSBlocks;
-import ivorius.psychedelicraft.block.TallCropBlock;
 import ivorius.psychedelicraft.block.entity.DryingTableBlockEntity;
 import ivorius.psychedelicraft.block.entity.PeyoteBlockEntity;
 import ivorius.psychedelicraft.client.render.block.DryingTableRenderer;
 import ivorius.psychedelicraft.client.render.block.PeyoteRenderer;
 import ivorius.psychedelicraft.item.PSItems;
+import net.minecraft.block.Block;
+import net.minecraft.block.BlockDoor;
+import net.minecraft.block.BlockFenceGate;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.client.renderer.block.model.ModelResourceLocation;
 import net.minecraft.client.renderer.block.statemap.StateMap;
@@ -39,11 +41,18 @@ public final class PSItemModels {
                 register(item);
             }
         }
-        registerWildModel(PSBlocks.NATURAL_CANNABIS, PSBlocks.CANNABIS);
-        registerWildModel(PSBlocks.NATURAL_HOP, PSBlocks.HOP);
-        registerWildModel(PSBlocks.NATURAL_COCA, PSBlocks.COCA);
-        registerWildModel(PSBlocks.NATURAL_TOBACCO, PSBlocks.TOBACCO);
-        registerWildModel(PSBlocks.NATURAL_COFFEA, PSBlocks.COFFEA);
+        shareModel(PSBlocks.NATURAL_CANNABIS, PSBlocks.CANNABIS);
+        shareModel(PSBlocks.NATURAL_HOP, PSBlocks.HOP);
+        shareModel(PSBlocks.NATURAL_COCA, PSBlocks.COCA);
+        shareModel(PSBlocks.NATURAL_TOBACCO, PSBlocks.TOBACCO);
+        shareModel(PSBlocks.NATURAL_COFFEA, PSBlocks.COFFEA);
+        shareModel(PSBlocks.POWERED_JUNIPER_TRAPDOOR, PSBlocks.JUNIPER_TRAPDOOR);
+        ModelLoader.setCustomStateMapper(PSBlocks.JUNIPER_DOOR, new StateMap.Builder().ignore(BlockDoor.POWERED).build());
+        ModelLoader.setCustomStateMapper(PSBlocks.JUNIPER_FENCE_GATE, new StateMap.Builder().ignore(BlockFenceGate.POWERED).build());
+        ModelLoader.setCustomStateMapper(PSBlocks.JUNIPER_SLAB, new StateMap.Builder()
+                .ignore(PSBlocks.JUNIPER_SLAB.getVariantProperty()).build());
+        ModelLoader.setCustomStateMapper(PSBlocks.JUNIPER_DOUBLE_SLAB, new StateMap.Builder()
+                .ignore(PSBlocks.JUNIPER_DOUBLE_SLAB.getVariantProperty()).build());
         ModelLoader.setCustomStateMapper(PSBlocks.JUNIPER_LEAVES, new StateMap.Builder()
                 .ignore(JuniperLeavesBlock.DISTANCE, JuniperLeavesBlock.PERSISTENT).build());
         ModelLoader.setCustomStateMapper(PSBlocks.FRUITING_JUNIPER_LEAVES, new StateMap.Builder()
@@ -52,11 +61,11 @@ public final class PSItemModels {
         ClientRegistry.bindTileEntitySpecialRenderer(PeyoteBlockEntity.class, new PeyoteRenderer());
     }
 
-    private static void registerWildModel(TallCropBlock wild, TallCropBlock cultivated) {
-        ModelLoader.setCustomStateMapper(wild, new StateMapperBase() {
+    private static void shareModel(Block block, Block model) {
+        ModelLoader.setCustomStateMapper(block, new StateMapperBase() {
             @Override
             protected ModelResourceLocation getModelResourceLocation(IBlockState state) {
-                return new ModelResourceLocation(cultivated.getRegistryName(), getPropertyString(state.getProperties()));
+                return new ModelResourceLocation(model.getRegistryName(), getPropertyString(state.getProperties()));
             }
         });
     }

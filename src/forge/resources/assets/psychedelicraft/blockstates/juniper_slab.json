@@ -1,0 +1,10 @@
+{
+  "variants": {
+    "half=bottom": {
+      "model": "psychedelicraft:juniper_slab"
+    },
+    "half=top": {
+      "model": "psychedelicraft:juniper_slab_top"
+    }
+  }
+}

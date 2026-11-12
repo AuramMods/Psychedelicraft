@@ -15,6 +15,8 @@ import ivorius.psychedelicraft.entity.drug.influence.DrugInfluence;
 import net.minecraft.creativetab.CreativeTabs;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemBlock;
+import net.minecraft.item.ItemDoor;
+import net.minecraft.item.ItemSlab;
 import net.minecraft.item.ItemStack;
 import net.minecraftforge.event.RegistryEvent;
 import net.minecraftforge.event.furnace.FurnaceFuelBurnTimeEvent;
@@ -79,6 +81,15 @@ public final class PSItems {
     public static final Item FRUITING_JUNIPER_LEAVES = named("fruiting_juniper_leaves", new ItemBlock(PSBlocks.FRUITING_JUNIPER_LEAVES));
     public static final Item JUNIPER_SAPLING = named("juniper_sapling", new ItemBlock(PSBlocks.JUNIPER_SAPLING));
     public static final Item JUNIPER_PLANKS = named("juniper_planks", new ItemBlock(PSBlocks.JUNIPER_PLANKS));
+    public static final Item JUNIPER_STAIRS = named("juniper_stairs", new ItemBlock(PSBlocks.JUNIPER_STAIRS));
+    public static final Item JUNIPER_SLAB = named("juniper_slab",
+            new ItemSlab(PSBlocks.JUNIPER_SLAB, PSBlocks.JUNIPER_SLAB, PSBlocks.JUNIPER_DOUBLE_SLAB).setHasSubtypes(false));
+    public static final Item JUNIPER_FENCE = named("juniper_fence", new ItemBlock(PSBlocks.JUNIPER_FENCE));
+    public static final Item JUNIPER_FENCE_GATE = named("juniper_fence_gate", new ItemBlock(PSBlocks.JUNIPER_FENCE_GATE));
+    public static final Item JUNIPER_DOOR = named("juniper_door", new ItemDoor(PSBlocks.JUNIPER_DOOR));
+    public static final Item JUNIPER_TRAPDOOR = named("juniper_trapdoor", new ItemBlock(PSBlocks.JUNIPER_TRAPDOOR));
+    public static final Item JUNIPER_BUTTON = named("juniper_button", new ItemBlock(PSBlocks.JUNIPER_BUTTON));
+    public static final Item JUNIPER_PRESSURE_PLATE = named("juniper_pressure_plate", new ItemBlock(PSBlocks.JUNIPER_PRESSURE_PLATE));
     public static final Item JUNIPER_BERRIES = named("juniper_berries", new QuickFoodItem(1, 0.5F, true));
     public static final Item DRYING_TABLE = named("drying_table", new ItemBlock(PSBlocks.DRYING_TABLE));
     public static final Item IRON_DRYING_TABLE = named("iron_drying_table", new ItemBlock(PSBlocks.IRON_DRYING_TABLE));
@@ -117,8 +128,12 @@ public final class PSItems {
             event.setBurnTime(700);
         } else if (item == MORNING_GLORY_LATTICE || item == WINE_GRAPE_LATTICE) {
             event.setBurnTime(0);
-        } else if (item == JUNIPER_SAPLING) {
+        } else if (item == JUNIPER_SAPLING || item == JUNIPER_BUTTON) {
             event.setBurnTime(100);
+        } else if (item == JUNIPER_SLAB) {
+            event.setBurnTime(150);
+        } else if (item == JUNIPER_DOOR) {
+            event.setBurnTime(200);
         }
     }
 }

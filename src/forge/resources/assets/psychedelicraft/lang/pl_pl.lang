@@ -72,3 +72,15 @@ tile.psychedelicraft.potted_tobacco.name=Tytoń w doniczce
 tile.psychedelicraft.potted_coca.name=Koka w doniczce
 tile.psychedelicraft.potted_coffea.name=Kawa w doniczce
 item.psychedelicraft.juniper_berries.name=Jagody jałowca
+
+tile.psychedelicraft.juniper_stairs.name=Schody z jałowca
+tile.psychedelicraft.juniper_slab.name=Płyta z jałowca
+tile.psychedelicraft.juniper_fence.name=Płot z jałowca
+tile.psychedelicraft.juniper_fence_gate.name=Furtka z jałowca
+tile.psychedelicraft.juniper_door.name=Drzwi z jałowca
+tile.psychedelicraft.juniper_trapdoor.name=Klapa z jałowca
+tile.psychedelicraft.juniper_button.name=Przycisk z jałowca
+tile.psychedelicraft.juniper_pressure_plate.name=Płytka naciskowa z jałowca
+tile.psychedelicraft.juniper_double_slab.name=Płyta z jałowca
+item.psychedelicraft.juniper_door.name=Drzwi z jałowca
+tile.psychedelicraft.powered_juniper_trapdoor.name=Klapa z jałowca

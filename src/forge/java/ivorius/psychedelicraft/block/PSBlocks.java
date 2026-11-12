@@ -11,6 +11,14 @@ import ivorius.psychedelicraft.block.entity.LatticeCropBlockEntity;
 import ivorius.psychedelicraft.block.entity.PeyoteBlockEntity;
 import ivorius.psychedelicraft.item.PSItems;
 import net.minecraft.block.Block;
+import net.minecraft.block.BlockButtonWood;
+import net.minecraft.block.BlockDoor;
+import net.minecraft.block.BlockFence;
+import net.minecraft.block.BlockFenceGate;
+import net.minecraft.block.BlockPressurePlate;
+import net.minecraft.block.BlockSlab;
+import net.minecraft.block.BlockStairs;
+import net.minecraft.block.BlockTrapDoor;
 import net.minecraft.block.material.Material;
 import net.minecraft.init.Blocks;
 import net.minecraftforge.event.RegistryEvent;
@@ -53,6 +61,18 @@ public final class PSBlocks {
     public static final JuniperLeavesBlock FRUITING_JUNIPER_LEAVES = named("fruiting_juniper_leaves", new JuniperLeavesBlock(true));
     public static final JuniperSaplingBlock JUNIPER_SAPLING = named("juniper_sapling", new JuniperSaplingBlock());
     public static final Block JUNIPER_PLANKS = named("juniper_planks", new JuniperPlanksBlock());
+    public static final BlockStairs JUNIPER_STAIRS = named("juniper_stairs",
+            new JuniperBuildingBlocks.Stairs(JUNIPER_PLANKS.getDefaultState()));
+    public static final BlockSlab JUNIPER_SLAB = named("juniper_slab", new JuniperSlabBlock.Single());
+    public static final BlockSlab JUNIPER_DOUBLE_SLAB = named("juniper_double_slab", new JuniperSlabBlock.Double());
+    public static final BlockFence JUNIPER_FENCE = named("juniper_fence", new JuniperBuildingBlocks.Fence());
+    public static final BlockFenceGate JUNIPER_FENCE_GATE = named("juniper_fence_gate", new JuniperBuildingBlocks.Gate());
+    public static final BlockDoor JUNIPER_DOOR = named("juniper_door", new JuniperBuildingBlocks.Door());
+    public static final BlockTrapDoor JUNIPER_TRAPDOOR = named("juniper_trapdoor", new JuniperTrapDoorBlock(false));
+    public static final BlockTrapDoor POWERED_JUNIPER_TRAPDOOR = named("powered_juniper_trapdoor", new JuniperTrapDoorBlock(true));
+    public static final BlockButtonWood JUNIPER_BUTTON = named("juniper_button", new JuniperButtonBlock());
+    public static final BlockPressurePlate JUNIPER_PRESSURE_PLATE = named("juniper_pressure_plate",
+            new JuniperBuildingBlocks.PressurePlate());
     static final List<PottedPlantBlock> POTTED_PLANTS = Collections.unmodifiableList(Arrays.asList(
             named("potted_morning_glory", new PottedPlantBlock(() -> PSItems.MORNING_GLORY_SEEDS)),
             named("potted_juniper_sapling", new PottedPlantBlock(() -> PSItems.JUNIPER_SAPLING)),
@@ -80,7 +100,9 @@ public final class PSBlocks {
                 LATTICE, MORNING_GLORY, MORNING_GLORY_LATTICE, WINE_GRAPE_LATTICE,
                 NATURAL_HOP, NATURAL_COCA, NATURAL_TOBACCO, NATURAL_COFFEA,
                 JUNIPER_LOG, JUNIPER_WOOD, STRIPPED_JUNIPER_LOG, STRIPPED_JUNIPER_WOOD,
-                JUNIPER_LEAVES, FRUITING_JUNIPER_LEAVES, JUNIPER_SAPLING, JUNIPER_PLANKS);
+                JUNIPER_LEAVES, FRUITING_JUNIPER_LEAVES, JUNIPER_SAPLING, JUNIPER_PLANKS,
+                JUNIPER_STAIRS, JUNIPER_SLAB, JUNIPER_DOUBLE_SLAB, JUNIPER_FENCE, JUNIPER_FENCE_GATE,
+                JUNIPER_DOOR, JUNIPER_TRAPDOOR, POWERED_JUNIPER_TRAPDOOR, JUNIPER_BUTTON, JUNIPER_PRESSURE_PLATE);
         for (PottedPlantBlock pot : POTTED_PLANTS) {
             event.getRegistry().register(pot);
         }
@@ -97,5 +119,10 @@ public final class PSBlocks {
         Blocks.FIRE.setFireInfo(STRIPPED_JUNIPER_WOOD, 5, 5);
         Blocks.FIRE.setFireInfo(JUNIPER_LEAVES, 30, 60);
         Blocks.FIRE.setFireInfo(JUNIPER_PLANKS, 5, 20);
+        Blocks.FIRE.setFireInfo(JUNIPER_STAIRS, 5, 20);
+        Blocks.FIRE.setFireInfo(JUNIPER_SLAB, 5, 20);
+        Blocks.FIRE.setFireInfo(JUNIPER_DOUBLE_SLAB, 5, 20);
+        Blocks.FIRE.setFireInfo(JUNIPER_FENCE, 5, 20);
+        Blocks.FIRE.setFireInfo(JUNIPER_FENCE_GATE, 5, 20);
     }
 }

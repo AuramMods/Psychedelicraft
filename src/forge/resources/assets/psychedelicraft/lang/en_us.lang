@@ -72,3 +72,15 @@ tile.psychedelicraft.potted_tobacco.name=Potted Tobacco
 tile.psychedelicraft.potted_coca.name=Potted Coca
 tile.psychedelicraft.potted_coffea.name=Potted Coffea
 item.psychedelicraft.juniper_berries.name=Juniper Berries
+
+tile.psychedelicraft.juniper_stairs.name=Juniper Stairs
+tile.psychedelicraft.juniper_slab.name=Juniper Slab
+tile.psychedelicraft.juniper_fence.name=Juniper Fence
+tile.psychedelicraft.juniper_fence_gate.name=Juniper Fence Gate
+tile.psychedelicraft.juniper_door.name=Juniper Door
+tile.psychedelicraft.juniper_trapdoor.name=Juniper Trapdoor
+tile.psychedelicraft.juniper_button.name=Juniper Button
+tile.psychedelicraft.juniper_pressure_plate.name=Juniper Pressure Plate
+tile.psychedelicraft.juniper_double_slab.name=Juniper Slab
+item.psychedelicraft.juniper_door.name=Juniper Door
+tile.psychedelicraft.powered_juniper_trapdoor.name=Juniper Trapdoor

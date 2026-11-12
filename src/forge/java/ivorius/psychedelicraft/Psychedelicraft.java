@@ -7,6 +7,7 @@ package ivorius.psychedelicraft;
 import ivorius.psychedelicraft.entity.drug.DrugCapability;
 import ivorius.psychedelicraft.item.PSItems;
 import ivorius.psychedelicraft.network.Channel;
+import ivorius.psychedelicraft.recipe.JuniperWoodRecipes;
 import ivorius.psychedelicraft.screen.PSGuiHandler;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.ResourceLocation;
@@ -33,6 +34,12 @@ public class Psychedelicraft {
     public void init(FMLInitializationEvent event) {
         GameRegistry.addSmelting(new ItemStack(PSItems.COFFEA_CHERRIES), new ItemStack(PSItems.COFFEE_BEANS), 0.2F);
         OreDictionary.registerOre("plankWood", PSItems.JUNIPER_PLANKS);
+        OreDictionary.registerOre("stairWood", PSItems.JUNIPER_STAIRS);
+        OreDictionary.registerOre("slabWood", PSItems.JUNIPER_SLAB);
+        OreDictionary.registerOre("fenceWood", PSItems.JUNIPER_FENCE);
+        OreDictionary.registerOre("fenceGateWood", PSItems.JUNIPER_FENCE_GATE);
+        OreDictionary.registerOre("doorWood", PSItems.JUNIPER_DOOR);
+        JuniperWoodRecipes.preferJuniperRecipes();
     }
 
     public static ResourceLocation id(String path) {

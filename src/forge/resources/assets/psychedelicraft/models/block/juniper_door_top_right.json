@@ -1,0 +1,7 @@
+{
+  "parent": "minecraft:block/door_top_rh",
+  "textures": {
+    "bottom": "psychedelicraft:blocks/juniper_door_top",
+    "top": "psychedelicraft:blocks/juniper_door_top"
+  }
+}
