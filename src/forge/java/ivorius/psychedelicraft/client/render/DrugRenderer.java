@@ -110,6 +110,7 @@ public final class DrugRenderer {
             float peyote = properties == null ? 0F : (float) properties.getActiveValue(DrugType.PEYOTE);
             if (environment.heatDistortion() > 0F || environment.waterDistortion(peyote) > 0F
                     || (harmonium != null && harmonium.getActiveValue() > 0F)
+                    || (properties != null && properties.getActiveValue(DrugType.ZERO) > 0F)
                     || hallucinations.strength(Effect.COLOR_CONTRAST) > 0F || ColorPostEffect.hasFocalBlur()) {
                 COLOR_POST.captureDepth(client);
             }

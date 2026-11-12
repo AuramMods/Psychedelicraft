@@ -26,6 +26,10 @@ public final class PSConfig {
         public float dofFocalPointFar = 128F;
         public float dofFocalBlurNear;
         public float dofFocalBlurFar;
+        @Config.RangeDouble(min = 0.01, max = 1)
+        public float digitalEffectPixelRescaleX = 0.05F;
+        @Config.RangeDouble(min = 0.01, max = 1)
+        public float digitalEffectPixelRescaleY = 0.05F;
     }
 
     public static final class Balancing {

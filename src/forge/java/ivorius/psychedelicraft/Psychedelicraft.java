@@ -6,6 +6,7 @@ package ivorius.psychedelicraft;
 
 import ivorius.psychedelicraft.entity.drug.DrugCapability;
 import ivorius.psychedelicraft.command.VomitCommand;
+import ivorius.psychedelicraft.command.DrugCommand;
 import ivorius.psychedelicraft.entity.FarmerTrades;
 import ivorius.psychedelicraft.fluid.PSFluids;
 import ivorius.psychedelicraft.item.FilledBucketItem;
@@ -67,6 +68,7 @@ public class Psychedelicraft {
     @Mod.EventHandler
     public void serverStarting(FMLServerStartingEvent event) {
         event.registerServerCommand(new VomitCommand());
+        event.registerServerCommand(new DrugCommand());
     }
 
     public static ResourceLocation id(String path) {

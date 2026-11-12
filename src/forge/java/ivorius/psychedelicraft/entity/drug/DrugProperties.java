@@ -35,6 +35,16 @@ public final class DrugProperties implements NbtSerialisable {
         dirty = true;
     }
 
+    public void setDrugValue(DrugType type, double value) {
+        drugs.computeIfAbsent(type, DrugType::create).setDesiredValue(value);
+        dirty = true;
+    }
+
+    public void setDrugLocked(DrugType type, boolean locked) {
+        drugs.computeIfAbsent(type, DrugType::create).setLocked(locked);
+        dirty = true;
+    }
+
     public void addToHarmonium(double value, int color) {
         addToDrug(DrugType.HARMONIUM, value);
         ((HarmoniumDrug) drugs.get(DrugType.HARMONIUM)).mixColor(value, color);

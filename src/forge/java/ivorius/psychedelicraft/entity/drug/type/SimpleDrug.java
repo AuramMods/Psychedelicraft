@@ -36,6 +36,16 @@ public class SimpleDrug implements Drug {
     }
 
     @Override
+    public void setDesiredValue(double value) {
+        desired = MathHelper.clamp(value, 0, 1);
+    }
+
+    @Override
+    public void setLocked(boolean locked) {
+        this.locked = locked;
+    }
+
+    @Override
     public void addToDesiredValue(double value) {
         if (!locked) {
             desired += value;

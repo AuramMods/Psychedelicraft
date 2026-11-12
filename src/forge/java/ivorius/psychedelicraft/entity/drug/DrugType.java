@@ -4,6 +4,8 @@
 
 package ivorius.psychedelicraft.entity.drug;
 
+import java.util.Collection;
+import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Optional;
@@ -21,7 +23,9 @@ import ivorius.psychedelicraft.entity.drug.type.CaffeineDrug;
 import ivorius.psychedelicraft.entity.drug.type.HarmoniumDrug;
 import ivorius.psychedelicraft.entity.drug.type.LsdDrug;
 import ivorius.psychedelicraft.entity.drug.type.PeyoteDrug;
+import ivorius.psychedelicraft.entity.drug.type.PowerDrug;
 import ivorius.psychedelicraft.entity.drug.type.RedShroomsDrug;
+import ivorius.psychedelicraft.entity.drug.type.SimpleDrug;
 import ivorius.psychedelicraft.entity.drug.type.WarmthDrug;
 
 public final class DrugType {
@@ -42,6 +46,8 @@ public final class DrugType {
     public static final DrugType LSD = register("lsd", () -> new LsdDrug(1, 0.0003, false));
     public static final DrugType SUGAR = register("sugar", () -> new CaffeineDrug(1, 0.0002, 0F));
     public static final DrugType HARMONIUM = register("harmonium", HarmoniumDrug::new);
+    public static final DrugType ZERO = register("zero", () -> new SimpleDrug(1, 0.0001));
+    public static final DrugType POWER = register("power", PowerDrug::new);
     public static final DrugType SLEEP_DEPRIVATION = register("sleep_deprivation", SleepDeprivationDrug::new);
 
     private final String id;
@@ -61,6 +67,10 @@ public final class DrugType {
 
     public static Optional<DrugType> byId(String id) {
         return Optional.ofNullable(REGISTRY.get(id));
+    }
+
+    public static Collection<DrugType> values() {
+        return Collections.unmodifiableCollection(REGISTRY.values());
     }
 
     public String id() {

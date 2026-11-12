@@ -18,6 +18,28 @@ public class DrugPropertiesTest {
     private static final double EPSILON = 1.0e-8;
 
     @Test
+    public void lockedRiftEffectsSurviveReloadAndOnlyAcceptExplicitSets() {
+        DrugProperties drugs = new DrugProperties();
+        drugs.setDrugValue(DrugType.POWER, 0.7);
+        drugs.setDrugLocked(DrugType.POWER, true);
+        drugs.setDrugValue(DrugType.ZERO, 0.7);
+        drugs.setDrugLocked(DrugType.ZERO, true);
+        DrugProperties restored = new DrugProperties();
+        restored.fromNbt(drugs.toNbt());
+        restored.addToDrug(DrugType.POWER, 0.3);
+        restored.addToDrug(DrugType.ZERO, 0.3);
+        tick(restored, 1, 120);
+
+        assertEquals(0.7, restored.getActiveValue(DrugType.POWER), EPSILON);
+        assertEquals(0.7, restored.getActiveValue(DrugType.ZERO), EPSILON);
+        restored.setDrugValue(DrugType.ZERO, 0.4);
+        restored.setDrugLocked(DrugType.POWER, false);
+        tick(restored, 121, 180);
+        assertTrue(restored.getActiveValue(DrugType.POWER) < 0.2);
+        assertEquals(0.4, restored.getActiveValue(DrugType.ZERO), EPSILON);
+    }
+
+    @Test
     public void registeredAlcoholAndKavaStackDoubleVisionThroughTheRemainingStrength() {
         NBTTagCompound snapshot = new NBTTagCompound();
         NBTTagCompound drugs = new NBTTagCompound();

@@ -1,0 +1,12 @@
+{
+  "vertex": "psychedelicraft:fullscreen",
+  "fragment": "psychedelicraft:blur_noise",
+  "cull": false,
+  "samplers": [{ "name": "DiffuseSampler" }],
+  "uniforms": [
+    { "name": "TextureScale", "type": "float", "count": 2, "values": [1.0, 1.0] },
+    { "name": "PixelSize", "type": "float", "count": 2, "values": [0.0, 0.0] },
+    { "name": "Seed", "type": "float", "count": 1, "values": [0.0] },
+    { "name": "Strength", "type": "float", "count": 1, "values": [0.0] }
+  ]
+}

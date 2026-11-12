@@ -24,6 +24,10 @@ public interface Drug extends NbtSerialisable {
 
     double getActiveValue();
 
+    void setDesiredValue(double value);
+
+    void setLocked(boolean locked);
+
     void addToDesiredValue(double value);
 
     default float colorHallucinationStrength() {

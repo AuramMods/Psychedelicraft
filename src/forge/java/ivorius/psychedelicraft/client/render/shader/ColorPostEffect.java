@@ -6,6 +6,7 @@ import java.nio.FloatBuffer;
 import java.nio.IntBuffer;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Random;
 
 import ivorius.psychedelicraft.Psychedelicraft;
 import ivorius.psychedelicraft.client.render.EnvironmentEffects;
@@ -48,6 +49,7 @@ public final class ColorPostEffect implements IResourceManagerReloadListener {
     private static final ResourceLocation HEAT_NOISE = Psychedelicraft.id("textures/environment/heat_distortion_noise.png");
     private static final ResourceLocation WATER_NOISE = Psychedelicraft.id("textures/environment/water_distortion.png");
     private static final ResourceLocation HURT_OVERLAY = Psychedelicraft.id("textures/environment/hurt_overlay.png");
+    private static final ResourceLocation DIGITAL_GLYPHS = Psychedelicraft.id("textures/environment/bits.png");
     private final IntBuffer viewport = BufferUtils.createIntBuffer(16);
     private final ByteBuffer colorMask = BufferUtils.createByteBuffer(16);
     private final FloatBuffer clearColor = BufferUtils.createFloatBuffer(16);
@@ -79,9 +81,12 @@ public final class ColorPostEffect implements IResourceManagerReloadListener {
         float bloom = hallucinations.strength(Effect.BLOOM) + drugs.getModifier(Drug::bloomStrength);
         float doubleVision = drugs.blendStrength(0F, Drug::doubleVision);
         float ticks = client.player.ticksExisted + partialTicks;
-        float verticalBlur = blurAmount(pauseBlur)
+        float power = (float) drugs.getActiveValue(DrugType.POWER);
+        float digital = (float) drugs.getActiveValue(DrugType.ZERO);
+        float sharedBlur = blurAmount(pauseBlur)
                 + Math.max(0F, (float) drugs.getActiveValue(DrugType.SLEEP_DEPRIVATION) - 0.7F) * partialTicks * 15F;
-        float horizontalBlur = verticalBlur + (float) drugs.getActiveValue(DrugType.BATH_SALTS) * (6F + ticks % 5F);
+        float verticalBlur = sharedBlur + power;
+        float horizontalBlur = sharedBlur + (float) drugs.getActiveValue(DrugType.BATH_SALTS) * (6F + ticks % 5F);
         boolean focalBlur = hasFocalBlur();
         float heat = environment.heatDistortion();
         float water = environment.waterDistortion((float) drugs.getActiveValue(DrugType.PEYOTE));
@@ -90,7 +95,7 @@ public final class ColorPostEffect implements IResourceManagerReloadListener {
         boolean colors = slow != 0F || quick != 0F || intensify != 0F || desaturate != 0F || inversion != 0F;
         boolean postProcessing = PSConfig.visual.shader2DEnabled;
         boolean hasEffects = colors || contrast != null || coloredBloom != null || bloom > 0F || doubleVision > 0F
-                || horizontalBlur > 0F || verticalBlur > 0F || focalBlur || heat > 0F || water > 0F || wet > 0F;
+                || horizontalBlur > 0F || verticalBlur > 0F || focalBlur || heat > 0F || water > 0F || wet > 0F || digital > 0F;
         if (hurt == 0F && (!postProcessing || !hasEffects)) {
             return;
         }
@@ -102,7 +107,7 @@ public final class ColorPostEffect implements IResourceManagerReloadListener {
         int framebuffer = currentFramebuffer();
         int program = GL11.glGetInteger(GL20.GL_CURRENT_PROGRAM);
         int activeTexture = GL11.glGetInteger(GL13.GL_ACTIVE_TEXTURE);
-        int textureUnits = postProcessing && (heat > 0F || water > 0F) ? 3 : 2;
+        int textureUnits = postProcessing && (heat > 0F || water > 0F || digital > 0F) ? 3 : 2;
         for (int unit = 0; unit < textureUnits; unit++) {
             GlStateManager.setActiveTexture(OpenGlHelper.defaultTexUnit + unit);
             boundTextures[unit] = GL11.glGetInteger(GL11.GL_TEXTURE_BINDING_2D);
@@ -168,9 +173,19 @@ public final class ColorPostEffect implements IResourceManagerReloadListener {
                     drawDoubleVision(source, output, ticks, doubleVision);
                     source = output;
                 }
+                if (power > 0F) {
+                    Framebuffer output = otherTarget(source, main);
+                    drawBlurNoise(source, output, ticks, power * 0.6F);
+                    source = output;
+                }
                 if (wet > 0F) {
                     Framebuffer output = otherTarget(source, main);
                     drawWetScreen(client, source, output, wet, ticks);
+                    source = output;
+                }
+                if (hasDepth && digital > 0F) {
+                    Framebuffer output = otherTarget(source, main);
+                    drawDigital(client, source, output, digital);
                     source = output;
                 }
             }
@@ -313,6 +328,35 @@ public final class ColorPostEffect implements IResourceManagerReloadListener {
         vision.getShaderUniformOrDefault("Strength").set(strength);
         vision.getShaderUniformOrDefault("Distance").set(MathHelper.sin(ticks / 20F) * 0.05F * strength);
         draw(vision, input, output);
+    }
+
+    private void drawBlurNoise(Framebuffer input, Framebuffer output, float ticks, float strength) throws IOException {
+        ShaderManager noise = program("blur_noise");
+        noise.getShaderUniformOrDefault("PixelSize").set(1F / input.framebufferWidth, 1F / input.framebufferHeight);
+        noise.getShaderUniformOrDefault("Strength").set(strength);
+        noise.getShaderUniformOrDefault("Seed").set(new Random((long) (ticks * 1000.0)).nextFloat() * 9F + 1F);
+        draw(noise, input, output);
+    }
+
+    private void drawDigital(Minecraft client, Framebuffer input, Framebuffer output, float strength) throws IOException {
+        ShaderManager digital = program("digital_depth");
+        digital.addSamplerTexture("DepthSampler", depthTexture);
+        digital.addSamplerTexture("GlyphSampler", texture(client, DIGITAL_GLYPHS));
+        float downscale = 0.95F * smoothStep(strength * 3F) + strength * 0.05F;
+        PSConfig.Visual options = PSConfig.visual;
+        digital.getShaderUniformOrDefault("Resolution").set(
+                input.framebufferWidth * (1F + (options.digitalEffectPixelRescaleX - 1F) * downscale),
+                input.framebufferHeight * (1F + (options.digitalEffectPixelRescaleY - 1F) * downscale));
+        digital.getShaderUniformOrDefault("TextProgress").set(smoothStep((strength - 0.2F) * 5F) + smoothStep((strength - 0.8F) * 10F));
+        digital.getShaderUniformOrDefault("MaxColors").set(strength > 0.4F ? Math.max(256F / ((strength - 0.4F) * 640F + 1F), 2F) : -1F);
+        digital.getShaderUniformOrDefault("Saturation").set(1F - smoothStep((strength - 0.6F) * 5F));
+        digital.getShaderUniformOrDefault("ViewDistance").set(client.gameSettings.renderDistanceChunks * 16F);
+        draw(digital, input, output);
+    }
+
+    private static float smoothStep(float progress) {
+        float value = MathHelper.clamp(progress, 0F, 1F);
+        return value * value * (3F - 2F * value);
     }
 
     private void drawDistortion(Minecraft client, Framebuffer input, Framebuffer output, float strength, float ticks) throws IOException {
