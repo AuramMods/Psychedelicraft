@@ -39,6 +39,11 @@ public final class CocaineDrug extends SimpleDrug {
     }
 
     @Override
+    public float bloomStrength() {
+        return Math.min(1F, (float) getActiveValue() / 0.6F) * 1.5F;
+    }
+
+    @Override
     public void update(DrugProperties properties, @Nullable EntityPlayer player) {
         super.update();
         if (player == null || player.world.isRemote || getActiveValue() <= 0.8 || player.ticksExisted % 20 != 0) return;

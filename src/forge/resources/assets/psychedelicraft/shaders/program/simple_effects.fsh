@@ -4,6 +4,7 @@ uniform sampler2D DiffuseSampler;
 uniform sampler2D DepthSampler;
 uniform float Ticks;
 uniform vec4 ColorStrengths;
+uniform float Inversion;
 uniform vec4 WorldColor;
 varying vec2 texCoord;
 
@@ -49,6 +50,9 @@ void main() {
     }
     if (ColorStrengths.w > 0.0) {
         color = mix(color, vec3(brightness(color)), ColorStrengths.w);
+    }
+    if (Inversion > 0.0) {
+        color = mix(color, vec3(1.0) - color, Inversion);
     }
     if (WorldColor.a > 0.0) {
         color = harmonize(color, texture2D(DepthSampler, texCoord).r - Ticks);

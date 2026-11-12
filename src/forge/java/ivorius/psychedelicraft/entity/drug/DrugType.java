@@ -19,7 +19,6 @@ import ivorius.psychedelicraft.entity.drug.type.TobaccoDrug;
 import ivorius.psychedelicraft.entity.drug.type.BrownShroomsDrug;
 import ivorius.psychedelicraft.entity.drug.type.CaffeineDrug;
 import ivorius.psychedelicraft.entity.drug.type.HarmoniumDrug;
-import ivorius.psychedelicraft.entity.drug.type.KavaDrug;
 import ivorius.psychedelicraft.entity.drug.type.LsdDrug;
 import ivorius.psychedelicraft.entity.drug.type.PeyoteDrug;
 import ivorius.psychedelicraft.entity.drug.type.RedShroomsDrug;
@@ -35,7 +34,7 @@ public final class DrugType {
     public static final DrugType CAFFEINE = register("caffeine", () -> new CaffeineDrug(1, 0.0002));
     public static final DrugType WARMTH = register("warmth", WarmthDrug::new);
     public static final DrugType ALCOHOL = register("alcohol", AlcoholDrug::new);
-    public static final DrugType KAVA = register("kava", KavaDrug::new);
+    public static final DrugType KAVA = register("kava", AlcoholDrug::new);
     public static final DrugType CANNABIS = register("cannabis", CannabisDrug::new);
     public static final DrugType TOBACCO = register("tobacco", TobaccoDrug::new);
     public static final DrugType COCAINE = register("coccaine", CocaineDrug::new);

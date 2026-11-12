@@ -18,6 +18,23 @@ public class DrugPropertiesTest {
     private static final double EPSILON = 1.0e-8;
 
     @Test
+    public void registeredAlcoholAndKavaStackDoubleVisionThroughTheRemainingStrength() {
+        NBTTagCompound snapshot = new NBTTagCompound();
+        NBTTagCompound drugs = new NBTTagCompound();
+        NBTTagCompound state = new NBTTagCompound();
+        state.setDouble("effect", 0.625);
+        state.setDouble("effectActive", 0.625);
+        drugs.setTag(DrugType.ALCOHOL.id(), state);
+        drugs.setTag(DrugType.KAVA.id(), state.copy());
+        snapshot.setTag("Drugs", drugs);
+        DrugProperties properties = new DrugProperties();
+        properties.fromNbt(snapshot);
+
+        assertEquals(0.75F, properties.blendStrength(0F, Drug::doubleVision), 0.00001F);
+        assertEquals(0F, properties.getModifier(Drug::heartbeatVolume), 0F);
+    }
+
+    @Test
     public void ingestionStartsOnTheFifteenthFiveTickUpdate() {
         DrugProperties properties = withMushroom(DrugType.BROWN_SHROOMS);
 

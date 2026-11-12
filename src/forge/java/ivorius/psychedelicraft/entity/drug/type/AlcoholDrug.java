@@ -13,7 +13,7 @@ import net.minecraft.util.math.MathHelper;
 import javax.annotation.Nullable;
 import java.util.Random;
 
-public class AlcoholDrug extends SimpleDrug {
+public final class AlcoholDrug extends SimpleDrug {
     public AlcoholDrug() {
         super(1, 0.0002);
     }
@@ -21,6 +21,11 @@ public class AlcoholDrug extends SimpleDrug {
     @Override
     public float viewWobblyness() {
         return (float) getActiveValue() * 0.5F;
+    }
+
+    @Override
+    public float doubleVision() {
+        return activeRamp(0.25F);
     }
 
     @Override

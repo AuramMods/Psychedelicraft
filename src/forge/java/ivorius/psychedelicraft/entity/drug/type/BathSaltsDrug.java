@@ -10,6 +10,7 @@ import ivorius.psychedelicraft.entity.drug.DrugProperties;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.init.MobEffects;
 import net.minecraft.potion.PotionEffect;
+import net.minecraft.util.math.MathHelper;
 
 import javax.annotation.Nullable;
 import java.util.Random;
@@ -17,6 +18,17 @@ import java.util.Random;
 public final class BathSaltsDrug extends SimpleDrug {
     public BathSaltsDrug() {
         super(1, 0.00012);
+    }
+
+    @Override
+    public float inversionStrength() {
+        float strength = (float) getActiveValue();
+        return MathHelper.clamp(strength * strength * 5.3F, 0F, 1.5F);
+    }
+
+    @Override
+    public float bloomStrength() {
+        return (float) getActiveValue() * 0.12F;
     }
 
     @Override

@@ -6,6 +6,11 @@ public final class WarmthDrug extends SimpleDrug {
     }
 
     @Override
+    public float bloomStrength() {
+        return (float) getActiveValue() * 0.5F;
+    }
+
+    @Override
     public float superSaturationHallucinationStrength() {
         return (float) getActiveValue() * 0.1F;
     }

@@ -54,12 +54,7 @@ public final class LsdDrug extends SimpleDrug {
     }
 
     @Override
-    public float heartbeatVolume() {
-        return harmful ? activeRamp(0.4F) + ticksActive() * 0.0001F * 1.2F : 0F;
-    }
-
-    @Override
-    public float heartbeatSpeed() {
-        return harmful ? (float) getActiveValue() * 0.1F + ticksActive() * 0.0001F : 0F;
+    public float bloomStrength() {
+        return (float) getActiveValue() * 0.12F;
     }
 }

@@ -46,6 +46,18 @@ public interface Drug extends NbtSerialisable {
         return 0;
     }
 
+    default float inversionStrength() {
+        return 0;
+    }
+
+    default float bloomStrength() {
+        return 0;
+    }
+
+    default float doubleVision() {
+        return 0;
+    }
+
     default float viewWobblyness() {
         return 0;
     }

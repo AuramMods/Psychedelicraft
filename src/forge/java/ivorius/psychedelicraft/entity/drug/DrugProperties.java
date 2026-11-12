@@ -148,15 +148,16 @@ public final class DrugProperties implements NbtSerialisable {
     }
 
     public float getColorIntensification(float strength) {
-        for (Drug drug : drugs.values()) {
-            strength += (1 - strength) * drug.superSaturationHallucinationStrength();
-        }
-        return strength;
+        return blendStrength(strength, Drug::superSaturationHallucinationStrength);
     }
 
     public float getDesaturation(float strength) {
+        return blendStrength(strength, Drug::desaturationHallucinationStrength);
+    }
+
+    public float blendStrength(float strength, Drug.Modifier modifier) {
         for (Drug drug : drugs.values()) {
-            strength += (1 - strength) * drug.desaturationHallucinationStrength();
+            strength += (1 - strength) * modifier.get(drug);
         }
         return strength;
     }

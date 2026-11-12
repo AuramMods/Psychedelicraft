@@ -5,7 +5,9 @@
 package ivorius.psychedelicraft.client.render;
 
 import ivorius.psychedelicraft.Psychedelicraft;
+import ivorius.psychedelicraft.client.render.HallucinationManager.Effect;
 import ivorius.psychedelicraft.client.render.shader.ColorPostEffect;
+import ivorius.psychedelicraft.config.PSConfig;
 import ivorius.psychedelicraft.entity.drug.Drug;
 import ivorius.psychedelicraft.entity.drug.DrugCapability;
 import ivorius.psychedelicraft.entity.drug.DrugProperties;
@@ -33,6 +35,7 @@ public final class DrugRenderer {
     private static EntityPlayerSP player;
     private static HallucinationManager hallucinations = new HallucinationManager();
     private static EnvironmentEffects environment = new EnvironmentEffects();
+    private static float pauseBlurProgress;
 
     private DrugRenderer() {
     }
@@ -48,8 +51,10 @@ public final class DrugRenderer {
             player = client.player;
             hallucinations = new HallucinationManager();
             environment = new EnvironmentEffects();
+            pauseBlurProgress = 0F;
             COLOR_POST.releaseTarget();
         }
+        pauseBlurProgress = MathHelper.clamp(pauseBlurProgress + (client.isGamePaused() ? 0.25F : -0.25F), 0F, 1F);
         if (player != null && world != null) environment.update(player);
         if (player != null && world != null && !client.isGamePaused()) {
             DrugProperties properties = DrugCapability.get(player);
@@ -99,12 +104,13 @@ public final class DrugRenderer {
     @SubscribeEvent(priority = EventPriority.LOWEST)
     public static void afterWorld(RenderWorldLastEvent event) {
         Minecraft client = Minecraft.getMinecraft();
-        if (player != null && player == client.player && world == client.world) {
+        if (PSConfig.visual.shader2DEnabled && player != null && player == client.player && world == client.world) {
             DrugProperties properties = DrugCapability.get(player);
             HarmoniumDrug harmonium = properties == null ? null : properties.getHarmonium();
             float peyote = properties == null ? 0F : (float) properties.getActiveValue(DrugType.PEYOTE);
             if (environment.heatDistortion() > 0F || environment.waterDistortion(peyote) > 0F
-                    || (harmonium != null && harmonium.getActiveValue() > 0F)) {
+                    || (harmonium != null && harmonium.getActiveValue() > 0F)
+                    || hallucinations.strength(Effect.COLOR_CONTRAST) > 0F || ColorPostEffect.hasFocalBlur()) {
                 COLOR_POST.captureDepth(client);
             }
         }
@@ -119,7 +125,8 @@ public final class DrugRenderer {
         if (player != null && player == client.player && world == client.world) {
             DrugProperties properties = DrugCapability.get(player);
             if (properties != null) {
-                COLOR_POST.render(client, partialTicks, hallucinations, properties, environment);
+                float pauseBlur = PSConfig.visual.pauseMenuBlur * pauseBlurProgress * pauseBlurProgress * pauseBlurProgress;
+                COLOR_POST.render(client, partialTicks, hallucinations, properties, environment, pauseBlur);
             }
         }
     }

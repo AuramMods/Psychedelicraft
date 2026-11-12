@@ -11,13 +11,17 @@ import java.util.Random;
 
 import ivorius.psychedelicraft.entity.drug.Drug;
 import ivorius.psychedelicraft.entity.drug.DrugProperties;
+import ivorius.psychedelicraft.entity.drug.type.HarmoniumDrug;
 import net.minecraft.util.math.MathHelper;
+
+import javax.annotation.Nullable;
 
 public final class HallucinationManager {
     private static final Effect[] EFFECTS = Effect.values();
     private final List<Effect> active = new ArrayList<>();
     private final float[] categoryStrengths = new float[Category.values().length];
     private final float[] strengths = new float[EFFECTS.length];
+    private final float[] mindColor = {1F, 1F, 1F};
 
     public void update(DrugProperties properties, Random random, int age) {
         float total = 0;
@@ -47,10 +51,43 @@ public final class HallucinationManager {
             int index = effect.ordinal();
             strengths[index] = nearValue(strengths[index], desired, 0.002F);
         }
+        mindColor[0] = nearValue(mindColor[0], colorWave(age, 0.0012371F, 0.0017412F), 0.002F);
+        mindColor[1] = nearValue(mindColor[1], colorWave(age, 0.0011239F, 0.0019321F), 0.002F);
+        mindColor[2] = nearValue(mindColor[2], colorWave(age, 0.0011541F, 0.0018682F), 0.002F);
     }
 
     public float strength(Effect effect) {
         return multiplier(effect) * strengths[effect.ordinal()];
+    }
+
+    @Nullable
+    public float[] bloomColor(@Nullable HarmoniumDrug harmonium) {
+        return mixMindColor(harmonium, 3F, MathHelper.clamp(strength(Effect.COLOR_BLOOM) * 1.5F, 0F, 1F), false);
+    }
+
+    @Nullable
+    public float[] contrastColor(@Nullable HarmoniumDrug harmonium) {
+        return mixMindColor(harmonium, 1F, MathHelper.clamp(strength(Effect.COLOR_CONTRAST), 0F, 1F), true);
+    }
+
+    @Nullable
+    private float[] mixMindColor(@Nullable HarmoniumDrug harmonium, float multiplier, float randomStrength, boolean clampAlpha) {
+        float dyeStrength = harmonium == null ? 0F : (float) harmonium.getActiveValue() * multiplier;
+        float strength = dyeStrength + randomStrength;
+        if (strength <= 0F) return null;
+        float[] result = {mindColor[0], mindColor[1], mindColor[2], clampAlpha ? Math.min(1F, strength) : strength};
+        if (dyeStrength > 0F) {
+            float[] dye = harmonium.color();
+            float blend = randomStrength / strength;
+            for (int channel = 0; channel < 3; channel++) {
+                result[channel] = dye[channel] + (mindColor[channel] - dye[channel]) * blend;
+            }
+        }
+        return result;
+    }
+
+    private static float colorWave(int age, float first, float second) {
+        return 0.5F * (1F + MathHelper.sin(age * first) * 0.5F) * (1F + MathHelper.sin(age * second) * 0.5F);
     }
 
     private boolean addRandom(Random random) {

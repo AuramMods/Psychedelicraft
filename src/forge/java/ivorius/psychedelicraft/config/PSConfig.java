@@ -13,10 +13,19 @@ public final class PSConfig {
     }
 
     public static final class Visual {
+        public boolean shader2DEnabled = true;
         public boolean doHeatDistortion = true;
         public boolean doWaterDistortion = true;
         public boolean waterOverlayEnabled = true;
         public boolean hurtOverlayEnabled = true;
+        @Config.Comment("Blur intensity while the singleplayer game is paused.")
+        public float pauseMenuBlur;
+        @Config.Comment("Near focus distance in blocks.")
+        public float dofFocalPointNear = 0.2F;
+        @Config.Comment("Far focus distance in blocks.")
+        public float dofFocalPointFar = 128F;
+        public float dofFocalBlurNear;
+        public float dofFocalBlurFar;
     }
 
     public static final class Balancing {
