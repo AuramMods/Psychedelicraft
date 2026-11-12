@@ -52,4 +52,15 @@ public class PlantBiomesTest {
         options.included = new String[]{"minecraft:desert", "#minecraft:is_forest"};
         assertFalse(PlantBiomes.allows(options, PlantBiomes::tallCrops, Biomes.DESERT));
     }
+
+    @Test
+    public void juniperDefaultsRequireBothDryWeatherAndWoodlandOrHills() {
+        assertFalse(PlantBiomes.juniper(Biomes.FOREST));
+        assertFalse(PlantBiomes.juniper(Biomes.EXTREME_HILLS));
+        assertFalse(PlantBiomes.juniper(Biomes.DESERT_HILLS));
+        assertFalse(PlantBiomes.juniper(Biomes.SAVANNA));
+        PSConfig.Feature options = new PSConfig.Feature();
+        options.included = new String[]{"minecraft:plains"};
+        assertTrue(PlantBiomes.allows(options, PlantBiomes::juniper, Biomes.PLAINS));
+    }
 }

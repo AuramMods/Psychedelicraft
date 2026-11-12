@@ -89,6 +89,10 @@ final class PlantBiomes {
         return badlands(biome) || desert(biome) || (!biome.canRain() && !biome.isSnowyBiome());
     }
 
+    static boolean juniper(Biome biome) {
+        return !biome.canRain() && !biome.isSnowyBiome() && (hills(biome) || forest(biome));
+    }
+
     private static boolean forest(Biome biome) {
         return BiomeDictionary.hasType(biome, BiomeDictionary.Type.FOREST)
                 && !BiomeDictionary.hasType(biome, BiomeDictionary.Type.CONIFEROUS) && !jungle(biome);

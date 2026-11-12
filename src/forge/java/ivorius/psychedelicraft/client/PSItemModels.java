@@ -1,6 +1,7 @@
 package ivorius.psychedelicraft.client;
 
 import ivorius.psychedelicraft.Psychedelicraft;
+import ivorius.psychedelicraft.block.JuniperLeavesBlock;
 import ivorius.psychedelicraft.block.LatticeCropBlock;
 import ivorius.psychedelicraft.block.PSBlocks;
 import ivorius.psychedelicraft.block.TallCropBlock;
@@ -11,6 +12,7 @@ import ivorius.psychedelicraft.client.render.block.PeyoteRenderer;
 import ivorius.psychedelicraft.item.PSItems;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.client.renderer.block.model.ModelResourceLocation;
+import net.minecraft.client.renderer.block.statemap.StateMap;
 import net.minecraft.client.renderer.block.statemap.StateMapperBase;
 import net.minecraft.item.Item;
 import net.minecraftforge.client.event.ModelRegistryEvent;
@@ -42,6 +44,10 @@ public final class PSItemModels {
         registerWildModel(PSBlocks.NATURAL_COCA, PSBlocks.COCA);
         registerWildModel(PSBlocks.NATURAL_TOBACCO, PSBlocks.TOBACCO);
         registerWildModel(PSBlocks.NATURAL_COFFEA, PSBlocks.COFFEA);
+        ModelLoader.setCustomStateMapper(PSBlocks.JUNIPER_LEAVES, new StateMap.Builder()
+                .ignore(JuniperLeavesBlock.DISTANCE, JuniperLeavesBlock.PERSISTENT).build());
+        ModelLoader.setCustomStateMapper(PSBlocks.FRUITING_JUNIPER_LEAVES, new StateMap.Builder()
+                .ignore(JuniperLeavesBlock.DISTANCE, JuniperLeavesBlock.PERSISTENT).build());
         ClientRegistry.bindTileEntitySpecialRenderer(DryingTableBlockEntity.class, new DryingTableRenderer());
         ClientRegistry.bindTileEntitySpecialRenderer(PeyoteBlockEntity.class, new PeyoteRenderer());
     }

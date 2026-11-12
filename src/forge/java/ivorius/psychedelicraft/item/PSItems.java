@@ -71,6 +71,15 @@ public final class PSItems {
     public static final Item WINE_GRAPE_LATTICE = named("wine_grape_lattice",
             new LatticeCropItem(PSBlocks.WINE_GRAPE_LATTICE)).setCreativeTab(null);
     public static final Item WINE_GRAPES = named("wine_grapes", new WineGrapesItem());
+    public static final Item JUNIPER_LOG = named("juniper_log", new ItemBlock(PSBlocks.JUNIPER_LOG));
+    public static final Item JUNIPER_WOOD = named("juniper_wood", new ItemBlock(PSBlocks.JUNIPER_WOOD));
+    public static final Item STRIPPED_JUNIPER_LOG = named("stripped_juniper_log", new ItemBlock(PSBlocks.STRIPPED_JUNIPER_LOG));
+    public static final Item STRIPPED_JUNIPER_WOOD = named("stripped_juniper_wood", new ItemBlock(PSBlocks.STRIPPED_JUNIPER_WOOD));
+    public static final Item JUNIPER_LEAVES = named("juniper_leaves", new ItemBlock(PSBlocks.JUNIPER_LEAVES));
+    public static final Item FRUITING_JUNIPER_LEAVES = named("fruiting_juniper_leaves", new ItemBlock(PSBlocks.FRUITING_JUNIPER_LEAVES));
+    public static final Item JUNIPER_SAPLING = named("juniper_sapling", new ItemBlock(PSBlocks.JUNIPER_SAPLING));
+    public static final Item JUNIPER_PLANKS = named("juniper_planks", new ItemBlock(PSBlocks.JUNIPER_PLANKS));
+    public static final Item JUNIPER_BERRIES = named("juniper_berries", new QuickFoodItem(1, 0.5F, true));
     public static final Item DRYING_TABLE = named("drying_table", new ItemBlock(PSBlocks.DRYING_TABLE));
     public static final Item IRON_DRYING_TABLE = named("iron_drying_table", new ItemBlock(PSBlocks.IRON_DRYING_TABLE));
 
@@ -108,6 +117,8 @@ public final class PSItems {
             event.setBurnTime(700);
         } else if (item == MORNING_GLORY_LATTICE || item == WINE_GRAPE_LATTICE) {
             event.setBurnTime(0);
+        } else if (item == JUNIPER_SAPLING) {
+            event.setBurnTime(100);
         }
     }
 }

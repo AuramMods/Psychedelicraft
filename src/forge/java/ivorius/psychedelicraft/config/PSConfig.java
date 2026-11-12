@@ -23,6 +23,7 @@ public final class PSConfig {
     }
 
     public static final class Generation {
+        public final Feature juniper = new Feature();
         public final Feature cannabis = new Feature();
         public final Feature hop = new Feature();
         public final Feature tobacco = new Feature();

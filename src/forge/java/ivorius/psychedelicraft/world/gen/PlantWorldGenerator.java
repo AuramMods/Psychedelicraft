@@ -38,6 +38,7 @@ public final class PlantWorldGenerator {
     private static final int LOW_ATTEMPTS = 5;
     private static final int LOW_XZ_SPREAD = 7;
     private static final int LOW_Y_SPREAD = 3;
+    private static final long JUNIPER_SALT = 0x9e3779b97f4a7c15L * "juniper".hashCode();
     private static final PSConfig.Generation OPTIONS = PSConfig.balancing.worldGeneration;
     private static final Patch[] PATCHES = {
             tall("cannabis", PSBlocks.NATURAL_CANNABIS, OPTIONS.cannabis, false),
@@ -69,6 +70,16 @@ public final class PlantWorldGenerator {
         }
         long seed = world.getSeed() ^ (341873128712L * chunk.x + 132897987541L * chunk.z);
         Random random = new Random();
+        if (OPTIONS.juniper.enabled) {
+            random.setSeed(seed ^ JUNIPER_SALT);
+            int attempts = random.nextFloat() < 0.05F ? 3 : 1;
+            for (int attempt = 0; attempt < attempts; attempt++) {
+                BlockPos column = chunk.getBlock(8 + random.nextInt(16), 0, 8 + random.nextInt(16));
+                if (PlantBiomes.allows(OPTIONS.juniper, PlantBiomes::juniper, world.getBiome(column))) {
+                    JuniperTree.generate(world, random, motionBlockingSurface(world, column));
+                }
+            }
+        }
         for (Patch patch : PATCHES) {
             random.setSeed(seed ^ patch.salt);
             if (!patch.options.enabled || random.nextInt(patch.rarity) != 0) {

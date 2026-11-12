@@ -1,5 +1,9 @@
 package ivorius.psychedelicraft.block;
 
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
+
 import ivorius.psychedelicraft.Psychedelicraft;
 import ivorius.psychedelicraft.block.TallCropBlock.Crop;
 import ivorius.psychedelicraft.block.entity.DryingTableBlockEntity;
@@ -41,6 +45,22 @@ public final class PSBlocks {
             new LatticeCropBlock(true, 2, () -> PSItems.MORNING_GLORY));
     public static final LatticeCropBlock WINE_GRAPE_LATTICE = named("wine_grape_lattice",
             new LatticeCropBlock(false, 1, () -> PSItems.WINE_GRAPES));
+    public static final JuniperLogBlock STRIPPED_JUNIPER_LOG = named("stripped_juniper_log", new JuniperLogBlock(null));
+    public static final JuniperLogBlock STRIPPED_JUNIPER_WOOD = named("stripped_juniper_wood", new JuniperLogBlock(null));
+    public static final JuniperLogBlock JUNIPER_LOG = named("juniper_log", new JuniperLogBlock(() -> STRIPPED_JUNIPER_LOG));
+    public static final JuniperLogBlock JUNIPER_WOOD = named("juniper_wood", new JuniperLogBlock(() -> STRIPPED_JUNIPER_WOOD));
+    public static final JuniperLeavesBlock JUNIPER_LEAVES = named("juniper_leaves", new JuniperLeavesBlock(false));
+    public static final JuniperLeavesBlock FRUITING_JUNIPER_LEAVES = named("fruiting_juniper_leaves", new JuniperLeavesBlock(true));
+    public static final JuniperSaplingBlock JUNIPER_SAPLING = named("juniper_sapling", new JuniperSaplingBlock());
+    public static final Block JUNIPER_PLANKS = named("juniper_planks", new JuniperPlanksBlock());
+    static final List<PottedPlantBlock> POTTED_PLANTS = Collections.unmodifiableList(Arrays.asList(
+            named("potted_morning_glory", new PottedPlantBlock(() -> PSItems.MORNING_GLORY_SEEDS)),
+            named("potted_juniper_sapling", new PottedPlantBlock(() -> PSItems.JUNIPER_SAPLING)),
+            named("potted_cannabis", new PottedPlantBlock(() -> PSItems.CANNABIS_SEEDS)),
+            named("potted_hop", new PottedPlantBlock(() -> PSItems.HOP_SEEDS)),
+            named("potted_tobacco", new PottedPlantBlock(() -> PSItems.TOBACCO_SEEDS)),
+            named("potted_coca", new PottedPlantBlock(() -> PSItems.COCA_SEEDS)),
+            named("potted_coffea", new PottedPlantBlock(() -> PSItems.COFFEA_CHERRIES))));
     public static final DryingTableBlock DRYING_TABLE = named("drying_table", new DryingTableBlock(Material.WOOD));
     public static final DryingTableBlock IRON_DRYING_TABLE = named("iron_drying_table", new DryingTableBlock(Material.IRON));
 
@@ -58,7 +78,12 @@ public final class PSBlocks {
         event.getRegistry().registerAll(CANNABIS, NATURAL_CANNABIS, HOP, COCA, TOBACCO, COFFEA,
                 PEYOTE, AGAVE_PLANT, JIMSONWEED, BELLADONNA, TOMATOES, DRYING_TABLE, IRON_DRYING_TABLE,
                 LATTICE, MORNING_GLORY, MORNING_GLORY_LATTICE, WINE_GRAPE_LATTICE,
-                NATURAL_HOP, NATURAL_COCA, NATURAL_TOBACCO, NATURAL_COFFEA);
+                NATURAL_HOP, NATURAL_COCA, NATURAL_TOBACCO, NATURAL_COFFEA,
+                JUNIPER_LOG, JUNIPER_WOOD, STRIPPED_JUNIPER_LOG, STRIPPED_JUNIPER_WOOD,
+                JUNIPER_LEAVES, FRUITING_JUNIPER_LEAVES, JUNIPER_SAPLING, JUNIPER_PLANKS);
+        for (PottedPlantBlock pot : POTTED_PLANTS) {
+            event.getRegistry().register(pot);
+        }
         GameRegistry.registerTileEntity(DryingTableBlockEntity.class, Psychedelicraft.id("drying_table"));
         GameRegistry.registerTileEntity(LatticeCropBlockEntity.class, Psychedelicraft.id("lattice_crop"));
         GameRegistry.registerTileEntity(PeyoteBlockEntity.class, Psychedelicraft.id("peyote"));
@@ -66,5 +91,11 @@ public final class PSBlocks {
         Blocks.FIRE.setFireInfo(LATTICE, 5, 20);
         Blocks.FIRE.setFireInfo(MORNING_GLORY_LATTICE, 5, 20);
         Blocks.FIRE.setFireInfo(WINE_GRAPE_LATTICE, 5, 20);
+        Blocks.FIRE.setFireInfo(JUNIPER_LOG, 5, 5);
+        Blocks.FIRE.setFireInfo(JUNIPER_WOOD, 5, 5);
+        Blocks.FIRE.setFireInfo(STRIPPED_JUNIPER_LOG, 5, 5);
+        Blocks.FIRE.setFireInfo(STRIPPED_JUNIPER_WOOD, 5, 5);
+        Blocks.FIRE.setFireInfo(JUNIPER_LEAVES, 30, 60);
+        Blocks.FIRE.setFireInfo(JUNIPER_PLANKS, 5, 20);
     }
 }
