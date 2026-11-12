@@ -7,7 +7,9 @@ package ivorius.psychedelicraft.client.render;
 import ivorius.psychedelicraft.Psychedelicraft;
 import ivorius.psychedelicraft.client.render.HallucinationManager.Effect;
 import ivorius.psychedelicraft.client.render.shader.ColorPostEffect;
-import ivorius.psychedelicraft.client.render.shader.TerrainShader;
+import ivorius.psychedelicraft.client.render.shader.WorldGeometryShader;
+import ivorius.psychedelicraft.client.render.shader.WorldGeometryShader.Material;
+import ivorius.psychedelicraft.client.render.shader.WorldGeometryShader.Scope;
 import ivorius.psychedelicraft.config.PSConfig;
 import ivorius.psychedelicraft.entity.drug.DrugCapability;
 import ivorius.psychedelicraft.entity.drug.DrugProperties;
@@ -18,6 +20,8 @@ import net.minecraft.client.entity.EntityPlayerSP;
 import net.minecraft.client.multiplayer.WorldClient;
 import net.minecraft.client.renderer.ChunkRenderContainer;
 import net.minecraft.client.renderer.EntityRenderer;
+import net.minecraft.client.renderer.Tessellator;
+import net.minecraft.entity.Entity;
 import net.minecraft.util.BlockRenderLayer;
 import net.minecraft.util.math.MathHelper;
 import net.minecraftforge.client.event.EntityViewRenderEvent;
@@ -29,10 +33,12 @@ import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent;
 import net.minecraftforge.fml.relauncher.Side;
 
+import javax.annotation.Nullable;
+
 @Mod.EventBusSubscriber(modid = Psychedelicraft.MOD_ID, value = Side.CLIENT)
 public final class DrugRenderer {
     private static final ColorPostEffect COLOR_POST = new ColorPostEffect();
-    private static final TerrainShader TERRAIN = new TerrainShader();
+    private static final WorldGeometryShader GEOMETRY = new WorldGeometryShader();
     private static WorldClient world;
     private static EntityPlayerSP player;
     private static HallucinationManager hallucinations = new HallucinationManager();
@@ -83,12 +89,48 @@ public final class DrugRenderer {
     }
 
     public static void drawTerrain(ChunkRenderContainer chunks, BlockRenderLayer layer) {
+        try (Scope scope = beginGeometry(Minecraft.getMinecraft(), Material.TERRAIN, 0F)) {
+            chunks.renderChunkLayer(layer);
+        }
+    }
+
+    public static void drawFastClouds(Tessellator tessellator, double cameraY) {
+        try (Scope scope = beginVanillaClouds(cameraY, false)) {
+            tessellator.draw();
+        }
+    }
+
+    @Nullable
+    public static Scope beginVanillaClouds(double cameraY, boolean fancy) {
         Minecraft client = Minecraft.getMinecraft();
+        if (client.world == null) return null;
+        float height = client.world.provider.getCloudHeight() - (float) cameraY + 0.33F;
+        return beginGeometry(client, fancy ? Material.VANILLA_FANCY_CLOUDS : Material.VANILLA_FAST_CLOUDS,
+                MathHelper.floor(height / 4F) * 4F - height);
+    }
+
+    @Nullable
+    public static Scope beginForgeClouds(float partialTicks, int mode) {
+        Minecraft client = Minecraft.getMinecraft();
+        Entity camera = client.getRenderViewEntity();
+        if (client.world == null || camera == null) return null;
+        double cameraY = camera.lastTickPosY + (camera.posY - camera.lastTickPosY) * partialTicks;
+        double height = client.world.provider.getCloudHeight() - cameraY + 0.33D;
+        return beginGeometry(client, mode == 2 ? Material.FORGE_FANCY_CLOUDS : Material.FORGE_FAST_CLOUDS,
+                MathHelper.floor(height / 4D) * 4F);
+    }
+
+    public static void endClouds(@Nullable Scope scope) {
+        if (scope != null) scope.close();
+    }
+
+    @Nullable
+    private static Scope beginGeometry(Minecraft client, Material material, float cloudY) {
         if (PSConfig.visual.shader3DEnabled && player != null && player == client.player && world == client.world) {
             DrugProperties properties = DrugCapability.get(player);
-            if (properties != null && TERRAIN.draw(client, player, hallucinations, properties, chunks, layer)) return;
+            if (properties != null) return GEOMETRY.begin(client, player, hallucinations, properties, material, cloudY);
         }
-        chunks.renderChunkLayer(layer);
+        return null;
     }
 
     @SubscribeEvent(priority = EventPriority.LOWEST)

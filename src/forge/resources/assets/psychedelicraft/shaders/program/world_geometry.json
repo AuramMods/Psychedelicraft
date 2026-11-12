@@ -1,7 +1,7 @@
 {
-  "vertex": "psychedelicraft:terrain_geometry",
-  "fragment": "psychedelicraft:terrain_geometry",
-  "samplers": [{ "name": "AtlasSampler" }, { "name": "LightmapSampler" }],
+  "vertex": "psychedelicraft:world_geometry",
+  "fragment": "psychedelicraft:world_geometry",
+  "samplers": [{ "name": "ColorSampler" }, { "name": "LightmapSampler" }, { "name": "PortalSampler" }],
   "uniforms": [
     { "name": "WorldTicks", "type": "float", "count": 1, "values": [0.0] },
     { "name": "Waves", "type": "float", "count": 3, "values": [0.0] },
@@ -12,6 +12,8 @@
     { "name": "SurfaceFractalCoords", "type": "float", "count": 4, "values": [0.0] },
     { "name": "Pulses", "type": "float", "count": 4, "values": [0.0] },
     { "name": "FogMode", "type": "float", "count": 1, "values": [0.0] },
-    { "name": "RadialFog", "type": "float", "count": 1, "values": [0.0] }
+    { "name": "RadialFog", "type": "float", "count": 1, "values": [0.0] },
+    { "name": "LightmapMode", "type": "float", "count": 1, "values": [0.0] },
+    { "name": "GeometryCoordinates", "type": "float", "count": 2, "values": [1.0, 0.0] }
   ]
 }

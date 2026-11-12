@@ -1,6 +1,6 @@
 #version 120
 
-uniform sampler2D AtlasSampler;
+uniform sampler2D PortalSampler;
 uniform float WorldTicks;
 uniform vec3 Waves;
 uniform vec2 PlayerXZ;
@@ -8,6 +8,7 @@ uniform float DistantDeformation;
 uniform float FractureStrength;
 uniform float SurfaceFractalStrength;
 uniform vec4 SurfaceFractalCoords;
+uniform vec2 GeometryCoordinates;
 
 varying vec2 atlasUv;
 varying vec2 lightmapUv;
@@ -22,6 +23,8 @@ float goldNoise(vec2 xy, float seed) {
 
 void main() {
   vec3 position = gl_Vertex.xyz;
+  position.xz *= GeometryCoordinates.x;
+  position.y += GeometryCoordinates.y;
   vec4 view = gl_ModelViewMatrix * gl_Vertex;
   gl_Position = ftransform();
   viewPosition = view.xyz;
@@ -31,7 +34,7 @@ void main() {
   surfaceColor = vec3(0.0);
   if (SurfaceFractalStrength > 0.0) {
     vec2 portalUv = mod(position.xz + position.yy, 4.0) / 4.0;
-    surfaceColor = texture2D(AtlasSampler, mix(SurfaceFractalCoords.xy, SurfaceFractalCoords.zw, portalUv)).rgb;
+    surfaceColor = texture2D(PortalSampler, mix(SurfaceFractalCoords.xy, SurfaceFractalCoords.zw, portalUv)).rgb;
   }
 
   float worldTicks = WorldTicks;

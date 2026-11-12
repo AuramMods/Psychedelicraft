@@ -1,7 +1,8 @@
 #version 120
 
-uniform sampler2D AtlasSampler;
+uniform sampler2D ColorSampler;
 uniform sampler2D LightmapSampler;
+uniform float LightmapMode;
 uniform float WorldTicks;
 uniform float SurfaceFractalStrength;
 uniform vec4 Pulses;
@@ -15,10 +16,15 @@ varying vec3 viewPosition;
 varying vec3 surfaceColor;
 
 void main() {
-  vec4 light = texture2D(LightmapSampler, lightmapUv);
-  vec4 atlas = texture2D(AtlasSampler, atlasUv);
+  vec4 light = vec4(1.0);
+  if (LightmapMode == 1.0) {
+    light = texture2D(LightmapSampler, lightmapUv);
+  } else if (LightmapMode == 2.0) {
+    light = texture2D(LightmapSampler, vec2(0.5));
+  }
+  vec4 base = texture2D(ColorSampler, atlasUv);
   vec4 color = vec4(mix(vertexColor.rgb * light.rgb, surfaceColor, SurfaceFractalStrength),
-                    vertexColor.a * light.a) * atlas;
+                    vertexColor.a * light.a) * base;
 
   float distanceToEye = RadialFog > 0.0 ? length(viewPosition) : abs(viewPosition.z);
   float fog = 1.0;
