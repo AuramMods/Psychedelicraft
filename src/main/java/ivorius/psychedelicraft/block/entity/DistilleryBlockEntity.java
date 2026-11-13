@@ -6,7 +6,9 @@ package ivorius.psychedelicraft.block.entity;
 
 import ivorius.psychedelicraft.block.DistilleryBlock;
 import ivorius.psychedelicraft.block.MashTubBlock;
+import ivorius.psychedelicraft.fluid.BrewFluid;
 import ivorius.psychedelicraft.fluid.BrewProcess;
+import ivorius.psychedelicraft.fluid.PSFluids;
 import ivorius.psychedelicraft.fluid.ProcessingTank;
 import net.minecraft.block.Block;
 import net.minecraft.block.material.Material;
@@ -19,6 +21,7 @@ import net.minecraft.util.EnumParticleTypes;
 import net.minecraft.util.SoundCategory;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.WorldServer;
+import net.minecraftforge.fluids.Fluid;
 import net.minecraftforge.fluids.FluidStack;
 
 import javax.annotation.Nullable;
@@ -50,14 +53,16 @@ public final class DistilleryBlockEntity extends FluidProcessingBlockEntity {
             outlet = status;
             changed();
         }
-        boolean ready = outlet == Outlet.READY;
-        processFluid(process, heatRate(), ready);
-        if (process == BrewProcess.DISTILL && ready) {
-            if (world.rand.nextInt(120) == 0) steam();
-            if (world.rand.nextInt(50) == 0) {
-                world.playSound(null, pos, SoundEvents.BLOCK_BREWING_STAND_BREW, SoundCategory.BLOCKS, 0.25F, 0.5F);
+        if (contents != null) {
+            Fluid fluid = contents.getFluid();
+            // The donor vents during its processing check, before testing the batch and outlet.
+            if (fluid instanceof BrewFluid || PSFluids.isFlowerExtract(fluid)
+                    || fluid == PSFluids.COFFEE || fluid == PSFluids.SLURRY) {
+                if (world.rand.nextInt(120) == 0) steam();
+                if (world.rand.nextInt(50) == 0) bubbleSound();
             }
         }
+        processFluid(process, heatRate(), outlet == Outlet.READY);
     }
 
     @Override
@@ -70,12 +75,19 @@ public final class DistilleryBlockEntity extends FluidProcessingBlockEntity {
             output.fill(byproduct, true);
         }
         steam();
+        if (world.rand.nextInt(10) == 0) bubbleSound();
         return super.completeProcess(process, contents);
     }
 
     private void steam() {
-        ((WorldServer) world).spawnParticle(EnumParticleTypes.CLOUD, pos.getX() + 0.5,
-                pos.getY() + 0.6, pos.getZ() + 0.5, 2, 0.12, 0.05, 0.12, 0.02);
+        double x = pos.getX() + (world.rand.nextDouble() + world.rand.nextDouble()) * 0.5;
+        double z = pos.getZ() + (world.rand.nextDouble() + world.rand.nextDouble()) * 0.5;
+        ((WorldServer) world).spawnParticle(EnumParticleTypes.CLOUD, x, pos.getY() + 0.6, z, 2, 0D, 0D, 0D, 0D);
+    }
+
+    private void bubbleSound() {
+        // The 1.20.1 mixer clamps the donor's 0.02 pitch to 0.5.
+        world.playSound(null, pos, SoundEvents.BLOCK_BREWING_STAND_BREW, SoundCategory.BLOCKS, 0.25F, 0.5F);
     }
 
     private int heatRate() {
