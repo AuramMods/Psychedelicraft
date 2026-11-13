@@ -7,13 +7,14 @@ package ivorius.psychedelicraft.client.render.block;
 import ivorius.psychedelicraft.Psychedelicraft;
 import ivorius.psychedelicraft.block.PSBlocks;
 import ivorius.psychedelicraft.block.entity.PlacedDrinkBlockEntity;
+import ivorius.psychedelicraft.client.render.DrugRenderer;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.GlStateManager;
-import net.minecraft.client.renderer.RenderGlobal;
 import net.minecraft.client.renderer.tileentity.TileEntitySpecialRenderer;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.EnumFacing;
+import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.RayTraceResult;
 import net.minecraftforge.client.event.DrawBlockHighlightEvent;
@@ -73,24 +74,23 @@ public final class PlacedDrinksRenderer extends TileEntitySpecialRenderer<Placed
         int cell = PlacedDrinkBlockEntity.cell((float) (target.hitVec.x - pos.getX()), (float) (target.hitVec.z - pos.getZ()));
         int existing = display.findColumn(cell);
         float partialTicks = event.getPartialTicks();
-        double x = pos.getX() + PlacedDrinkBlockEntity.x(existing < 0 ? cell : existing)
+        double x = pos.getX() + PlacedDrinkBlockEntity.x(cell)
                 - (player.lastTickPosX + (player.posX - player.lastTickPosX) * partialTicks);
         double y = pos.getY() - (player.lastTickPosY + (player.posY - player.lastTickPosY) * partialTicks);
-        double z = pos.getZ() + PlacedDrinkBlockEntity.z(existing < 0 ? cell : existing)
+        double z = pos.getZ() + PlacedDrinkBlockEntity.z(cell)
                 - (player.lastTickPosZ + (player.posZ - player.lastTickPosZ) * partialTicks);
-        GlStateManager.enableBlend();
-        GlStateManager.tryBlendFuncSeparate(GlStateManager.SourceFactor.SRC_ALPHA,
-                GlStateManager.DestFactor.ONE_MINUS_SRC_ALPHA, GlStateManager.SourceFactor.ONE, GlStateManager.DestFactor.ZERO);
-        GlStateManager.disableTexture2D();
-        GlStateManager.depthMask(false);
-        GlStateManager.glLineWidth(2);
+        AxisAlignedBB outline = new AxisAlignedBB(x - 0.125, y, z - 0.125, x + 0.125,
+                y + (existing < 0 ? 0.01 / 16 : 0.25), z + 0.125);
+        GL11.glPushAttrib(GL11.GL_ENABLE_BIT | GL11.GL_COLOR_BUFFER_BIT | GL11.GL_DEPTH_BUFFER_BIT | GL11.GL_LINE_BIT);
         try {
-            RenderGlobal.drawBoundingBox(x - 0.125, y + 0.001, z - 0.125, x + 0.125,
-                    y + (existing < 0 ? 0.002 : 0.25), z + 0.125, 0, 0, 0, 0.4F);
+            GL11.glEnable(GL11.GL_BLEND);
+            GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA);
+            GL11.glDisable(GL11.GL_TEXTURE_2D);
+            GL11.glDepthMask(false);
+            GL11.glLineWidth(2);
+            DrugRenderer.drawBlockOutline(outline, 0, 0, 0, 0.4F, target);
         } finally {
-            GlStateManager.depthMask(true);
-            GlStateManager.enableTexture2D();
-            GlStateManager.disableBlend();
+            GL11.glPopAttrib();
         }
     }
 }

@@ -9,6 +9,7 @@ import net.minecraft.block.Block;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTTagList;
+import net.minecraft.util.EnumFacing;
 import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.MathHelper;
 import net.minecraftforge.common.util.Constants;
@@ -22,6 +23,7 @@ public final class PlacedDrinkBlockEntity extends DrinkDisplayBlockEntity {
     private static final int GRID_SIZE = 16;
     private static final int MAX_HEIGHT = 5;
     private static final int PICKUP_RADIUS = 2;
+    private static final EnumFacing[] PICKUP_ORDER = {EnumFacing.EAST, EnumFacing.NORTH, EnumFacing.WEST, EnumFacing.SOUTH};
 
     private final Map<Integer, List<Drink>> columns = new LinkedHashMap<>();
 
@@ -56,24 +58,21 @@ public final class PlacedDrinkBlockEntity extends DrinkDisplayBlockEntity {
     public int findColumn(int cell) {
         int x = cell / GRID_SIZE;
         int z = cell % GRID_SIZE;
-        int result = -1;
-        int closest = 2 * PICKUP_RADIUS * PICKUP_RADIUS + 1;
-        for (int dx = -PICKUP_RADIUS; dx <= PICKUP_RADIUS; dx++) {
-            for (int dz = -PICKUP_RADIUS; dz <= PICKUP_RADIUS; dz++) {
-                int candidateX = x + dx;
-                int candidateZ = z + dz;
-                int distance = dx * dx + dz * dz;
-                if (distance < closest && candidateX >= 0 && candidateX < GRID_SIZE
-                        && candidateZ >= 0 && candidateZ < GRID_SIZE) {
-                    int candidate = candidateX * GRID_SIZE + candidateZ;
-                    if (columns.containsKey(candidate)) {
-                        closest = distance;
-                        result = candidate;
-                    }
+        int width = 2 * PICKUP_RADIUS + 1;
+        int stepsRemaining = width * width;
+        for (int leg = 0; stepsRemaining > 0; leg++) {
+            EnumFacing direction = PICKUP_ORDER[leg % PICKUP_ORDER.length];
+            int length = leg / 2 + 1;
+            for (int step = 0; step < length && stepsRemaining > 0; step++, stepsRemaining--) {
+                if (x >= 0 && x < GRID_SIZE && z >= 0 && z < GRID_SIZE) {
+                    int candidate = x * GRID_SIZE + z;
+                    if (columns.containsKey(candidate)) return candidate;
                 }
+                x += direction.getFrontOffsetX();
+                z += direction.getFrontOffsetZ();
             }
         }
-        return result;
+        return -1;
     }
 
     public ItemStack peek(int cell) {

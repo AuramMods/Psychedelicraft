@@ -59,6 +59,26 @@ public class DrinkDisplayTest {
     }
 
     @Test
+    public void nearbyPickupSearchesEastFirstThenContinuesAroundEachRing() {
+        PlacedDrinkBlockEntity display = new PlacedDrinkBlockEntity();
+        int center = PlacedDrinkBlockEntity.cell(0.5F, 0.5F);
+        int east = center + 16;
+        int northEast = east - 1;
+        int west = center - 16;
+        int outerCorner = center + 2 * 16 + 2;
+        int outOfRange = center + 3;
+        for (int cell : new int[]{west, northEast, east, center, outerCorner, outOfRange}) {
+            assertTrue(display.place(cell, new ItemStack(PSItems.WOODEN_MUG).setStackDisplayName(Integer.toString(cell)), 0));
+        }
+        for (int cell : new int[]{center, east, northEast, west, outerCorner}) {
+            assertEquals(Integer.toString(cell), display.peek(center).getDisplayName());
+            assertEquals(Integer.toString(cell), display.take(center).getDisplayName());
+        }
+        assertTrue(display.peek(center).isEmpty());
+        assertEquals(Integer.toString(outOfRange), display.peek(outOfRange).getDisplayName());
+    }
+
+    @Test
     public void rackSlotsMatchAllFacingsAndKeepOneBottlePerSlot() {
         BottleRackBlock rack = PSBlocks.BOTTLE_RACK;
         for (EnumFacing facing : EnumFacing.HORIZONTALS) {
