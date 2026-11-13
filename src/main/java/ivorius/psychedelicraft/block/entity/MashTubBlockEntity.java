@@ -19,6 +19,7 @@ import net.minecraft.nbt.NBTTagList;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.EnumHand;
 import net.minecraft.util.SoundCategory;
+import net.minecraft.util.SoundEvent;
 import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Vec3d;
@@ -29,6 +30,7 @@ import net.minecraftforge.fml.common.registry.ForgeRegistries;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Random;
 
 public final class MashTubBlockEntity extends FluidProcessingBlockEntity {
     public static final int CAPACITY = 32000;
@@ -96,18 +98,15 @@ public final class MashTubBlockEntity extends FluidProcessingBlockEntity {
         if (matches == 0) {
             supplied.clear();
             getTank().replace(new FluidStack(PSFluids.SLURRY, contents.amount));
-            bubbles(90, 0.5F);
-            world.playSound(null, pos, SoundEvents.BLOCK_GRAVEL_BREAK, SoundCategory.BLOCKS, 0.8F, 0.7F);
-        } else {
-            if (matches == 1 && complete != null) {
-                activeRecipe = complete.getRegistryName();
-                pulsesLeft = totalPulses = 2 + world.rand.nextInt(4) + complete.getStewTime();
-                getTank().setCanFill(false);
-                getTank().setCanDrain(false);
-            }
-            bubbles(20, 0);
-            world.playSound(null, pos, SoundEvents.ENTITY_GENERIC_SPLASH, SoundCategory.BLOCKS, 0.5F, 1.15F);
+            bubbles(90, 0.5F, SoundEvents.BLOCK_GRAVEL_BREAK);
+        } else if (matches == 1 && complete != null) {
+            activeRecipe = complete.getRegistryName();
+            pulsesLeft = totalPulses = 2 + world.rand.nextInt(4) + complete.getStewTime();
+            getTank().setCanFill(false);
+            getTank().setCanDrain(false);
         }
+        bubbles(20, 0, SoundEvents.BLOCK_LAVA_POP);
+        world.playSound(null, pos, SoundEvents.ENTITY_GENERIC_SPLASH, SoundCategory.BLOCKS, 1, 1);
         changed();
         return true;
     }
@@ -130,7 +129,7 @@ public final class MashTubBlockEntity extends FluidProcessingBlockEntity {
             endStew();
             return;
         }
-        bubbles(9, 0.55F);
+        bubbles(9, 0.5F, SoundEvents.BLOCK_LAVA_AMBIENT);
         if (--pulsesLeft <= 0) {
             getTank().replace(recipe.finish(getTank().getFluidAmount()));
             supplied.clear();
@@ -153,18 +152,33 @@ public final class MashTubBlockEntity extends FluidProcessingBlockEntity {
         updateLight();
         FluidStack fluid = getTank().getFluid();
         if (fluid != null && !supplied.isEmpty() && world.getTotalWorldTime() % 3 == 0 && world.rand.nextFloat() < 0.33F) {
-            SlurryBubble.spawn(world, bubbleOrigin(), 1 + (int) (supplied.size() * 1.5), 0,
+            SlurryBubble.spawnMash(world, bubbleOrigin(), 1 + (int) (supplied.size() * 1.5),
                     fluid.getFluid().getColor(fluid));
+            world.playSound(pos.getX() + 0.5, pos.getY() + 0.5, pos.getZ() + 0.5,
+                    SoundEvents.BLOCK_LAVA_POP, SoundCategory.BLOCKS, bubbleVolume(), bubblePitch(), true);
         }
     }
 
-    private void bubbles(int count, float spread) {
+    private void bubbles(int count, float spread, SoundEvent sound) {
         FluidStack fluid = getTank().getFluid();
-        if (fluid != null) Channel.spawnFluidBubbles(world, bubbleOrigin(), count, spread, fluid.getFluid().getColor(fluid));
+        if (fluid == null) return;
+        Channel.spawnFluidBubbles(world, bubbleOrigin(), count, spread, fluid.getFluid().getColor(fluid));
+        world.playSound(null, pos, sound, SoundCategory.BLOCKS, bubbleVolume(), bubblePitch());
     }
 
     private Vec3d bubbleOrigin() {
-        return new Vec3d(pos.getX() + 0.5, pos.getY() + getFluidSurface(), pos.getZ() + 0.5);
+        Random random = world.rand;
+        return new Vec3d(pos.getX() + 0.5 + (random.nextDouble() - random.nextDouble()) * 0.25,
+                pos.getY() + 1 + (random.nextDouble() - random.nextDouble()) * 0.25,
+                pos.getZ() + 0.5 + (random.nextDouble() - random.nextDouble()) * 0.25);
+    }
+
+    private float bubbleVolume() {
+        return 0.5F + world.rand.nextFloat();
+    }
+
+    private float bubblePitch() {
+        return 0.3F + world.rand.nextFloat();
     }
 
     private void updateLight() {
