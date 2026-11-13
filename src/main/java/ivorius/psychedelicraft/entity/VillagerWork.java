@@ -31,17 +31,25 @@ import net.minecraftforge.event.ForgeEventFactory;
 import net.minecraftforge.fml.common.registry.VillagerRegistry.VillagerProfession;
 
 import javax.annotation.Nullable;
+import java.util.ArrayList;
+import java.util.List;
 
 final class VillagerWork extends EntityAIBase {
     private static final String WORKSITE = "Worksite";
     private static final String WORKSITE_DIMENSION = "WorksiteDimension";
     private static final int SEARCH_RADIUS = 32;
     private static final double WORK_DISTANCE_SQ = 1.73D * 1.73D;
+    private static final int CROP_SESSION_TICKS = 60;
+    private static final int CROP_TARGET_DELAY = 20;
+    private static final int CROP_SESSION_DELAY = 40;
 
     private final EntityVillager villager;
     private final VillagerTradePreview preview;
+    private final List<BlockPos> cropTargets = new ArrayList<>();
     private long nextTask;
     private long lastWorkCheck;
+    private long nextCropAction;
+    private long nextCropSession;
     private BlockPos target;
     private Vec3d wander;
     private Job job;
@@ -90,11 +98,14 @@ final class VillagerWork extends EntityAIBase {
             job = Job.CLAIM;
             return target != null;
         }
-        if (villager.getDistanceSqToCenter(site) <= 36 && villager.getRNG().nextInt(3) == 0
+        if (now >= nextCropSession && villager.getDistanceSqToCenter(site) <= 36 && villager.getRNG().nextInt(3) == 0
                 && ForgeEventFactory.getMobGriefingEvent(villager.world, villager)) {
-            target = findCrop();
-            job = Job.CROP;
-            if (target != null) return true;
+            findCrops();
+            if (!cropTargets.isEmpty()) {
+                target = chooseCrop();
+                job = Job.CROP;
+                return true;
+            }
         }
         target = site;
         job = Job.DRY;
@@ -108,7 +119,8 @@ final class VillagerWork extends EntityAIBase {
 
     @Override
     public void startExecuting() {
-        remaining = 160;
+        remaining = job == Job.CROP ? CROP_SESSION_TICKS : 160;
+        nextCropAction = villager.world.getTotalWorldTime();
         if (job == Job.WANDER) {
             villager.getNavigator().tryMoveToXYZ(wander.x, wander.y, wander.z, 0.4D);
         } else {
@@ -126,6 +138,10 @@ final class VillagerWork extends EntityAIBase {
     public void updateTask() {
         remaining--;
         if (job == Job.WANDER) return;
+        if (job == Job.CROP) {
+            workCrops();
+            return;
+        }
         if (!villager.world.isBlockLoaded(target)) {
             remaining = 0;
             return;
@@ -133,19 +149,22 @@ final class VillagerWork extends EntityAIBase {
         if (preview.shown().isEmpty()) {
             villager.getLookHelper().setLookPosition(target.getX() + 0.5D, target.getY() + 0.5D, target.getZ() + 0.5D, 20, 20);
         }
-        double range = job == Job.CLAIM ? 6.25D : job == Job.CROP ? 2.25D : WORK_DISTANCE_SQ;
+        double range = job == Job.CLAIM ? 6.25D : WORK_DISTANCE_SQ;
         if (villager.getDistanceSqToCenter(target) > range) {
             if (remaining % 20 == 0 && !moveTowardTarget()) remaining = 0;
             return;
         }
         if (job == Job.CLAIM) claim();
-        else if (job == Job.DRY) workTable();
-        else tendCrop();
+        else workTable();
         remaining = 0;
     }
 
     @Override
     public void resetTask() {
+        if (job == Job.CROP) {
+            nextCropSession = villager.world.getTotalWorldTime() + CROP_SESSION_DELAY;
+            cropTargets.clear();
+        }
         villager.getNavigator().clearPath();
     }
 
@@ -228,29 +247,59 @@ final class VillagerWork extends EntityAIBase {
         return best;
     }
 
-    @Nullable
-    private BlockPos findCrop() {
+    private void findCrops() {
+        cropTargets.clear();
+        World world = villager.world;
         BlockPos origin = villager.getPosition();
-        int seed = seedSlot(villager.getVillagerInventory());
-        for (BlockPos pos : BlockPos.getAllInBoxMutable(origin.add(-2, -1, -2), origin.add(2, 1, 2))) {
-            if (!villager.world.isBlockLoaded(pos)) continue;
-            IBlockState state = villager.world.getBlockState(pos);
-            if (mature(state)
-                    || seed >= 0 && villager.world.isAirBlock(pos) && villager.world.getBlockState(pos.down()).getBlock() == Blocks.FARMLAND) {
-                return pos.toImmutable();
+        boolean hasSeed = seedSlot(villager.getVillagerInventory()) >= 0;
+        boolean farmlandNearby = false;
+        for (BlockPos pos : BlockPos.getAllInBoxMutable(origin.add(-1, -1, -1), origin.add(1, 1, 1))) {
+            if (!world.isBlockLoaded(pos)) continue;
+            IBlockState state = world.getBlockState(pos);
+            if (world.getBlockState(pos.down()).getBlock() == Blocks.FARMLAND) {
+                farmlandNearby = true;
+                if (hasSeed && world.isAirBlock(pos)) cropTargets.add(pos.toImmutable());
             }
+            if (mature(state)) cropTargets.add(pos.toImmutable());
         }
-        return null;
+        if (!farmlandNearby && !cropTargets.isEmpty() && !hasFarmland(origin)) cropTargets.clear();
     }
 
-    private void tendCrop() {
+    private boolean hasFarmland(BlockPos origin) {
         World world = villager.world;
-        if (!ForgeEventFactory.getMobGriefingEvent(world, villager)) return;
+        for (BlockPos pos : BlockPos.getAllInBoxMutable(origin.add(-4, -2, -4), origin.add(4, 2, 4))) {
+            if (world.isBlockLoaded(pos) && world.getBlockState(pos).getBlock() == Blocks.FARMLAND) return true;
+        }
+        return false;
+    }
+
+    private BlockPos chooseCrop() {
+        return cropTargets.remove(villager.world.rand.nextInt(cropTargets.size()));
+    }
+
+    private void workCrops() {
+        World world = villager.world;
+        if (villager.getProfessionForge() != VillagerCareers.DEALER || !ForgeEventFactory.getMobGriefingEvent(world, villager)) {
+            remaining = 0;
+            return;
+        }
+        if (!world.isBlockLoaded(target)) {
+            advanceCrop();
+            return;
+        }
+        if (preview.shown().isEmpty()) {
+            villager.getLookHelper().setLookPosition(target.getX() + 0.5D, target.getY() + 0.5D, target.getZ() + 0.5D, 20, 20);
+        }
+        if (villager.getDistanceSqToCenter(target) >= 1D) {
+            if (remaining % 20 == 0 && !moveTowardTarget()) advanceCrop();
+            return;
+        }
+        if (world.getTotalWorldTime() < nextCropAction) return;
+
         IBlockState state = world.getBlockState(target);
         IInventory inventory = villager.getVillagerInventory();
-        if (mature(state)) {
-            world.destroyBlock(target, true);
-        } else if (world.isAirBlock(target) && world.getBlockState(target.down()).getBlock() == Blocks.FARMLAND) {
+        if (mature(state) && world.destroyBlock(target, true)) return;
+        if (world.isAirBlock(target) && world.getBlockState(target.down()).getBlock() == Blocks.FARMLAND) {
             int seed = seedSlot(inventory);
             if (seed >= 0) {
                 Block crop = ((ItemBlock) inventory.getStackInSlot(seed).getItem()).getBlock();
@@ -261,6 +310,17 @@ final class VillagerWork extends EntityAIBase {
                 }
             }
         }
+        advanceCrop();
+    }
+
+    private void advanceCrop() {
+        if (cropTargets.isEmpty()) {
+            remaining = 0;
+            return;
+        }
+        target = chooseCrop();
+        nextCropAction = villager.world.getTotalWorldTime() + CROP_TARGET_DELAY;
+        moveTowardTarget();
     }
 
     static boolean mature(IBlockState state) {
