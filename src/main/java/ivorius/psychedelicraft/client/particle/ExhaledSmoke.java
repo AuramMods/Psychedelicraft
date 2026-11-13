@@ -22,6 +22,7 @@ public final class ExhaledSmoke extends ParticleSmokeNormal {
         if (client.getConnection() != sender || client.world == null || client.world.provider.getDimension() != dimension
                 || client.gameSettings.particleSetting == 2) return;
         Random random = client.world.rand;
+        if (count == 1 && client.gameSettings.particleSetting == 1 && random.nextInt(3) == 0) return;
         int amount = Math.min(count, client.gameSettings.particleSetting == 1 ? 10 : 30);
         for (int i = 0; i < amount; i++) {
             Vec3d from = count > 1 ? origin.addVector(random.nextGaussian() * 0.12, 0, random.nextGaussian() * 0.12) : origin;

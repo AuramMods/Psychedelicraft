@@ -51,7 +51,21 @@ public final class SmokeEffects {
             DrugProperties properties = DrugCapability.get(player);
             if (properties != null) item.applyInfluences(properties);
         }
-        Channel.spawnSmoke(world, new Vec3d(pos.getX() + 0.5, pos.getY() + 1, pos.getZ() + 0.5),
-                new Vec3d(0, 0.18, 0), item.smokeColor(), 1, 30);
+        Random random = world.rand;
+        for (int puff = 0; puff < 30; puff++) {
+            double centerX = pos.getX() + 0.5 + triangularOffset(random);
+            double centerZ = pos.getZ() + 0.5 + triangularOffset(random);
+            // With a positive count, the donor's packet offsets spread the spawn position.
+            Vec3d origin = new Vec3d(centerX + random.nextGaussian() * (float) triangularOffset(random),
+                    pos.getY() + 1 + random.nextGaussian() * (float) (0.8 + triangularOffset(random)),
+                    centerZ + random.nextGaussian() * (float) triangularOffset(random));
+            Vec3d velocity = new Vec3d(random.nextGaussian() * 0.001F, random.nextGaussian() * 0.001F,
+                    random.nextGaussian() * 0.001F);
+            Channel.spawnSmoke(world, origin, velocity, item.smokeColor(), 1, 1);
+        }
+    }
+
+    private static double triangularOffset(Random random) {
+        return 0.3 * (random.nextDouble() - random.nextDouble());
     }
 }
