@@ -763,7 +763,15 @@ sh run/production/background-qa/run.sh "$qa" game-background Overlay-QA \
 - Two muted clients joined an isolated LAN world. The host's options included Gameplay, while the guest received only Visuals and Drug Theme Music. The same run passed the owner and observer synchronization regression, including the Nether round trip, reconnect, and death and respawn. The host saved the world on shutdown. Logs are under `run/production/runtime-qa-cycle77/lan` in `runtime-host-retry.log` and `runtime-guest-retry.log`.
 - The production jar SHA-256 is `a7df952139783afb48e827b9b6d968ba6a5c0c290f936cee29be17bc1f4d39b2`. The evidence is under `run/production/runtime-qa-cycle77` in `build-production-final.log`, `runtime-verified.log`, `runtime-reopen.log` and `game-verified/screenshots`.
 
-Next, verify in-world hit detection on the tray's overhanging edges against the pinned donor. Dedicated Forge startup and multiplayer on that server remain open pending EULA acceptance.
+### Cycle 78 · Tray overhang selection
+
+- The pinned `TrayBlock` extends one pixel beyond its own cell at both ends. Its `MixinVoxelShape` leaves the hit assigned to the tray for an overhang this small. The previous Forge jar matched the shape in a block-local ray test, but world rays through all four overhangs missed the tray on both sides of an integrated game.
+- Forge now checks loaded adjacent trays along the normal world ray traversal. It tests the tray's existing oriented shape and retains the owning block position. A nearer native block hit still wins. The first implementation hit a read-only ASM frame list during launch. The working transformer copies the list before adding the candidate local.
+- The Java 8 clean build and reobfuscation passed, and the suite passed 142 tests after adding an assertion for the owning position, hit face, and ordering against nearer and farther block hits. The new jar SHA-256 is `f191e2778e366a3bfcafc7f26b635057bd8d8d4981f881a70292079fa2e912b0`.
+- The packaged jar passed world rays through the center, all four overhangs, and the air just outside them. It checked side hits, a lip at a chunk boundary, a stone block that occluded the lip, and both bounding-box and return-last-miss flags. The native client crosshair selected the lip, and its creative break packet removed the tray on the server while preserving neighboring stone. The first gameplay fixture passed the ray checks but waited for an exact player height after the player had already landed on the tray. The passing fixture waits for the reported horizontal position and aim.
+- The same jar passed the native bucket and dispenser regression for tagged fluid placement and recovery, flow, lava mixing, and Nether evaporation. All client runs used the muted Docker display. Logs are under `run/production/runtime-qa-cycle78` in `runtime-before.log`, `runtime-verified.log`, `runtime-fluid-regression.log`, `build-production-final.log`, and `test-overhang.log`.
+
+Next, verify observer-side breath and smoke effects with two Forge clients. Dedicated Forge startup and multiplayer on that server remain open pending EULA acceptance.
 
 ## Repository and branch survey
 
