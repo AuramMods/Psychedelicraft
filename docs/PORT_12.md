@@ -716,7 +716,14 @@ sh run/production/background-qa/run.sh "$qa" game-background Overlay-QA \
 - JEI rendered the square recipe and indexed a bowl holding 1 mB of stage-two extract. The same run passed the nine mod category checks and opened the filled crafting, coffee heating and dyed bottle recipes.
 - The packaged jar's SHA-256 is `d7aa2df34043f42afc209014baea8d4ff86fa70950ca2d6262f8a57cd093dadd`. Evidence is under `run/production/runtime-qa-cycle71` in `build-production-verified.log`, `runtime-fluid.log`, `runtime-jei.log` and `game-jei/screenshots/jei-12.png`.
 
-Next, recheck projectile flight with separate assertions for client spawn data and server impact effects.
+### Cycle 72 · Projectile tracking and impact regression
+
+- Re-ran the projectile checks in muted Forge 14.23.5.2864 using the Cycle 71 production jar. The fixture waited for the thrower's chunk to be tracked and recorded each projectile's item stack when Forge added the entity to the client world. The owner received both ordinary throws with the correct entity IDs, fluid and volume. The 750 mB water throw and the 2,000 mB brew throw both carried the flying tag. The brew also retained its custom tint and distillation stage. The water impact occurred before the client processed its spawn, so a render-frame sample could miss the entity.
+- Independent server checks confirmed that the water throw dealt four points of direct damage with no ignition or explosion. The brewed throw damaged and ignited its target, produced one owner-attributed explosion and preserved the adjacent stone. Survival consumed the item, creative retained it, and serializing and restoring the projectile recovered the item stack and owner.
+- A stationary sample let the client resolve the flying model and capture the tinted projectile with its particles. The earlier rack and placed-drink checks also passed. The stationary sample verifies the renderer separately from the short throws. The test covers the owner connection and leaves remote observer coverage open.
+- The production jar's SHA-256 is `d7aa2df34043f42afc209014baea8d4ff86fa70950ca2d6262f8a57cd093dadd`. Local evidence is under `run/production/runtime-qa-cycle72` in `runtime-projectile.log` and `game-projectile/screenshots/cycle72-flight.png`.
+
+Next, verify player effect snapshots across tracking, dimension changes and reconnect with two clients. The dedicated server still requires EULA acceptance.
 
 ## Repository and branch survey
 
