@@ -697,7 +697,17 @@ sh run/production/background-qa/run.sh "$qa" game-background Overlay-QA \
 - JEI displayed the warm coffee and coffea roast in its furnace category. An early run used a generic wrapper that the furnace category rejected while drawing. The final jar uses JEI's furnace wrapper. Its built-in view shows XP with JEI's own progress animation.
 - The packaged jar's SHA-256 is `4e2dd5c789dbf82a000065a8b64e94cd3c01eb4470fe7f8702a37c2093478757`. Evidence is under `run/production/runtime-qa-cycle69` in `build-production-final.log`, `runtime-verified-start.log`, `runtime-verified-reopen.log` and `runtime-jei-verified.log`. The coffea recipe capture is in `game-jei-final/screenshots/jei-12.png`.
 
-Next, audit the other donor serializers and their output handling, including the recipes that change a filled receptacle.
+### Cycle 70 · Stained glass and vessel conversion
+
+- Moved both shaped bottle recipes and both shapeless vessel conversions to Forge JSON under their existing recipe IDs. The shaped factory uses Forge's pattern parser and the donor's 16 sign colors. This replaces a call to a client-only dye method from shared crafting code. Forge's `blockGlass` Ore Dictionary entry accepts compatible glass, and wool uses wildcard metadata.
+- The conversion factory finds exactly one vessel and carries its fluid volume and attributes into the authored output. It also copies the dye between dyeable items, including the donor's default brown when the source has no explicit dye. The output keeps its own display name and other authored item tags. A filled input needs a single output vessel with enough room for the full transfer. The consumed vessel contributes no crafting remainder, and other ingredients use Forge's usual remainder handling.
+- The Java 8 build and reobfuscation passed 137 tests. ForgeGradle attempted remote metadata and artifact checks despite offline mode. After DNS timed out, the build used the cached dependencies with the network requests failing immediately.
+- In muted Forge 14.23.5.2864, the packaged jar passed both shaped recipes and both conversions across all 16 colors. It carried 1,234 mB with custom attributes through a round trip. Recipes supplied by the fixture kept their authored tags, honored disabled mirroring and rejected a transfer into an undersized bottle. A survival client shift-click turned a named water bucket into one flask containing 1,000 mB, with the grid empty and no extra bucket.
+- JEI rendered the red glass inputs and the eight dyed bottles in its crafting screen. The same run checked all nine mod categories, filled crafting and coffee heating. Dedicated-server validation is still open.
+- The projectile regression passed crafting, rack and placed-drink checks, including nested fluid attributes. The server verified direct damage and no ignition before the water projectile's combined client tracking and no-explosion assertion failed. The previous jar entered the test world but had sustained tick delays and was stopped before the projectile check. The projectile entity and item classes are byte-for-byte identical across the two jars. Flight validation remains open.
+- The packaged jar's SHA-256 is `9c05c86ee610b48c4ba06d4a8cc098e9103f38ba465a34718c966cf058b3f973`. Evidence is under `run/production/runtime-qa-cycle70` in `build-production-offline.log`, `runtime-vessels.log`, `runtime-jei-verified.log`, `runtime-projectile-verified.log` and `game-jei-verified/screenshots/jei-11.png`.
+
+Next, compare the donor's fluid-aware shapeless recipes with the Forge reagent and remainder handling. Recheck projectile flight with separate assertions for client spawn data and server impact effects.
 
 ## Repository and branch survey
 

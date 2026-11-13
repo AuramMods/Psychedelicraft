@@ -12,7 +12,7 @@ import ivorius.psychedelicraft.item.PortableFluidItem;
 import ivorius.psychedelicraft.recipe.FurnaceRecipe;
 import ivorius.psychedelicraft.recipe.DryingRecipe;
 import ivorius.psychedelicraft.recipe.FillReceptacleRecipe;
-import ivorius.psychedelicraft.recipe.FluidVesselRecipes.BottleRecipe;
+import ivorius.psychedelicraft.recipe.BottleRecipe;
 import ivorius.psychedelicraft.recipe.MashingRecipe;
 import mezz.jei.api.IGuiHelper;
 import mezz.jei.api.IModPlugin;
