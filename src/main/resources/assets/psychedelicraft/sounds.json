@@ -95,6 +95,13 @@
       { "name": "minecraft:block.wood.break", "type": "event", "volume": 0.9, "pitch": 0.85 }
     ]
   },
+  "item.crop.plant": {
+    "subtitle": "subtitles.block.generic.place",
+    "sounds": [
+      { "name": "minecraft:block.grass.hit", "type": "event", "volume": 0.45 },
+      { "name": "minecraft:block.grass.hit", "type": "event", "volume": 0.45, "pitch": 1.2 }
+    ]
+  },
   "drug.generic": {
     "category": "ambient",
     "sounds": [

@@ -1,5 +1,6 @@
 package ivorius.psychedelicraft.entity;
 
+import ivorius.psychedelicraft.PSSounds;
 import ivorius.psychedelicraft.block.TallCropBlock;
 import ivorius.psychedelicraft.block.entity.DryingTableBlockEntity;
 import ivorius.psychedelicraft.item.PSItems;
@@ -19,10 +20,10 @@ import net.minecraft.inventory.IInventory;
 import net.minecraft.item.EnumDyeColor;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemBlock;
+import net.minecraft.item.ItemDye;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.tileentity.TileEntity;
-import net.minecraft.util.EnumParticleTypes;
 import net.minecraft.util.SoundCategory;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Vec3d;
@@ -260,17 +261,15 @@ final class VillagerWork extends EntityAIBase {
                 Block crop = ((ItemBlock) inventory.getStackInSlot(seed).getItem()).getBlock();
                 if (crop.canPlaceBlockAt(world, target) && world.setBlockState(target, crop.getDefaultState(), 3)) {
                     inventory.decrStackSize(seed, 1);
-                    world.playSound(null, target, SoundEvents.ITEM_HOE_TILL, SoundCategory.BLOCKS, 0.5F, 1F);
+                    world.playSound(null, target.getX(), target.getY(), target.getZ(), PSSounds.CROP_PLANT,
+                            SoundCategory.BLOCKS, 1F, 1F);
                 }
             }
         } else if (state.getBlock() instanceof IGrowable && canGrow(state, target)) {
             int meal = mealSlot(inventory);
-            IGrowable crop = (IGrowable) state.getBlock();
-            if (meal >= 0 && crop.canUseBonemeal(world, villager.getRNG(), target, state)) {
-                crop.grow(world, villager.getRNG(), target, state);
-                inventory.decrStackSize(meal, 1);
-                ((WorldServer) world).spawnParticle(EnumParticleTypes.VILLAGER_HAPPY, target.getX() + 0.5D,
-                        target.getY() + 0.25D, target.getZ() + 0.5D, 4, 0.25D, 0.25D, 0.25D, 0D);
+            if (meal >= 0 && ItemDye.applyBonemeal(inventory.getStackInSlot(meal), world, target)) {
+                inventory.markDirty();
+                world.playEvent(2005, target, 0);
             }
         }
     }
