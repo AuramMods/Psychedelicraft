@@ -48,7 +48,6 @@ public final class ColorPostEffect implements IResourceManagerReloadListener {
     private static final Logger LOGGER = LogManager.getLogger(Psychedelicraft.MOD_ID);
     private static final ResourceLocation HEAT_NOISE = Psychedelicraft.id("textures/environment/heat_distortion_noise.png");
     private static final ResourceLocation WATER_NOISE = Psychedelicraft.id("textures/environment/water_distortion.png");
-    private static final ResourceLocation HURT_OVERLAY = Psychedelicraft.id("textures/environment/hurt_overlay.png");
     private static final ResourceLocation DIGITAL_GLYPHS = Psychedelicraft.id("textures/environment/bits.png");
     private final IntBuffer viewport = BufferUtils.createIntBuffer(16);
     private final ByteBuffer colorMask = BufferUtils.createByteBuffer(16);
@@ -93,14 +92,13 @@ public final class ColorPostEffect implements IResourceManagerReloadListener {
         float heat = environment.heatDistortion();
         float water = environment.waterDistortion((float) drugs.getActiveValue(DrugType.PEYOTE));
         float wet = environment.wetOverlay();
-        float hurt = environment.hurtOverlay(client.player.hurtTime, client.player.maxHurtTime, drugs.heartbeatPulse(partialTicks));
         boolean colors = slow != 0F || quick != 0F || intensify != 0F || desaturate != 0F || inversion != 0F;
         boolean postProcessing = PSConfig.visual.shader2DEnabled;
         float motion = PSConfig.visual.doMotionBlur ? drugs.blendStrength(0F, Drug::motionBlur) : 0F;
         if (motion <= 0) motionHistory.release();
         boolean hasEffects = colors || contrast != null || coloredBloom != null || bloom > 0F || doubleVision > 0F
                 || horizontalBlur > 0F || verticalBlur > 0F || focalBlur || heat > 0F || water > 0F || wet > 0F || digital > 0F;
-        boolean useScratch = hurt > 0F || postProcessing && hasEffects;
+        boolean useScratch = postProcessing && hasEffects;
         if (!useScratch && motion <= 0) {
             return;
         }
@@ -152,10 +150,6 @@ public final class ColorPostEffect implements IResourceManagerReloadListener {
             boolean hasDepth = depthTexture != 0 && depthWidth == main.framebufferTextureWidth
                     && depthHeight == main.framebufferTextureHeight;
             Framebuffer source = main;
-            if (hurt > 0F) {
-                drawHurt(client, source, target, hurt);
-                source = target;
-            }
             if (postProcessing) {
                 if (hasDepth && heat > 0F) {
                     Framebuffer output = otherTarget(source, main);
@@ -405,18 +399,6 @@ public final class ColorPostEffect implements IResourceManagerReloadListener {
         wetScreen.getShaderUniformOrDefault("Wetness").set(strength);
         wetScreen.getShaderUniformOrDefault("Ticks").set(ticks);
         draw(wetScreen, input, output);
-    }
-
-    private void drawHurt(Minecraft client, Framebuffer input, Framebuffer output, float opacity) throws IOException {
-        ShaderManager hurtScreen = program("hurt_screen");
-        hurtScreen.addSamplerTexture("OverlaySampler", texture(client, HURT_OVERLAY));
-        hurtScreen.getShaderUniformOrDefault("Opacity").set(opacity);
-        ScaledResolution resolution = new ScaledResolution(client);
-        float width = resolution.getScaledWidth();
-        float height = resolution.getScaledHeight();
-        int offset = (int) ((1F - opacity) * 40F);
-        hurtScreen.getShaderUniformOrDefault("OverlayScale").set(width / (width + 2 * offset), height / (height + 2 * offset));
-        draw(hurtScreen, input, output);
     }
 
     private ShaderManager program(String name) throws IOException {

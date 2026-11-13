@@ -21,6 +21,9 @@ public final class PSConfig {
         public boolean waterOverlayEnabled = true;
         public boolean hurtOverlayEnabled = true;
         public boolean doMotionBlur = true;
+        @Config.LangKey("gui.psychedelicraft.option.sun_glare_intensity")
+        @Config.RangeDouble(min = 0, max = 1)
+        public float sunFlareIntensity = 0.25F;
         @Config.Comment("Blur intensity while the singleplayer game is paused.")
         public float pauseMenuBlur;
         @Config.Comment("Near focus distance in blocks.")

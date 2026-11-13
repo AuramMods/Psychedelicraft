@@ -365,3 +365,6 @@ gui.psychedelicraft.option.shaders_3d=Używaj shaderów 3d
 commands.psychedelicraft.hallucinate.usage=/hallucinate <typ> [<gracz> lub <x> <y> <z>]
 commands.psychedelicraft.hallucinate.unknown=Nieznana halucynacja: %s
 commands.psychedelicraft.hallucinate.success=Przywołano halucynację
+
+gui.psychedelicraft.option.sun_glare_intensity=Blask słońca
+psychedelicraft.sleep.tired=...Naprawdę powinienem się przespać...

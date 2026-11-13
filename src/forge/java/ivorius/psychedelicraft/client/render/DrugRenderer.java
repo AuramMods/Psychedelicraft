@@ -59,6 +59,7 @@ public final class DrugRenderer {
     private static EntityPlayerSP player;
     private static HallucinationManager hallucinations = new HallucinationManager();
     private static EnvironmentEffects environment = new EnvironmentEffects();
+    private static ScreenOverlays screenOverlays = new ScreenOverlays();
     private static float pauseBlurProgress;
     private static boolean renderingWorld;
     private static boolean renderingBuiltInItem;
@@ -83,6 +84,7 @@ public final class DrugRenderer {
             CameraEffects.reset(player);
             hallucinations = new HallucinationManager();
             environment = new EnvironmentEffects();
+            screenOverlays = new ScreenOverlays();
             pauseBlurProgress = 0F;
             COLOR_POST.releaseTarget();
         }
@@ -92,6 +94,7 @@ public final class DrugRenderer {
             DrugProperties properties = DrugCapability.get(player);
             if (properties != null) {
                 CameraEffects.tick(player, properties);
+                screenOverlays.tick(client, player, properties);
                 ContextualHallucinations.tick(properties, hallucinations.strength(Effect.ENTITIES) * 0.4F);
                 hallucinations.update(properties, player.getRNG(), player.ticksExisted);
             }
@@ -131,6 +134,9 @@ public final class DrugRenderer {
             shadowSection = null;
             GEOMETRY.clearEntityView();
         }
+        Minecraft client = Minecraft.getMinecraft();
+        // F1 skips the HUD, so composite once after the complete world and hand render.
+        if (client.gameSettings.hideGUI && client.currentScreen == null) renderPost(client, partialTicks);
     }
 
     public static void captureEntityView() {
@@ -199,6 +205,14 @@ public final class DrugRenderer {
     public static void drawWorldPart(ModelRenderer model, float scale) {
         try (Scope scope = beginWorldModel(Material.ENTITY)) {
             model.render(scale);
+        }
+    }
+
+    static void drawScreenQuads(Tessellator tessellator) {
+        Minecraft client = Minecraft.getMinecraft();
+        try (Scope scope = PSConfig.visual.shader3DEnabled && player != null
+                ? GEOMETRY.beginScreen(client, player, hallucinations) : null) {
+            tessellator.draw();
         }
     }
 
@@ -339,18 +353,14 @@ public final class DrugRenderer {
                 COLOR_POST.captureDepth(client);
             }
         }
-        // F1 suppresses the HUD event, so use the final world pass in that case.
-        if (client.gameSettings.hideGUI && client.currentScreen == null
-                && (!client.gameSettings.anaglyph || EntityRenderer.anaglyphField == 1)) {
-            renderPost(client, event.getPartialTicks());
-        }
     }
 
     private static void renderPost(Minecraft client, float partialTicks) {
         if (player != null && player == client.player && world == client.world) {
             DrugProperties properties = DrugCapability.get(player);
             if (properties != null) {
-                PowerOverlay.render(client, player.ticksExisted, partialTicks, (float) properties.getActiveValue(DrugType.POWER));
+                float hurt = environment.hurtOverlay(player.hurtTime, player.maxHurtTime, properties.heartbeatPulse(partialTicks));
+                screenOverlays.render(client, player, properties, partialTicks, hurt);
                 float pauseBlur = PSConfig.visual.pauseMenuBlur * pauseBlurProgress * pauseBlurProgress * pauseBlurProgress;
                 COLOR_POST.render(client, partialTicks, hallucinations, properties, environment, pauseBlur);
             }

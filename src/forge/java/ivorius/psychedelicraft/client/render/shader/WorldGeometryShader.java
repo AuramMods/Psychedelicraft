@@ -56,21 +56,27 @@ public final class WorldGeometryShader implements IResourceManagerReloadListener
     }
 
     @Nullable
+    public Scope beginScreen(Minecraft client, EntityPlayerSP player, HallucinationManager hallucinations) {
+        return begin(client, player, hallucinations, null, Material.SCREEN, 0F, null, null);
+    }
+
+    @Nullable
     private Scope begin(Minecraft client, @Nullable EntityPlayerSP player, HallucinationManager hallucinations,
                         @Nullable DrugProperties drugs, Material material, float cloudY,
                         @Nullable BlockPos anchor, @Nullable ShaderManager zeroMatter) {
         boolean entity = material == Material.ENTITY || material == Material.ENTITY_GLINT;
+        boolean screen = material == Material.SCREEN;
         boolean deform = player != null && drugs != null && (!entity || entityState.hasView());
-        if (!deform && zeroMatter == null) return null;
+        if (!deform && !screen && zeroMatter == null) return null;
         float small = deform ? hallucinations.strength(Effect.SMALL_WAVES) * 0.5F : 0F;
         float big = deform ? hallucinations.strength(Effect.BIG_WAVES) * 0.6F : 0F;
         float wiggle = deform ? hallucinations.strength(Effect.WIGGLE_WAVES) * 0.7F : 0F;
         float distant = deform ? hallucinations.strength(Effect.DISTANT_WORLD_DEFORMATION) : 0F;
         // The donor's glint fragment shader reads its texture and modulation color directly.
-        float surface = !deform || material == Material.ENTITY_GLINT ? 0F
+        float surface = (!deform && !screen) || material == Material.ENTITY_GLINT ? 0F
                 : MathHelper.clamp(hallucinations.strength(Effect.SURFACE_FRACTALS), 0F, 1F);
         float fracture = deform ? (float) drugs.getActiveValue(DrugType.LSD) * 0.06F : 0F;
-        float[] pulses = deform ? hallucinations.pulseColor() : null;
+        float[] pulses = deform || screen ? hallucinations.pulseColor() : null;
 
         ShaderManager program = zeroMatter;
         if (program == null) {
@@ -89,8 +95,8 @@ public final class WorldGeometryShader implements IResourceManagerReloadListener
                 OpenGlHelper.glUseProgram(program.getProgram());
                 setSampler(program, "ColorSampler", 0);
                 setSampler(program, "LightmapSampler", 1);
-                upload(program, "FogMode", fogMode());
-                upload(program, "RadialFog", radialFog() ? 1F : 0F);
+                upload(program, "FogMode", screen ? 0F : fogMode());
+                upload(program, "RadialFog", !screen && radialFog() ? 1F : 0F);
                 if (entity) entityState.upload(program);
                 else upload(program, "LightmapMode", material.lightmapMode);
             } else if (deform) {
@@ -98,7 +104,7 @@ public final class WorldGeometryShader implements IResourceManagerReloadListener
             }
             // Keep the inactive atlas sampler on the primary texture rather than an unused texture unit.
             setSampler(program, "PortalSampler", surface > 0F ? portalUnit : 0);
-            upload(program, "WorldTicks", deform ? player.ticksExisted + client.getRenderPartialTicks() : 0F);
+            upload(program, "WorldTicks", deform || screen ? player.ticksExisted + client.getRenderPartialTicks() : 0F);
             upload(program, "DistantDeformation", distant);
             upload(program, "SurfaceFractalStrength", surface);
             upload(program, "FractureStrength", fracture);
@@ -198,6 +204,7 @@ public final class WorldGeometryShader implements IResourceManagerReloadListener
 
     public enum Material {
         TERRAIN(1F, 1F),
+        SCREEN(0F, 1F),
         PARTICLES(1F, 1F),
         ENTITY(1F, 1F),
         ENTITY_GLINT(1F, 1F),
