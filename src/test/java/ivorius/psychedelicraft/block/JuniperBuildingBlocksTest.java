@@ -1,11 +1,15 @@
 package ivorius.psychedelicraft.block;
 
 import ivorius.psychedelicraft.fluid.physical.Waterlogging;
+import ivorius.psychedelicraft.item.PSItems;
 import net.minecraft.block.BlockDirectional;
+import net.minecraft.block.BlockDoor;
 import net.minecraft.block.BlockSlab;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.init.Bootstrap;
+import net.minecraft.item.ItemStack;
 import net.minecraft.util.EnumFacing;
+import net.minecraft.util.NonNullList;
 import net.minecraft.util.Rotation;
 import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
@@ -57,6 +61,33 @@ public class JuniperBuildingBlocksTest {
         JuniperSlabBlock doubleSlab = new JuniperSlabBlock.Double();
         assertSame(doubleSlab.getDefaultState(), doubleSlab.getStateFromMeta(0));
         assertEquals(2, doubleSlab.quantityDropped(null));
+    }
+
+    @Test
+    public void doubleSlabsGiveForgeTwoIndependentDrops() {
+        NonNullList<ItemStack> drops = NonNullList.create();
+        BlockSlab slab = PSBlocks.JUNIPER_DOUBLE_SLAB;
+        slab.getDrops(drops, null, BlockPos.ORIGIN, slab.getDefaultState(), 0);
+        assertEquals(2, drops.size());
+        for (ItemStack stack : drops) {
+            assertSame(PSItems.JUNIPER_SLAB, stack.getItem());
+            assertEquals(1, stack.getCount());
+        }
+    }
+
+    @Test
+    public void onlyTheLowerDoorHalfHasLoot() {
+        NonNullList<ItemStack> drops = NonNullList.create();
+        BlockDoor door = PSBlocks.JUNIPER_DOOR;
+        IBlockState lower = door.getDefaultState().withProperty(BlockDoor.HALF, BlockDoor.EnumDoorHalf.LOWER);
+        IBlockState upper = lower.withProperty(BlockDoor.HALF, BlockDoor.EnumDoorHalf.UPPER);
+        door.getDrops(drops, null, BlockPos.ORIGIN, upper, 0);
+        assertTrue(drops.isEmpty());
+
+        door.getDrops(drops, null, BlockPos.ORIGIN, lower, 0);
+        assertEquals(1, drops.size());
+        assertSame(PSItems.JUNIPER_DOOR, drops.get(0).getItem());
+        assertEquals(1, drops.get(0).getCount());
     }
 
     @Test
