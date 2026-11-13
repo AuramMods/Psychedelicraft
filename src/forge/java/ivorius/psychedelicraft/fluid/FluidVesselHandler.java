@@ -113,6 +113,11 @@ public final class FluidVesselHandler extends FluidHandlerItemStack {
         return getContainer();
     }
 
+    public ItemStack replaceContents(FluidStack fluid) {
+        setFluid(new FluidStack(fluid, Math.min(capacity, fluid.amount)));
+        return getContainer();
+    }
+
     @Override
     public boolean canFillFluidType(FluidStack fluid) {
         return vessel.accepts(fluid.getFluid());

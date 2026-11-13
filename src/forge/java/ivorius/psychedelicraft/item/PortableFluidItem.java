@@ -10,7 +10,6 @@ import ivorius.psychedelicraft.fluid.BrewFluid;
 import ivorius.psychedelicraft.fluid.FluidVessel;
 import ivorius.psychedelicraft.fluid.FluidVesselHandler;
 import ivorius.psychedelicraft.fluid.PSFluids;
-import ivorius.psychedelicraft.recipe.CoffeeHeating;
 import net.minecraft.advancements.CriteriaTriggers;
 import net.minecraft.client.util.ITooltipFlag;
 import net.minecraft.creativetab.CreativeTabs;
@@ -72,11 +71,6 @@ public class PortableFluidItem extends Item {
     @Override
     public int getItemStackLimit(ItemStack stack) {
         return vessel == FluidVessel.BOTTLE && contents(stack) != null ? 1 : super.getItemStackLimit(stack);
-    }
-
-    @Override
-    public float getSmeltingExperience(ItemStack stack) {
-        return CoffeeHeating.experience(stack);
     }
 
     @Override

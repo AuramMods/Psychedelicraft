@@ -1,31 +1,42 @@
 package ivorius.psychedelicraft.fluid;
 
+import com.google.gson.JsonParser;
 import ivorius.psychedelicraft.entity.drug.Drug;
 import ivorius.psychedelicraft.entity.drug.DrugProperties;
 import ivorius.psychedelicraft.entity.drug.DrugType;
 import ivorius.psychedelicraft.item.PSItems;
-import ivorius.psychedelicraft.recipe.CoffeeHeating;
+import ivorius.psychedelicraft.recipe.FurnaceRecipe;
 import net.minecraft.init.Bootstrap;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTTagList;
+import net.minecraftforge.common.crafting.JsonContext;
 import net.minecraftforge.fluids.Fluid;
 import net.minecraftforge.fluids.FluidRegistry;
 import net.minecraftforge.fluids.FluidStack;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
+import java.io.InputStreamReader;
+import java.nio.charset.StandardCharsets;
+
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
 
 public class FluidServingTest {
+    private static FurnaceRecipe heating;
+
     @BeforeClass
-    public static void bootstrap() {
+    public static void bootstrap() throws Exception {
         Bootstrap.register();
         PSFluids.register();
+        try (InputStreamReader json = new InputStreamReader(FluidServingTest.class.getResourceAsStream(
+                "/assets/psychedelicraft/recipes/hot_coffee.json"), StandardCharsets.UTF_8)) {
+            heating = (FurnaceRecipe) new FurnaceRecipe.Factory().parse(new JsonContext("psychedelicraft"),
+                    new JsonParser().parse(json).getAsJsonObject());
+        }
     }
 
     @Test
@@ -36,8 +47,8 @@ public class FluidServingTest {
         attributes.setString("batch", "winter");
         cup.setTagInfo("fluid", FluidContents.write(new FluidStack(PSFluids.COFFEE, 125, attributes)));
 
-        ItemStack warm = CoffeeHeating.getResult(cup);
-        ItemStack hot = CoffeeHeating.getResult(warm);
+        ItemStack warm = heating.resultFor(cup);
+        ItemStack hot = heating.resultFor(warm);
         assertSame(PSItems.STONE_CUP, hot.getItem());
         assertEquals("Evening cup", hot.getDisplayName());
         FluidStack contents = PSItems.STONE_CUP.contents(hot);
@@ -46,23 +57,22 @@ public class FluidServingTest {
         assertEquals(0, PSFluids.warmth(PSItems.STONE_CUP.contents(cup)));
         assertEquals(1, PSFluids.warmth(PSItems.STONE_CUP.contents(warm)));
         assertEquals(2, PSFluids.warmth(contents));
-        assertNull(CoffeeHeating.getResult(hot));
-        assertNull(CoffeeHeating.getResult(new ItemStack(PSItems.STONE_CUP)));
-        assertEquals(0.2F, CoffeeHeating.experience(hot), 0.0001F);
-        assertEquals(-1, CoffeeHeating.experience(cup), 0.0001F);
+        assertTrue(heating.resultFor(hot).isEmpty());
+        assertTrue(heating.resultFor(new ItemStack(PSItems.STONE_CUP)).isEmpty());
+        assertEquals(0.2F, heating.getExperience(), 0.0001F);
     }
 
     @Test
     public void flaskHeatingAlsoKeepsItsFluidAttributes() {
         ItemStack flask = new ItemStack(PSItems.FLASK);
         flask.setTagInfo("fluid", FluidContents.write(new FluidStack(PSFluids.COFFEE, 8000)));
-        ItemStack warmed = CoffeeHeating.getResult(flask);
+        ItemStack warmed = heating.resultFor(flask);
         assertSame(PSItems.FLASK, warmed.getItem());
         assertEquals(8000, PSItems.FLASK.contents(warmed).amount);
         assertEquals(1, PSFluids.warmth(PSItems.FLASK.contents(warmed)));
 
         flask.setTagInfo("fluid", FluidContents.write(new FluidStack(FluidRegistry.WATER, 8000)));
-        assertNull(CoffeeHeating.getResult(flask));
+        assertTrue(heating.resultFor(flask).isEmpty());
     }
 
     @Test

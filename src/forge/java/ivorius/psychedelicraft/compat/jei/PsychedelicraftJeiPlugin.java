@@ -6,11 +6,10 @@ import ivorius.psychedelicraft.fluid.BrewFluid;
 import ivorius.psychedelicraft.fluid.BrewProcess;
 import ivorius.psychedelicraft.fluid.PSFluids;
 import ivorius.psychedelicraft.fluid.FluidVesselHandler;
-import ivorius.psychedelicraft.fluid.FluidContents;
 import ivorius.psychedelicraft.item.FluidMachineItem;
 import ivorius.psychedelicraft.item.PSItems;
 import ivorius.psychedelicraft.item.PortableFluidItem;
-import ivorius.psychedelicraft.recipe.CoffeeHeating;
+import ivorius.psychedelicraft.recipe.FurnaceRecipe;
 import ivorius.psychedelicraft.recipe.DryingRecipe;
 import ivorius.psychedelicraft.recipe.FillReceptacleRecipe;
 import ivorius.psychedelicraft.recipe.FluidVesselRecipes.BottleRecipe;
@@ -142,7 +141,7 @@ public final class PsychedelicraftJeiPlugin implements IModPlugin {
                 harvest(PSItems.WINE_GRAPE_LATTICE, PSItems.WINE_GRAPES),
                 harvest(PSItems.FRUITING_JUNIPER_LEAVES, PSItems.JUNIPER_BERRIES)), ProcessCategory.uid(HARVEST));
         registerFluidRecipes(registry);
-        registerCoffee(registry);
+        registerSmelting(registry);
         registry.handleRecipes(FillReceptacleRecipe.class, FilledCrafting::new, VanillaRecipeCategoryUid.CRAFTING);
         registry.handleRecipes(BottleRecipe.class, recipe -> new ColoredBottle(recipe, null), VanillaRecipeCategoryUid.CRAFTING);
         List<ColoredBottle> dyedBottles = new ArrayList<>();
@@ -277,29 +276,43 @@ public final class PsychedelicraftJeiPlugin implements IModPlugin {
         }
     }
 
-    private void registerCoffee(IModRegistry registry) {
+    private void registerSmelting(IModRegistry registry) {
         List<IRecipeWrapper> recipes = new ArrayList<>();
         IVanillaRecipeFactory factory = registry.getJeiHelpers().getVanillaRecipeFactory();
-        ItemStack cup = FluidVesselHandler.forCrafting(new ItemStack(PSItems.STONE_CUP)).craftContents(PSFluids.COFFEE, -1, null);
-        addCoffeeHeating(factory, recipes, cup);
-        List<Item> machines = new ArrayList<>(Arrays.asList(barrels()));
-        Collections.addAll(machines, PSItems.MASH_TUB, PSItems.FLASK, PSItems.DISTILLERY);
-        for (Item item : machines) {
-            ItemStack machine = new ItemStack(item);
-            machine.setTagInfo("fluid", FluidContents.write(new FluidStack(PSFluids.COFFEE, ((FluidMachineItem) item).getCapacity())));
-            addCoffeeHeating(factory, recipes, machine);
+        for (FurnaceRecipe recipe : FurnaceRecipe.recipes()) {
+            FluidStack fluid = recipe.exampleFluid();
+            ItemStack[] items = recipe.exampleItems();
+            if (fluid == null) {
+                for (ItemStack input : items) addSmelting(factory, recipes, recipe, input);
+                continue;
+            }
+            if (items.length == 0) {
+                List<Item> samples = new ArrayList<>(Arrays.asList(barrels()));
+                Collections.addAll(samples, PSItems.STONE_CUP, PSItems.MASH_TUB, PSItems.FLASK, PSItems.DISTILLERY);
+                items = samples.stream().map(ItemStack::new).toArray(ItemStack[]::new);
+            }
+            for (ItemStack sample : items) {
+                FluidStack volume = fluid.copy();
+                if (fluid.getFluid() == PSFluids.COFFEE && fluid.tag.hasNoTags()) {
+                    if (sample.getItem() instanceof FluidMachineItem) volume.amount = ((FluidMachineItem) sample.getItem()).getCapacity();
+                    else if (sample.getItem() instanceof PortableFluidItem) volume.amount = ((PortableFluidItem) sample.getItem()).getVessel().capacity;
+                }
+                ItemStack output = addSmelting(factory, recipes, recipe, FurnaceRecipe.withContents(sample.copy(), volume));
+                if (!output.isEmpty() && fluid.getFluid() == PSFluids.COFFEE && fluid.tag.hasNoTags()) {
+                    addSmelting(factory, recipes, recipe, output);
+                }
+            }
         }
         registry.addRecipes(recipes, VanillaRecipeCategoryUid.SMELTING);
     }
 
-    private void addCoffeeHeating(IVanillaRecipeFactory factory, List<IRecipeWrapper> recipes, ItemStack input) {
-        ItemStack output = CoffeeHeating.getResult(input);
-        while (output != null) {
+    private ItemStack addSmelting(IVanillaRecipeFactory factory, List<IRecipeWrapper> recipes, FurnaceRecipe recipe, ItemStack input) {
+        ItemStack output = recipe.resultFor(input);
+        if (!output.isEmpty()) {
             recipes.add(factory.createSmeltingRecipe(Collections.singletonList(input), output));
             indexVessel(output);
-            input = output;
-            output = CoffeeHeating.getResult(input);
         }
+        return output;
     }
 
     private static int seconds(int ticks) {

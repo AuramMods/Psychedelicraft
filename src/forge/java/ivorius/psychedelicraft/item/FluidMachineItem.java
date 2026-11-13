@@ -6,7 +6,6 @@ package ivorius.psychedelicraft.item;
 
 import ivorius.psychedelicraft.fluid.FluidContents;
 import ivorius.psychedelicraft.fluid.PSFluids;
-import ivorius.psychedelicraft.recipe.CoffeeHeating;
 import net.minecraft.block.Block;
 import net.minecraft.client.util.ITooltipFlag;
 import net.minecraft.item.ItemBlock;
@@ -40,11 +39,6 @@ public class FluidMachineItem extends ItemBlock {
     public FluidStack contents(ItemStack stack) {
         NBTTagCompound data = stack.getSubCompound("fluid");
         return data == null ? null : FluidContents.read(data, capacity);
-    }
-
-    @Override
-    public float getSmeltingExperience(ItemStack stack) {
-        return CoffeeHeating.experience(stack);
     }
 
     @Override

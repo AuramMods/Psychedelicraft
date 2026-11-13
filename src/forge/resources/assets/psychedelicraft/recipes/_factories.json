@@ -2,7 +2,9 @@
   "recipes": {
     "drying": "ivorius.psychedelicraft.recipe.DryingRecipe$Factory",
     "fill_receptical": "ivorius.psychedelicraft.recipe.FillReceptacleRecipe$Factory",
-    "mashing": "ivorius.psychedelicraft.recipe.MashingRecipe$Factory"
+    "mashing": "ivorius.psychedelicraft.recipe.MashingRecipe$Factory",
+    "smelting_item": "ivorius.psychedelicraft.recipe.FurnaceRecipe$Factory",
+    "smelting_receptical": "ivorius.psychedelicraft.recipe.FurnaceRecipe$Factory"
   },
   "ingredients": {
     "filled_vessel": "ivorius.psychedelicraft.recipe.FluidStackIngredient$Factory"

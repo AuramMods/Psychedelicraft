@@ -687,7 +687,17 @@ sh run/production/background-qa/run.sh "$qa" game-background Overlay-QA \
 - The same jar passed the muted JEI regression with nine drying recipes and both table catalysts. The vat regression passed all fourteen mashes, hand and hopper transfers, client shift-clicking, slurry and a locked wheat-hop stew. The first regression fixture reached the vat GUI and failed on a retired screen class. The maintained Cycle 56 fixture uses the shared processing screen.
 - The packaged jar's SHA-256 is `c8096bca8e9c157b8d8b0f70ce5437c1972267996b2a73aa116ae1ed750c1782`. Evidence is under `run/production/runtime-qa-cycle68` in `build-production-final.log`, `runtime-final-start.log` and `runtime-final-reopen.log`. The regression logs are `runtime-drying-json.log` in fixture directories 53 and 56.
 
-Next, compare the remaining custom recipe serializers with Forge, including the donor's fluid-aware smelting and the legacy furnace cook time for coffea cherries.
+### Cycle 69 · Furnace recipes and cooking time
+
+- Forge now loads the donor's coffee heating recipe and a 100-tick coffea cherry roast from recipe JSON. Other mods can add a fluid recipe with `psychedelicraft:smelting_receptical` or an item recipe with `psychedelicraft:smelting_item`. Fluid recipes can restrict the item, fluid, minimum volume and fluid attributes. They can keep or replace the vessel and apply the donor's integer attribute operations.
+- The coffee recipe maps the donor JSON's `temperature` operation to the `warmth` field used by the donor's coffee effects and the Forge save format. Coffee still heats for 200 ticks per step and stops at hot. Forge's furnace runs the recipes, and old coffea batches with a saved 200-tick duration resume on the 100-tick schedule.
+- The furnace checks stack tags and XP before combining these recipe outputs. It saves the recipe's XP with the output and reads it when a player takes the stack. Native furnace fuel handling and unrelated vanilla recipes use their existing paths. JEI uses its standard furnace display for the registered recipes.
+- The clean Java 8 build and reobfuscation passed 135 tests. In muted Forge 14.23.5.2864, two consecutive roasts completed after 100 ticks each, sand became glass on its usual 200-tick schedule, and the old saved roast duration was corrected. A blocked coffee batch left its input and fuel intact until the incompatible output was removed, then preserved the name, volume and batch tag. The external water recipe respected its 60-tick duration, 80 mB minimum and input tag. It produced the authored tag while preserving the original 90 mB.
+- A fresh process restored the external recipe output and its XP. The native furnace screen transferred the tagged bottle on shift-click and the server awarded one XP.
+- JEI displayed the warm coffee and coffea roast in its furnace category. An early run used a generic wrapper that the furnace category rejected while drawing. The final jar uses JEI's furnace wrapper. Its built-in view shows XP with JEI's own progress animation.
+- The packaged jar's SHA-256 is `4e2dd5c789dbf82a000065a8b64e94cd3c01eb4470fe7f8702a37c2093478757`. Evidence is under `run/production/runtime-qa-cycle69` in `build-production-final.log`, `runtime-verified-start.log`, `runtime-verified-reopen.log` and `runtime-jei-verified.log`. The coffea recipe capture is in `game-jei-final/screenshots/jei-12.png`.
+
+Next, audit the other donor serializers and their output handling, including the recipes that change a filled receptacle.
 
 ## Repository and branch survey
 

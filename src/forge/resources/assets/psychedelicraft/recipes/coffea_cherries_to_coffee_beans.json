@@ -1,0 +1,7 @@
+{
+  "type": "psychedelicraft:smelting_item",
+  "cookingtime": 100,
+  "experience": 0.2,
+  "item": {"item": "psychedelicraft:coffea_cherries"},
+  "result": {"item": "psychedelicraft:coffee_beans"}
+}
