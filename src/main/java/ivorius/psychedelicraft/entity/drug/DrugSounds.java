@@ -19,7 +19,7 @@ final class DrugSounds {
     private float targetPulse;
 
     void tick(DrugProperties properties, EntityPlayer player) {
-        if (player.world.isRemote && player.isUser()) tickHeartbeat(properties, player);
+        if (player.world.isRemote) tickHeartbeat(properties, player);
         if (breathDelay > 0) breathDelay--;
         if (breathDelay == 0) {
             inhaling = !inhaling;
@@ -45,8 +45,8 @@ final class DrugSounds {
                 float speed = 1F + properties.getModifier(Drug::heartbeatSpeed);
                 heartbeatDelay = speed <= 1F ? 1 : MathHelper.floor(35F / (speed - 1F));
                 targetPulse = 1F;
-                player.world.playSound(player, player.posX, player.posY, player.posZ, PSSounds.HEARTBEAT,
-                        SoundCategory.AMBIENT, volume, speed);
+                player.world.playSound(player.posX, player.posY, player.posZ, PSSounds.HEARTBEAT,
+                        SoundCategory.AMBIENT, volume, speed, false);
             }
         }
     }
