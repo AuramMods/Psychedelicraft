@@ -785,7 +785,13 @@ sh run/production/background-qa/run.sh "$qa" game-background Overlay-QA \
 - Both clients in the Forge 14.23.5.2864 LAN run resolved the flight renderer and thrown-bottle model from the spawn data. They received 750 mB of water for the first throw and 2,000 mB of wheat brew with its tint and distillation stage 5 for the second. Both received glass and extinguish sounds for the water, with zero blast or flame packets. The brew sent each client eight flame packets, eight lava packets, one explosion packet and one positional blast sound. Each client made one sound request before volume filtering. A subsequent vanilla explosion still sent its usual sound packet.
 - The integrated server verified survival item consumption, thrower attribution for damage, ignition and preservation of the nearby stone. Both clients ran on Docker's Xvfb display at zero master volume with OpenAL's `No Output` device. The host saved the world on shutdown. The build log is `run/production/runtime-qa-cycle80/build-production-final.log`. Runtime logs are `runtime-host-retry.log` and `runtime-guest-retry.log` in `run/production/runtime-qa-cycle80-verified`.
 
-Next, verify the lightning, guardian beam and dragon death geometry paths in a live client. Dedicated Forge startup and multiplayer on that server remain open pending EULA acceptance.
+### Cycle 81 · Lightning, guardian beams and dragon death rays
+
+- A separate Forge fixture froze the camera, entity poses and lightning seed in a disposable world. It rendered 56 lightning strips, one guardian beam and 20 dragon death rays through Minecraft's world renderer. The probe measured each draw group in the framebuffer before and after rendering. It used controlled entity state to exercise these visuals.
+- Near-neutral waves preserved every sampled pixel. Portal tint changed 4,312 lightning pixels, 194 guardian beam pixels and 25,837 dragon ray pixels. Adding waves changed coverage at 1,063, 272 and 3,332 pixels respectively. The native 3D shader toggle restored the baseline samples. A resource reload released the old program and linked a fresh one. All stages restored the program and atlas binding, with no OpenGL errors.
+- The runtime used the packaged jar from Cycle 80 with Forge 14.23.5.2864 on Docker's Xvfb display. Master volume was zero and OpenAL reported `No Output`. The world saved at shutdown. Evidence is in `run/production/runtime-qa-cycle81/runtime-special.log` and `game-special/screenshots` under the same directory. The earlier source-only checks for these three draws now have runtime coverage.
+
+Next, audit the remaining model, sound and particle paths against the pinned donor. Dedicated Forge startup and multiplayer on that server remain open pending EULA acceptance.
 
 ## Repository and branch survey
 
