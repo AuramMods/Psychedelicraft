@@ -3,6 +3,8 @@ package ivorius.psychedelicraft.block;
 import java.util.Random;
 
 import ivorius.psychedelicraft.item.PSItems;
+import ivorius.psychedelicraft.fluid.physical.Waterloggable;
+import ivorius.psychedelicraft.fluid.physical.Waterlogging;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockTrapDoor;
 import net.minecraft.block.SoundType;
@@ -11,13 +13,16 @@ import net.minecraft.block.material.Material;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.entity.EntityLiving;
 import net.minecraft.entity.EntityLivingBase;
+import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
+import net.minecraft.util.EnumFacing;
+import net.minecraft.util.EnumHand;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.IBlockAccess;
 import net.minecraft.world.World;
 
-final class JuniperTrapDoorBlock extends BlockTrapDoor {
+final class JuniperTrapDoorBlock extends BlockTrapDoor implements Waterloggable {
     // The native facing, half and open properties already occupy all four metadata bits.
     private final boolean powered;
 
@@ -48,8 +53,17 @@ final class JuniperTrapDoorBlock extends BlockTrapDoor {
 
     private static boolean setPower(World world, BlockPos pos, IBlockState state, boolean powered) {
         Block target = powered ? PSBlocks.POWERED_JUNIPER_TRAPDOOR : PSBlocks.JUNIPER_TRAPDOOR;
-        return world.setBlockState(pos, target.getDefaultState().withProperty(FACING, state.getValue(FACING))
+        return Waterlogging.replacePreservingWater(world, pos, target.getDefaultState().withProperty(FACING, state.getValue(FACING))
                 .withProperty(HALF, state.getValue(HALF)).withProperty(OPEN, powered), 2);
+    }
+
+    @Override
+    public boolean onBlockActivated(World world, BlockPos pos, IBlockState state, EntityPlayer player,
+                                    EnumHand hand, EnumFacing face, float x, float y, float z) {
+        if (Waterlogging.bucketItem(player.getHeldItem(hand))) return false;
+        boolean changed = super.onBlockActivated(world, pos, state, player, hand, face, x, y, z);
+        if (changed) Waterlogging.scheduleIfWet(world, pos);
+        return changed;
     }
 
     @Override

@@ -13,6 +13,8 @@ import java.util.Random;
 import java.util.Set;
 
 import ivorius.psychedelicraft.item.PSItems;
+import ivorius.psychedelicraft.fluid.physical.Waterloggable;
+import ivorius.psychedelicraft.fluid.physical.Waterlogging;
 import net.minecraft.block.Block;
 import net.minecraft.block.SoundType;
 import net.minecraft.block.material.Material;
@@ -37,7 +39,7 @@ import net.minecraftforge.common.IShearable;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 
-public final class JuniperLeavesBlock extends Block implements IShearable {
+public final class JuniperLeavesBlock extends Block implements IShearable, Waterloggable {
     public static final int UNSUPPORTED = 7;
     public static final PropertyInteger DISTANCE = PropertyInteger.create("distance", 1, UNSUPPORTED);
     public static final PropertyBool PERSISTENT = PropertyBool.create("persistent");
@@ -131,7 +133,7 @@ public final class JuniperLeavesBlock extends Block implements IShearable {
         if (updated.getValue(DISTANCE) == UNSUPPORTED) {
             dropBlockAsItem(world, pos, updated, 0);
             world.setBlockToAir(pos);
-        } else if (!fruiting && random.nextFloat() < 0.01F) {
+        } else if (!fruiting && random.nextFloat() < 0.01F && !Waterlogging.isWet(world, pos, updated)) {
             world.setBlockState(pos, PSBlocks.FRUITING_JUNIPER_LEAVES.copyGrowth(updated), 3);
         }
     }
@@ -184,7 +186,8 @@ public final class JuniperLeavesBlock extends Block implements IShearable {
         if (!fruiting) {
             return false;
         }
-        if (!world.isRemote && world.setBlockState(pos, PSBlocks.JUNIPER_LEAVES.copyGrowth(state), 3)) {
+        if (Waterlogging.bucketItem(player.getHeldItem(hand))) return false;
+        if (!world.isRemote && Waterlogging.replacePreservingWater(world, pos, PSBlocks.JUNIPER_LEAVES.copyGrowth(state), 3)) {
             spawnAsEntity(world, pos, new ItemStack(PSItems.JUNIPER_BERRIES));
         }
         return true;

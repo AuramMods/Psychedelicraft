@@ -20,7 +20,7 @@ class WaterloggableBlockItem extends ItemBlock {
                                 float hitX, float hitY, float hitZ, IBlockState state) {
         boolean wet = !world.isRemote && Waterlogging.isWaterSource(world.getBlockState(pos));
         if (!super.placeBlockAt(stack, player, world, pos, side, hitX, hitY, hitZ, state)) return false;
-        if (wet && world.getBlockState(pos).getBlock() == getBlock()) Waterlogging.fillSource(world, pos);
+        if (wet && Waterlogging.supports(world.getBlockState(pos))) Waterlogging.fillSource(world, pos);
         return true;
     }
 }

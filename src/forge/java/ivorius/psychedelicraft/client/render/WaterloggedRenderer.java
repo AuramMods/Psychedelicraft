@@ -6,6 +6,7 @@ import net.minecraft.client.renderer.BlockFluidRenderer;
 import net.minecraft.client.renderer.BufferBuilder;
 import net.minecraft.init.Blocks;
 import net.minecraft.util.BlockRenderLayer;
+import net.minecraft.util.EnumBlockRenderType;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.IBlockAccess;
 import net.minecraftforge.client.MinecraftForgeClient;
@@ -14,6 +15,11 @@ import javax.annotation.Nullable;
 
 public final class WaterloggedRenderer {
     private WaterloggedRenderer() {
+    }
+
+    public static boolean renderLayer(IBlockState state, BlockRenderLayer layer) {
+        return layer == BlockRenderLayer.TRANSLUCENT || (state.getRenderType() != EnumBlockRenderType.ENTITYBLOCK_ANIMATED
+                && state.getBlock().getBlockLayer() == layer);
     }
 
     @Nullable

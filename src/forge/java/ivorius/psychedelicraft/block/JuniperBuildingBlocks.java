@@ -3,6 +3,7 @@ package ivorius.psychedelicraft.block;
 import java.util.Random;
 
 import ivorius.psychedelicraft.item.PSItems;
+import ivorius.psychedelicraft.fluid.physical.Waterloggable;
 import net.minecraft.block.BlockDoor;
 import net.minecraft.block.BlockFence;
 import net.minecraft.block.BlockFenceGate;
@@ -24,7 +25,7 @@ final class JuniperBuildingBlocks {
     private JuniperBuildingBlocks() {
     }
 
-    static final class Stairs extends BlockStairs {
+    static final class Stairs extends BlockStairs implements Waterloggable {
         Stairs(IBlockState planks) {
             super(planks);
         }
@@ -35,7 +36,7 @@ final class JuniperBuildingBlocks {
         }
     }
 
-    static final class Fence extends BlockFence {
+    static final class Fence extends BlockFence implements Waterloggable {
         Fence() {
             super(Material.WOOD, MapColor.SILVER);
             setHardness(2);

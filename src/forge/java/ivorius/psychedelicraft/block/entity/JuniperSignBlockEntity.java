@@ -13,8 +13,6 @@ import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.item.EnumDyeColor;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
-import net.minecraft.network.NetworkManager;
-import net.minecraft.network.play.server.SPacketUpdateTileEntity;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.EnumFacing;
@@ -23,7 +21,7 @@ import net.minecraft.util.math.Vec3d;
 import net.minecraft.util.text.event.ClickEvent;
 import net.minecraft.world.World;
 
-public final class JuniperSignBlockEntity extends TileEntity {
+public final class JuniperSignBlockEntity extends WaterloggedBlockEntity {
     private final JuniperSignText frontText = new JuniperSignText();
     private final JuniperSignText backText = new JuniperSignText();
     private boolean waxed;
@@ -208,23 +206,4 @@ public final class JuniperSignBlockEntity extends TileEntity {
         return true;
     }
 
-    @Override
-    public boolean shouldRefresh(World world, BlockPos pos, IBlockState before, IBlockState after) {
-        return before.getBlock() != after.getBlock();
-    }
-
-    @Override
-    public NBTTagCompound getUpdateTag() {
-        return writeToNBT(new NBTTagCompound());
-    }
-
-    @Override
-    public SPacketUpdateTileEntity getUpdatePacket() {
-        return new SPacketUpdateTileEntity(pos, 0, getUpdateTag());
-    }
-
-    @Override
-    public void onDataPacket(NetworkManager network, SPacketUpdateTileEntity packet) {
-        handleUpdateTag(packet.getNbtCompound());
-    }
 }

@@ -1,16 +1,17 @@
 package ivorius.psychedelicraft.fluid.physical;
 
 import ivorius.psychedelicraft.Psychedelicraft;
-import ivorius.psychedelicraft.block.LatticeBlock;
-import ivorius.psychedelicraft.block.PSBlocks;
 import ivorius.psychedelicraft.block.entity.WaterloggedBlockEntity;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockDispenser;
 import net.minecraft.block.BlockLiquid;
+import net.minecraft.block.material.Material;
+import net.minecraft.block.state.BlockFaceShape;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.dispenser.BehaviorDefaultDispenseItem;
 import net.minecraft.dispenser.IBehaviorDispenseItem;
 import net.minecraft.dispenser.IBlockSource;
+import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.init.Blocks;
 import net.minecraft.init.Items;
@@ -22,8 +23,10 @@ import net.minecraft.tileentity.TileEntity;
 import net.minecraft.tileentity.TileEntityDispenser;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.util.SoundCategory;
+import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.RayTraceResult;
+import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.IBlockAccess;
 import net.minecraft.world.World;
 import net.minecraftforge.event.entity.player.FillBucketEvent;
@@ -35,6 +38,7 @@ import net.minecraftforge.fml.common.eventhandler.Event;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 
 import javax.annotation.Nullable;
+import java.util.Random;
 
 @Mod.EventBusSubscriber(modid = Psychedelicraft.MOD_ID)
 public final class Waterlogging {
@@ -42,7 +46,12 @@ public final class Waterlogging {
     }
 
     public static boolean supports(IBlockState state) {
-        return state.getBlock() instanceof LatticeBlock;
+        return state.getBlock() instanceof Waterloggable;
+    }
+
+    public static boolean needsWaterTile(IBlockState state) {
+        Block block = state.getBlock();
+        return block instanceof Waterloggable && !((Waterloggable) block).hasOwnWaterTile();
     }
 
     @Nullable
@@ -85,11 +94,83 @@ public final class Waterlogging {
     }
 
     public static boolean blocksPiston(Block block, IBlockState state) {
-        return block != PSBlocks.LATTICE && block.hasTileEntity(state);
+        return block.hasTileEntity(state)
+                && (!(block instanceof Waterloggable) || !((Waterloggable) block).canPistonMove());
     }
 
     public static void scheduleFlow(World world, BlockPos pos) {
         world.scheduleUpdate(pos, world.getBlockState(pos).getBlock(), Blocks.FLOWING_WATER.tickRate(world));
+    }
+
+    public static void scheduleIfWet(World world, BlockPos pos) {
+        if (!world.isRemote && isWet(world, pos)) scheduleFlow(world, pos);
+    }
+
+    public static void tickBlock(Block block, World world, BlockPos pos, IBlockState state, Random random) {
+        block.updateTick(world, pos, state, random);
+        if (block instanceof Waterloggable && isWet(world, pos)) {
+            Blocks.FLOWING_WATER.updateTick(world, pos, Blocks.FLOWING_WATER.getDefaultState(), random);
+        }
+    }
+
+    public static IBlockState releasedState(World world, BlockPos pos) {
+        return (isWet(world, pos) ? Blocks.FLOWING_WATER : Blocks.AIR).getDefaultState();
+    }
+
+    public static boolean remove(World world, BlockPos pos, IBlockState replacement, int flags) {
+        return world.setBlockState(pos, replacement.getBlock() == Blocks.AIR ? releasedState(world, pos) : replacement, flags);
+    }
+
+    public static boolean replacePreservingWater(World world, BlockPos pos, IBlockState next, int flags) {
+        boolean wet = isWet(world, pos);
+        if (!world.setBlockState(pos, next, flags)) return false;
+        if (wet) fillSource(world, pos);
+        return true;
+    }
+
+    public static boolean bucketItem(ItemStack held) {
+        return held.getItem() == Items.BUCKET || held.getItem() == Items.WATER_BUCKET;
+    }
+
+    public static boolean isOutletClosed(World world, BlockPos from, BlockPos to) {
+        IBlockState state = world.getBlockState(from);
+        if (!isWet(world, from, state)) return false;
+        EnumFacing face = EnumFacing.getFacingFromVector(to.getX() - from.getX(),
+                to.getY() - from.getY(), to.getZ() - from.getZ());
+        return state.getBlockFaceShape(world, from, face) == BlockFaceShape.SOLID;
+    }
+
+    public static IBlockState flowDestination(World world, BlockPos to, BlockPos from) {
+        return isOutletClosed(world, from, to) ? Blocks.BEDROCK.getDefaultState() : world.getBlockState(to);
+    }
+
+    @Nullable
+    public static Boolean containsEntity(IBlockAccess world, BlockPos pos, IBlockState state, Entity entity,
+                                         double y, Material material, boolean head) {
+        if (material != Material.WATER || !isWet(world, pos, state)) return null;
+        return y >= pos.getY() && (!head || y < pos.getY() + 1);
+    }
+
+    @Nullable
+    public static Boolean containsMaterial(World world, BlockPos pos, AxisAlignedBB box, Material material) {
+        return material == Material.WATER ? containsLiquid(world, pos, box) : null;
+    }
+
+    @Nullable
+    public static Boolean containsLiquid(World world, BlockPos pos, AxisAlignedBB box) {
+        return isWet(world, pos) ? box.intersects(new AxisAlignedBB(pos)) : null;
+    }
+
+    public static float liquidHeight(World world, BlockPos pos, IBlockState state, Material material) {
+        return material == Material.WATER && isWet(world, pos, state) ? 1 : 0;
+    }
+
+    public static Vec3d acceleration(World world, BlockPos pos, Entity entity, Vec3d motion) {
+        return isWet(world, pos) ? Blocks.WATER.modifyAcceleration(world, pos, entity, motion) : motion;
+    }
+
+    public static int fireValue(int normal, IBlockAccess world, BlockPos pos) {
+        return normal != 0 && isWet(world, pos) ? 0 : normal;
     }
 
     @SubscribeEvent

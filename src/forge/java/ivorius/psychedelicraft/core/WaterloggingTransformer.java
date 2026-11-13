@@ -17,6 +17,7 @@ import org.objectweb.asm.tree.JumpInsnNode;
 import org.objectweb.asm.tree.LabelNode;
 import org.objectweb.asm.tree.MethodInsnNode;
 import org.objectweb.asm.tree.MethodNode;
+import org.objectweb.asm.tree.TypeInsnNode;
 import org.objectweb.asm.tree.VarInsnNode;
 
 import static ivorius.psychedelicraft.core.ClientEffectsTransformer.field;
@@ -29,18 +30,30 @@ public final class WaterloggingTransformer implements IClassTransformer {
     private static final String LIQUID = "net.minecraft.block.BlockLiquid";
     private static final String FLOWING = "net.minecraft.block.BlockDynamicLiquid";
     private static final String PISTON = "net.minecraft.block.BlockPistonBase";
+    private static final String BLOCK = "net.minecraft.block.Block";
+    private static final String WORLD_SERVER = "net.minecraft.world.WorldServer";
+    private static final String WORLD_CLASS = "net.minecraft.world.World";
+    private static final String SHEARS = "net.minecraft.item.ItemShears";
     private static final String WORLD = "Lnet/minecraft/world/World;";
     private static final String ACCESS = "Lnet/minecraft/world/IBlockAccess;";
     private static final String POS = "Lnet/minecraft/util/math/BlockPos;";
     private static final String STATE = "Lnet/minecraft/block/state/IBlockState;";
     private static final String MATERIAL = "Lnet/minecraft/block/material/Material;";
+    private static final String ENTITY = "Lnet/minecraft/entity/Entity;";
+    private static final String PLAYER = "Lnet/minecraft/entity/player/EntityPlayer;";
+    private static final String AABB = "Lnet/minecraft/util/math/AxisAlignedBB;";
+    private static final String VECTOR = "Lnet/minecraft/util/math/Vec3d;";
+    private static final String FACING = "Lnet/minecraft/util/EnumFacing;";
+    private static final String RANDOM = "Ljava/util/Random;";
     private static final String HOOKS = "ivorius/psychedelicraft/fluid/physical/Waterlogging";
 
     @Override
     public byte[] transform(String name, String transformedName, byte[] bytes) {
         if (bytes == null || !(DISPATCHER.equals(transformedName) || FLUID_RENDERER.equals(transformedName)
                 || LIQUID.equals(transformedName) || FLOWING.equals(transformedName)
-                || PISTON.equals(transformedName) || VIEWPOINT.equals(transformedName))) return bytes;
+                || PISTON.equals(transformedName) || VIEWPOINT.equals(transformedName)
+                || BLOCK.equals(transformedName) || WORLD_SERVER.equals(transformedName)
+                || WORLD_CLASS.equals(transformedName) || SHEARS.equals(transformedName))) return bytes;
         ClassNode type = new ClassNode(Opcodes.ASM5);
         new ClassReader(bytes).accept(type, 0);
         switch (transformedName) {
@@ -66,6 +79,7 @@ public final class WaterloggingTransformer implements IClassTransformer {
                 break;
             case FLOWING:
                 keepSourceInBlock(type);
+                guardWaterOutlets(type);
                 substituteFluidStates(method(type, "checkAdjacentBlock", "func_176371_a", "(" + WORLD + POS + "I)I"), 1);
                 substituteFluidStates(method(type, "updateTick", "func_180650_b",
                         "(" + WORLD + POS + STATE + "Ljava/util/Random;)V"), 1);
@@ -73,12 +87,211 @@ public final class WaterloggingTransformer implements IClassTransformer {
             case PISTON:
                 patchPiston(type);
                 break;
+            case BLOCK:
+                patchBlock(type);
+                break;
+            case WORLD_SERVER:
+                routeScheduledTicks(type);
+                break;
+            case WORLD_CLASS:
+                scheduleOnNeighborUpdate(type);
+                releaseWater(method(type, "setBlockToAir", "func_175698_g", "(" + POS + ")Z"));
+                releaseWater(method(type, "destroyBlock", "func_175655_b", "(" + POS + "Z)Z"));
+                break;
+            case SHEARS:
+                releaseWater(method(type, "onBlockStartBreak", "onBlockStartBreak",
+                        "(Lnet/minecraft/item/ItemStack;" + POS + PLAYER + ")Z"));
+                break;
             default:
                 throw new AssertionError(transformedName);
         }
         ClassWriter writer = new ClassWriter(ClassWriter.COMPUTE_MAXS);
         type.accept(writer);
         return writer.toByteArray();
+    }
+
+    private static void patchBlock(ClassNode type) {
+        MethodNode hasTile = method(type, "hasTileEntity", "hasTileEntity", "(" + STATE + ")Z");
+        returnWhenSupported(hasTile, new InsnNode(Opcodes.ICONST_1), Opcodes.IRETURN);
+        MethodNode createTile = method(type, "createTileEntity", "createTileEntity",
+                "(" + WORLD + STATE + ")Lnet/minecraft/tileentity/TileEntity;");
+        String tile = "ivorius/psychedelicraft/block/entity/WaterloggedBlockEntity";
+        InsnList create = new InsnList();
+        create.add(new TypeInsnNode(Opcodes.NEW, tile));
+        create.add(new InsnNode(Opcodes.DUP));
+        create.add(new MethodInsnNode(Opcodes.INVOKESPECIAL, tile, "<init>", "()V", false));
+        create.add(new InsnNode(Opcodes.ARETURN));
+        returnWhen(createTile, create, 2, "needsWaterTile");
+        MethodNode layer = method(type, "canRenderInLayer", "canRenderInLayer",
+                "(" + STATE + "Lnet/minecraft/util/BlockRenderLayer;)Z");
+        Type[] args = Type.getArgumentTypes(layer.desc);
+        InsnList render = new InsnList();
+        render.add(new VarInsnNode(Opcodes.ALOAD, 1));
+        render.add(new VarInsnNode(Opcodes.ALOAD, 2));
+        render.add(new MethodInsnNode(Opcodes.INVOKESTATIC, "ivorius/psychedelicraft/client/render/WaterloggedRenderer",
+                "renderLayer", Type.getMethodDescriptor(Type.BOOLEAN_TYPE, args), false));
+        render.add(new InsnNode(Opcodes.IRETURN));
+        returnWhen(layer, render, 1, "supports");
+
+        delegateBlock(method(type, "isEntityInsideMaterial", "isEntityInsideMaterial",
+                "(" + ACCESS + POS + STATE + ENTITY + "D" + MATERIAL + "Z)Ljava/lang/Boolean;"),
+                "containsEntity", Opcodes.ARETURN);
+        delegateBlock(method(type, "isAABBInsideMaterial", "isAABBInsideMaterial",
+                "(" + WORLD + POS + AABB + MATERIAL + ")Ljava/lang/Boolean;"), "containsMaterial", Opcodes.ARETURN);
+        delegateBlock(method(type, "isAABBInsideLiquid", "isAABBInsideLiquid",
+                "(" + WORLD + POS + AABB + ")Ljava/lang/Boolean;"), "containsLiquid", Opcodes.ARETURN);
+        delegateBlock(method(type, "getBlockLiquidHeight", "getBlockLiquidHeight",
+                "(" + WORLD + POS + STATE + MATERIAL + ")F"), "liquidHeight", Opcodes.FRETURN);
+        delegateBlock(method(type, "modifyAcceleration", "func_176197_a",
+                "(" + WORLD + POS + ENTITY + VECTOR + ")" + VECTOR), "acceleration", Opcodes.ARETURN);
+        patchFireValue(method(type, "getFlammability", "getFlammability", "(" + ACCESS + POS + FACING + ")I"));
+        patchFireValue(method(type, "getFireSpreadSpeed", "getFireSpreadSpeed", "(" + ACCESS + POS + FACING + ")I"));
+        releaseWater(method(type, "removedByPlayer", "removedByPlayer", "(" + STATE + WORLD + POS + PLAYER + "Z)Z"));
+    }
+
+    private static void returnWhenSupported(MethodNode method, AbstractInsnNode value, int opcode) {
+        InsnList result = new InsnList();
+        result.add(value);
+        result.add(new InsnNode(opcode));
+        returnWhen(method, result, 1, "supports");
+    }
+
+    private static void returnWhen(MethodNode method, InsnList result, int state, String predicate) {
+        LabelNode vanilla = new LabelNode();
+        InsnList hook = new InsnList();
+        hook.add(new VarInsnNode(Opcodes.ALOAD, state));
+        String descriptor = "(" + Type.getArgumentTypes(method.desc)[state - 1].getDescriptor() + ")Z";
+        hook.add(new MethodInsnNode(Opcodes.INVOKESTATIC, HOOKS, predicate, descriptor, false));
+        hook.add(new JumpInsnNode(Opcodes.IFEQ, vanilla));
+        hook.add(result);
+        hook.add(vanilla);
+        hook.add(new FrameNode(Opcodes.F_SAME, 0, null, 0, null));
+        method.instructions.insert(hook);
+    }
+
+    private static void delegateBlock(MethodNode method, String hook, int opcode) {
+        InsnList body = new InsnList();
+        int local = 1;
+        for (Type arg : Type.getArgumentTypes(method.desc)) {
+            body.add(new VarInsnNode(arg.getOpcode(Opcodes.ILOAD), local));
+            local += arg.getSize();
+        }
+        body.add(new MethodInsnNode(Opcodes.INVOKESTATIC, HOOKS, hook, method.desc, false));
+        body.add(new InsnNode(opcode));
+        method.instructions.clear();
+        method.localVariables = null;
+        method.instructions.add(body);
+    }
+
+    private static void patchFireValue(MethodNode method) {
+        Type[] args = Type.getArgumentTypes(method.desc);
+        for (AbstractInsnNode instruction : method.instructions.toArray()) {
+            if (instruction.getOpcode() != Opcodes.IRETURN) continue;
+            InsnList hook = new InsnList();
+            hook.add(new VarInsnNode(Opcodes.ALOAD, 1));
+            hook.add(new VarInsnNode(Opcodes.ALOAD, 2));
+            hook.add(new MethodInsnNode(Opcodes.INVOKESTATIC, HOOKS, "fireValue",
+                    Type.getMethodDescriptor(Type.INT_TYPE, Type.INT_TYPE, args[0], args[1]), false));
+            method.instructions.insertBefore(instruction, hook);
+        }
+    }
+
+    private static void releaseWater(MethodNode method) {
+        for (AbstractInsnNode instruction : method.instructions.toArray()) {
+            if (!matches(instruction, "setBlockState", "func_180501_a", "(" + POS + STATE + "I)Z")) continue;
+            replaceWorldCall(method, (MethodInsnNode) instruction, "remove");
+            return;
+        }
+        throw new IllegalStateException("Could not locate Forge 1.12 block removal in " + method.name);
+    }
+
+    private static void routeScheduledTicks(ClassNode type) {
+        MethodNode ticks = method(type, "tickUpdates", "func_72955_a", "(Z)Z");
+        for (AbstractInsnNode instruction : ticks.instructions.toArray()) {
+            if (!matches(instruction, "updateTick", "func_180650_b", "(" + WORLD + POS + STATE + RANDOM + ")V")) continue;
+            replaceWorldCall(ticks, (MethodInsnNode) instruction, "tickBlock");
+            return;
+        }
+        throw new IllegalStateException("Could not locate Forge 1.12 scheduled block update");
+    }
+
+    private static void scheduleOnNeighborUpdate(ClassNode type) {
+        MethodNode neighbor = method(type, "neighborChanged", "func_190524_a",
+                "(" + POS + "Lnet/minecraft/block/Block;" + POS + ")V");
+        InsnList hook = new InsnList();
+        hook.add(new VarInsnNode(Opcodes.ALOAD, 0));
+        hook.add(new VarInsnNode(Opcodes.ALOAD, 1));
+        hook.add(new MethodInsnNode(Opcodes.INVOKESTATIC, HOOKS, "scheduleIfWet",
+                "(L" + type.name + ";" + Type.getArgumentTypes(neighbor.desc)[0] + ")V", false));
+        neighbor.instructions.insert(hook);
+    }
+
+    private static void guardWaterOutlets(ClassNode type) {
+        MethodNode tick = method(type, "updateTick", "func_180650_b", "(" + WORLD + POS + STATE + RANDOM + ")V");
+        guardDownwardDestination(tick);
+        for (AbstractInsnNode instruction : tick.instructions.toArray()) {
+            if (!matches(instruction, "tryFlowInto", "func_176375_a", "(" + WORLD + POS + STATE + "I)V")) continue;
+            MethodInsnNode call = (MethodInsnNode) instruction;
+            // The source position is local 2. Use a synthetic bridge in the transformed class
+            // so the native private method still owns water placement.
+            tick.instructions.insertBefore(call, new VarInsnNode(Opcodes.ALOAD, 2));
+            tick.instructions.set(call, new MethodInsnNode(Opcodes.INVOKESPECIAL, type.name,
+                    "psychedelicraft$flowThroughFace", appendSource(call.desc), false));
+        }
+        MethodNode nativeFlow = method(type, "tryFlowInto", "func_176375_a", "(" + WORLD + POS + STATE + "I)V");
+        MethodNode bridge = new MethodNode(Opcodes.ACC_PRIVATE | Opcodes.ACC_SYNTHETIC,
+                "psychedelicraft$flowThroughFace", appendSource(nativeFlow.desc), null, null);
+        Type[] args = Type.getArgumentTypes(nativeFlow.desc);
+        InsnList body = bridge.instructions;
+        LabelNode open = new LabelNode();
+        body.add(new VarInsnNode(Opcodes.ALOAD, 1));
+        body.add(new VarInsnNode(Opcodes.ALOAD, 5));
+        body.add(new VarInsnNode(Opcodes.ALOAD, 2));
+        body.add(new MethodInsnNode(Opcodes.INVOKESTATIC, HOOKS, "isOutletClosed",
+                Type.getMethodDescriptor(Type.BOOLEAN_TYPE, args[0], args[1], args[1]), false));
+        body.add(new JumpInsnNode(Opcodes.IFEQ, open));
+        body.add(new InsnNode(Opcodes.RETURN));
+        body.add(open);
+        body.add(new FrameNode(Opcodes.F_SAME, 0, null, 0, null));
+        for (int local = 0; local <= 4; local++) {
+            body.add(new VarInsnNode(local == 4 ? Opcodes.ILOAD : Opcodes.ALOAD, local));
+        }
+        body.add(new MethodInsnNode(Opcodes.INVOKESPECIAL, type.name, nativeFlow.name, nativeFlow.desc, false));
+        body.add(new InsnNode(Opcodes.RETURN));
+        type.methods.add(bridge);
+    }
+
+    private static void guardDownwardDestination(MethodNode tick) {
+        int downReads = 0;
+        for (AbstractInsnNode instruction : tick.instructions.toArray()) {
+            if (!matches(instruction, "getBlockState", "func_180495_p", "(" + POS + ")" + STATE)
+                    || !matches(instruction.getPrevious(), "down", "func_177977_b", "()" + POS)
+                    || ++downReads != 2) continue;
+            MethodInsnNode call = (MethodInsnNode) instruction;
+            Type pos = Type.getArgumentTypes(call.desc)[0];
+            String descriptor = Type.getMethodDescriptor(Type.getReturnType(call.desc), Type.getObjectType(call.owner), pos, pos);
+            tick.instructions.insertBefore(call, new VarInsnNode(Opcodes.ALOAD, 2));
+            tick.instructions.set(call, new MethodInsnNode(Opcodes.INVOKESTATIC, HOOKS, "flowDestination", descriptor, false));
+            return;
+        }
+        throw new IllegalStateException("Could not locate Forge 1.12 downward flow destination");
+    }
+
+    private static String appendSource(String descriptor) {
+        return descriptor.substring(0, descriptor.indexOf(')')) + Type.getArgumentTypes(descriptor)[1] + ")V";
+    }
+
+    private static boolean matches(AbstractInsnNode instruction, String name, String srg, String descriptor) {
+        if (!(instruction instanceof MethodInsnNode)) return false;
+        MethodInsnNode call = (MethodInsnNode) instruction;
+        FMLDeobfuscatingRemapper remapper = FMLDeobfuscatingRemapper.INSTANCE;
+        String mapped = remapper.mapMethodName(call.owner, call.name, call.desc);
+        return (name.equals(mapped) || srg.equals(mapped)) && descriptor.equals(remapper.mapMethodDesc(call.desc));
+    }
+
+    private static void replaceWorldCall(MethodNode method, MethodInsnNode call, String hook) {
+        method.instructions.set(call, new MethodInsnNode(Opcodes.INVOKESTATIC, HOOKS, hook,
+                "(L" + call.owner + ";" + call.desc.substring(1), false));
     }
 
     private static void keepSourceInBlock(ClassNode type) {

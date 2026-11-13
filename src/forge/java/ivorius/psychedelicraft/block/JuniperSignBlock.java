@@ -3,6 +3,8 @@ package ivorius.psychedelicraft.block;
 import java.util.Random;
 
 import ivorius.psychedelicraft.block.entity.JuniperSignBlockEntity;
+import ivorius.psychedelicraft.fluid.physical.Waterloggable;
+import ivorius.psychedelicraft.fluid.physical.Waterlogging;
 import ivorius.psychedelicraft.item.PSItems;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockHorizontal;
@@ -25,6 +27,7 @@ import net.minecraft.stats.StatList;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.util.EnumHand;
+import net.minecraft.util.EnumBlockRenderType;
 import net.minecraft.util.Mirror;
 import net.minecraft.util.Rotation;
 import net.minecraft.util.SoundCategory;
@@ -34,7 +37,7 @@ import net.minecraft.util.math.MathHelper;
 import net.minecraft.world.IBlockAccess;
 import net.minecraft.world.World;
 
-public abstract class JuniperSignBlock extends BlockSign {
+public abstract class JuniperSignBlock extends BlockSign implements Waterloggable {
     public static final PropertyInteger ROTATION = BlockStandingSign.ROTATION;
     public static final PropertyDirection FACING = BlockHorizontal.FACING;
 
@@ -89,6 +92,21 @@ public abstract class JuniperSignBlock extends BlockSign {
     }
 
     @Override
+    public EnumBlockRenderType getRenderType(IBlockState state) {
+        return EnumBlockRenderType.ENTITYBLOCK_ANIMATED;
+    }
+
+    @Override
+    public boolean canPistonMove() {
+        return false;
+    }
+
+    @Override
+    public boolean hasOwnWaterTile() {
+        return true;
+    }
+
+    @Override
     public Item getItemDropped(IBlockState state, Random random, int fortune) {
         return form.isHanging() ? PSItems.JUNIPER_HANGING_SIGN : PSItems.JUNIPER_SIGN;
     }
@@ -125,6 +143,7 @@ public abstract class JuniperSignBlock extends BlockSign {
         }
         boolean front = facesPlayer(world, pos, state, player);
         ItemStack held = player.getHeldItem(hand);
+        if (Waterlogging.bucketItem(held)) return false;
         if (held.getItem() == PSItems.JUNIPER_HANGING_SIGN && canChainFrom(state, facing)
                 && !(sign.isWaxed() && sign.text(front).hasClickCommands())) {
             return false;

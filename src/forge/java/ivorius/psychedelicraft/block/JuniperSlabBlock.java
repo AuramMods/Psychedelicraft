@@ -3,6 +3,7 @@ package ivorius.psychedelicraft.block;
 import java.util.Random;
 
 import ivorius.psychedelicraft.item.PSItems;
+import ivorius.psychedelicraft.fluid.physical.Waterloggable;
 import net.minecraft.block.BlockSlab;
 import net.minecraft.block.SoundType;
 import net.minecraft.block.material.MapColor;
@@ -78,7 +79,7 @@ abstract class JuniperSlabBlock extends BlockSlab {
         }
     }
 
-    static final class Single extends JuniperSlabBlock {
+    static final class Single extends JuniperSlabBlock implements Waterloggable {
         @Override
         public boolean isDouble() {
             return false;

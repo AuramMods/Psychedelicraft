@@ -1,5 +1,6 @@
 package ivorius.psychedelicraft.block;
 
+import ivorius.psychedelicraft.fluid.physical.Waterlogging;
 import net.minecraft.block.BlockDirectional;
 import net.minecraft.block.BlockSlab;
 import net.minecraft.block.state.IBlockState;
@@ -12,7 +13,9 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertSame;
+import static org.junit.Assert.assertTrue;
 
 public class JuniperBuildingBlocksTest {
     @BeforeClass
@@ -54,5 +57,23 @@ public class JuniperBuildingBlocksTest {
         JuniperSlabBlock doubleSlab = new JuniperSlabBlock.Double();
         assertSame(doubleSlab.getDefaultState(), doubleSlab.getStateFromMeta(0));
         assertEquals(2, doubleSlab.quantityDropped(null));
+    }
+
+    @Test
+    public void onlyDonorWaterloggableJuniperBlocksAcceptWater() {
+        assertTrue(Waterlogging.supports(PSBlocks.JUNIPER_LEAVES.getDefaultState()));
+        assertTrue(Waterlogging.supports(PSBlocks.FRUITING_JUNIPER_LEAVES.getDefaultState()));
+        assertTrue(Waterlogging.supports(PSBlocks.JUNIPER_STAIRS.getDefaultState()));
+        assertTrue(Waterlogging.supports(PSBlocks.JUNIPER_SLAB.getDefaultState()));
+        assertTrue(Waterlogging.supports(PSBlocks.JUNIPER_FENCE.getDefaultState()));
+        assertTrue(Waterlogging.supports(PSBlocks.JUNIPER_TRAPDOOR.getDefaultState()));
+        assertTrue(Waterlogging.supports(PSBlocks.POWERED_JUNIPER_TRAPDOOR.getDefaultState()));
+        assertTrue(Waterlogging.supports(PSBlocks.JUNIPER_SIGN.getDefaultState()));
+        assertTrue(Waterlogging.supports(PSBlocks.JUNIPER_WALL_SIGN.getDefaultState()));
+        assertTrue(Waterlogging.supports(PSBlocks.JUNIPER_HANGING_SIGN.getDefaultState()));
+        assertTrue(Waterlogging.supports(PSBlocks.JUNIPER_WALL_HANGING_SIGN.getDefaultState()));
+        assertFalse(Waterlogging.supports(PSBlocks.JUNIPER_DOUBLE_SLAB.getDefaultState()));
+        assertFalse(Waterlogging.supports(PSBlocks.JUNIPER_FENCE_GATE.getDefaultState()));
+        assertFalse(Waterlogging.supports(PSBlocks.JUNIPER_DOOR.getDefaultState()));
     }
 }

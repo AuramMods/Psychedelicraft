@@ -1,5 +1,7 @@
 package ivorius.psychedelicraft.item;
 
+import ivorius.psychedelicraft.fluid.physical.Waterlogging;
+
 import java.util.Arrays;
 import java.util.Comparator;
 import javax.annotation.Nullable;
@@ -61,6 +63,7 @@ final class JuniperSignItem extends Item {
         if (world.isRemote) {
             return EnumActionResult.SUCCESS;
         }
+        boolean wet = Waterlogging.isWaterSource(world.getBlockState(pos));
         if (!world.setBlockState(pos, state, 11)) {
             return EnumActionResult.FAIL;
         }
@@ -77,6 +80,7 @@ final class JuniperSignItem extends Item {
             }
             CriteriaTriggers.PLACED_BLOCK.trigger(serverPlayer, pos, held);
         }
+        if (wet) Waterlogging.fillSource(world, pos);
         SoundType sound = block.getSoundType(state, world, pos, player);
         world.playSound(null, pos, sound.getPlaceSound(), SoundCategory.BLOCKS,
                 (sound.getVolume() + 1F) * 0.5F, sound.getPitch() * 0.8F);
