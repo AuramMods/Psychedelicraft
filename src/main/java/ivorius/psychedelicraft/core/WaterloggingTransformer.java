@@ -355,7 +355,7 @@ public final class WaterloggingTransformer implements IClassTransformer {
         InsnList hook = new InsnList();
         hook.add(new VarInsnNode(Opcodes.ALOAD, 1));
         hook.add(new VarInsnNode(Opcodes.ALOAD, 2));
-        hook.add(new MethodInsnNode(Opcodes.INVOKESTATIC, HOOKS, "isWet",
+        hook.add(new MethodInsnNode(Opcodes.INVOKESTATIC, HOOKS, "keepsWaterSource",
                 Type.getMethodDescriptor(Type.BOOLEAN_TYPE, args[0], args[1]), false));
         hook.add(new JumpInsnNode(Opcodes.IFEQ, vanilla));
         hook.add(new InsnNode(Opcodes.RETURN));

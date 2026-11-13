@@ -1,6 +1,7 @@
 package ivorius.psychedelicraft.fluid.physical;
 
 import ivorius.psychedelicraft.Psychedelicraft;
+import ivorius.psychedelicraft.block.BubbleColumnBlock;
 import ivorius.psychedelicraft.block.entity.WaterloggedBlockEntity;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockDispenser;
@@ -70,6 +71,11 @@ public final class Waterlogging {
         return isWet((IBlockAccess) world, pos);
     }
 
+    public static boolean keepsWaterSource(World world, BlockPos pos) {
+        IBlockState state = world.getBlockState(pos);
+        return BubbleColumnBlock.isColumn(state) || isWet(world, pos, state);
+    }
+
     public static boolean isWet(IBlockAccess world, BlockPos pos, IBlockState state) {
         if (!supports(state)) return false;
         WaterloggedBlockEntity tile = tile(world, pos);
@@ -77,7 +83,7 @@ public final class Waterlogging {
     }
 
     public static boolean isWaterSource(IBlockState state) {
-        return (state.getBlock() == Blocks.WATER || state.getBlock() == Blocks.FLOWING_WATER)
+        return (state.getBlock() == Blocks.WATER || state.getBlock() == Blocks.FLOWING_WATER || BubbleColumnBlock.isColumn(state))
                 && state.getValue(BlockLiquid.LEVEL) == 0;
     }
 
@@ -145,6 +151,7 @@ public final class Waterlogging {
 
     public static void tickBlock(Block block, World world, BlockPos pos, IBlockState state, Random random) {
         block.updateTick(world, pos, state, random);
+        if (block == Blocks.SOUL_SAND) BubbleColumnBlock.updateAbove(world, pos);
         if (block instanceof Waterloggable && isWet(world, pos)) {
             Blocks.FLOWING_WATER.updateTick(world, pos, Blocks.FLOWING_WATER.getDefaultState(), random);
         }

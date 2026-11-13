@@ -71,6 +71,13 @@ public final class PSItemModels {
     }
 
     @SubscribeEvent
+    public static void registerBlockColors(ColorHandlerEvent.Block event) {
+        event.getBlockColors().registerBlockColorHandler((state, world, pos, layer) ->
+                world != null && pos != null ? net.minecraft.world.biome.BiomeColorHelper.getWaterColorAtPos(world, pos) : -1,
+                PSBlocks.BUBBLE_COLUMN);
+    }
+
+    @SubscribeEvent
     public static void registerItemColors(ColorHandlerEvent.Item event) {
         event.getItemColors().registerItemColorHandler((stack, layer) -> layer == 0 ? HarmoniumItem.getColor(stack) : -1,
                 PSItems.HARMONIUM);
@@ -108,6 +115,7 @@ public final class PSItemModels {
 
     @SubscribeEvent
     public static void registerModels(ModelRegistryEvent event) {
+        ModelLoader.setCustomStateMapper(PSBlocks.BUBBLE_COLUMN, block -> java.util.Collections.emptyMap());
         PSItems.BAG_O_VOMIT.registerDisguise();
         for (Item item : PSItems.items()) {
             if (item == PSItems.MORNING_GLORY_LATTICE || item == PSItems.WINE_GRAPE_LATTICE) {
