@@ -14,6 +14,7 @@ public final class PSSounds {
     public static final SoundEvent RIFT_JAR_OPEN = sound("block.rift_jar.open");
     public static final SoundEvent RIFT_JAR_CLOSE = sound("block.rift_jar.close");
     public static final SoundEvent BOTTLE_RACK_USE = sound("block.bottle_rack.use");
+    public static final SoundEvent PLACED_DRINK_SET_DOWN = sound("block.placed_drink.set_down");
     public static final SoundEvent PAPER_BAG_INSERT = sound("item.paper_bag.insert");
     public static final SoundEvent PAPER_BAG_REMOVE = sound("item.paper_bag.remove");
     public static final SoundEvent DRUG_GENERIC = sound("drug.generic");
@@ -29,6 +30,6 @@ public final class PSSounds {
     @SubscribeEvent
     public static void registerSounds(RegistryEvent.Register<SoundEvent> event) {
         event.getRegistry().registerAll(BREATH, HEARTBEAT, RIFT_JAR_TOGGLE, RIFT_JAR_OPEN, RIFT_JAR_CLOSE,
-                BOTTLE_RACK_USE, PAPER_BAG_INSERT, PAPER_BAG_REMOVE, DRUG_GENERIC);
+                BOTTLE_RACK_USE, PLACED_DRINK_SET_DOWN, PAPER_BAG_INSERT, PAPER_BAG_REMOVE, DRUG_GENERIC);
     }
 }

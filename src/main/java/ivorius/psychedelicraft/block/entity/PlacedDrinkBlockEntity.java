@@ -5,7 +5,6 @@
 package ivorius.psychedelicraft.block.entity;
 
 import ivorius.psychedelicraft.block.PlacedDrinksBlock;
-import net.minecraft.block.Block;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTTagList;
@@ -91,11 +90,10 @@ public final class PlacedDrinkBlockEntity extends DrinkDisplayBlockEntity {
         return stack;
     }
 
-    public void dropContents() {
+    public void addDrops(List<ItemStack> drops) {
         for (List<Drink> drinks : columns.values()) {
-            for (Drink drink : drinks) Block.spawnAsEntity(world, pos, drink.stack);
+            for (Drink drink : drinks) drops.add(drink.stack.copy());
         }
-        columns.clear();
     }
 
     public void forEachDrink(DrinkConsumer consumer) {

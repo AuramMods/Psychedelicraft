@@ -13,6 +13,9 @@ import net.minecraftforge.items.IItemHandler;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertSame;
@@ -45,6 +48,25 @@ public class DrinkDisplayTest {
             assertEquals("Bottle " + index, returned.getDisplayName());
         }
         assertTrue(display.take(cell).isEmpty());
+    }
+
+    @Test
+    public void collectingLootKeepsTheDisplayAndReturnsIndependentStacks() {
+        PlacedDrinkBlockEntity display = new PlacedDrinkBlockEntity();
+        int cell = PlacedDrinkBlockEntity.cell(0.5F, 0.5F);
+        assertTrue(display.place(cell, new ItemStack(PSItems.BOTTLE).setStackDisplayName("Lower"), 0));
+        assertTrue(display.place(cell, new ItemStack(PSItems.WOODEN_MUG).setStackDisplayName("Upper"), 0));
+
+        List<ItemStack> drops = new ArrayList<>();
+        display.addDrops(drops);
+        assertEquals(2, drops.size());
+        assertEquals("Lower", drops.get(0).getDisplayName());
+        assertEquals("Upper", drops.get(1).getDisplayName());
+        drops.get(0).shrink(1);
+        drops.get(1).setStackDisplayName("Changed");
+
+        assertEquals("Upper", display.take(cell).getDisplayName());
+        assertEquals("Lower", display.take(cell).getDisplayName());
     }
 
     @Test

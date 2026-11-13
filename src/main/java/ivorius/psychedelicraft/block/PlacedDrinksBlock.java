@@ -4,6 +4,7 @@
 
 package ivorius.psychedelicraft.block;
 
+import ivorius.psychedelicraft.PSSounds;
 import ivorius.psychedelicraft.block.entity.PlacedDrinkBlockEntity;
 import ivorius.psychedelicraft.item.PSItems;
 import net.minecraft.block.Block;
@@ -15,7 +16,6 @@ import net.minecraft.block.state.IBlockState;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.init.SoundEvents;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.tileentity.TileEntity;
@@ -23,12 +23,15 @@ import net.minecraft.util.EnumActionResult;
 import net.minecraft.util.EnumBlockRenderType;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.util.EnumHand;
+import net.minecraft.util.NonNullList;
 import net.minecraft.util.SoundCategory;
 import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.RayTraceResult;
 import net.minecraft.world.IBlockAccess;
 import net.minecraft.world.World;
+
+import javax.annotation.Nullable;
 
 public final class PlacedDrinksBlock extends Block {
     private static final AxisAlignedBB SELECTION = new AxisAlignedBB(0, 0, 0, 1, 1 / 16D, 1);
@@ -86,7 +89,6 @@ public final class PlacedDrinksBlock extends Block {
             ItemStack retrieved = display.take(cell);
             if (retrieved.isEmpty()) return false;
             if (!player.inventory.addItemStackToInventory(retrieved)) player.dropItem(retrieved, false);
-            playSound(world, pos);
             return true;
         }
         if (!canPlace(held) || !player.canPlayerEdit(pos, side, held)) return false;
@@ -102,7 +104,7 @@ public final class PlacedDrinksBlock extends Block {
     }
 
     private static void playSound(World world, BlockPos pos) {
-        world.playSound(null, pos, SoundEvents.BLOCK_GLASS_PLACE, SoundCategory.BLOCKS, 0.65F, 1.2F);
+        world.playSound(null, pos, PSSounds.PLACED_DRINK_SET_DOWN, SoundCategory.BLOCKS, 1F, 1F);
     }
 
     private static PlacedDrinkBlockEntity display(IBlockAccess world, BlockPos pos) {
@@ -111,10 +113,32 @@ public final class PlacedDrinksBlock extends Block {
     }
 
     @Override
-    public void breakBlock(World world, BlockPos pos, IBlockState state) {
+    public void getDrops(NonNullList<ItemStack> drops, IBlockAccess world, BlockPos pos, IBlockState state, int fortune) {
         PlacedDrinkBlockEntity display = display(world, pos);
-        if (!world.isRemote && display != null) display.dropContents();
-        super.breakBlock(world, pos, state);
+        if (display != null) display.addDrops(drops);
+    }
+
+    @Override
+    public void dropBlockAsItemWithChance(World world, BlockPos pos, IBlockState state, float chance, int fortune) {
+        // The donor releases the vessels after evaluating explosion loot.
+        super.dropBlockAsItemWithChance(world, pos, state, 1F, fortune);
+    }
+
+    @Override
+    public boolean canSilkHarvest(World world, BlockPos pos, IBlockState state, EntityPlayer player) {
+        return false;
+    }
+
+    @Override
+    public boolean removedByPlayer(IBlockState state, World world, BlockPos pos, EntityPlayer player, boolean willHarvest) {
+        return willHarvest || super.removedByPlayer(state, world, pos, player, false);
+    }
+
+    @Override
+    public void harvestBlock(World world, EntityPlayer player, BlockPos pos, IBlockState state,
+                             @Nullable TileEntity tile, ItemStack tool) {
+        super.harvestBlock(world, player, pos, state, tile, tool);
+        world.setBlockToAir(pos);
     }
 
     @Override
@@ -122,6 +146,7 @@ public final class PlacedDrinksBlock extends Block {
         if (!world.isRemote && entity instanceof EntityLivingBase
                 && (entity.posY > pos.getY() || entity.posY >= pos.getY() && !entity.isSneaking())
                 && Math.max(Math.abs(entity.posX - entity.prevPosX), Math.abs(entity.posZ - entity.prevPosZ)) >= 0.003) {
+            dropBlockAsItem(world, pos, state, 0);
             world.setBlockToAir(pos);
             playSound(world, pos);
         }
