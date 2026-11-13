@@ -92,9 +92,14 @@ public final class DrugEvents {
 
     @SubscribeEvent
     public static void registerGameRules(WorldEvent.Load event) {
-        GameRules rules = event.getWorld().getGameRules();
-        if (!rules.hasRule(SleepDeprivationDrug.GAME_RULE)) {
-            rules.addGameRule(SleepDeprivationDrug.GAME_RULE, "false", GameRules.ValueType.BOOLEAN_VALUE);
+        registerGameRules(event.getWorld().getGameRules());
+    }
+
+    static void registerGameRules(GameRules rules) {
+        String name = SleepDeprivationDrug.GAME_RULE;
+        // Minecraft saves custom game rules without their types.
+        if (!rules.areSameType(name, GameRules.ValueType.BOOLEAN_VALUE)) {
+            rules.addGameRule(name, Boolean.toString(rules.getBoolean(name)), GameRules.ValueType.BOOLEAN_VALUE);
         }
     }
 
