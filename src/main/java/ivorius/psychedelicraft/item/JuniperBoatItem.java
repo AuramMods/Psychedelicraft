@@ -2,12 +2,8 @@ package ivorius.psychedelicraft.item;
 
 import ivorius.psychedelicraft.entity.EntityJuniperBoat;
 import ivorius.psychedelicraft.entity.EntityJuniperChestBoat;
-import ivorius.psychedelicraft.fluid.physical.PhysicalFluidBlock;
 import ivorius.psychedelicraft.fluid.physical.Waterlogging;
-import net.minecraft.block.Block;
 import net.minecraft.block.BlockDispenser;
-import net.minecraft.block.BlockLiquid;
-import net.minecraft.block.state.IBlockState;
 import net.minecraft.dispenser.BehaviorDefaultDispenseItem;
 import net.minecraft.dispenser.IBlockSource;
 import net.minecraft.entity.Entity;
@@ -24,8 +20,6 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.RayTraceResult;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
-import net.minecraftforge.fluids.BlockFluidBase;
-import net.minecraftforge.fluids.IFluidBlock;
 
 import javax.annotation.Nullable;
 
@@ -80,7 +74,7 @@ public final class JuniperBoatItem extends Item {
         Vec3d inside = start.add(end.subtract(start).scale(0.001));
         // Forge's liquid ray trace only hits source blocks. Compare fluid shapes against the native outline hit.
         for (BlockPos pos : BlockPos.getAllInBoxMutable(new BlockPos(start), new BlockPos(limit))) {
-            double height = fluidHeight(world, pos);
+            double height = Waterlogging.liquidShapeHeight(world, pos, Waterlogging.fluidState(world, pos));
             if (height == 0) continue;
             double bottom = pos.getY() + (height < 0 ? 1 + height : 0);
             AxisAlignedBB volume = new AxisAlignedBB(pos.getX(), bottom, pos.getZ(),
@@ -96,21 +90,6 @@ public final class JuniperBoatItem extends Item {
             }
         }
         return nearest;
-    }
-
-    private static double fluidHeight(World world, BlockPos pos) {
-        IBlockState state = Waterlogging.fluidState(world, pos);
-        Block block = state.getBlock();
-        if (block instanceof BlockLiquid) {
-            IBlockState above = Waterlogging.fluidState(world, pos.up());
-            return above.getMaterial() == state.getMaterial() ? 1
-                    : 1 - BlockLiquid.getLiquidHeightPercent(state.getValue(BlockLiquid.LEVEL));
-        }
-        if (block instanceof PhysicalFluidBlock) {
-            return world.getBlockState(pos.up()).getBlock() == block ? 1
-                    : (8 - state.getValue(BlockFluidBase.LEVEL)) / 9F;
-        }
-        return block instanceof IFluidBlock ? ((IFluidBlock) block).getFilledPercentage(world, pos) : 0;
     }
 
     public void registerDispenserBehavior() {

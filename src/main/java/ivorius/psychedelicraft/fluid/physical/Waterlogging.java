@@ -30,9 +30,11 @@ import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.IBlockAccess;
 import net.minecraft.world.World;
 import net.minecraftforge.event.entity.player.FillBucketEvent;
+import net.minecraftforge.fluids.BlockFluidBase;
 import net.minecraftforge.fluids.Fluid;
 import net.minecraftforge.fluids.FluidRegistry;
 import net.minecraftforge.fluids.FluidStack;
+import net.minecraftforge.fluids.IFluidBlock;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.common.eventhandler.Event;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
@@ -91,6 +93,20 @@ public final class Waterlogging {
 
     public static IBlockState fluidState(World world, BlockPos pos) {
         return fluidState((IBlockAccess) world, pos);
+    }
+
+    public static float liquidShapeHeight(World world, BlockPos pos, IBlockState fluidState) {
+        Block block = fluidState.getBlock();
+        if (block instanceof BlockLiquid) {
+            IBlockState above = fluidState(world, pos.up());
+            return above.getMaterial() == fluidState.getMaterial() ? 1
+                    : 1 - BlockLiquid.getLiquidHeightPercent(fluidState.getValue(BlockLiquid.LEVEL));
+        }
+        if (block instanceof PhysicalFluidBlock) {
+            return world.getBlockState(pos.up()).getBlock() == block ? 1
+                    : (8 - fluidState.getValue(BlockFluidBase.LEVEL)) / 9F;
+        }
+        return block instanceof IFluidBlock ? ((IFluidBlock) block).getFilledPercentage(world, pos) : 0;
     }
 
     public static boolean isWater(IBlockAccess world, BlockPos pos) {
