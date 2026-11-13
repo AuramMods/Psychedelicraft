@@ -271,32 +271,54 @@ public final class VillagerCareers {
     }
 
     static boolean restock(EntityVillager villager) {
+        if (villager.isTrading()) return false;
+        VillagerProfession profession = villager.getProfessionForge();
         NBTTagCompound data = data(villager);
         long time = villager.world.getTotalWorldTime();
         long day = villager.world.getWorldTime() / 24000L;
-        int restocks = data.getLong("RestockDay") == day ? data.getInteger("Restocks") : 0;
-        if (villager.isTrading() || restocks >= 2 || restocks > 0 && time - data.getLong("LastRestock") < 2400L) return false;
+        long lastRestock = data.getLong("LastRestock");
+        int restocks = data.getInteger("Restocks");
+        boolean reset = time - lastRestock > 12000L || data.hasKey("RestockDay", 99) && day > data.getLong("RestockDay");
+        data.setLong("RestockDay", day);
         MerchantRecipeList recipes = storedOffers(villager);
-        if (recipes.stream().noneMatch(recipe -> recipe.getToolUses() > 0)) return false;
-        VillagerProfession profession = villager.getProfessionForge();
+        if (reset) {
+            int missed = 2 - restocks;
+            if (missed > 0) updateStock(data, recipes, profession, missed);
+            lastRestock = time;
+            restocks = 0;
+            data.setLong("LastRestock", lastRestock);
+            data.setInteger("Restocks", restocks);
+        }
+        if (restocks >= 2 || restocks > 0 && time - lastRestock <= 2400L) return false;
+        if (recipes.stream().noneMatch(recipe -> recipe.getToolUses() > 0 && findOffer(profession, recipe) != null)) return false;
+
+        updateStock(data, recipes, profession, 0);
+        data.setLong("LastRestock", time);
+        data.setInteger("Restocks", restocks + 1);
+        if (profession == ADDICT) villager.attackEntityFrom(OVERDOSE, 1F + villager.getRNG().nextFloat() * 5F);
+        return true;
+    }
+
+    static void updateStock(NBTTagCompound data, MerchantRecipeList recipes, VillagerProfession profession, int missedRestocks) {
         NBTTagCompound demand = data.getCompoundTag("Demand");
         for (int slot = 0; slot < recipes.size(); slot++) {
             MerchantRecipe recipe = recipes.get(slot);
             Offer offer = findOffer(profession, recipe);
             if (offer == null) continue;
             String id = offer.item.getRegistryName().toString();
-            int value = demand.getInteger(id) + recipe.getToolUses() * 2 - recipe.getMaxTradeUses();
+            // The donor treats a missed restock as a restock with zero uses.
+            int change = missedRestocks > 0 ? -missedRestocks * recipe.getMaxTradeUses()
+                    : recipe.getToolUses() * 2 - recipe.getMaxTradeUses();
+            int value = demand.getInteger(id) + change;
             demand.setInteger(id, value);
             ItemStack buy = recipe.getItemToBuy().copy();
             buy.setCount(MathHelper.clamp(demandPrice(offer, value), 1, buy.getMaxStackSize()));
-            recipes.set(slot, new MerchantRecipe(buy, recipe.getSecondItemToBuy().copy(), recipe.getItemToSell().copy(), 0, recipe.getMaxTradeUses()));
+            NBTTagCompound offerTag = recipe.writeToTags();
+            offerTag.setTag("buy", buy.writeToNBT(new NBTTagCompound()));
+            offerTag.setInteger("uses", 0);
+            recipes.set(slot, new MerchantRecipe(offerTag));
         }
         data.setTag("Demand", demand);
-        data.setLong("RestockDay", day);
-        data.setLong("LastRestock", time);
-        data.setInteger("Restocks", restocks + 1);
-        if (profession == ADDICT) villager.attackEntityFrom(OVERDOSE, 1F + villager.getRNG().nextFloat() * 5F);
-        return true;
     }
 
     private static MerchantRecipeList storedOffers(EntityVillager villager) {
