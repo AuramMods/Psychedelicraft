@@ -27,6 +27,8 @@ import net.minecraftforge.fluids.Fluid;
 import net.minecraftforge.oredict.ShapelessOreRecipe;
 
 import javax.annotation.Nullable;
+import java.util.ArrayList;
+import java.util.List;
 
 public final class FillReceptacleRecipe extends ShapelessOreRecipe {
     private final Ingredient receptacle;
@@ -70,6 +72,15 @@ public final class FillReceptacleRecipe extends ShapelessOreRecipe {
     private ItemStack fill(ItemStack stack) {
         FluidVesselHandler vessel = FluidVesselHandler.forCrafting(stack);
         return vessel == null ? ItemStack.EMPTY : vessel.craftContents(fluid, amount, attributes);
+    }
+
+    public List<ItemStack> getDisplayOutputs() {
+        List<ItemStack> outputs = new ArrayList<>();
+        for (ItemStack stack : receptacle.getMatchingStacks()) {
+            ItemStack filled = fill(stack);
+            if (!filled.isEmpty()) outputs.add(filled);
+        }
+        return outputs;
     }
 
     public static final class Factory implements IRecipeFactory {

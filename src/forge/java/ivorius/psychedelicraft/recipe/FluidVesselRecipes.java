@@ -69,7 +69,7 @@ public final class FluidVesselRecipes {
         }
     }
 
-    private static final class BottleRecipe extends ShapedOreRecipe {
+    public static final class BottleRecipe extends ShapedOreRecipe {
         private BottleRecipe(ItemStack output, Object... pattern) {
             super(null, output, pattern);
         }
@@ -80,13 +80,23 @@ public final class FluidVesselRecipes {
             for (int slot = 0; slot < inventory.getSizeInventory(); slot++) {
                 ItemStack glass = inventory.getStackInSlot(slot);
                 if (glass.getItem() == Item.getItemFromBlock(Blocks.STAINED_GLASS)) {
-                    NBTTagCompound display = new NBTTagCompound();
-                    display.setInteger("color", EnumDyeColor.byMetadata(glass.getMetadata()).getColorValue());
-                    result.setTagInfo("display", display);
+                    dye(result, EnumDyeColor.byMetadata(glass.getMetadata()));
                     break;
                 }
             }
             return result;
+        }
+
+        public ItemStack coloredOutput(EnumDyeColor color) {
+            ItemStack result = getRecipeOutput().copy();
+            dye(result, color);
+            return result;
+        }
+
+        private static void dye(ItemStack stack, EnumDyeColor color) {
+            NBTTagCompound display = new NBTTagCompound();
+            display.setInteger("color", color.getColorValue());
+            stack.setTagInfo("display", display);
         }
     }
 

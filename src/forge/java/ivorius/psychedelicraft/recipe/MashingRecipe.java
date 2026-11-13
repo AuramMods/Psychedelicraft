@@ -62,6 +62,10 @@ public final class MashingRecipe extends IForgeRegistryEntry.Impl<IRecipe> imple
         return ingredients.stream().anyMatch(ingredient -> ingredient.apply(stack));
     }
 
+    public FluidStack getMinimumPool() {
+        return new FluidStack(pool, minimumAmount, poolAttributes.hasNoTags() ? null : poolAttributes.copy());
+    }
+
     public boolean matchesPartial(List<ItemStack> supplied) {
         if (supplied.size() > ingredients.size()) return false;
         return assign(supplied, 0, 0);

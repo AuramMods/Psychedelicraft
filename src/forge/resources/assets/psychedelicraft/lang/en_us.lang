@@ -370,3 +370,23 @@ commands.psychedelicraft.hallucinate.success=Summoned a hallucination
 
 gui.psychedelicraft.option.sun_glare_intensity=Sun Flare
 psychedelicraft.sleep.tired=...I should really sleep...
+
+psychedelicraft.jei.drying=Drying Table
+psychedelicraft.jei.mashing=Wooden Vat
+psychedelicraft.jei.fermenting=Fermenting
+psychedelicraft.jei.maturing=Maturing
+psychedelicraft.jei.distilling=Distilling
+psychedelicraft.jei.barrel_draw=Drawing from a Barrel
+psychedelicraft.jei.flask_draw=Drawing from a Flask
+psychedelicraft.jei.distillery_draw=Drawing from a Distillery
+psychedelicraft.jei.harvest=Harvesting with Shears
+psychedelicraft.jei.drying_time=At full heat: %1$s s (wood), %2$s s (iron)
+psychedelicraft.jei.mashing_hint=Minimum fluid. Add the ingredients to the vat.
+psychedelicraft.jei.harvest_hint=Use shears on the mature plant.
+psychedelicraft.jei.draw_hint=Use the empty vessel to collect the fluid.
+psychedelicraft.jei.process.ferment=Ferment for %s s
+psychedelicraft.jei.process.acetify=Turn into vinegar after %s s
+psychedelicraft.jei.process.mature=Mature for %s s
+psychedelicraft.jei.process.harden=Harden for %s s
+psychedelicraft.jei.process.cool=Cool for %s s
+psychedelicraft.jei.process.distill=Distill with a connected outlet (%s s without heat)

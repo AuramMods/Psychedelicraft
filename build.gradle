@@ -48,8 +48,16 @@ minecraft {
     }
 }
 
+repositories {
+    maven {
+        url = 'https://maven.blamejared.com/'
+        content { includeModule 'mezz.jei', 'jei_1.12.2' }
+    }
+}
+
 dependencies {
     minecraft "net.minecraftforge:forge:${forgeVersion}"
+    compileOnly fg.deobf('mezz.jei:jei_1.12.2:4.16.1.302:api')
     testImplementation 'junit:junit:4.13.2'
 }
 
