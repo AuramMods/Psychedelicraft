@@ -4,6 +4,7 @@
 
 package ivorius.psychedelicraft.item;
 
+import ivorius.psychedelicraft.PSSounds;
 import ivorius.psychedelicraft.Psychedelicraft;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockButton;
@@ -17,7 +18,6 @@ import net.minecraft.entity.item.EntityItem;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.init.Blocks;
 import net.minecraft.init.Items;
-import net.minecraft.init.SoundEvents;
 import net.minecraft.inventory.ClickType;
 import net.minecraft.inventory.Container;
 import net.minecraft.inventory.Slot;
@@ -29,6 +29,7 @@ import net.minecraft.util.ActionResult;
 import net.minecraft.util.EnumActionResult;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.util.EnumHand;
+import net.minecraft.util.SoundEvent;
 import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.text.translation.I18n;
@@ -105,15 +106,14 @@ public final class PaperBagItem extends Item {
             ItemStack previous = stored.copy();
             if (cursor.isEmpty() && !contents.isEmpty()) {
                 player.inventory.setItemStack(contents.take(contents.stack.getMaxStackSize()));
-                playRemove(player);
             } else if (contents.insert(cursor)) {
                 if (cursor.isEmpty()) player.inventory.setItemStack(ItemStack.EMPTY);
-                playInsert(player);
             } else {
                 return null;
             }
             setContents(stored, contents);
             slot.onSlotChanged();
+            playInsert(player);
             return previous;
         }
         return null;
@@ -179,7 +179,7 @@ public final class PaperBagItem extends Item {
         if (changed) {
             setContents(bag, contents);
             player.inventory.markDirty();
-            playInsert(player);
+            playRemove(player);
         }
     }
 
@@ -198,13 +198,16 @@ public final class PaperBagItem extends Item {
     }
 
     private static void playInsert(EntityPlayer player) {
-        if (!player.world.isRemote) player.world.playSound(null, player.posX, player.posY, player.posZ,
-                SoundEvents.ITEM_ARMOR_EQUIP_LEATHER, player.getSoundCategory(), 0.55F, 1.25F);
+        playBagSound(player, PSSounds.PAPER_BAG_INSERT, 1.25F);
     }
 
     private static void playRemove(EntityPlayer player) {
+        playBagSound(player, PSSounds.PAPER_BAG_REMOVE, 0.85F);
+    }
+
+    private static void playBagSound(EntityPlayer player, SoundEvent sound, float pitch) {
         if (!player.world.isRemote) player.world.playSound(null, player.posX, player.posY, player.posZ,
-                SoundEvents.ITEM_ARMOR_EQUIP_LEATHER, player.getSoundCategory(), 0.55F, 0.85F);
+                sound, player.getSoundCategory(), 1F, pitch);
     }
 
     private static boolean canStore(ItemStack stack) {

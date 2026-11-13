@@ -4,6 +4,7 @@
 
 package ivorius.psychedelicraft.block;
 
+import ivorius.psychedelicraft.PSSounds;
 import ivorius.psychedelicraft.block.entity.BottleRackBlockEntity;
 import net.minecraft.block.BlockHorizontal;
 import net.minecraft.block.SoundType;
@@ -14,7 +15,6 @@ import net.minecraft.block.state.IBlockState;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.init.SoundEvents;
 import net.minecraft.item.ItemStack;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.EnumFacing;
@@ -126,15 +126,14 @@ public final class BottleRackBlock extends BlockHorizontal {
         ItemStack held = player.getHeldItem(hand);
         if (held.isEmpty()) {
             ItemStack bottle = bottles.extractItem(slot, 1, world.isRemote);
-            if (bottle.isEmpty()) return false;
-            if (!world.isRemote) player.setHeldItem(hand, bottle);
+            if (!world.isRemote && !bottle.isEmpty()) player.setHeldItem(hand, bottle);
         } else {
             ItemStack remainder = bottles.insertItem(slot, held.copy(), world.isRemote);
             if (remainder.getCount() == held.getCount()) return false;
             if (!world.isRemote && !player.capabilities.isCreativeMode) player.setHeldItem(hand, remainder);
         }
         if (!world.isRemote) {
-            world.playSound(null, pos, SoundEvents.BLOCK_WOOD_PLACE, SoundCategory.BLOCKS, 0.65F, held.isEmpty() ? 1 : 1.5F);
+            world.playSound(null, pos, PSSounds.BOTTLE_RACK_USE, SoundCategory.BLOCKS, 1F, held.isEmpty() ? 1F : 1.5F);
         }
         return true;
     }

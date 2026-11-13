@@ -34,6 +34,24 @@
       "psychedelicraft:rift_jar/jar_open"
     ]
   },
+  "block.bottle_rack.use": {
+    "subtitle": "subtitle.psychedelicraft.bottle_rack_use",
+    "sounds": [
+      { "name": "minecraft:block.wood.place", "type": "event" }
+    ]
+  },
+  "item.paper_bag.insert": {
+    "subtitle": "subtitle.psychedelicraft.paper_bag_insert",
+    "sounds": [
+      { "name": "minecraft:item.armor.equip_leather", "type": "event" }
+    ]
+  },
+  "item.paper_bag.remove": {
+    "subtitle": "subtitle.psychedelicraft.paper_bag_remove",
+    "sounds": [
+      { "name": "minecraft:item.armor.equip_leather", "type": "event" }
+    ]
+  },
   "drug.generic": {
     "category": "ambient",
     "sounds": [

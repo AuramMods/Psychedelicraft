@@ -799,7 +799,15 @@ sh run/production/background-qa/run.sh "$qa" game-background Overlay-QA \
 - Both versions ran on Docker's Xvfb display with zero master volume and OpenAL's `No Output` device. The logs are `build-production.log`, `runtime-baseline.log` and `runtime-verified.log` in `run/production/runtime-qa-cycle82`.
 - The same jar passed the original distillery gameplay fixture in a new default-terrain world. It verified both machine recipes, lava acceleration, tagged fluid and 1 mB slurry transfer, both 2:1 flower-extract stages, and pause and resume when the receiver was removed and replaced. The client resolved the flask and distillery models. The log is `runtime-distillery-regression.log` in the same directory.
 
-Next, compare the sound substitutes for the bottle rack and paper bag with the donor's interactions. Dedicated Forge startup and multiplayer on that server remain open pending EULA acceptance.
+### Cycle 83 · Bottle rack and paper bag sounds
+
+- Compared the rack and paper bag interactions with the pinned 1.20.1 source and the 1.12.2 and 1.20.1 sound catalogs. The donor uses `item.book.put`, `item.bundle.insert` and `item.bundle.remove_one`. The 1.12.2 catalog lacks all three sets of samples. The port uses Forge sound events that reference the legacy wood and leather events and supply rack, packing and unpacking subtitles in English and Polish.
+- A valid empty-hand rack click now plays the sound even when the selected slot is empty, matching the donor. Insertion and extraction use the donor's volume and pitches. Invalid faces and rejected insertions stay quiet. Paper bag slot interactions, ground pickup, adjacent-slot collection and manual emptying now select the donor's corresponding packing or unpacking cue. This includes the packing cue when a bag in a slot empties into the cursor and the unpacking cue for automatic adjacent-slot collection. The 1.12 leather samples retain distinct pitches for the two cues.
+- The clean Java 8 build and reobfuscation passed 142 tests. The production jar's SHA-256 is `eaaa0b86d19f8faa51e2ec6cc7ae0fe2b01a0ee27cdcdc35519556d2971eeed9`.
+- In muted Forge 14.23.5.2864, the previous jar sent two wood and seven leather sound events. The rebuilt jar sent three rack and seven bag events with the expected order, categories, volume and pitches. The client made exactly one request for each packet. The fixture also resolved all three English subtitles and opened their referenced OGG samples. An early fixture placed ground pickup and adjacent collection in the wrong order in its expected list. The retry used the actual interaction order. The runtime checked sound dispatch and asset resolution at zero master volume with OpenAL's `No Output` device.
+- The existing survival bag regression also passed native inventory clicks, ground pickup, adjacent collection, manual emptying, dispenser output, and the stomach and vomit checks. Evidence is in `build-production.log`, `runtime-baseline.log`, `runtime-verified-retry.log` and `runtime-bag-regression.log` under `run/production/runtime-qa-cycle83`.
+
+Next, audit English and Polish text by the keys the Forge runtime actually uses. Dedicated Forge startup and multiplayer on that server remain open pending EULA acceptance.
 
 ## Repository and branch survey
 
