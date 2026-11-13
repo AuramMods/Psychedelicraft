@@ -6,6 +6,7 @@ package ivorius.psychedelicraft.block;
 
 import java.util.Random;
 
+import ivorius.psychedelicraft.entity.PlantMovement;
 import net.minecraft.block.BlockBush;
 import net.minecraft.block.IGrowable;
 import net.minecraft.block.SoundType;
@@ -126,9 +127,7 @@ public abstract class AgePlantBlock extends BlockBush implements IGrowable {
     }
 
     protected static void slow(Entity entity) {
-        entity.motionX *= 0.8F;
-        entity.motionY *= 0.75F;
-        entity.motionZ *= 0.8F;
+        ((PlantMovement) entity).psychedelicraft$slowNextMove();
     }
 
     protected static AxisAlignedBB shape(double halfWidth, double height) {
