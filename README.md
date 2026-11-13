@@ -54,6 +54,8 @@ java -jar forge-1.12.2-14.23.5.2864.jar nogui
 
 Read and accept the Minecraft EULA in the generated `eula.txt` before starting the server again. Joining clients need the same Psychedelicraft build.
 
+Explosion drop decay follows the 1.20.1 defaults. `blockExplosionDropDecay` and `mobExplosionDropDecay` default to `true`, and `tntExplosionDropDecay` defaults to `false`. Use `/gamerule` to change them per world. These rules control drops from blocks destroyed by explosions.
+
 Contributing
 ============
 

@@ -23,6 +23,7 @@ public final class PsychedelicraftCore implements IFMLLoadingPlugin {
                 "ivorius.psychedelicraft.core.VillagerCareersTransformer",
                 "ivorius.psychedelicraft.core.WaterloggingTransformer",
                 "ivorius.psychedelicraft.core.TrayRayTraceTransformer",
+                "ivorius.psychedelicraft.core.ExplosionDropTransformer",
                 "ivorius.psychedelicraft.core.IntegratedShutdownTransformer"};
     }
 
