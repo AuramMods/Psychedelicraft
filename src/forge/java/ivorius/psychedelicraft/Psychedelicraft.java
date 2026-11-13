@@ -56,14 +56,9 @@ public class Psychedelicraft {
         OreDictionary.registerOre("oreCopper", PSItems.COPPER_ORE);
         OreDictionary.registerOre("ingotCopper", PSItems.COPPER_INGOT);
         OreDictionary.registerOre("beeCombHoney", PSItems.HONEYCOMB);
+        OreDictionary.registerOre("cropTomato", PSItems.TOMATO);
         GameRegistry.registerWorldGenerator(new CopperOreGenerator(), 0);
-        OreDictionary.registerOre("plankWood", PSItems.JUNIPER_PLANKS);
-        OreDictionary.registerOre("stairWood", PSItems.JUNIPER_STAIRS);
-        OreDictionary.registerOre("slabWood", PSItems.JUNIPER_SLAB);
-        OreDictionary.registerOre("fenceWood", PSItems.JUNIPER_FENCE);
-        OreDictionary.registerOre("fenceGateWood", PSItems.JUNIPER_FENCE_GATE);
-        OreDictionary.registerOre("doorWood", PSItems.JUNIPER_DOOR);
-        JuniperWoodRecipes.preferJuniperRecipes();
+        JuniperWoodRecipes.register();
         PSItems.JUNIPER_BOAT.registerDispenserBehavior();
         PSItems.JUNIPER_CHEST_BOAT.registerDispenserBehavior();
         FilledBucketItem.registerDispenserBehavior();

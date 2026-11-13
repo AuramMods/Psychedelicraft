@@ -36,6 +36,8 @@ import net.minecraft.world.World;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 import net.minecraftforge.items.ItemHandlerHelper;
+import net.minecraftforge.oredict.DyeUtils;
+import net.minecraftforge.oredict.OreDictionary;
 
 import javax.annotation.Nullable;
 import java.util.List;
@@ -206,22 +208,38 @@ public final class PaperBagItem extends Item {
     }
 
     private static boolean canStore(ItemStack stack) {
+        if (stack.isEmpty()) return false;
         Item item = stack.getItem();
         Block block = Block.getBlockFromItem(item);
-        return !stack.isEmpty() && (block instanceof BlockFlower || block instanceof BlockButton
+        return block instanceof BlockFlower || block instanceof BlockButton
                 || block == Blocks.RED_MUSHROOM || block == Blocks.BROWN_MUSHROOM
                 || item == Items.COOKIE || item == Items.NETHER_WART || item == Items.WHEAT_SEEDS
                 || item == Items.BEETROOT_SEEDS || item == Items.CARROT || item == Items.POTATO
-                || item == Items.SPIDER_EYE || item == Items.FISH || item == Items.COOKED_FISH
+                || item == Items.SPIDER_EYE || (item == Items.FISH && isVariant(stack, 3))
+                || (item == Items.COOKED_FISH && isVariant(stack, 1))
                 || item == Items.GOLDEN_CARROT || item == Items.MELON || item == Items.POISONOUS_POTATO
                 || item == Items.BAKED_POTATO || item == Items.BEETROOT || item == Items.CHORUS_FRUIT
-                || item == Items.ROTTEN_FLESH || item == Items.APPLE || item == Items.GOLDEN_APPLE
-                || item == Items.DYE || item == PSItems.IRON_CHAIN || item == PSItems.BOTTLE
+                || item == Items.ROTTEN_FLESH || item == Items.APPLE
+                || (item == Items.DYE && isVariant(stack, 15)) || item == PSItems.IRON_CHAIN || item == PSItems.BOTTLE
                 || item == PSItems.BROWN_MAGIC_MUSHROOMS || item == PSItems.RED_MAGIC_MUSHROOMS
                 || item == PSItems.TOMATO || item == PSItems.BELLADONNA_BERRIES || item == PSItems.AGAVE_LEAF
                 || item == PSItems.SYRINGE || item == PSItems.MORNING_GLORY || item == PSItems.HASH_MUFFIN
                 || item == PSItems.COCAINE_POWDER || item == PSItems.OBSIDIAN_DUST || item == PSItems.JOINT
-                || item == PSItems.CIGAR || item == PSItems.CIGARETTE || item == PSItems.SMOKING_PIPE);
+                || item == PSItems.CIGAR || item == PSItems.CIGARETTE || item == PSItems.SMOKING_PIPE
+                || matchesCommonTag(stack);
+    }
+
+    private static boolean isVariant(ItemStack stack, int last) {
+        return stack.getMetadata() >= 0 && stack.getMetadata() <= last;
+    }
+
+    private static boolean matchesCommonTag(ItemStack stack) {
+        if (stack.getItem() == Items.DYE) return false; // Forge's vanilla dye registration uses wildcard metadata.
+        for (int id : OreDictionary.getOreIDs(stack)) {
+            String ore = OreDictionary.getOreName(id);
+            if ("cropApple".equals(ore) || "dye".equals(ore)) return true;
+        }
+        return DyeUtils.isDye(stack);
     }
 
     private static int capacity(ItemStack stack) {

@@ -3,6 +3,7 @@ package ivorius.psychedelicraft.item;
 import net.minecraft.init.Bootstrap;
 import net.minecraft.init.Items;
 import net.minecraft.item.ItemStack;
+import net.minecraftforge.oredict.OreDictionary;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
@@ -51,5 +52,34 @@ public class PaperBagTest {
         assertTrue(PaperBagItem.getContents(bag).isEmpty());
         assertEquals("Keep this name", bag.getDisplayName());
         assertEquals(64, bag.getMaxStackSize());
+    }
+
+    @Test
+    public void acceptsOnlyTheAuthoredVanillaFishAndAppleVariants() {
+        assertTrue(emptyContents().insert(new ItemStack(Items.FISH, 1, 3)));
+        assertTrue(emptyContents().insert(new ItemStack(Items.COOKED_FISH, 1, 1)));
+        assertFalse(emptyContents().insert(new ItemStack(Items.COOKED_FISH, 1, 2)));
+        assertFalse(emptyContents().insert(new ItemStack(Items.DYE, 1, 16)));
+        assertTrue(emptyContents().insert(new ItemStack(Items.APPLE)));
+        assertFalse(emptyContents().insert(new ItemStack(Items.GOLDEN_APPLE)));
+    }
+
+    @Test
+    public void acceptsDictionaryApplesAndDyesWithoutMixingTheirVariants() {
+        ItemStack apple = new ItemStack(Items.CARROT_ON_A_STICK, 1, 6);
+        ItemStack dye = new ItemStack(Items.SHEARS, 1, 7);
+        OreDictionary.registerOre("cropApple", apple);
+        OreDictionary.registerOre("dyePurple", dye);
+
+        PaperBagItem.Contents contents = emptyContents();
+        assertTrue(contents.insert(apple.copy()));
+        assertFalse(contents.insert(new ItemStack(Items.CARROT_ON_A_STICK, 1, 7)));
+        assertFalse(contents.insert(dye.copy()));
+        assertEquals(6, contents.take(1).getMetadata());
+        assertTrue(emptyContents().insert(dye.copy()));
+    }
+
+    private static PaperBagItem.Contents emptyContents() {
+        return new PaperBagItem.Contents(ItemStack.EMPTY, 0);
     }
 }
