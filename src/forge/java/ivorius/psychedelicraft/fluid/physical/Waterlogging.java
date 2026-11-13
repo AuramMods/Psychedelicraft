@@ -93,6 +93,27 @@ public final class Waterlogging {
         return fluidState((IBlockAccess) world, pos);
     }
 
+    public static boolean isWater(IBlockAccess world, BlockPos pos) {
+        return isWater(world, pos, world.getBlockState(pos));
+    }
+
+    public static boolean isWater(IBlockAccess world, BlockPos pos, IBlockState state) {
+        Block block = state.getBlock();
+        return state.getMaterial() == Material.WATER || isWet(world, pos, state)
+                || block instanceof PhysicalFluidBlock && ((PhysicalFluidBlock) block).isWaterLike();
+    }
+
+    public static IBlockState waterState(World world, BlockPos pos) {
+        IBlockState state = world.getBlockState(pos);
+        return state.getMaterial() != Material.WATER && isWater(world, pos, state)
+                ? Blocks.WATER.getDefaultState() : state;
+    }
+
+    public static void displayTick(Block block, IBlockState state, World world, BlockPos pos, Random random) {
+        block.randomDisplayTick(state, world, pos, random);
+        if (isWet(world, pos, state)) Blocks.WATER.randomDisplayTick(Blocks.WATER.getDefaultState(), world, pos, random);
+    }
+
     public static boolean blocksPiston(Block block, IBlockState state) {
         return block.hasTileEntity(state)
                 && (!(block instanceof Waterloggable) || !((Waterloggable) block).canPistonMove());

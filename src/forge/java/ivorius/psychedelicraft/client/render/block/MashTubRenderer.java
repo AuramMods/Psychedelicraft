@@ -31,7 +31,7 @@ public final class MashTubRenderer extends TileEntitySpecialRenderer<MashTubBloc
         FluidStack fluid = vat.getTank().getFluid();
         float height = 0.1F;
         if (fluid != null) {
-            height = 0.3F + 0.6F * fluid.amount / vat.getTank().getCapacity();
+            height = vat.getFluidSurface();
             TextureAtlasSprite sprite = Minecraft.getMinecraft().getTextureMapBlocks()
                     .getAtlasSprite(fluid.getFluid().getStill(fluid).toString());
             drawSurface(sprite, fluid.getFluid().getColor(fluid), x, y + height, z, anchor);

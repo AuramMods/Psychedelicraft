@@ -7,11 +7,13 @@ import net.minecraft.init.Bootstrap;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraftforge.fluids.BlockFluidBase;
 import net.minecraftforge.fluids.Fluid;
+import net.minecraftforge.fluids.FluidRegistry;
 import net.minecraftforge.fluids.FluidStack;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
 
@@ -47,5 +49,15 @@ public class PhysicalFluidStateTest {
         assertEquals(Fluid.BUCKET_VOLUME, restored.amount);
         assertEquals(attributes, restored.tag);
         assertTrue(restored.getFluid().doesVaporize(restored));
+    }
+
+    @Test
+    public void physicalFluidWaterMembershipMatchesTheDonor() {
+        assertEquals(24L, PSFluids.all().stream().filter(PhysicalFluidBlock::isWaterLike).count());
+        assertTrue(PhysicalFluidBlock.isWaterLike(FluidRegistry.WATER));
+        assertFalse(PhysicalFluidBlock.isWaterLike(FluidRegistry.LAVA));
+        assertFalse(PhysicalFluidBlock.isWaterLike(PSFluids.AGAVE));
+        assertFalse(PhysicalFluidBlock.isWaterLike(PSFluids.KAVA));
+        assertFalse(PhysicalFluidBlock.isWaterLike(PSFluids.BATH_SALTS));
     }
 }

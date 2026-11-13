@@ -6,7 +6,10 @@ package ivorius.psychedelicraft.block;
 
 import ivorius.psychedelicraft.Psychedelicraft;
 import ivorius.psychedelicraft.block.entity.MashTubBlockEntity;
+import ivorius.psychedelicraft.client.particle.SlurryBubble;
 import ivorius.psychedelicraft.fluid.FluidContents;
+import ivorius.psychedelicraft.fluid.PSFluids;
+import ivorius.psychedelicraft.fluid.physical.WorldFluid;
 import ivorius.psychedelicraft.item.PSItems;
 import ivorius.psychedelicraft.screen.PSGuiHandler;
 import net.minecraft.block.BlockContainer;
@@ -19,6 +22,7 @@ import net.minecraft.block.state.IBlockState;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.init.Blocks;
 import net.minecraft.item.ItemStack;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.EnumBlockRenderType;
@@ -29,16 +33,22 @@ import net.minecraft.util.NonNullList;
 import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.RayTraceResult;
+import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.IBlockAccess;
 import net.minecraft.world.World;
 import net.minecraftforge.common.capabilities.Capability;
 import net.minecraftforge.fluids.FluidStack;
+import net.minecraftforge.fluids.FluidRegistry;
+import net.minecraftforge.fml.relauncher.Side;
+import net.minecraftforge.fml.relauncher.SideOnly;
 
 import javax.annotation.Nullable;
 import java.util.List;
+import java.util.Random;
 
 public final class MashTubBlock extends BlockContainer {
     private static final int CENTER = 4;
+    private static final double INNER_EDGE = 0.4375;
     public static final PropertyInteger OFFSET = PropertyInteger.create("offset", 0, 8);
     private static final AxisAlignedBB[] BASIN = {
             new AxisAlignedBB(-0.5, 0, -0.5, 1.5, 0.0625, 1.5),
@@ -117,6 +127,64 @@ public final class MashTubBlock extends BlockContainer {
         MashTubBlockEntity vat = getVat(world, pos);
         FluidStack fluid = vat == null ? null : vat.getTank().getFluid();
         return fluid == null ? 0 : fluid.getFluid().getLuminosity(fluid);
+    }
+
+    @Override
+    public Boolean isEntityInsideMaterial(IBlockAccess world, BlockPos pos, IBlockState state, Entity entity,
+                                          double y, Material material, boolean testingHead) {
+        // The donor's vat hook handles body contact. The containing block remains wood.
+        return !testingHead && (material == Material.WATER || material == Material.LAVA)
+                ? intersectsLiquid(world, pos, entity.getEntityBoundingBox(), material) : null;
+    }
+
+    @Override
+    public Boolean isAABBInsideMaterial(World world, BlockPos pos, AxisAlignedBB box, Material material) {
+        return material == Material.WATER || material == Material.LAVA ? intersectsLiquid(world, pos, box, material) : null;
+    }
+
+    @Override
+    public float getBlockLiquidHeight(World world, BlockPos pos, IBlockState state, Material material) {
+        MashTubBlockEntity vat = material == Material.WATER || material == Material.LAVA ? getVat(world, pos) : null;
+        return vat != null && matchesMaterial(vat.getTank().getFluid(), material) ? vat.getFluidSurface() : 0;
+    }
+
+    private static boolean intersectsLiquid(IBlockAccess world, BlockPos pos, AxisAlignedBB box, Material material) {
+        MashTubBlockEntity vat = getVat(world, pos);
+        if (vat == null) return false;
+        FluidStack fluid = vat.getTank().getFluid();
+        if (!matchesMaterial(fluid, material)) return false;
+        BlockPos center = vat.getPos();
+        return box.intersects(Math.max(pos.getX(), center.getX() - INNER_EDGE), center.getY() + 0.0625,
+                Math.max(pos.getZ(), center.getZ() - INNER_EDGE),
+                Math.min(pos.getX() + 1, center.getX() + 1 + INNER_EDGE), center.getY() + vat.getFluidSurface(),
+                Math.min(pos.getZ() + 1, center.getZ() + 1 + INNER_EDGE));
+    }
+
+    private static boolean matchesMaterial(@Nullable FluidStack fluid, Material material) {
+        if (fluid == null) return false;
+        if (material == Material.LAVA) return fluid.getFluid() == FluidRegistry.LAVA;
+        return fluid.getFluid() == FluidRegistry.WATER || fluid.getFluid() instanceof WorldFluid;
+    }
+
+    @Override
+    @SideOnly(Side.CLIENT)
+    public void randomDisplayTick(IBlockState state, World world, BlockPos pos, Random random) {
+        MashTubBlockEntity vat = getVat(world, pos);
+        FluidStack fluid = vat == null ? null : vat.getTank().getFluid();
+        if (fluid == null) return;
+        if (fluid.getFluid() == PSFluids.SLURRY) {
+            BlockPos center = vat.getPos();
+            double x = Math.max(center.getX() - INNER_EDGE + 0.25,
+                    Math.min(center.getX() + 1 + INNER_EDGE - 0.25, pos.getX() + 0.5));
+            double z = Math.max(center.getZ() - INNER_EDGE + 0.25,
+                    Math.min(center.getZ() + 1 + INNER_EDGE - 0.25, pos.getZ() + 0.5));
+            SlurryBubble.ambient(world, new Vec3d(x, pos.getY() + vat.getFluidSurface(), z),
+                    fluid.getFluid().getColor(fluid), 0.25, random);
+        } else if (fluid.getFluid() == FluidRegistry.WATER) {
+            Blocks.WATER.randomDisplayTick(Blocks.WATER.getDefaultState(), world, pos, random);
+        } else if (fluid.getFluid() == FluidRegistry.LAVA) {
+            Blocks.LAVA.randomDisplayTick(Blocks.LAVA.getDefaultState(), world, pos, random);
+        }
     }
 
     @Override

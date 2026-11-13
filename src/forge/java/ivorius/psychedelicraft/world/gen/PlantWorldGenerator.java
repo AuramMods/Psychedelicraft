@@ -13,6 +13,7 @@ import ivorius.psychedelicraft.block.PSBlocks;
 import ivorius.psychedelicraft.block.TallCropBlock;
 import ivorius.psychedelicraft.block.VineStemBlock;
 import ivorius.psychedelicraft.config.PSConfig;
+import ivorius.psychedelicraft.fluid.physical.Waterlogging;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockDirt;
 import net.minecraft.block.BlockDoublePlant;
@@ -173,7 +174,7 @@ public final class PlantWorldGenerator {
 
     private static boolean waterNearby(World world, BlockPos soil) {
         for (BlockPos pos : BlockPos.getAllInBox(soil.add(-1, -1, -1), soil.add(1, 1, 1))) {
-            if (world.getBlockState(pos).getMaterial() == Material.WATER) {
+            if (Waterlogging.isWater(world, pos)) {
                 return true;
             }
         }

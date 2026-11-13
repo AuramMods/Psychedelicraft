@@ -6,18 +6,19 @@ package ivorius.psychedelicraft.block.entity;
 
 import ivorius.psychedelicraft.fluid.PSFluids;
 import ivorius.psychedelicraft.fluid.FluidVesselHandler;
+import ivorius.psychedelicraft.client.particle.SlurryBubble;
+import ivorius.psychedelicraft.network.Channel;
 import ivorius.psychedelicraft.recipe.MashingRecipe;
 import net.minecraft.init.SoundEvents;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.crafting.IRecipe;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTTagList;
-import net.minecraft.util.EnumParticleTypes;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.SoundCategory;
 import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
-import net.minecraft.world.WorldServer;
+import net.minecraft.util.math.Vec3d;
 import net.minecraftforge.fluids.FluidStack;
 import net.minecraftforge.fml.common.registry.ForgeRegistries;
 
@@ -44,6 +45,10 @@ public final class MashTubBlockEntity extends FluidProcessingBlockEntity {
 
     public float getStewProgress() {
         return totalPulses > 0 ? 1 - (float) pulsesLeft / totalPulses : 0;
+    }
+
+    public float getFluidSurface() {
+        return getTank().getFluidAmount() == 0 ? 0 : 0.3F + 0.6F * getTank().getFluidAmount() / getTank().getCapacity();
     }
 
     @Override
@@ -84,10 +89,10 @@ public final class MashTubBlockEntity extends FluidProcessingBlockEntity {
         if (!partial) {
             supplied.clear();
             getTank().replace(new FluidStack(PSFluids.SLURRY, contents.amount));
-            bubbles(40, 0.65);
+            bubbles(90, 0.5F);
             world.playSound(null, pos, SoundEvents.BLOCK_GRAVEL_BREAK, SoundCategory.BLOCKS, 0.8F, 0.7F);
         } else {
-            bubbles(20, 0.4);
+            bubbles(20, 0);
             world.playSound(null, pos, SoundEvents.ENTITY_GENERIC_SPLASH, SoundCategory.BLOCKS, 0.5F, 1.15F);
         }
         changed();
@@ -112,7 +117,7 @@ public final class MashTubBlockEntity extends FluidProcessingBlockEntity {
             endStew();
             return;
         }
-        bubbles(9, 0.55);
+        bubbles(9, 0.55F);
         if (--pulsesLeft <= 0) {
             getTank().replace(recipe.finish(getTank().getFluidAmount()));
             supplied.clear();
@@ -133,17 +138,20 @@ public final class MashTubBlockEntity extends FluidProcessingBlockEntity {
     @Override
     protected void tickClient() {
         updateLight();
-        if (!supplied.isEmpty() && world.getTotalWorldTime() % 3 == 0 && world.rand.nextInt(3) == 0) {
-            for (int i = 0; i <= supplied.size(); i++) {
-                world.spawnParticle(EnumParticleTypes.WATER_SPLASH, pos.getX() + 0.5 + world.rand.nextGaussian() * 0.35,
-                        pos.getY() + 0.5, pos.getZ() + 0.5 + world.rand.nextGaussian() * 0.35, 0, 0.1, 0);
-            }
+        FluidStack fluid = getTank().getFluid();
+        if (fluid != null && !supplied.isEmpty() && world.getTotalWorldTime() % 3 == 0 && world.rand.nextFloat() < 0.33F) {
+            SlurryBubble.spawn(world, bubbleOrigin(), 1 + (int) (supplied.size() * 1.5), 0,
+                    fluid.getFluid().getColor(fluid));
         }
     }
 
-    private void bubbles(int count, double spread) {
-        ((WorldServer) world).spawnParticle(EnumParticleTypes.WATER_SPLASH, pos.getX() + 0.5, pos.getY() + 0.55,
-                pos.getZ() + 0.5, count, spread, 0.1, spread, 0.12);
+    private void bubbles(int count, float spread) {
+        FluidStack fluid = getTank().getFluid();
+        if (fluid != null) Channel.spawnFluidBubbles(world, bubbleOrigin(), count, spread, fluid.getFluid().getColor(fluid));
+    }
+
+    private Vec3d bubbleOrigin() {
+        return new Vec3d(pos.getX() + 0.5, pos.getY() + getFluidSurface(), pos.getZ() + 0.5);
     }
 
     private void updateLight() {

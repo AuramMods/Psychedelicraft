@@ -34,6 +34,9 @@ public final class WaterloggingTransformer implements IClassTransformer {
     private static final String WORLD_SERVER = "net.minecraft.world.WorldServer";
     private static final String WORLD_CLASS = "net.minecraft.world.World";
     private static final String SHEARS = "net.minecraft.item.ItemShears";
+    private static final String FARMLAND = "net.minecraft.block.BlockFarmland";
+    private static final String SUSPENDED = "net.minecraft.client.particle.ParticleSuspend";
+    private static final String WORLD_CLIENT = "net.minecraft.client.multiplayer.WorldClient";
     private static final String WORLD = "Lnet/minecraft/world/World;";
     private static final String ACCESS = "Lnet/minecraft/world/IBlockAccess;";
     private static final String POS = "Lnet/minecraft/util/math/BlockPos;";
@@ -53,7 +56,9 @@ public final class WaterloggingTransformer implements IClassTransformer {
                 || LIQUID.equals(transformedName) || FLOWING.equals(transformedName)
                 || PISTON.equals(transformedName) || VIEWPOINT.equals(transformedName)
                 || BLOCK.equals(transformedName) || WORLD_SERVER.equals(transformedName)
-                || WORLD_CLASS.equals(transformedName) || SHEARS.equals(transformedName))) return bytes;
+                || WORLD_CLASS.equals(transformedName) || SHEARS.equals(transformedName)
+                || FARMLAND.equals(transformedName) || SUSPENDED.equals(transformedName)
+                || WORLD_CLIENT.equals(transformedName))) return bytes;
         ClassNode type = new ClassNode(Opcodes.ASM5);
         new ClassReader(bytes).accept(type, 0);
         switch (transformedName) {
@@ -75,7 +80,8 @@ public final class WaterloggingTransformer implements IClassTransformer {
                 substituteFluidStates(method(type, "modifyAcceleration", "func_176197_a",
                         "(" + WORLD + POS + "Lnet/minecraft/entity/Entity;Lnet/minecraft/util/math/Vec3d;)"
                                 + "Lnet/minecraft/util/math/Vec3d;"), 1);
-                substituteFluidStates(method(type, "checkForMixing", "func_176365_e", "(" + WORLD + POS + STATE + ")Z"), 1);
+                substituteFluidStates(method(type, "checkForMixing", "func_176365_e", "(" + WORLD + POS + STATE + ")Z"),
+                        1, "waterState");
                 break;
             case FLOWING:
                 keepSourceInBlock(type);
@@ -102,12 +108,32 @@ public final class WaterloggingTransformer implements IClassTransformer {
                 releaseWater(method(type, "onBlockStartBreak", "onBlockStartBreak",
                         "(Lnet/minecraft/item/ItemStack;" + POS + PLAYER + ")Z"));
                 break;
+            case FARMLAND:
+                substituteFluidStates(method(type, "hasWater", "func_176530_e", "(" + WORLD + POS + ")Z"), 1, "waterState");
+                break;
+            case SUSPENDED:
+                substituteFluidStates(method(type, "onUpdate", "func_189213_a", "()V"), 1, "waterState");
+                break;
+            case WORLD_CLIENT:
+                patchDisplayTick(type);
+                break;
             default:
                 throw new AssertionError(transformedName);
         }
         ClassWriter writer = new ClassWriter(ClassWriter.COMPUTE_MAXS);
         type.accept(writer);
         return writer.toByteArray();
+    }
+
+    private static void patchDisplayTick(ClassNode type) {
+        MethodNode display = method(type, "showBarrierParticles", "func_184153_a",
+                "(IIII" + RANDOM + "ZLnet/minecraft/util/math/BlockPos$MutableBlockPos;)V");
+        for (AbstractInsnNode instruction : display.instructions.toArray()) {
+            if (!matches(instruction, "randomDisplayTick", "func_180655_c", "(" + STATE + WORLD + POS + RANDOM + ")V")) continue;
+            replaceWorldCall(display, (MethodInsnNode) instruction, "displayTick");
+            return;
+        }
+        throw new IllegalStateException("Could not locate Forge 1.12 random display tick");
     }
 
     private static void patchBlock(ClassNode type) {
@@ -350,6 +376,10 @@ public final class WaterloggingTransformer implements IClassTransformer {
     }
 
     private static void substituteFluidStates(MethodNode method, int limit) {
+        substituteFluidStates(method, limit, "fluidState");
+    }
+
+    private static void substituteFluidStates(MethodNode method, int limit, String hook) {
         FMLDeobfuscatingRemapper remapper = FMLDeobfuscatingRemapper.INSTANCE;
         int replaced = 0;
         for (AbstractInsnNode instruction : method.instructions.toArray()) {
@@ -361,7 +391,7 @@ public final class WaterloggingTransformer implements IClassTransformer {
                     || !("(" + POS + ")" + STATE).equals(remapper.mapMethodDesc(call.desc))
                     || !("net/minecraft/world/World".equals(owner) || "net/minecraft/world/IBlockAccess".equals(owner))) continue;
             method.instructions.set(call, new MethodInsnNode(Opcodes.INVOKESTATIC, HOOKS,
-                    "fluidState", "(L" + call.owner + ";" + call.desc.substring(1), false));
+                    hook, "(L" + call.owner + ";" + call.desc.substring(1), false));
             if (++replaced == limit) return;
         }
         throw new IllegalStateException("Could not locate Forge 1.12 liquid block state reads in " + method.name);

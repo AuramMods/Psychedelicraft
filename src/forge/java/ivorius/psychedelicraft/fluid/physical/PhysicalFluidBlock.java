@@ -13,15 +13,15 @@ import net.minecraft.block.material.MaterialLiquid;
 import net.minecraft.block.properties.PropertyBool;
 import net.minecraft.block.state.BlockStateContainer;
 import net.minecraft.block.state.IBlockState;
+import net.minecraft.client.renderer.ActiveRenderInfo;
 import net.minecraft.entity.Entity;
 import net.minecraft.init.Blocks;
-import net.minecraft.init.SoundEvents;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.EnumFacing;
-import net.minecraft.util.SoundCategory;
 import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.IBlockAccess;
 import net.minecraft.world.World;
 import net.minecraftforge.common.property.IExtendedBlockState;
@@ -29,6 +29,7 @@ import net.minecraftforge.common.property.IUnlistedProperty;
 import net.minecraftforge.event.ForgeEventFactory;
 import net.minecraftforge.fluids.BlockFluidClassic;
 import net.minecraftforge.fluids.Fluid;
+import net.minecraftforge.fluids.FluidRegistry;
 import net.minecraftforge.fluids.FluidStack;
 import net.minecraftforge.fluids.FluidUtil;
 import net.minecraftforge.fluids.IFluidBlock;
@@ -55,7 +56,7 @@ public final class PhysicalFluidBlock extends BlockFluidClassic {
         super(fluid, new MaterialLiquid(MapColor.WATER));
         this.fluid = fluid;
         spreadLoss = Math.max(1, fluid.getViscosity() / 1000);
-        waterLike = fluid != PSFluids.AGAVE && fluid != PSFluids.KAVA && fluid != PSFluids.BATH_SALTS;
+        waterLike = isWaterLike(fluid);
         setTickRate(5);
         setTickRandomly(fluid == PSFluids.COFFEE);
         setDefaultState(getDefaultState().withProperty(ATTRIBUTED, false));
@@ -262,31 +263,56 @@ public final class PhysicalFluidBlock extends BlockFluidClassic {
     @Override
     @SideOnly(Side.CLIENT)
     public void randomDisplayTick(IBlockState state, World world, BlockPos pos, Random random) {
-        if (fluid != PSFluids.SLURRY) return;
-        double y = pos.getY() + getFilledPercentage(world, pos);
-        for (int i = 0; i < 5; i++) {
-            SlurryBubble.spawn(world, pos.getX() + random.nextDouble(), y,
-                    pos.getZ() + random.nextDouble(), fluid.getColor());
+        boolean falling = world.getBlockState(pos.up()).getBlock() == this;
+        IBlockState display = Blocks.WATER.getDefaultState().withProperty(BlockLiquid.LEVEL,
+                falling ? 8 : state.getValue(LEVEL));
+        Blocks.WATER.randomDisplayTick(display, world, pos, random);
+        if (fluid == PSFluids.SLURRY) {
+            SlurryBubble.ambient(world, new Vec3d(pos.getX() + 0.5, pos.getY() + getFilledPercentage(world, pos),
+                    pos.getZ() + 0.5), fluid.getColor(), 0.5, random);
         }
-        world.playSound(pos.getX() + 0.5, y, pos.getZ() + 0.5, SoundEvents.BLOCK_LAVA_POP,
-                SoundCategory.BLOCKS, 0.5F + random.nextFloat(), 0.3F + random.nextFloat(), true);
     }
 
     @Override
     @Nullable
     public Boolean isEntityInsideMaterial(IBlockAccess world, BlockPos pos, IBlockState state, Entity entity,
                                            double y, Material material, boolean testingHead) {
-        return material == Material.WATER && waterLike
-                ? (testingHead ? y : entity.getEntityBoundingBox().minY) < pos.getY() + getFilledPercentage(world, pos) : null;
+        if (material != Material.WATER) return null;
+        return waterLike && (testingHead ? y < pos.getY() + getFilledPercentage(world, pos)
+                : intersectsFluid(world, pos, entity.getEntityBoundingBox()));
     }
 
     @Override
     @Nullable
     public Boolean isAABBInsideMaterial(World world, BlockPos pos, AxisAlignedBB box, Material material) {
-        return material == Material.WATER && waterLike ? box.minY < pos.getY() + getFilledPercentage(world, pos) : null;
+        return material == Material.WATER ? waterLike && intersectsFluid(world, pos, box) : null;
+    }
+
+    @Override
+    public float getBlockLiquidHeight(World world, BlockPos pos, IBlockState state, Material material) {
+        return material == Material.WATER && waterLike ? getFilledPercentage(world, pos) : 0;
+    }
+
+    private boolean intersectsFluid(IBlockAccess world, BlockPos pos, AxisAlignedBB box) {
+        return box.intersects(pos.getX(), pos.getY(), pos.getZ(),
+                pos.getX() + 1, pos.getY() + getFilledPercentage(world, pos), pos.getZ() + 1);
+    }
+
+    @Override
+    @SideOnly(Side.CLIENT)
+    public Vec3d getFogColor(World world, BlockPos pos, IBlockState state, Entity entity, Vec3d original, float partialTicks) {
+        double cameraY = ActiveRenderInfo.projectViewFromEntity(entity, partialTicks).y;
+        if (cameraY >= pos.getY() + getFilledPercentage(world, pos)) return original;
+        int color = fluid.getColor(contents(world, pos));
+        return new Vec3d((color >> 16 & 255) / 255D, (color >> 8 & 255) / 255D, (color & 255) / 255D);
     }
 
     public boolean isWaterLike() {
         return waterLike;
+    }
+
+    public static boolean isWaterLike(Fluid fluid) {
+        return fluid == FluidRegistry.WATER || (fluid instanceof WorldFluid
+                && fluid != PSFluids.AGAVE && fluid != PSFluids.KAVA && fluid != PSFluids.BATH_SALTS);
     }
 }
