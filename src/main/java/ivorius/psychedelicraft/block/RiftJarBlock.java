@@ -174,6 +174,12 @@ public final class RiftJarBlock extends BlockContainer {
     }
 
     @Override
+    public void dropBlockAsItemWithChance(World world, BlockPos pos, IBlockState state, float chance, int fortune) {
+        // The filled jar comes directly from its tile, outside the explosion loot pool.
+        super.dropBlockAsItemWithChance(world, pos, state, 1F, fortune);
+    }
+
+    @Override
     public void getDrops(NonNullList<ItemStack> drops, IBlockAccess world, BlockPos pos, IBlockState state, int fortune) {
         TileEntity tile = world.getTileEntity(pos);
         if (tile instanceof RiftJarBlockEntity && !tile.isInvalid()) {

@@ -4,6 +4,7 @@ import net.minecraft.block.Block;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
+import net.minecraft.util.NonNullList;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 import net.minecraftforge.event.ForgeEventFactory;
@@ -12,8 +13,8 @@ import javax.annotation.Nullable;
 import java.util.List;
 import java.util.Random;
 
-final class PlantDrops {
-    private PlantDrops() {
+final class BlockDrops {
+    private BlockDrops() {
     }
 
     static boolean usesDecay(World world, float chance) {
@@ -31,6 +32,13 @@ final class PlantDrops {
             if (survives(random, chance)) survivors++;
         }
         stack.setCount(survivors);
+    }
+
+    static void dropPool(World world, BlockPos pos, IBlockState state, float chance, int fortune,
+                         @Nullable EntityPlayer harvester) {
+        NonNullList<ItemStack> drops = NonNullList.create();
+        if (survives(world.rand, chance)) state.getBlock().getDrops(drops, world, pos, state, fortune);
+        spawn(drops, world, pos, state, fortune, harvester);
     }
 
     static void spawn(List<ItemStack> drops, World world, BlockPos pos, IBlockState state,

@@ -63,15 +63,15 @@ public final class PeyoteBlock extends SucculentPlantBlock {
 
     @Override
     public void dropBlockAsItemWithChance(World world, BlockPos pos, IBlockState state, float chance, int fortune) {
-        if (!PlantDrops.usesDecay(world, chance)) {
+        if (!BlockDrops.usesDecay(world, chance)) {
             super.dropBlockAsItemWithChance(world, pos, state, chance, fortune);
             return;
         }
         NonNullList<ItemStack> drops = NonNullList.create();
-        if (PlantDrops.survives(world.rand, chance)) {
+        if (BlockDrops.survives(world.rand, chance)) {
             getDrops(drops, world, pos, state, fortune);
-            for (ItemStack stack : drops) PlantDrops.decay(stack, world.rand, chance);
+            for (ItemStack stack : drops) BlockDrops.decay(stack, world.rand, chance);
         }
-        PlantDrops.spawn(drops, world, pos, state, fortune, harvesters.get());
+        BlockDrops.spawn(drops, world, pos, state, fortune, harvesters.get());
     }
 }

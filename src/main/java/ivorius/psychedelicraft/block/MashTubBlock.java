@@ -258,6 +258,15 @@ public final class MashTubBlock extends BlockContainer {
     }
 
     @Override
+    public void dropBlockAsItemWithChance(World world, BlockPos pos, IBlockState state, float chance, int fortune) {
+        if (!edge && BlockDrops.usesDecay(world, chance)) {
+            BlockDrops.dropPool(world, pos, state, chance, fortune, harvesters.get());
+        } else {
+            super.dropBlockAsItemWithChance(world, pos, state, chance, fortune);
+        }
+    }
+
+    @Override
     public void getDrops(NonNullList<ItemStack> drops, IBlockAccess world, BlockPos pos, IBlockState state, int fortune) {
         if (edge) return;
         ItemStack stack = new ItemStack(PSItems.MASH_TUB);

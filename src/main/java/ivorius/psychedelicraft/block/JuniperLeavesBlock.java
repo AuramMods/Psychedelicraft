@@ -215,27 +215,27 @@ public final class JuniperLeavesBlock extends Block implements IShearable, Water
 
     @Override
     public void dropBlockAsItemWithChance(World world, BlockPos pos, IBlockState state, float chance, int fortune) {
-        if (!PlantDrops.usesDecay(world, chance)) {
+        if (!BlockDrops.usesDecay(world, chance)) {
             super.dropBlockAsItemWithChance(world, pos, state, chance, fortune);
             return;
         }
         NonNullList<ItemStack> drops = NonNullList.create();
         collectDrops(drops, world.rand, fortune, chance);
-        PlantDrops.spawn(drops, world, pos, state, fortune, harvesters.get());
+        BlockDrops.spawn(drops, world, pos, state, fortune, harvesters.get());
     }
 
     private void collectDrops(NonNullList<ItemStack> drops, Random random, int fortune, float chance) {
         if (fruiting) {
-            if (PlantDrops.survives(random, chance)) drops.add(new ItemStack(PSItems.JUNIPER_BERRIES));
-        } else if (PlantDrops.survives(random, chance) && roll(random, SAPLING, fortune)) {
+            if (BlockDrops.survives(random, chance)) drops.add(new ItemStack(PSItems.JUNIPER_BERRIES));
+        } else if (BlockDrops.survives(random, chance) && roll(random, SAPLING, fortune)) {
             drops.add(new ItemStack(PSItems.JUNIPER_SAPLING));
         }
         if (roll(random, STICKS_OR_BERRIES, fortune)) {
             ItemStack bonus = new ItemStack(fruiting ? PSItems.JUNIPER_BERRIES : Items.STICK, 1 + random.nextInt(2));
-            PlantDrops.decay(bonus, random, chance);
+            BlockDrops.decay(bonus, random, chance);
             if (!bonus.isEmpty()) drops.add(bonus);
         }
-        if (fruiting && PlantDrops.survives(random, chance) && roll(random, APPLE, fortune)) {
+        if (fruiting && BlockDrops.survives(random, chance) && roll(random, APPLE, fortune)) {
             drops.add(new ItemStack(Items.APPLE));
         }
     }

@@ -56,6 +56,15 @@ abstract class FluidMachineBlock extends BlockContainer {
     }
 
     @Override
+    public void dropBlockAsItemWithChance(World world, BlockPos pos, IBlockState state, float chance, int fortune) {
+        if (BlockDrops.usesDecay(world, chance)) {
+            BlockDrops.dropPool(world, pos, state, chance, fortune, harvesters.get());
+        } else {
+            super.dropBlockAsItemWithChance(world, pos, state, chance, fortune);
+        }
+    }
+
+    @Override
     public void getDrops(NonNullList<ItemStack> drops, IBlockAccess world, BlockPos pos, IBlockState state, int fortune) {
         ItemStack stack = new ItemStack(Item.getItemFromBlock(this));
         FluidMachineBlockEntity machine = getMachine(world, pos);
