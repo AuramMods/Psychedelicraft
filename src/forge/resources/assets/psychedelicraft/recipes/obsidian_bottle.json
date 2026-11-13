@@ -1,12 +1,9 @@
 {
-  "type": "forge:ore_shapeless",
+  "type": "psychedelicraft:shapeless_fluid",
   "ingredients": [
     {
-      "fluid": "minecraft:lava",
-      "type": "psychedelicraft:filled_vessel",
-      "vessel": {
-        "item": "psychedelicraft:filled_glass_bottle"
-      }
+      "item": "psychedelicraft:filled_glass_bottle",
+      "fluid": "minecraft:lava"
     },
     {
       "item": "minecraft:water_bucket"

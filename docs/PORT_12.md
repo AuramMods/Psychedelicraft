@@ -707,7 +707,16 @@ sh run/production/background-qa/run.sh "$qa" game-background Overlay-QA \
 - The projectile regression passed crafting, rack and placed-drink checks, including nested fluid attributes. The server verified direct damage and no ignition before the water projectile's combined client tracking and no-explosion assertion failed. The previous jar entered the test world but had sustained tick delays and was stopped before the projectile check. The projectile entity and item classes are byte-for-byte identical across the two jars. Flight validation remains open.
 - The packaged jar's SHA-256 is `9c05c86ee610b48c4ba06d4a8cc098e9103f38ba465a34718c966cf058b3f973`. Evidence is under `run/production/runtime-qa-cycle70` in `build-production-offline.log`, `runtime-vessels.log`, `runtime-jei-verified.log`, `runtime-projectile-verified.log` and `game-jei-verified/screenshots/jei-11.png`.
 
-Next, compare the donor's fluid-aware shapeless recipes with the Forge reagent and remainder handling. Recheck projectile flight with separate assertions for client spawn data and server impact effects.
+### Cycle 71 · Fluid-aware shapeless crafting
+
+- Moved the donor's LSA square, obsidian bottle and obsidian dust recipes to the Forge `psychedelicraft:shapeless_fluid` factory. The LSA recipe retains the existing `lsa_square` recipe ID and `lsd_square` item ID. Forge ingredients and recipe constants supply item and group matching. A fluid specification accepts an ID or an object with a minimum volume and an NBT attribute filter.
+- Forge assigns one ingredient to each occupied slot and uses that same assignment to calculate crafting remainders. A positive volume drains exactly that amount and returns the vessel with its remaining fluid and tags. A fluid condition without a positive volume uses ordinary Forge item consumption and remainders. The obsidian quench consumes the lava bottle and returns the empty water bucket.
+- The clean Java 8 build and reobfuscation passed 139 tests. Tests exercised overlapping ingredient assignment, excess inputs, minimum volume, required fluid attributes, and the named vessel's remainder after its last dose.
+- The packaged jar ran in muted Forge 14.23.5.2864. The fixture matched all three donor recipes through the native registry and verified the water bucket and empty bowl remainders. An external recipe with overlapping ingredients drained 70 mB from a 120 mB bottle and preserved its nested tags. A survival client shift-click produced one square and left the named bowl with its two remaining millibuckets in the grid.
+- JEI rendered the square recipe and indexed a bowl holding 1 mB of stage-two extract. The same run passed the nine mod category checks and opened the filled crafting, coffee heating and dyed bottle recipes.
+- The packaged jar's SHA-256 is `d7aa2df34043f42afc209014baea8d4ff86fa70950ca2d6262f8a57cd093dadd`. Evidence is under `run/production/runtime-qa-cycle71` in `build-production-verified.log`, `runtime-fluid.log`, `runtime-jei.log` and `game-jei/screenshots/jei-12.png`.
+
+Next, recheck projectile flight with separate assertions for client spawn data and server impact effects.
 
 ## Repository and branch survey
 

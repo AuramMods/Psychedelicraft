@@ -1,5 +1,5 @@
 {
-  "type": "forge:ore_shapeless",
+  "type": "psychedelicraft:shapeless_fluid",
   "ingredients": [
     {
       "item": "psychedelicraft:obsidian_bottle"

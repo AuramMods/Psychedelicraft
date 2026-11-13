@@ -1,5 +1,6 @@
 package ivorius.psychedelicraft.recipe;
 
+import com.google.gson.JsonParser;
 import ivorius.psychedelicraft.fluid.BrewFluid;
 import ivorius.psychedelicraft.fluid.FluidContents;
 import ivorius.psychedelicraft.fluid.PSFluids;
@@ -10,7 +11,10 @@ import net.minecraft.init.Items;
 import net.minecraft.inventory.Container;
 import net.minecraft.inventory.InventoryCrafting;
 import net.minecraft.item.ItemStack;
+import net.minecraft.item.crafting.IRecipe;
+import net.minecraft.item.crafting.Ingredient;
 import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.util.NonNullList;
 import net.minecraftforge.fluids.FluidStack;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -21,7 +25,7 @@ import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
 
 public class LsaSquareRecipeTest {
-    private final LsaSquareRecipe recipe = new LsaSquareRecipe();
+    private final IRecipe recipe = recipe();
 
     @BeforeClass
     public static void bootstrap() {
@@ -75,6 +79,14 @@ public class LsaSquareRecipeTest {
         inventory.setInventorySlotContents(0, new ItemStack(Items.PAPER));
         inventory.setInventorySlotContents(3, vessel);
         return inventory;
+    }
+
+    private static IRecipe recipe() {
+        NonNullList<Ingredient> ingredients = NonNullList.create();
+        ingredients.add(Ingredient.fromItems(Items.PAPER));
+        ingredients.add(FluidStackIngredient.parse(Ingredient.fromItems(PSItems.FILLED_BOWL), new JsonParser()
+                .parse("{\"fluid\":\"psychedelicraft:morning_glory_extract\",\"attributes\":{\"distillation\":2},\"level\":1}")));
+        return new FluidAwareShapelessRecipe(null, ingredients, new ItemStack(PSItems.LSA_SQUARE));
     }
 
     private static ItemStack extract(ItemStack vessel, int volume, int stage) {

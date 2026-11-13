@@ -12,6 +12,7 @@ import ivorius.psychedelicraft.item.PortableFluidItem;
 import ivorius.psychedelicraft.recipe.FurnaceRecipe;
 import ivorius.psychedelicraft.recipe.DryingRecipe;
 import ivorius.psychedelicraft.recipe.FillReceptacleRecipe;
+import ivorius.psychedelicraft.recipe.FluidAwareShapelessRecipe;
 import ivorius.psychedelicraft.recipe.BottleRecipe;
 import ivorius.psychedelicraft.recipe.MashingRecipe;
 import mezz.jei.api.IGuiHelper;
@@ -154,6 +155,9 @@ public final class PsychedelicraftJeiPlugin implements IModPlugin {
                 }
             } else if (recipe instanceof FillReceptacleRecipe) {
                 ((FillReceptacleRecipe) recipe).getDisplayOutputs().forEach(this::indexVessel);
+            } else if (recipe instanceof FluidAwareShapelessRecipe) {
+                recipe.getIngredients().forEach(ingredient -> Arrays.stream(ingredient.getMatchingStacks())
+                        .filter(stack -> ingredient.apply(stack)).forEach(this::indexVessel));
             }
         });
         registry.addRecipes(dyedBottles, VanillaRecipeCategoryUid.CRAFTING);
