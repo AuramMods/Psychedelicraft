@@ -37,6 +37,7 @@ import net.minecraft.client.renderer.RenderItem;
 import net.minecraft.client.renderer.RenderGlobal;
 import net.minecraft.client.renderer.Tessellator;
 import net.minecraft.client.renderer.block.model.ItemCameraTransforms;
+import net.minecraft.client.renderer.texture.TextureAtlasSprite;
 import net.minecraft.client.renderer.tileentity.TileEntityItemStackRenderer;
 import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
 import net.minecraft.client.shader.ShaderManager;
@@ -44,8 +45,11 @@ import net.minecraft.entity.Entity;
 import net.minecraft.item.ItemStack;
 import net.minecraft.tileentity.TileEntityPiston;
 import net.minecraft.util.BlockRenderLayer;
+import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.MathHelper;
+import net.minecraft.util.math.RayTraceResult;
+import net.minecraft.world.IBlockAccess;
 import net.minecraftforge.client.event.EntityViewRenderEvent;
 import net.minecraftforge.client.event.RenderGameOverlayEvent;
 import net.minecraftforge.client.event.RenderWorldLastEvent;
@@ -123,6 +127,33 @@ public final class DrugRenderer {
     public static void drawTerrain(ChunkRenderContainer chunks, BlockRenderLayer layer) {
         try (Scope scope = beginGeometry(Minecraft.getMinecraft(), Material.TERRAIN, 0F)) {
             chunks.renderChunkLayer(layer);
+        }
+    }
+
+    public static void drawBlockCracks(BlockRendererDispatcher renderer, IBlockState state, BlockPos pos,
+                                       TextureAtlasSprite crack, IBlockAccess access, Tessellator tessellator) {
+        try (Scope scope = beginGeometry(Minecraft.getMinecraft(), Material.BLOCK_DAMAGE, 0F, pos)) {
+            renderer.renderBlockDamage(state, pos, crack, access);
+            if (scope != null && tessellator.getBuffer().getVertexCount() > 0) {
+                // The damage batch uses camera-relative vertices. Draw with this block's section offset.
+                tessellator.draw();
+                BufferBuilder buffer = tessellator.getBuffer();
+                buffer.begin(GL11.GL_QUADS, DefaultVertexFormats.BLOCK);
+                buffer.noColor();
+            }
+        }
+    }
+
+    public static void drawBlockOutline(AxisAlignedBB box, float red, float green, float blue, float alpha,
+                                        RayTraceResult target) {
+        try (Scope scope = beginGeometry(Minecraft.getMinecraft(), Material.BLOCK_OUTLINE, 0F, target.getBlockPos())) {
+            RenderGlobal.drawSelectionBoundingBox(box, red, green, blue, alpha);
+        }
+    }
+
+    public static void drawWorldBorder(Tessellator tessellator) {
+        try (Scope scope = beginGeometry(Minecraft.getMinecraft(), Material.WORLD_BORDER, 0F)) {
+            tessellator.draw();
         }
     }
 

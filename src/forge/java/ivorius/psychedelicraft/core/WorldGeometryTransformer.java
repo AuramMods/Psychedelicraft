@@ -18,13 +18,18 @@ import org.objectweb.asm.tree.MethodNode;
 import org.objectweb.asm.tree.TryCatchBlockNode;
 import org.objectweb.asm.tree.VarInsnNode;
 
+import java.util.Collections;
+
 import static ivorius.psychedelicraft.core.ClientEffectsTransformer.method;
+import static ivorius.psychedelicraft.core.EntityGeometryTransformer.patchCalls;
 
 public final class WorldGeometryTransformer implements IClassTransformer {
     private static final String RENDER_GLOBAL = "net.minecraft.client.renderer.RenderGlobal";
     private static final String FORGE_CLOUDS = "net.minecraftforge.client.CloudRenderer";
     private static final String ENTITY_RENDERER = "net.minecraft.client.renderer.EntityRenderer";
     private static final String PARTICLE_MANAGER = "net.minecraft.client.particle.ParticleManager";
+    private static final String TESSELLATOR = "net/minecraft/client/renderer/Tessellator";
+    private static final String RAY_TRACE = "Lnet/minecraft/util/math/RayTraceResult;";
     private static final String BILLBOARD_RENDER = "(Lnet/minecraft/client/renderer/BufferBuilder;"
             + "Lnet/minecraft/entity/Entity;FFFFFF)V";
     private static final String LAYER_DRAW = "(Lnet/minecraft/util/BlockRenderLayer;)V";
@@ -44,6 +49,7 @@ public final class WorldGeometryTransformer implements IClassTransformer {
             patchTerrain(method(type, "renderBlockLayer", "func_174982_a", LAYER_DRAW));
             patchSkyDraw(method(type, "renderSky", "func_174976_a", "(FI)V"), false);
             patchSkyDraw(method(type, "renderSkyEnd", "func_180448_r", "()V"), true);
+            patchBlockOverlays(type);
             patchTessellatorDraws(method(type, "renderClouds", "func_180447_b", VANILLA_CLOUD_DRAW), true);
             wrapClouds(type, method(type, "renderCloudsFancy", "func_180445_c", VANILLA_CLOUD_DRAW), false);
         } else if (FORGE_CLOUDS.equals(transformedName)) {
@@ -85,6 +91,43 @@ public final class WorldGeometryTransformer implements IClassTransformer {
                 || "net.minecraft.client.particle.ParticleFootStep".equals(name);
     }
 
+    private static void patchBlockOverlays(ClassNode type) {
+        MethodNode damage = method(type, "drawBlockDamageTexture", "func_174981_a", "(L" + TESSELLATOR
+                + ";Lnet/minecraft/client/renderer/BufferBuilder;Lnet/minecraft/entity/Entity;F)V");
+        Type tessellator = Type.getArgumentTypes(damage.desc)[0];
+        replaceOverlayCall(damage, "net/minecraft/client/renderer/BlockRendererDispatcher", "renderBlockDamage",
+                "func_175020_a", "(Lnet/minecraft/block/state/IBlockState;Lnet/minecraft/util/math/BlockPos;"
+                        + "Lnet/minecraft/client/renderer/texture/TextureAtlasSprite;Lnet/minecraft/world/IBlockAccess;)V",
+                "drawBlockCracks", tessellator, 1);
+
+        MethodNode outline = method(type, "drawSelectionBox", "func_72731_b",
+                "(Lnet/minecraft/entity/player/EntityPlayer;" + RAY_TRACE + "IF)V");
+        replaceOverlayCall(outline, RENDER_GLOBAL.replace('.', '/'), "drawSelectionBoundingBox", "func_189697_a",
+                "(Lnet/minecraft/util/math/AxisAlignedBB;FFFF)V", "drawBlockOutline",
+                Type.getArgumentTypes(outline.desc)[1], 2);
+
+        MethodNode border = method(type, "renderWorldBorder", "func_180449_a", "(Lnet/minecraft/entity/Entity;F)V");
+        patchCalls(Collections.singletonList(border), TESSELLATOR, "draw", "func_78381_a", "()V", "drawWorldBorder");
+    }
+
+    private static void replaceOverlayCall(MethodNode render, String owner, String name, String srg,
+                                           String descriptor, String hookName, Type extraArgument, int slot) {
+        FMLDeobfuscatingRemapper remapper = FMLDeobfuscatingRemapper.INSTANCE;
+        for (AbstractInsnNode instruction : render.instructions.toArray()) {
+            if (!(instruction instanceof MethodInsnNode)) continue;
+            MethodInsnNode call = (MethodInsnNode) instruction;
+            String mapped = remapper.mapMethodName(call.owner, call.name, call.desc);
+            if (!owner.equals(remapper.map(call.owner)) || !(name.equals(mapped) || srg.equals(mapped))
+                    || !descriptor.equals(remapper.mapMethodDesc(call.desc))) continue;
+            String receiver = call.getOpcode() == Opcodes.INVOKESTATIC ? "" : "L" + call.owner + ";";
+            render.instructions.insertBefore(call, new VarInsnNode(Opcodes.ALOAD, slot));
+            render.instructions.set(call, hook(hookName,
+                    "(" + receiver + call.desc.substring(1, call.desc.length() - 2) + extraArgument.getDescriptor() + ")V"));
+            return;
+        }
+        throw new IllegalStateException("Could not locate " + name + " in " + render.name);
+    }
+
     private static void patchSkyView(MethodNode render) {
         FMLDeobfuscatingRemapper remapper = FMLDeobfuscatingRemapper.INSTANCE;
         for (AbstractInsnNode instruction : render.instructions.toArray()) {
@@ -117,7 +160,7 @@ public final class WorldGeometryTransformer implements IClassTransformer {
         MethodInsnNode draw = (MethodInsnNode) instruction;
         FMLDeobfuscatingRemapper remapper = FMLDeobfuscatingRemapper.INSTANCE;
         String name = remapper.mapMethodName(draw.owner, draw.name, draw.desc);
-        return "net/minecraft/client/renderer/Tessellator".equals(remapper.map(draw.owner))
+        return TESSELLATOR.equals(remapper.map(draw.owner))
                 && ("draw".equals(name) || "func_78381_a".equals(name)) && "()V".equals(draw.desc);
     }
 

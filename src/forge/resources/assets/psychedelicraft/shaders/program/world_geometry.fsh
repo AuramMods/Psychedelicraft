@@ -9,7 +9,7 @@ uniform vec4 Pulses;
 uniform float FogMode;
 uniform float RadialFog;
 uniform float EntityModel;
-uniform float SkyMode;
+uniform float Untextured;
 uniform float PortalTexGen;
 uniform float EntityTextured;
 uniform vec4 EntityOverlay;
@@ -29,7 +29,7 @@ void main() {
   } else if (LightmapMode == 2.0) {
     light = texture2D(LightmapSampler, vec2(0.5));
   }
-  vec4 base = SkyMode == 1.0 ? vec4(1.0) : PortalTexGen > 0.0
+  vec4 base = Untextured > 0.0 ? vec4(1.0) : PortalTexGen > 0.0
       ? texture2DProj(ColorSampler, colorUv) : texture2D(ColorSampler, colorUv.xy);
   vec4 color;
   if (EntityModel > 0.0) {

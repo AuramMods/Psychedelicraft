@@ -80,8 +80,9 @@ public final class WorldGeometryShader implements IResourceManagerReloadListener
         float big = deform ? hallucinations.strength(Effect.BIG_WAVES) * 0.6F : 0F;
         float wiggle = deform ? hallucinations.strength(Effect.WIGGLE_WAVES) * 0.7F : 0F;
         float distant = deform ? hallucinations.strength(Effect.DISTANT_WORLD_DEFORMATION) : 0F;
-        // The donor's glint and End portal shaders do not use vertex color.
-        float surface = (!deform && !screen && !sky) || material == Material.ENTITY_GLINT || portal ? 0F
+        // The donor's glint, End portal and world border shaders read textures without vertex color.
+        float surface = (!deform && !screen && !sky) || material == Material.ENTITY_GLINT || portal
+                || material == Material.WORLD_BORDER ? 0F
                 : MathHelper.clamp(hallucinations.strength(Effect.SURFACE_FRACTALS), 0F, 1F);
         float fracture = deform ? (float) drugs.getActiveValue(DrugType.LSD) * 0.06F : 0F;
         float[] pulses = deform || screen ? hallucinations.pulseColor() : null;
@@ -103,9 +104,11 @@ public final class WorldGeometryShader implements IResourceManagerReloadListener
                 OpenGlHelper.glUseProgram(program.getProgram());
                 setSampler(program, "ColorSampler", 0);
                 setSampler(program, "LightmapSampler", 1);
-                upload(program, "FogMode", screen || sky ? 0F : fogMode());
-                upload(program, "RadialFog", !screen && !sky && radialFog() ? 1F : 0F);
+                boolean fog = !screen && !sky && material != Material.BLOCK_DAMAGE && material != Material.WORLD_BORDER;
+                upload(program, "FogMode", fog ? fogMode() : 0F);
+                upload(program, "RadialFog", fog && radialFog() ? 1F : 0F);
                 upload(program, "SkyMode", material == Material.SKY_GRADIENT ? 1F : sky ? 2F : 0F);
+                upload(program, "Untextured", material == Material.SKY_GRADIENT || material == Material.BLOCK_OUTLINE ? 1F : 0F);
                 upload(program, "PortalTexGen", portal ? 1F : 0F);
                 if (entity) entityState.upload(program);
                 else {
@@ -217,6 +220,9 @@ public final class WorldGeometryShader implements IResourceManagerReloadListener
 
     public enum Material {
         TERRAIN(1F, 1F),
+        BLOCK_DAMAGE(0F, 1F),
+        BLOCK_OUTLINE(0F, 1F),
+        WORLD_BORDER(0F, 1F),
         SCREEN(0F, 1F),
         SKY_GRADIENT(0F, 1F),
         END_SKY(0F, 1F),
