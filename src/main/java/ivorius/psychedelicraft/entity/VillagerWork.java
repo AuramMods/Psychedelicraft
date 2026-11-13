@@ -39,10 +39,12 @@ final class VillagerWork extends EntityAIBase {
     private static final String WORKSITE_DIMENSION = "WorksiteDimension";
     private static final int SEARCH_RADIUS = 32;
     private static final int BONE_MEAL = EnumDyeColor.WHITE.getDyeDamage();
+    private static final double WORK_DISTANCE_SQ = 1.73D * 1.73D;
 
     private final EntityVillager villager;
     private final VillagerTradePreview preview;
     private long nextTask;
+    private long lastWorkCheck;
     private BlockPos target;
     private Vec3d wander;
     private Job job;
@@ -56,24 +58,17 @@ final class VillagerWork extends EntityAIBase {
 
     @Override
     public boolean shouldExecute() {
-        if (villager.isChild() || villager.isTrading()) return false;
+        if (!canWork(villager)) return false;
         VillagerProfession profession = villager.getProfessionForge();
         if (profession != VillagerCareers.DEALER && profession != VillagerCareers.UNEMPLOYED
                 && profession != VillagerCareers.ADDICT) return false;
         long now = villager.world.getTotalWorldTime();
         if (now < nextTask) return false;
-        long time = villager.world.getWorldTime() % 24000L;
-        if (time < 2000 || time >= 9000) return false;
         nextTask = now + 40;
 
         if (profession == VillagerCareers.ADDICT) {
-            NBTTagCompound data = VillagerCareers.data(villager);
-            if (now >= data.getLong("NextRestockCheck") && villager.getRNG().nextBoolean()) {
-                data.setLong("NextRestockCheck", now + 300);
-                VillagerCareers.restock(villager);
-            }
             EntityPlayer player = villager.world.getClosestPlayerToEntity(villager, 9);
-            if (player == null || player.isSpectator()) return false;
+            if (player == null) return false;
             wander = RandomPositionGenerator.findRandomTarget(villager, 8, 6);
             nextTask = now + 180;
             job = Job.WANDER;
@@ -109,6 +104,11 @@ final class VillagerWork extends EntityAIBase {
         return true;
     }
 
+    static boolean canWork(EntityVillager villager) {
+        long time = Math.floorMod(villager.world.getWorldTime(), 24000L);
+        return !villager.isChild() && !villager.isTrading() && time >= 2000 && time < 9000;
+    }
+
     @Override
     public void startExecuting() {
         remaining = 160;
@@ -121,7 +121,7 @@ final class VillagerWork extends EntityAIBase {
 
     @Override
     public boolean shouldContinueExecuting() {
-        return remaining > 0 && villager.isEntityAlive() && !villager.isTrading()
+        return remaining > 0 && villager.isEntityAlive() && canWork(villager)
                 && (job != Job.WANDER || !villager.getNavigator().noPath());
     }
 
@@ -136,7 +136,8 @@ final class VillagerWork extends EntityAIBase {
         if (preview.shown().isEmpty()) {
             villager.getLookHelper().setLookPosition(target.getX() + 0.5D, target.getY() + 0.5D, target.getZ() + 0.5D, 20, 20);
         }
-        if (villager.getDistanceSqToCenter(target) > (job == Job.CROP ? 2.25D : 6.25D)) {
+        double range = job == Job.CLAIM ? 6.25D : job == Job.CROP ? 2.25D : WORK_DISTANCE_SQ;
+        if (villager.getDistanceSqToCenter(target) > range) {
             if (remaining % 20 == 0 && !moveTowardTarget()) remaining = 0;
             return;
         }
@@ -173,13 +174,19 @@ final class VillagerWork extends EntityAIBase {
     private void workTable() {
         DryingTableBlockEntity table = table(villager.world, target);
         if (table == null || !table.claim(villager.getUniqueID())) return;
+        long now = villager.world.getTotalWorldTime();
+        if (now - lastWorkCheck < 300 || villager.world.rand.nextInt(2) != 0) return;
+        lastWorkCheck = now;
+        // The 1.12 drink sample is also one of the donor's wandering-trader samples.
+        villager.playSound(SoundEvents.ENTITY_GENERIC_DRINK, 0.65F,
+                1F + (villager.getRNG().nextFloat() - villager.getRNG().nextFloat()) * 0.2F);
         ItemStack output = table.removeStackFromSlot(DryingRecipe.OUTPUT);
         if (!output.isEmpty()) {
             ItemStack excess = villager.getVillagerInventory().addItem(output);
             if (!excess.isEmpty()) villager.entityDropItem(excess, 0F);
         }
         if (table.isEmpty()) loadBatch(villager.getVillagerInventory(), table);
-        if (VillagerCareers.restock(villager)) villager.playSound(SoundEvents.ENTITY_WITCH_DRINK, 0.5F, 1F);
+        VillagerCareers.restock(villager);
     }
 
     static boolean loadBatch(IInventory inventory, DryingTableBlockEntity table) {

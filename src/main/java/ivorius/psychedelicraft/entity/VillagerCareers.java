@@ -114,6 +114,7 @@ public final class VillagerCareers {
             if (villager.tasks.taskEntries.stream().noneMatch(entry -> entry.action instanceof VillagerWork)) {
                 VillagerTradePreview preview = new VillagerTradePreview(villager);
                 villager.tasks.addTask(7, new VillagerWork(villager, preview));
+                villager.tasks.addTask(7, new AddictRestockTask(villager));
                 villager.tasks.addTask(8, preview);
             }
         }

@@ -4,14 +4,19 @@ import com.google.gson.JsonParser;
 import ivorius.psychedelicraft.block.entity.DryingTableBlockEntity;
 import ivorius.psychedelicraft.item.PSItems;
 import ivorius.psychedelicraft.recipe.DryingRecipe;
+import net.minecraft.entity.passive.EntityVillager;
 import net.minecraft.init.Bootstrap;
 import net.minecraft.init.Blocks;
 import net.minecraft.init.Items;
 import net.minecraft.inventory.InventoryBasic;
 import net.minecraft.item.ItemStack;
+import net.minecraft.profiler.Profiler;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.village.MerchantRecipe;
 import net.minecraft.village.MerchantRecipeList;
+import net.minecraft.world.World;
+import net.minecraft.world.WorldProviderSurface;
+import net.minecraft.world.chunk.IChunkProvider;
 import net.minecraftforge.common.crafting.JsonContext;
 import net.minecraftforge.fml.common.registry.ForgeRegistries;
 import org.junit.BeforeClass;
@@ -84,5 +89,47 @@ public class VillagerWorkTest {
         assertSame(Items.BREAD, results.get(1).getItem());
         results.get(0).shrink(1);
         assertEquals(3, offers.get(0).getItemToSell().getCount());
+    }
+
+    @Test
+    public void adultWorkUsesTheSameWindowOnEachWorldDay() {
+        WorkWorld world = new WorkWorld();
+        EntityVillager villager = new EntityVillager(world);
+        for (long day : new long[] {-24000, 0, 24000}) {
+            world.dayTime = day + 1999;
+            assertFalse(VillagerWork.canWork(villager));
+            world.dayTime++;
+            assertTrue(VillagerWork.canWork(villager));
+            world.dayTime = day + 8999;
+            assertTrue(VillagerWork.canWork(villager));
+            world.dayTime++;
+            assertFalse(VillagerWork.canWork(villager));
+        }
+        world.dayTime = 2000;
+        villager.setGrowingAge(-1);
+        assertFalse(VillagerWork.canWork(villager));
+    }
+
+    private static final class WorkWorld extends World {
+        private long dayTime;
+
+        private WorkWorld() {
+            super(null, null, new WorldProviderSurface(), new Profiler(), false);
+        }
+
+        @Override
+        public long getWorldTime() {
+            return dayTime;
+        }
+
+        @Override
+        protected IChunkProvider createChunkProvider() {
+            return null;
+        }
+
+        @Override
+        protected boolean isChunkLoaded(int x, int z, boolean allowEmpty) {
+            return false;
+        }
     }
 }
