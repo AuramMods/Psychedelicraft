@@ -38,8 +38,8 @@ final class RastaHeadModel extends ModelBase {
     }
 
     void render() {
-        head.render(0.0625F);
-        hat.render(0.0625F);
-        joint.render(0.0625F);
+        DrugRenderer.drawWorldPart(head, 0.0625F);
+        DrugRenderer.drawWorldPart(hat, 0.0625F);
+        DrugRenderer.drawWorldPart(joint, 0.0625F);
     }
 }

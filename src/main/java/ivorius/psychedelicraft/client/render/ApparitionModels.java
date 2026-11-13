@@ -281,7 +281,7 @@ enum ApparitionModels {
             renderer.rotateAngleZ = roll + wing * (0.2F + MathHelper.cos(age * 1.9F) * 0.46F);
             GlStateManager.color(red * (color >> 16 & 255) / 255F, green * (color >> 8 & 255) / 255F,
                     blue * (color & 255) / 255F, alpha);
-            renderer.render(0.0625F);
+            DrugRenderer.drawWorldPart(renderer, 0.0625F);
             if (!children.isEmpty()) {
                 GlStateManager.pushMatrix();
                 renderer.postRender(0.0625F);
