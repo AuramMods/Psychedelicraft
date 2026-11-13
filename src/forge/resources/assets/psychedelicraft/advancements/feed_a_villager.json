@@ -17,7 +17,10 @@
   },
   "criteria": {
     "done_the_thing": {
-      "trigger": "minecraft:impossible"
+      "trigger": "psychedelicraft:custom",
+      "conditions": {
+        "event": "feed_villager"
+      }
     }
   },
   "requirements": [

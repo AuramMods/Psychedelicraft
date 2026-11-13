@@ -4,6 +4,7 @@
 
 package ivorius.psychedelicraft;
 
+import ivorius.psychedelicraft.advancement.PSCriteria;
 import ivorius.psychedelicraft.entity.drug.DrugCapability;
 import ivorius.psychedelicraft.command.VomitCommand;
 import ivorius.psychedelicraft.command.DrugCommand;
@@ -39,6 +40,7 @@ public class Psychedelicraft {
     @Mod.EventHandler
     public void preInit(FMLPreInitializationEvent event) {
         PSFluids.register();
+        PSCriteria.register();
         DrugCapability.register();
         Channel.register();
         ChestLoot.register();

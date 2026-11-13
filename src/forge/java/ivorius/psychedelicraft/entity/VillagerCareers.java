@@ -6,10 +6,10 @@
 package ivorius.psychedelicraft.entity;
 
 import ivorius.psychedelicraft.Psychedelicraft;
+import ivorius.psychedelicraft.advancement.PSCriteria;
 import ivorius.psychedelicraft.block.entity.DryingTableBlockEntity;
 import ivorius.psychedelicraft.config.PSConfig;
 import ivorius.psychedelicraft.item.PSItems;
-import net.minecraft.advancements.Advancement;
 import net.minecraft.advancements.CriteriaTriggers;
 import net.minecraft.entity.item.EntityXPOrb;
 import net.minecraft.entity.item.EntityItem;
@@ -143,12 +143,7 @@ public final class VillagerCareers {
             villager.playSound(SoundEvents.ENTITY_GENERIC_EAT, 1F + villager.getRNG().nextFloat(),
                     0.3F + villager.getRNG().nextFloat() * 0.7F);
             changeCareer(villager, ADDICT);
-            if (event.getEntityPlayer() instanceof EntityPlayerMP) {
-                EntityPlayerMP player = (EntityPlayerMP) event.getEntityPlayer();
-                Advancement advancement = player.getServerWorld().getAdvancementManager()
-                        .getAdvancement(Psychedelicraft.id("feed_a_villager"));
-                if (advancement != null) player.getAdvancements().grantCriterion(advancement, "done_the_thing");
-            }
+            PSCriteria.feedVillager(event.getEntityPlayer());
         }
     }
 

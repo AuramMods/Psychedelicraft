@@ -17,11 +17,13 @@
   },
   "criteria": {
     "consumed_the_thing": {
-      "trigger": "minecraft:consume_item",
+      "trigger": "minecraft:inventory_changed",
       "conditions": {
-        "item": {
-          "item": "psychedelicraft:dried_cannabis_buds"
-        }
+        "items": [
+          {
+            "item": "psychedelicraft:dried_cannabis_buds"
+          }
+        ]
       }
     }
   },

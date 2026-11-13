@@ -102,6 +102,10 @@ public final class BrewFluid extends WorldFluid {
         return style(stack).symbol;
     }
 
+    public boolean isDrinkType(FluidStack stack, String drink) {
+        return style(stack).name.equals(drink);
+    }
+
     void addServingInfluences(FluidStack stack, double buckets, DrugProperties properties) {
         State state = new State(stack);
         Style style = style(state);

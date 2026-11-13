@@ -4,9 +4,13 @@
 
 package ivorius.psychedelicraft.screen;
 
+import ivorius.psychedelicraft.advancement.PSCriteria;
 import ivorius.psychedelicraft.block.entity.FluidMachineBlockEntity;
+import ivorius.psychedelicraft.block.entity.MashTubBlockEntity;
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.entity.player.InventoryPlayer;
+import net.minecraft.inventory.ClickType;
 import net.minecraft.inventory.Container;
 import net.minecraft.inventory.Slot;
 import net.minecraft.item.ItemStack;
@@ -35,6 +39,20 @@ public final class FluidMachineContainer extends Container {
     @Override
     public boolean canInteractWith(EntityPlayer player) {
         return machine.isUsableByPlayer(player);
+    }
+
+    @Override
+    public ItemStack slotClick(int slotId, int dragType, ClickType clickType, EntityPlayer player) {
+        if (!(machine instanceof MashTubBlockEntity) || !(player instanceof EntityPlayerMP)) {
+            return super.slotClick(slotId, dragType, clickType, player);
+        }
+        Slot output = inventorySlots.get(FluidMachineBlockEntity.OUTPUT);
+        ItemStack before = output.getStack().copy();
+        ItemStack result = super.slotClick(slotId, dragType, clickType, player);
+        if (!before.isEmpty() && !ItemStack.areItemStacksEqual(before, output.getStack())) {
+            PSCriteria.tookMash(player, before);
+        }
+        return result;
     }
 
     @Override

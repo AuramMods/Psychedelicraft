@@ -5,6 +5,7 @@
 package ivorius.psychedelicraft.entity.drug.type;
 
 import ivorius.psychedelicraft.PSDamageTypes;
+import ivorius.psychedelicraft.advancement.PSCriteria;
 import ivorius.psychedelicraft.entity.drug.DrugProperties;
 import ivorius.psychedelicraft.entity.drug.DrugType;
 import net.minecraft.entity.player.EntityPlayer;
@@ -62,6 +63,7 @@ public final class AlcoholDrug extends SimpleDrug {
         if (player != null && !player.world.isRemote && strength > 0 && player.getRNG().nextFloat() > 1 - strength) {
             player.world.setEntityState(player, (byte) 2);
             properties.addToDrug(DrugType.SLEEP_DEPRIVATION, 0.25);
+            PSCriteria.hangover(player);
         }
     }
 }

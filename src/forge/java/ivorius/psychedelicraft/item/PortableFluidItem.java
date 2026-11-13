@@ -1,8 +1,11 @@
 package ivorius.psychedelicraft.item;
 
 import ivorius.psychedelicraft.Psychedelicraft;
+import ivorius.psychedelicraft.advancement.PSCriteria;
 import ivorius.psychedelicraft.block.BarrelBlock;
+import ivorius.psychedelicraft.block.MashTubBlock;
 import ivorius.psychedelicraft.block.PlacedDrinksBlock;
+import ivorius.psychedelicraft.block.entity.MashTubBlockEntity;
 import ivorius.psychedelicraft.fluid.BrewFluid;
 import ivorius.psychedelicraft.fluid.FluidVessel;
 import ivorius.psychedelicraft.fluid.FluidVesselHandler;
@@ -71,10 +74,12 @@ public class PortableFluidItem extends Item {
     @Override
     public EnumActionResult onItemUseFirst(EntityPlayer player, World world, BlockPos pos, EnumFacing face,
                                           float x, float y, float z, EnumHand hand) {
-        return !world.isRemote && !(world.getBlockState(pos).getBlock() instanceof BarrelBlock)
-                && world.isBlockModifiable(player, pos)
-                && FluidUtil.interactWithFluidHandler(player, hand, world, pos, face)
-                ? EnumActionResult.SUCCESS : EnumActionResult.PASS;
+        if (world.isRemote || world.getBlockState(pos).getBlock() instanceof BarrelBlock
+                || !world.isBlockModifiable(player, pos)) return EnumActionResult.PASS;
+        MashTubBlockEntity vat = MashTubBlock.getVat(world, pos);
+        boolean transferred = vat == null ? FluidUtil.interactWithFluidHandler(player, hand, world, pos, face)
+                : vat.interactWithVessel(player, hand);
+        return transferred ? EnumActionResult.SUCCESS : EnumActionResult.PASS;
     }
 
     @Override
@@ -100,6 +105,7 @@ public class PortableFluidItem extends Item {
         EntityPlayer player = (EntityPlayer) entity;
         if (!world.isRemote) {
             PSFluids.consume(player, portion);
+            PSCriteria.drankBrew(player, portion);
             player.addStat(StatList.getObjectUseStats(this));
             if (player instanceof EntityPlayerMP) {
                 CriteriaTriggers.CONSUME_ITEM.trigger((EntityPlayerMP) player, stack);

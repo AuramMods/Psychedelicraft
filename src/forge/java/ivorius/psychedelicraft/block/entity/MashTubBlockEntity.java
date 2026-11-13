@@ -4,22 +4,26 @@
 
 package ivorius.psychedelicraft.block.entity;
 
+import ivorius.psychedelicraft.advancement.PSCriteria;
 import ivorius.psychedelicraft.fluid.PSFluids;
 import ivorius.psychedelicraft.fluid.FluidVesselHandler;
 import ivorius.psychedelicraft.client.particle.SlurryBubble;
 import ivorius.psychedelicraft.network.Channel;
 import ivorius.psychedelicraft.recipe.MashingRecipe;
+import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.init.SoundEvents;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.crafting.IRecipe;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTTagList;
 import net.minecraft.util.ResourceLocation;
+import net.minecraft.util.EnumHand;
 import net.minecraft.util.SoundCategory;
 import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Vec3d;
 import net.minecraftforge.fluids.FluidStack;
+import net.minecraftforge.fluids.FluidUtil;
 import net.minecraftforge.fml.common.registry.ForgeRegistries;
 
 import java.util.ArrayList;
@@ -49,6 +53,14 @@ public final class MashTubBlockEntity extends FluidProcessingBlockEntity {
 
     public float getFluidSurface() {
         return getTank().getFluidAmount() == 0 ? 0 : 0.3F + 0.6F * getTank().getFluidAmount() / getTank().getCapacity();
+    }
+
+    public boolean interactWithVessel(EntityPlayer player, EnumHand hand) {
+        FluidStack contents = getTank().getFluid();
+        int amount = getTank().getFluidAmount();
+        if (!FluidUtil.interactWithFluidHandler(player, hand, getTank())) return false;
+        if (getTank().getFluidAmount() < amount) PSCriteria.tookMash(player, contents);
+        return true;
     }
 
     @Override

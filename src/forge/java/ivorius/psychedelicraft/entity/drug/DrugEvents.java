@@ -1,6 +1,7 @@
 package ivorius.psychedelicraft.entity.drug;
 
 import ivorius.psychedelicraft.Psychedelicraft;
+import ivorius.psychedelicraft.advancement.PSCriteria;
 import ivorius.psychedelicraft.config.PSConfig;
 import ivorius.psychedelicraft.entity.RealityRiftEntity;
 import ivorius.psychedelicraft.network.Channel;
@@ -46,6 +47,7 @@ public final class DrugEvents {
         if (properties != null) {
             properties.tick(event.player.ticksExisted, event.player);
             if (!event.player.world.isRemote) {
+                PSCriteria.drugsChanged(event.player, properties);
                 float speed = properties.getMultiplier(Drug::speedModifier);
                 updateSpeed(event.player.getEntityAttribute(SharedMonsterAttributes.MOVEMENT_SPEED), speed);
                 updateSpeed(event.player.getEntityAttribute(SharedMonsterAttributes.ATTACK_SPEED), speed);
