@@ -29,6 +29,7 @@ import net.minecraft.client.renderer.EntityRenderer;
 import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.client.renderer.ItemRenderer;
 import net.minecraft.client.renderer.RenderItem;
+import net.minecraft.client.renderer.RenderGlobal;
 import net.minecraft.client.renderer.Tessellator;
 import net.minecraft.client.renderer.block.model.ItemCameraTransforms;
 import net.minecraft.client.renderer.tileentity.TileEntityItemStackRenderer;
@@ -121,6 +122,27 @@ public final class DrugRenderer {
 
     public static void drawParticles(Tessellator tessellator) {
         try (Scope scope = beginGeometry(Minecraft.getMinecraft(), Material.PARTICLES, 0F)) {
+            tessellator.draw();
+        }
+    }
+
+    public static void renderSky(RenderGlobal renderer, float partialTicks, int pass) {
+        Minecraft client = Minecraft.getMinecraft();
+        if (geometryDrugs(client) == null || hallucinations.strength(Effect.SURFACE_FRACTALS) <= 0F) {
+            renderer.renderSky(partialTicks, pass);
+            return;
+        }
+        // Recover the coordinates after each sky draw's local rotation, before the camera transforms them.
+        GEOMETRY.captureEntityView();
+        try {
+            renderer.renderSky(partialTicks, pass);
+        } finally {
+            GEOMETRY.clearEntityView();
+        }
+    }
+
+    public static void drawSky(Tessellator tessellator, boolean textured) {
+        try (Scope scope = GEOMETRY.beginSky(Minecraft.getMinecraft(), hallucinations, textured)) {
             tessellator.draw();
         }
     }

@@ -42,11 +42,14 @@ public final class WorldGeometryTransformer implements IClassTransformer {
         new ClassReader(bytes).accept(type, 0);
         if (RENDER_GLOBAL.equals(transformedName)) {
             patchTerrain(method(type, "renderBlockLayer", "func_174982_a", LAYER_DRAW));
+            patchSkyDraw(method(type, "renderSky", "func_174976_a", "(FI)V"), false);
+            patchSkyDraw(method(type, "renderSkyEnd", "func_180448_r", "()V"), true);
             patchTessellatorDraws(method(type, "renderClouds", "func_180447_b", VANILLA_CLOUD_DRAW), true);
             wrapClouds(type, method(type, "renderCloudsFancy", "func_180445_c", VANILLA_CLOUD_DRAW), false);
         } else if (FORGE_CLOUDS.equals(transformedName)) {
             wrapClouds(type, method(type, "render", "render", "(IF)Z"), true);
         } else if (ENTITY_RENDERER.equals(transformedName)) {
+            patchSkyView(method(type, "renderWorldPass", "func_175068_a", "(IFJ)V"));
             patchTessellatorDraws(method(type, "renderRainSnow", "func_78474_d", "(F)V"), false);
         } else if (PARTICLE_MANAGER.equals(transformedName)) {
             patchTessellatorDraws(method(type, "renderParticles", "func_78874_a", "(Lnet/minecraft/entity/Entity;F)V"), false);
@@ -82,23 +85,54 @@ public final class WorldGeometryTransformer implements IClassTransformer {
                 || "net.minecraft.client.particle.ParticleFootStep".equals(name);
     }
 
-    private static void patchTessellatorDraws(MethodNode render, boolean fastClouds) {
+    private static void patchSkyView(MethodNode render) {
         FMLDeobfuscatingRemapper remapper = FMLDeobfuscatingRemapper.INSTANCE;
-        boolean patched = false;
         for (AbstractInsnNode instruction : render.instructions.toArray()) {
             if (instruction.getOpcode() != Opcodes.INVOKEVIRTUAL) continue;
             MethodInsnNode draw = (MethodInsnNode) instruction;
             String name = remapper.mapMethodName(draw.owner, draw.name, draw.desc);
-            if ("net/minecraft/client/renderer/Tessellator".equals(remapper.map(draw.owner))
-                    && ("draw".equals(name) || "func_78381_a".equals(name)) && "()V".equals(draw.desc)) {
-                if (fastClouds) {
-                    render.instructions.insertBefore(draw, new VarInsnNode(Opcodes.DLOAD, 5));
-                    render.instructions.set(draw, hook("drawFastClouds", "(L" + draw.owner + ";D)V"));
-                } else {
-                    render.instructions.set(draw, hook("drawParticles", "(L" + draw.owner + ";)V"));
-                }
-                patched = true;
+            if ("net/minecraft/client/renderer/RenderGlobal".equals(remapper.map(draw.owner))
+                    && ("renderSky".equals(name) || "func_174976_a".equals(name)) && "(FI)V".equals(draw.desc)) {
+                render.instructions.set(draw, hook("renderSky", "(L" + draw.owner + ";FI)V"));
+                return;
             }
+        }
+        throw new IllegalStateException("Could not locate Forge 1.12 sky render call");
+    }
+
+    private static void patchSkyDraw(MethodNode render, boolean textured) {
+        for (AbstractInsnNode instruction : render.instructions.toArray()) {
+            if (!isTessellatorDraw(instruction)) continue;
+            MethodInsnNode draw = (MethodInsnNode) instruction;
+            // The first Overworld flush draws the sunrise gradient. The End flush repeats for each face.
+            render.instructions.insertBefore(draw, new InsnNode(textured ? Opcodes.ICONST_1 : Opcodes.ICONST_0));
+            render.instructions.set(draw, hook("drawSky", "(L" + draw.owner + ";Z)V"));
+            return;
+        }
+        throw new IllegalStateException("Could not locate the sky draw in " + render.name);
+    }
+
+    private static boolean isTessellatorDraw(AbstractInsnNode instruction) {
+        if (instruction.getOpcode() != Opcodes.INVOKEVIRTUAL) return false;
+        MethodInsnNode draw = (MethodInsnNode) instruction;
+        FMLDeobfuscatingRemapper remapper = FMLDeobfuscatingRemapper.INSTANCE;
+        String name = remapper.mapMethodName(draw.owner, draw.name, draw.desc);
+        return "net/minecraft/client/renderer/Tessellator".equals(remapper.map(draw.owner))
+                && ("draw".equals(name) || "func_78381_a".equals(name)) && "()V".equals(draw.desc);
+    }
+
+    private static void patchTessellatorDraws(MethodNode render, boolean fastClouds) {
+        boolean patched = false;
+        for (AbstractInsnNode instruction : render.instructions.toArray()) {
+            if (!isTessellatorDraw(instruction)) continue;
+            MethodInsnNode draw = (MethodInsnNode) instruction;
+            if (fastClouds) {
+                render.instructions.insertBefore(draw, new VarInsnNode(Opcodes.DLOAD, 5));
+                render.instructions.set(draw, hook("drawFastClouds", "(L" + draw.owner + ";D)V"));
+            } else {
+                render.instructions.set(draw, hook("drawParticles", "(L" + draw.owner + ";)V"));
+            }
+            patched = true;
         }
         if (!patched) throw new IllegalStateException("Could not locate the tessellator draw in " + render.name);
     }

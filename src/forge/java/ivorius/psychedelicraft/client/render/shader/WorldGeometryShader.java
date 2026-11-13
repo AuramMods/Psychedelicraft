@@ -61,19 +61,26 @@ public final class WorldGeometryShader implements IResourceManagerReloadListener
     }
 
     @Nullable
+    public Scope beginSky(Minecraft client, HallucinationManager hallucinations, boolean textured) {
+        return begin(client, null, hallucinations, null, textured ? Material.END_SKY : Material.SKY_GRADIENT,
+                0F, null, null);
+    }
+
+    @Nullable
     private Scope begin(Minecraft client, @Nullable EntityPlayerSP player, HallucinationManager hallucinations,
                         @Nullable DrugProperties drugs, Material material, float cloudY,
                         @Nullable BlockPos anchor, @Nullable ShaderManager zeroMatter) {
         boolean entity = material == Material.ENTITY || material == Material.ENTITY_GLINT;
         boolean screen = material == Material.SCREEN;
+        boolean sky = material == Material.SKY_GRADIENT || material == Material.END_SKY;
         boolean deform = player != null && drugs != null && (!entity || entityState.hasView());
-        if (!deform && !screen && zeroMatter == null) return null;
+        if (!deform && !screen && (!sky || !entityState.hasView()) && zeroMatter == null) return null;
         float small = deform ? hallucinations.strength(Effect.SMALL_WAVES) * 0.5F : 0F;
         float big = deform ? hallucinations.strength(Effect.BIG_WAVES) * 0.6F : 0F;
         float wiggle = deform ? hallucinations.strength(Effect.WIGGLE_WAVES) * 0.7F : 0F;
         float distant = deform ? hallucinations.strength(Effect.DISTANT_WORLD_DEFORMATION) : 0F;
         // The donor's glint fragment shader reads its texture and modulation color directly.
-        float surface = (!deform && !screen) || material == Material.ENTITY_GLINT ? 0F
+        float surface = (!deform && !screen && !sky) || material == Material.ENTITY_GLINT ? 0F
                 : MathHelper.clamp(hallucinations.strength(Effect.SURFACE_FRACTALS), 0F, 1F);
         float fracture = deform ? (float) drugs.getActiveValue(DrugType.LSD) * 0.06F : 0F;
         float[] pulses = deform || screen ? hallucinations.pulseColor() : null;
@@ -95,10 +102,14 @@ public final class WorldGeometryShader implements IResourceManagerReloadListener
                 OpenGlHelper.glUseProgram(program.getProgram());
                 setSampler(program, "ColorSampler", 0);
                 setSampler(program, "LightmapSampler", 1);
-                upload(program, "FogMode", screen ? 0F : fogMode());
-                upload(program, "RadialFog", !screen && radialFog() ? 1F : 0F);
+                upload(program, "FogMode", screen || sky ? 0F : fogMode());
+                upload(program, "RadialFog", !screen && !sky && radialFog() ? 1F : 0F);
+                upload(program, "SkyMode", material == Material.SKY_GRADIENT ? 1F : sky ? 2F : 0F);
                 if (entity) entityState.upload(program);
-                else upload(program, "LightmapMode", material.lightmapMode);
+                else {
+                    upload(program, "LightmapMode", material.lightmapMode);
+                    if (sky) entityState.uploadView(program);
+                }
             } else if (deform) {
                 entityState.uploadView(program);
             }
@@ -205,6 +216,8 @@ public final class WorldGeometryShader implements IResourceManagerReloadListener
     public enum Material {
         TERRAIN(1F, 1F),
         SCREEN(0F, 1F),
+        SKY_GRADIENT(0F, 1F),
+        END_SKY(0F, 1F),
         PARTICLES(1F, 1F),
         ENTITY(1F, 1F),
         ENTITY_GLINT(1F, 1F),

@@ -10,6 +10,7 @@ uniform float SurfaceFractalStrength;
 uniform vec4 SurfaceFractalCoords;
 uniform vec4 GeometryCoordinates;
 uniform float EntityModel;
+uniform float SkyMode;
 uniform mat4 EntityViewToWorld;
 uniform float EntityLighting;
 uniform float EntityColorMaterial;
@@ -40,7 +41,7 @@ float diffuseLight(vec3 normal, vec3 direction) {
 void main() {
   vec4 view = gl_ModelViewMatrix * gl_Vertex;
   vec3 position = gl_Vertex.xyz;
-  if (EntityModel > 0.0) {
+  if (EntityModel > 0.0 || SkyMode > 0.0) {
     position = (EntityViewToWorld * view).xyz;
   }
   position.xz *= GeometryCoordinates.w;
