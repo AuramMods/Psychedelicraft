@@ -1,9 +1,9 @@
 {
 	"parent": "minecraft:block/block",
 	"textures": {
-		"particle": "#lattice",
-		"lattice": "psychedelicraft:block/lattice",
-		"grapes": "psychedelicraft:block/wine_grape_lattice_0"
+		"particle": "psychedelicraft:blocks/lattice",
+		"lattice": "psychedelicraft:blocks/lattice",
+		"grapes": "psychedelicraft:blocks/wine_grape_lattice_0"
 	},
 	"elements": [
 		{

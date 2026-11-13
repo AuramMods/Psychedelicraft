@@ -1,52 +1,83 @@
 /*
- *  Copyright (c) 2014, Lukas Tenbrink.
- *  * http://lukas.axxim.net
+ * Copyright (c) 2014, Lukas Tenbrink.
  */
 
 package ivorius.psychedelicraft.entity.drug;
 
-import net.fabricmc.fabric.api.event.registry.FabricRegistryBuilder;
-import net.minecraft.registry.Registry;
-import net.minecraft.registry.RegistryKey;
-import net.minecraft.util.Identifier;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.LinkedHashMap;
+import java.util.Map;
+import java.util.Optional;
+import java.util.function.Supplier;
 
-import java.util.function.Function;
-
-import ivorius.psychedelicraft.PSSounds;
 import ivorius.psychedelicraft.Psychedelicraft;
-import ivorius.psychedelicraft.entity.drug.type.*;
+import ivorius.psychedelicraft.entity.drug.type.AlcoholDrug;
+import ivorius.psychedelicraft.entity.drug.type.BathSaltsDrug;
+import ivorius.psychedelicraft.entity.drug.type.CannabisDrug;
+import ivorius.psychedelicraft.entity.drug.type.CocaineDrug;
+import ivorius.psychedelicraft.entity.drug.type.SleepDeprivationDrug;
+import ivorius.psychedelicraft.entity.drug.type.TobaccoDrug;
+import ivorius.psychedelicraft.entity.drug.type.BrownShroomsDrug;
+import ivorius.psychedelicraft.entity.drug.type.CaffeineDrug;
+import ivorius.psychedelicraft.entity.drug.type.HarmoniumDrug;
+import ivorius.psychedelicraft.entity.drug.type.LsdDrug;
+import ivorius.psychedelicraft.entity.drug.type.PeyoteDrug;
+import ivorius.psychedelicraft.entity.drug.type.PowerDrug;
+import ivorius.psychedelicraft.entity.drug.type.RedShroomsDrug;
+import ivorius.psychedelicraft.entity.drug.type.SimpleDrug;
+import ivorius.psychedelicraft.entity.drug.type.WarmthDrug;
 
-/**
- * Created by lukas on 22.10.14.
- */
-public record DrugType (Identifier id, Function<DrugType, Drug> constructor) {
-    public static final Registry<DrugType> REGISTRY = FabricRegistryBuilder.createSimple(RegistryKey.<DrugType>ofRegistry(Psychedelicraft.id("drugs"))).buildAndRegister();
-    public static final DrugType ALCOHOL = register("alcohol", type -> new AlcoholDrug(type, 1, 0.0002d));
-    public static final DrugType CANNABIS = register("cannabis", type -> new CannabisDrug(1, 0.0002d));
-    public static final DrugType BROWN_SHROOMS = register("brown_shrooms", type -> new BrownShroomsDrug(1, 0.0002d));
-    public static final DrugType RED_SHROOMS = register("red_shrooms", type -> new RedShroomsDrug(1, 0.0002d));
-    public static final DrugType TOBACCO = register("tobacco", type -> new TobaccoDrug(1, 0.003d));
-    public static final DrugType COCAINE = register("coccaine", type -> new CocaineDrug(1, 0.0003d));
-    public static final DrugType CAFFEINE = register("caffeine", type -> new CaffeineDrug(type, 1, 0.0002d, 1));
-    public static final DrugType SUGAR = register("sugar", type -> new CaffeineDrug(type, 1, 0.0002d, 0));
-    public static final DrugType BATH_SALTS = register("bath_salts", type -> new BathSaltsDrug(1, 0.00012d));
-    public static final DrugType SLEEP_DEPRIVATION = register("sleep_deprivation", type -> new SleepDeprivationDrug());
-    public static final DrugType LSD = register("lsd", type -> new LsdDrug(type, 1, 0.0003d, false));
-    public static final DrugType ATROPINE = register("atropine", type -> new LsdDrug(type, 1, 0.0003d, true));
-    public static final DrugType KAVA = register("kava", type -> new AlcoholDrug(type, 1, 0.0002d));
-    public static final DrugType WARMTH = register("warmth", type -> new WarmthDrug(1, 0.004d));
-    public static final DrugType PEYOTE = register("peyote", type -> new PeyoteDrug(1, 0.0002d));
-    public static final DrugType ZERO = register("zero", type -> new SimpleDrug(type, 1, 0.0001d));
-    public static final DrugType POWER = register("power", type -> new PowerDrug(0.95, 0.0001d));
-    public static final DrugType HARMONIUM = register("harmonium", type -> new HarmoniumDrug(1, 0.0003d));
+public final class DrugType {
+    private static final Map<String, DrugType> REGISTRY = new LinkedHashMap<>();
 
-    public Drug create() {
-        return constructor.apply(this);
+    public static final DrugType BROWN_SHROOMS = register("brown_shrooms", () -> new BrownShroomsDrug(1, 0.0002));
+    public static final DrugType RED_SHROOMS = register("red_shrooms", () -> new RedShroomsDrug(1, 0.0002));
+    public static final DrugType PEYOTE = register("peyote", () -> new PeyoteDrug(1, 0.0002));
+    public static final DrugType ATROPINE = register("atropine", () -> new LsdDrug(1, 0.0003, true));
+    public static final DrugType CAFFEINE = register("caffeine", () -> new CaffeineDrug(1, 0.0002));
+    public static final DrugType WARMTH = register("warmth", WarmthDrug::new);
+    public static final DrugType ALCOHOL = register("alcohol", AlcoholDrug::new);
+    public static final DrugType KAVA = register("kava", AlcoholDrug::new);
+    public static final DrugType CANNABIS = register("cannabis", CannabisDrug::new);
+    public static final DrugType TOBACCO = register("tobacco", TobaccoDrug::new);
+    public static final DrugType COCAINE = register("coccaine", CocaineDrug::new);
+    public static final DrugType BATH_SALTS = register("bath_salts", BathSaltsDrug::new);
+    public static final DrugType LSD = register("lsd", () -> new LsdDrug(1, 0.0003, false));
+    public static final DrugType SUGAR = register("sugar", () -> new CaffeineDrug(1, 0.0002, 0F));
+    public static final DrugType HARMONIUM = register("harmonium", HarmoniumDrug::new);
+    public static final DrugType ZERO = register("zero", () -> new SimpleDrug(1, 0.0001));
+    public static final DrugType POWER = register("power", PowerDrug::new);
+    public static final DrugType SLEEP_DEPRIVATION = register("sleep_deprivation", SleepDeprivationDrug::new);
+
+    private final String id;
+    private final Supplier<Drug> factory;
+
+    private DrugType(String id, Supplier<Drug> factory) {
+        this.id = id;
+        this.factory = factory;
     }
 
-    static DrugType register(String name, Function<DrugType, Drug> constructor) {
-        DrugType type = new DrugType(Psychedelicraft.id(name), constructor);
-        PSSounds.register("drug." + name);
-        return Registry.register(REGISTRY, type.id(), type);
+    private static DrugType register(String path, Supplier<Drug> factory) {
+        String id = Psychedelicraft.id(path).toString();
+        DrugType type = new DrugType(id, factory);
+        REGISTRY.put(id, type);
+        return type;
+    }
+
+    public static Optional<DrugType> byId(String id) {
+        return Optional.ofNullable(REGISTRY.get(id));
+    }
+
+    public static Collection<DrugType> values() {
+        return Collections.unmodifiableCollection(REGISTRY.values());
+    }
+
+    public String id() {
+        return id;
+    }
+
+    public Drug create() {
+        return factory.get();
     }
 }

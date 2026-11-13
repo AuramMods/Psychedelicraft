@@ -1,58 +1,61 @@
 package ivorius.psychedelicraft.command;
 
-import java.util.Optional;
-
-import com.mojang.brigadier.CommandDispatcher;
-import com.mojang.brigadier.context.CommandContext;
-import com.mojang.brigadier.suggestion.*;
-
-import ivorius.psychedelicraft.entity.drug.hallucination.HallucinationTypeKeys;
+import ivorius.psychedelicraft.entity.drug.HallucinationType;
 import ivorius.psychedelicraft.network.Channel;
-import ivorius.psychedelicraft.network.MsgHallucinate;
-import net.minecraft.command.CommandRegistryAccess;
-import net.minecraft.command.CommandSource;
-import net.minecraft.command.argument.BlockPosArgumentType;
-import net.minecraft.command.argument.EntityArgumentType;
-import net.minecraft.command.argument.IdentifierArgumentType;
-import net.minecraft.server.command.CommandManager;
-import net.minecraft.server.command.ServerCommandSource;
-import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.text.Text;
-import net.minecraft.util.Identifier;
+import net.minecraft.command.CommandBase;
+import net.minecraft.command.CommandException;
+import net.minecraft.command.ICommandSender;
+import net.minecraft.command.WrongUsageException;
+import net.minecraft.entity.player.EntityPlayerMP;
+import net.minecraft.server.MinecraftServer;
 import net.minecraft.util.math.BlockPos;
 
-/**
- * @author Sollace
- * @since 5 Jan 2023
- */
-class HallucinateCommand {
-    private static final SuggestionProvider<ServerCommandSource> SUGGESTIONS = (context, builder) -> CommandSource.suggestIdentifiers(HallucinationTypeKeys.REGISTRY, builder);
+import javax.annotation.Nullable;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
+import java.util.stream.Collectors;
 
-    public static void register(CommandDispatcher<ServerCommandSource> dispatcher, CommandRegistryAccess registries) {
-        dispatcher.register(CommandManager.literal("hallucinate")
-                .requires(source -> source.hasPermissionLevel(2))
-            .requires(source -> source.hasPermissionLevel(2))
-                    .then(CommandManager.argument("type", IdentifierArgumentType.identifier()).suggests(SUGGESTIONS).executes(ctx -> {
-                        sendHallucination(ctx, ctx.getSource().getPlayerOrThrow(), Optional.empty());
-                        return 0;
-                    })
-                    .then(CommandManager.argument("target", EntityArgumentType.players()).executes(ctx -> {
-                        EntityArgumentType.getPlayers(ctx, "target").forEach(player -> {
-                            sendHallucination(ctx, player, Optional.empty());
-                        });
-                        return 0;
-                    }))
-                    .then(CommandManager.argument("position", BlockPosArgumentType.blockPos()).executes(ctx -> {
-                        sendHallucination(ctx, ctx.getSource().getPlayerOrThrow(), Optional.of(BlockPosArgumentType.getBlockPos(ctx, "position")));
-                        return 0;
-                    }))
-            )
-        );
+public final class HallucinateCommand extends CommandBase {
+    @Override
+    public String getName() {
+        return "hallucinate";
     }
 
-    private static void sendHallucination(CommandContext<ServerCommandSource> ctx, ServerPlayerEntity player, Optional<BlockPos> position) {
-        Identifier type = IdentifierArgumentType.getIdentifier(ctx, "type");
-        Channel.HALLUCINATE.sendToPlayer(new MsgHallucinate(player.getId(), type, position), player);
-        ctx.getSource().sendFeedback(() -> Text.translatable("commands.hallucinate.success"), true);
+    @Override
+    public String getUsage(ICommandSender sender) {
+        return "commands.psychedelicraft.hallucinate.usage";
+    }
+
+    @Override
+    public int getRequiredPermissionLevel() {
+        return 2;
+    }
+
+    @Override
+    public void execute(MinecraftServer server, ICommandSender sender, String[] args) throws CommandException {
+        if (args.length != 1 && args.length != 2 && args.length != 4) throw new WrongUsageException(getUsage(sender));
+        HallucinationType type = HallucinationType.byName(args[0]);
+        if (type == null) throw new CommandException("commands.psychedelicraft.hallucinate.unknown", args[0]);
+        List<EntityPlayerMP> players = args.length == 2
+                ? getPlayers(server, sender, args[1]) : Collections.singletonList(getCommandSenderAsPlayer(sender));
+        BlockPos position = args.length == 4 ? parseBlockPos(sender, args, 1, false) : null;
+        for (EntityPlayerMP player : players) Channel.hallucinate(player, type, position);
+        notifyCommandListener(sender, this, "commands.psychedelicraft.hallucinate.success");
+    }
+
+    @Override
+    public List<String> getTabCompletions(MinecraftServer server, ICommandSender sender, String[] args, @Nullable BlockPos pos) {
+        if (args.length == 1) {
+            List<String> ids = Arrays.stream(HallucinationType.values()).map(HallucinationType::id).collect(Collectors.toList());
+            return getListOfStringsMatchingLastWord(args, ids);
+        }
+        if (args.length == 2) return getListOfStringsMatchingLastWord(args, server.getOnlinePlayerNames());
+        return args.length <= 4 ? getTabCompletionCoordinate(args, 1, pos) : Collections.emptyList();
+    }
+
+    @Override
+    public boolean isUsernameIndex(String[] args, int index) {
+        return args.length == 2 && index == 1;
     }
 }

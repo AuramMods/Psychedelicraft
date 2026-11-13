@@ -1,88 +1,111 @@
 package ivorius.psychedelicraft.recipe;
 
 import com.google.gson.JsonObject;
-
-import net.minecraft.inventory.Inventory;
+import com.google.gson.JsonSyntaxException;
+import net.minecraft.inventory.IInventory;
+import net.minecraft.inventory.InventoryCrafting;
 import net.minecraft.item.ItemStack;
-import net.minecraft.network.PacketByteBuf;
-import net.minecraft.recipe.*;
-import net.minecraft.recipe.book.CookingRecipeCategory;
-import net.minecraft.util.Identifier;
-import net.minecraft.util.JsonHelper;
+import net.minecraft.item.crafting.IRecipe;
+import net.minecraft.item.crafting.Ingredient;
+import net.minecraft.util.JsonUtils;
 import net.minecraft.world.World;
+import net.minecraftforge.common.crafting.CraftingHelper;
+import net.minecraftforge.common.crafting.IRecipeFactory;
+import net.minecraftforge.common.crafting.JsonContext;
+import net.minecraftforge.fml.common.registry.ForgeRegistries;
+import net.minecraftforge.registries.IForgeRegistryEntry;
 
-public class DryingRecipe extends AbstractCookingRecipe {
-    public DryingRecipe(Identifier id, String group, CookingRecipeCategory category,
-            Ingredient input, ItemStack output, float experience, int cookTime) {
-        super(PSRecipes.DRYING_TYPE, id, group, category, input, output, experience, cookTime);
-    }
+import javax.annotation.Nullable;
+import java.util.ArrayList;
+import java.util.List;
 
-    @Override
-    public RecipeSerializer<?> getSerializer() {
-        return PSRecipes.DRYING;
-    }
+public final class DryingRecipe extends IForgeRegistryEntry.Impl<IRecipe> implements IRecipe {
+    public static final int INPUT_COUNT = 9;
+    public static final int OUTPUT = 0;
+    private final Ingredient input;
+    private final ItemStack output;
 
-    @Override
-    public boolean matches(Inventory inventory, World world) {
-        return RecipeUtils.stacks(inventory).filter(input).count() == inventory.size() - 1;
+    private DryingRecipe(Ingredient input, ItemStack output) {
+        this.input = input;
+        this.output = output;
     }
 
     public Ingredient getInput() {
         return input;
     }
 
-    // Suppress warnings being logged when Minecraft realises it doesn't know what category to put these recipes into
-    // The mashing tub doesn't have a recipe book anyway
-    @Override
-    public boolean isIgnoredInRecipeBook() {
+    public ItemStack getOutput() {
+        return output.copy();
+    }
+
+    public static List<DryingRecipe> recipes() {
+        List<DryingRecipe> recipes = new ArrayList<>();
+        for (IRecipe recipe : ForgeRegistries.RECIPES) {
+            if (recipe instanceof DryingRecipe) recipes.add((DryingRecipe) recipe);
+        }
+        return recipes;
+    }
+
+    @Nullable
+    public static DryingRecipe match(IInventory inventory) {
+        if (!inventory.getStackInSlot(OUTPUT).isEmpty()) {
+            return null;
+        }
+        for (int slot = 1; slot <= INPUT_COUNT; slot++) {
+            if (inventory.getStackInSlot(slot).getCount() != 1) return null;
+        }
+        for (DryingRecipe recipe : recipes()) {
+            if (recipe.matchesInputs(inventory)) {
+                return recipe;
+            }
+        }
+        return null;
+    }
+
+    private boolean matchesInputs(IInventory inventory) {
+        for (int slot = 1; slot <= INPUT_COUNT; slot++) {
+            if (!input.apply(inventory.getStackInSlot(slot))) {
+                return false;
+            }
+        }
         return true;
     }
 
-    public static class Serializer implements RecipeSerializer<DryingRecipe> {
-        private final int cookingTime;
+    // Forge discovers machine recipes through the crafting registry. Only the table runs them.
+    @Override
+    public boolean matches(InventoryCrafting inventory, World world) {
+        return false;
+    }
 
-        public Serializer(int cookingTime) {
-            this.cookingTime = cookingTime;
-        }
+    @Override
+    public ItemStack getCraftingResult(InventoryCrafting inventory) {
+        return ItemStack.EMPTY;
+    }
 
-        @SuppressWarnings("deprecation")
+    @Override
+    public ItemStack getRecipeOutput() {
+        return getOutput();
+    }
+
+    @Override
+    public boolean canFit(int width, int height) {
+        return false;
+    }
+
+    @Override
+    public boolean isDynamic() {
+        return true;
+    }
+
+    public static final class Factory implements IRecipeFactory {
         @Override
-        public DryingRecipe read(Identifier id, JsonObject json) {
-            return new DryingRecipe(id,
-                    JsonHelper.getString(json, "group", ""),
-                    CookingRecipeCategory.CODEC.byId(
-                            JsonHelper.getString(json, "category", null),
-                            CookingRecipeCategory.MISC
-                    ),
-                    Ingredient.fromJson(JsonHelper.hasArray(json, "ingredient")
-                            ? JsonHelper.getArray(json, "ingredient")
-                            : JsonHelper.getObject(json, "ingredient")),
-                    ShapedRecipe.outputFromJson(JsonHelper.getObject(json, "result")),
-                    JsonHelper.getFloat(json, "experience", 0),
-                    JsonHelper.getInt(json, "cookingtime", cookingTime)
-            );
-        }
-
-        @Override
-        public DryingRecipe read(Identifier id, PacketByteBuf buffer) {
-            return new DryingRecipe(id,
-                    buffer.readString(),
-                    buffer.readEnumConstant(CookingRecipeCategory.class),
-                    Ingredient.fromPacket(buffer),
-                    buffer.readItemStack(),
-                    buffer.readFloat(),
-                    buffer.readVarInt()
-            );
-        }
-
-        @Override
-        public void write(PacketByteBuf buffer, DryingRecipe recipe) {
-            buffer.writeString(recipe.getGroup());
-            buffer.writeEnumConstant(recipe.getCategory());
-            recipe.getInput().write(buffer);
-            buffer.writeItemStack(recipe.output);
-            buffer.writeFloat(recipe.getExperience());
-            buffer.writeVarInt(recipe.getCookTime());
+        public IRecipe parse(JsonContext context, JsonObject json) {
+            Ingredient input = CraftingHelper.getIngredient(json.get("ingredient"), context);
+            ItemStack output = CraftingHelper.getItemStack(JsonUtils.getJsonObject(json, "result"), context);
+            if (output.isEmpty() || output.getCount() > output.getMaxStackSize()) {
+                throw new JsonSyntaxException("Drying output must fit in one stack");
+            }
+            return new DryingRecipe(input, output);
         }
     }
 }

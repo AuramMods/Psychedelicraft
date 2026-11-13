@@ -1,16 +1,19 @@
 {
   "variants": {
     "axis=x": {
-      "model": "psychedelicraft:block/stripped_juniper_log_horizontal",
+      "model": "psychedelicraft:stripped_juniper_log",
       "x": 90,
       "y": 90
     },
     "axis=y": {
-      "model": "psychedelicraft:block/stripped_juniper_log"
+      "model": "psychedelicraft:stripped_juniper_log"
     },
     "axis=z": {
-      "model": "psychedelicraft:block/stripped_juniper_log_horizontal",
+      "model": "psychedelicraft:stripped_juniper_log",
       "x": 90
+    },
+    "axis=none": {
+      "model": "psychedelicraft:stripped_juniper_log"
     }
   }
 }

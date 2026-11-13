@@ -14,9 +14,9 @@ There is also an old Forge implementation on `master`. Reuse its ideas where hel
 
 ## Port progress
 
-The parity baseline is the pinned [plain 1.20.1 snapshot][plain]. During migration, `src/main` holds the donor and Gradle builds `src/forge/java` and `src/forge/resources`. Move the Forge implementation into the standard source directories after the donor tree is no longer needed. Keep each in-progress feature open until its behavior is verified.
+The parity baseline is the pinned [plain 1.20.1 snapshot][plain]. The Forge branch builds `src/main/java` and `src/main/resources`. Use `git show 319a4ea0:<path>` to inspect the donor's original files. Keep each in-progress feature open until its behavior is verified.
 
-| Baseline area | Donor source of truth under `src/main` | Status and evidence |
+| Baseline area | Source in the pinned 1.20.1 snapshot | Status and evidence |
 | --- | --- | --- |
 | Loader, build, mod metadata and sided initialization | `Psychedelicraft`, `PsychedelicraftClient`, `fabric.mod.json`, access widener, mixin configuration, Gradle and CI | Forge entrypoint, Java 8 build, reobfuscation and client-only model registration in place. `clean build` passed. Remaining hooks are tracked with their features. |
 | Items and creative groups | `item/PSItems`, `item/PSItemGroups`, `fluid/PSFluids`, `fluid/alcohol/DrinkTypes`, item classes, corresponding models and language keys | All 100 pinned item registrations have a Forge counterpart. General, Drinks and Weapons follow the donor catalog, with the 1.12 substitutes available in General. Drinks and Weapons include the donor's staged vessel samples. Item mechanics, recipes, visuals and translations are tracked separately below. |
@@ -746,7 +746,15 @@ sh run/production/background-qa/run.sh "$qa" game-background Overlay-QA \
 - Eight server ticks at full drowsiness added 0.40 exhaustion. The creative player and the player whose fatigue was masked by caffeine gained none. Kava alone left exhaustion unchanged. Kava with subthreshold fatigue did not start a blink, and full sleep deprivation started the overlay. The last two checks inspected the live overlay state. The fixture did not compare rendered pixels or remote observer animation.
 - The packaged jar's SHA-256 is `cab72f0607e4026794695e27d6f9a34c043b82f49f8dad244b56bf25162c81c1`. Evidence is under `run/production/runtime-qa-cycle75` in `build-production.log` and `runtime-stimulants.log`. Forge used Docker's Xvfb display and OpenAL's `No Output` device, then saved the world on shutdown.
 
-Next, verify the installation instructions and source layout against the packaged Forge target. Dedicated Forge startup and multiplayer on that server remain open pending EULA acceptance.
+### Cycle 76 · Forge source layout and installation
+
+- Moved the Forge Java and resources into Gradle's standard source directories. Removed the duplicate donor tree, which was byte-for-byte unchanged from the pinned Git snapshot. Kept the shared build output directory used by ForgeGradle's exploded-mod launches.
+- Documented installation for Minecraft 1.12.2 and Java 8 with Forge 14.23.5.2864, the exact reobfuscated jar filename, and optional JEI 4.16.1.302. The existing CI workflow already builds with Java 8 on push and pull request.
+- `./gradlew --no-daemon clean build` passed all 141 tests under Java 8. The reobfuscated jar contains 1,208 files, including 381 Java 8 classes. Every file inside the jar is byte-for-byte identical to the previous cycle, including Forge metadata and the MIT license. The new archive SHA-256 is `1af9a2ff3c670a1c9d2b83a9cf3784fa0ba9b6cbb54c0cf747b6951f68e3bc29`.
+- Ran the official Forge installer against fresh client and server directories. It created the `1.12.2-forge-14.23.5.2864` client profile. The fresh client created and saved a test world with the packaged jar and passed the stimulant and fatigue regression in muted Docker. The installed dedicated launcher found the jar in `mods` and reached Minecraft's EULA prompt before opening a world.
+- A second muted client loaded the same jar with JEI 4.16.1.302. It opened all nine mod categories, the filled crafting and coffee heating recipes, and the LSA square recipe with its 1 mB extract ingredient. Both clients used OpenAL's `No Output` device and saved on shutdown. Evidence is under `run/production/runtime-qa-cycle76` in `build-production.log`, `jar-comparison.log`, `install-client.log`, `install-server.log`, `runtime-fresh-client.log`, `runtime-jei.log` and `runtime-dedicated.log`.
+
+Next, audit the Forge Mod Options screen against the pinned donor's settings, including Polish labels and reset behavior. Dedicated Forge startup and multiplayer on that server remain open pending EULA acceptance.
 
 ## Repository and branch survey
 

@@ -1,234 +1,216 @@
 /*
- *  Copyright (c) 2014, Lukas Tenbrink.
- *  * http://lukas.axxim.net
+ * Copyright (c) 2014, Lukas Tenbrink.
  */
 
 package ivorius.psychedelicraft.entity;
 
-import ivorius.psychedelicraft.ParticleHelper;
 import ivorius.psychedelicraft.block.PSBlocks;
+import ivorius.psychedelicraft.entity.drug.DrugCapability;
 import ivorius.psychedelicraft.entity.drug.DrugProperties;
 import ivorius.psychedelicraft.entity.drug.DrugType;
-import ivorius.psychedelicraft.util.MathUtils;
-import net.minecraft.entity.*;
-import net.minecraft.entity.data.*;
-import net.minecraft.nbt.NbtCompound;
-import net.minecraft.particle.DustParticleEffect;
-import net.minecraft.particle.ParticleTypes;
-import net.minecraft.predicate.entity.EntityPredicates;
-import net.minecraft.text.Text;
-import net.minecraft.util.Formatting;
-import net.minecraft.util.math.*;
-import net.minecraft.world.*;
+import net.minecraft.entity.Entity;
+import net.minecraft.entity.EntityLivingBase;
+import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.network.datasync.DataParameter;
+import net.minecraft.network.datasync.DataSerializers;
+import net.minecraft.network.datasync.EntityDataManager;
+import net.minecraft.util.DamageSource;
+import net.minecraft.util.EntitySelectors;
+import net.minecraft.util.EnumParticleTypes;
+import net.minecraft.util.math.AxisAlignedBB;
+import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.MathHelper;
+import net.minecraft.util.text.ITextComponent;
+import net.minecraft.world.World;
 
-import java.util.function.Supplier;
+public final class RealityRiftEntity extends Entity {
+    private static final DataParameter<Float> SIZE = EntityDataManager.createKey(RealityRiftEntity.class, DataSerializers.FLOAT);
+    private static final DataParameter<Float> INSTABILITY = EntityDataManager.createKey(RealityRiftEntity.class, DataSerializers.FLOAT);
+    private static final DataParameter<Boolean> CLOSING = EntityDataManager.createKey(RealityRiftEntity.class, DataSerializers.BOOLEAN);
+    private float visualSize;
+    private float previousVisualSize;
 
-import org.joml.Vector3f;
-
-import com.google.common.base.Suppliers;
-
-/**
- * Created by lukas on 03.03.14.
- */
-public class RealityRiftEntity extends Entity {
-    private static final TrackedData<Float> SIZE = DataTracker.registerData(RealityRiftEntity.class, TrackedDataHandlerRegistry.FLOAT);
-    private static final TrackedData<Float> INSTABILITY = DataTracker.registerData(RealityRiftEntity.class, TrackedDataHandlerRegistry.FLOAT);
-    private static final TrackedData<Boolean> CLOSING = DataTracker.registerData(RealityRiftEntity.class, TrackedDataHandlerRegistry.BOOLEAN);
-
-    public float visualRiftSize;
-
-    public static void spawn(Entity entity) {
-        RealityRiftEntity rift = PSEntities.REALITY_RIFT.create(entity.getWorld());
-        rift.setPosition(
-                entity.getX() + (entity.getWorld().getRandom().nextDouble() - 0.5) * 100,
-                entity.getY() + (entity.getWorld().getRandom().nextDouble() - 0.5) * 100,
-                entity.getZ() + (entity.getWorld().getRandom().nextDouble() - 0.5) * 100
-        );
-        entity.getWorld().spawnEntity(rift);
+    public RealityRiftEntity(World world) {
+        super(world);
+        setSize(2, 2);
+        setNoGravity(true);
+        if (!world.isRemote) setRiftSize(0.5F + (rand.nextFloat() - rand.nextFloat()) * 0.5F);
     }
 
-    RealityRiftEntity(EntityType<RealityRiftEntity> type, World par1World) {
-        super(type, par1World);
-        setRiftSize((float)getWorld().getRandom().nextTriangular(0.5F, 0.5F));
+    public static void spawnNear(Entity entity) {
+        World world = entity.world;
+        RealityRiftEntity rift = new RealityRiftEntity(world);
+        rift.setPosition(entity.posX + (world.rand.nextDouble() - 0.5) * 100,
+                entity.posY + (world.rand.nextDouble() - 0.5) * 100,
+                entity.posZ + (world.rand.nextDouble() - 0.5) * 100);
+        world.spawnEntity(rift);
     }
 
     @Override
-    public Box getVisibilityBoundingBox() {
-        return getBoundingBox().expand(20);
+    protected void entityInit() {
+        dataManager.register(SIZE, 0F);
+        dataManager.register(INSTABILITY, 0F);
+        dataManager.register(CLOSING, false);
     }
 
     @Override
-    protected void initDataTracker() {
-        this.getDataTracker().startTracking(SIZE, 0F);
-        this.getDataTracker().startTracking(CLOSING, false);
-        this.getDataTracker().startTracking(INSTABILITY, 0F);
+    public AxisAlignedBB getRenderBoundingBox() {
+        return getEntityBoundingBox().grow(20);
+    }
+
+    @Override
+    public ITextComponent getDisplayName() {
+        ITextComponent name = super.getDisplayName();
+        name.getStyle().setObfuscated(true);
+        return name;
+    }
+
+    @Override
+    protected boolean canTriggerWalking() {
+        return false;
     }
 
     public float getRiftSize() {
-        return getDataTracker().get(SIZE);
+        return dataManager.get(SIZE);
     }
 
     public void setRiftSize(float size) {
-        getDataTracker().set(SIZE, Math.max(0, size));
+        dataManager.set(SIZE, Float.isFinite(size) ? Math.max(0, size) : 0);
     }
 
-    public void addToRift(float size) {
-        setRiftSize(getRiftSize() + size);
-    }
-
-    public float takeFromRift(float size) {
-        if (isCritical()) {
-            return 0.2f;
-        }
-
-        float riftSize = getRiftSize();
-        float newVal = Math.max(riftSize - size, 0.0f);
-
-        setRiftSize(newVal);
-
-        return riftSize - newVal;
+    public float takeFromRift(float amount) {
+        if (isCritical()) return 0.2F;
+        float before = getRiftSize();
+        setRiftSize(before - amount);
+        return before - getRiftSize();
     }
 
     public float getInstability() {
-        return getDataTracker().get(INSTABILITY);
-    }
-
-    public void setInstability(float instability) {
-        getDataTracker().set(INSTABILITY, Math.max(0, instability));
+        return dataManager.get(INSTABILITY);
     }
 
     public boolean isRiftClosing() {
-        return getDataTracker().get(CLOSING);
-    }
-
-    public void setRiftClosing(boolean closing) {
-        getDataTracker().set(CLOSING, closing);
+        return dataManager.get(CLOSING);
     }
 
     public boolean isCritical() {
-        return ((getInstability() > 0) || (getRiftSize() > 3)) && !isRiftClosing();
+        return !isRiftClosing() && (getInstability() > 0 || getRiftSize() > 3);
     }
 
-//    @Override
-//    public boolean interactFirst(EntityPlayer par1EntityPlayer)
-//    {
-//        ItemStack heldItem = par1EntityPlayer.getHeldItem();
-//        if (!isRiftClosing() && heldItem.getItem() == Psychedelicraft.itemRiftObtainer && heldItem.getItemDamage() == 0)
-//        {
-//            heldItem.setItemDamage(1);
-//            setRiftClosing(true);
-//
-//            return true;
-//        }
-//
-//        return super.interactFirst(par1EntityPlayer);
-//    }
-
-    @Override
-    public boolean canAvoidTraps() {
-        return true;
-    }
-
-//    @Override
-//    public boolean canBeCollidedWith() // Need this for right click interaction
-//    {
-//        return !isDead;
-//    }
-
-    @Override
-    public Text getDisplayName() {
-        return super.getDisplayName().copy().formatted(Formatting.OBFUSCATED);
+    public float getVisualSize(float partialTicks) {
+        return previousVisualSize + (visualSize - previousVisualSize) * partialTicks;
     }
 
     @Override
-    public void tick() {
-        super.tick();
-        setVelocity(Vec3d.ZERO);
-
-        boolean critical = isCritical();
-
-        if (getWorld().isClient) {
-            Vec3d pos = getPos();
-            Supplier<Vec3d> particlePositionSupplier = () -> {
-                float distance = random.nextFloat() * random.nextFloat();
-                return ParticleHelper.apply(pos, x -> x + (random.nextFloat() * 8 - 4) * distance).add(0, getHeight() / 2F, 0);
-            };
-            ParticleHelper.spawnParticles(getWorld(), ParticleTypes.LARGE_SMOKE, particlePositionSupplier, Suppliers.ofInstance(Vec3d.ZERO), random.nextInt(3));
-            ParticleHelper.spawnParticles(getWorld(), new DustParticleEffect(new Vector3f(1, 0.5F, 0.5F), 1), particlePositionSupplier, Suppliers.ofInstance(new Vec3d(-10, -10, -10)), random.nextInt(2));
-            ParticleHelper.spawnParticles(getWorld(), ParticleTypes.ENCHANT, Suppliers.ofInstance(pos.add(0, 1 + (getHeight() / 2F), 0)), () -> {
-                float distance = random.nextFloat() * random.nextFloat();
-                return ParticleHelper.apply(Vec3d.ZERO, x -> x + (random.nextFloat() * 8 - 4) * distance).add(0, getHeight() / 2F, 0);
-            }, 1);
+    public void onUpdate() {
+        super.onUpdate();
+        motionX = motionY = motionZ = 0;
+        if (world.isRemote) {
+            spawnParticles();
+        } else {
+            tickRift();
         }
+        previousVisualSize = visualSize;
+        float target = getRiftSize();
+        float interpolated = visualSize + (target - visualSize) * 0.05F;
+        visualSize = interpolated < target ? Math.min(target, interpolated + 0.005F)
+                : Math.max(target, interpolated - 0.005F);
+        if (!world.isRemote && visualSize <= 0 && target <= 0) setDead();
+    }
 
-        float searchDistance = 5.0f + getInstability() * 50.0f;
-        for (LivingEntity entityLivingBase : getWorld().getEntitiesByClass(LivingEntity.class, getBoundingBox().expand(searchDistance), EntityPredicates.EXCEPT_CREATIVE_OR_SPECTATOR)) {
-            double dist = entityLivingBase.distanceTo(this);
-            double effect = (searchDistance - dist) * 0.0005 * getRiftSize();
-
-            if (effect > 0.0) {
-                DrugProperties.of(entityLivingBase).ifPresentOrElse(drugProperties -> {
-                    drugProperties.addToDrug(DrugType.ZERO, effect * 20.0f);
-                    drugProperties.addToDrug(DrugType.POWER, effect * 200.0f);
-                }, () -> {
-                    if (critical) {
-                        entityLivingBase.damage(getDamageSources().magic(), (float) effect * 20.0f);
-                    }
-                });
+    private void tickRift() {
+        boolean critical = isCritical();
+        float range = 5 + getInstability() * 50;
+        for (EntityLivingBase target : world.getEntitiesWithinAABB(EntityLivingBase.class,
+                getEntityBoundingBox().grow(range), EntitySelectors.CAN_AI_TARGET)) {
+            double dose = (range - getDistance(target)) * 0.0005 * getRiftSize();
+            if (dose <= 0) continue;
+            DrugProperties drugs = target instanceof EntityPlayer ? DrugCapability.get((EntityPlayer) target) : null;
+            if (drugs != null) {
+                drugs.addToDrug(DrugType.ZERO, dose * 20);
+                drugs.addToDrug(DrugType.POWER, dose * 200);
+            } else if (critical) {
+                target.attackEntityFrom(DamageSource.MAGIC, (float) (dose * 20));
             }
         }
 
         if (critical) {
-            float prevS = getInstability();
-            float newS = Math.min(prevS + 0.001f, 1.0f);
-            setInstability(newS);
+            float previous = getInstability();
+            float instability = Math.min(previous + 0.001F, 1);
+            dataManager.set(INSTABILITY, instability);
+            replaceShell(previous * 50, instability * 50);
+            if (instability >= 0.9F) dataManager.set(CLOSING, true);
+        } else {
+            setRiftSize(getRiftSize() - (isRiftClosing() ? 0.05F : 1F / 24000F));
+        }
+    }
 
-            float prevDesRange = prevS * 50.0f;
-            float newDesRange = newS * 50.0f;
-
-            if (prevDesRange < newDesRange) {
-                int desRange = MathHelper.ceil(newDesRange);
-                BlockPos center = getBlockPos();
-                BlockPos.iterateOutwards(center, desRange, desRange, desRange).forEach(p -> {
-                    if (p.isWithinDistance(center, newDesRange) && !p.isWithinDistance(center, prevDesRange) && !getWorld().isAir(p)) {
-                        getWorld().setBlockState(p, PSBlocks.GLITCH.getDefaultState());
-                    }
-                });
+    private void replaceShell(float previousRadius, float radius) {
+        BlockPos center = getPosition();
+        BlockPos.MutableBlockPos cursor = new BlockPos.MutableBlockPos();
+        double outerSquared = radius * radius;
+        double innerSquared = previousRadius * previousRadius;
+        int extent = MathHelper.ceil(radius) - 1;
+        for (int x = -extent; x <= extent; x++) {
+            for (int y = -extent; y <= extent; y++) {
+                int rowSquared = x * x + y * y;
+                if (rowSquared >= outerSquared || center.getY() + y < 0 || center.getY() + y >= world.getHeight()) {
+                    continue;
+                }
+                int end = MathHelper.ceil(Math.sqrt(outerSquared - rowSquared)) - 1;
+                if (rowSquared >= innerSquared) {
+                    replaceRow(center, cursor, x, y, -end, end);
+                } else {
+                    int start = MathHelper.ceil(Math.sqrt(innerSquared - rowSquared));
+                    replaceRow(center, cursor, x, y, -end, -start);
+                    replaceRow(center, cursor, x, y, start, end);
+                }
             }
         }
+    }
 
-        if (isRiftClosing()) {
-            setRiftSize(getRiftSize() - 1F / 20F);
-        } else if (!critical) {
-            setRiftSize(getRiftSize() - 1F / 20F / 20F / 60F);
-        }
-
-       // setRiftSize(getRiftSize() - 1.0f / 1.0f / 20.0f / 60.0f);
-        visualRiftSize = MathUtils.nearValue(visualRiftSize, getRiftSize(), 0.05f, 0.005f);
-
-        if (!getWorld().isClient) {
-            if (getInstability() >= 0.9f) {
-                setRiftClosing(true);
-            }
-
-            if (visualRiftSize <= 0.0f && getRiftSize() <= 0.0f) {
-                discard();
+    private void replaceRow(BlockPos center, BlockPos.MutableBlockPos cursor, int x, int y, int from, int to) {
+        for (int z = from; z <= to; z++) {
+            cursor.setPos(center.getX() + x, center.getY() + y, center.getZ() + z);
+            if (world.isBlockLoaded(cursor) && !world.isAirBlock(cursor)) {
+                world.setBlockState(cursor, PSBlocks.GLITCH.getDefaultState());
             }
         }
+    }
+
+    private void spawnParticles() {
+        for (int count = rand.nextInt(3); count > 0; count--) {
+            float spread = rand.nextFloat() * rand.nextFloat();
+            world.spawnParticle(EnumParticleTypes.SMOKE_LARGE, posX + particleOffset(spread),
+                    posY + height * 0.5 + particleOffset(spread), posZ + particleOffset(spread), 0, 0, 0);
+        }
+        if (rand.nextBoolean()) {
+            float spread = rand.nextFloat() * rand.nextFloat();
+            world.spawnParticle(EnumParticleTypes.REDSTONE, posX + particleOffset(spread),
+                    posY + height * 0.5 + particleOffset(spread), posZ + particleOffset(spread), 1, 0.5, 0.5);
+        }
+        float spread = rand.nextFloat() * rand.nextFloat();
+        world.spawnParticle(EnumParticleTypes.ENCHANTMENT_TABLE, posX, posY + 1 + height * 0.5, posZ,
+                particleOffset(spread), particleOffset(spread) + height * 0.5, particleOffset(spread));
+    }
+
+    private float particleOffset(float spread) {
+        return (rand.nextFloat() * 8 - 4) * spread;
     }
 
     @Override
-    public void readCustomDataFromNbt(NbtCompound compound) {
-        setRiftSize(compound.getFloat("riftSize"));
-        setRiftClosing(compound.getBoolean("isRiftClosing"));
-        setInstability(compound.getFloat("instability"));
+    protected void readEntityFromNBT(NBTTagCompound tag) {
+        setRiftSize(tag.getFloat("riftSize"));
+        float instability = tag.getFloat("instability");
+        dataManager.set(INSTABILITY, Float.isFinite(instability) ? MathHelper.clamp(instability, 0, 1) : 0);
+        dataManager.set(CLOSING, tag.getBoolean("isRiftClosing"));
     }
 
     @Override
-    public void writeCustomDataToNbt(NbtCompound compound) {
-        compound.putFloat("riftSize", getRiftSize());
-        compound.putBoolean("isRiftClosing", isRiftClosing());
-        compound.putFloat("instability", getInstability());
+    protected void writeEntityToNBT(NBTTagCompound tag) {
+        tag.setFloat("riftSize", getRiftSize());
+        tag.setFloat("instability", getInstability());
+        tag.setBoolean("isRiftClosing", isRiftClosing());
     }
-
 }

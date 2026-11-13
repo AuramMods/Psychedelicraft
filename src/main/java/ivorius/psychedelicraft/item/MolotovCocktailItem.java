@@ -1,87 +1,95 @@
 /*
- *  Copyright (c) 2014, Lukas Tenbrink.
- *  * http://lukas.axxim.net
+ * Copyright (c) 2014, Lukas Tenbrink.
  */
 
 package ivorius.psychedelicraft.item;
 
+import ivorius.psychedelicraft.Psychedelicraft;
+import ivorius.psychedelicraft.config.PSConfig;
 import ivorius.psychedelicraft.entity.MolotovCocktailEntity;
-import ivorius.psychedelicraft.fluid.Combustable;
-import ivorius.psychedelicraft.fluid.ConsumableFluid.ConsumptionType;
-import net.minecraft.entity.LivingEntity;
-import net.minecraft.entity.player.PlayerEntity;
+import ivorius.psychedelicraft.fluid.BrewFluid;
+import ivorius.psychedelicraft.fluid.FluidVessel;
+import net.minecraft.creativetab.CreativeTabs;
+import net.minecraft.entity.EntityLivingBase;
+import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.init.SoundEvents;
+import net.minecraft.item.EnumAction;
 import net.minecraft.item.ItemStack;
-import net.minecraft.sound.SoundCategory;
-import net.minecraft.sound.SoundEvents;
-import net.minecraft.stat.Stats;
-import net.minecraft.text.Text;
-import net.minecraft.util.*;
+import net.minecraft.stats.StatList;
+import net.minecraft.util.ActionResult;
+import net.minecraft.util.EnumActionResult;
+import net.minecraft.util.EnumHand;
+import net.minecraft.util.NonNullList;
+import net.minecraft.util.SoundCategory;
 import net.minecraft.util.math.MathHelper;
+import net.minecraft.util.text.translation.I18n;
 import net.minecraft.world.World;
+import net.minecraftforge.fluids.FluidStack;
+import net.minecraftforge.fml.relauncher.Side;
+import net.minecraftforge.fml.relauncher.SideOnly;
 
-public class MolotovCocktailItem extends BottleItem {
-    public MolotovCocktailItem(Settings settings, int capacity) {
-        super(settings, capacity, 0, ConsumptionType.DRINK);
+public final class MolotovCocktailItem extends PortableFluidItem {
+    public static final String FLYING = "flying";
+    private static final int USE_TICKS = 7200;
+
+    MolotovCocktailItem() {
+        super(FluidVessel.BOTTLE);
+        setMaxStackSize(1);
+        addPropertyOverride(Psychedelicraft.id(FLYING),
+                (stack, world, entity) -> stack.hasTagCompound() && stack.getTagCompound().getBoolean(FLYING) ? 1 : 0);
     }
 
     @Override
-    public UseAction getUseAction(ItemStack stack) {
-        return UseAction.BOW;
+    public EnumAction getItemUseAction(ItemStack stack) {
+        return EnumAction.BOW;
     }
 
     @Override
-    public int getMaxUseTime(ItemStack stack) {
-        return 7200;
+    public int getMaxItemUseDuration(ItemStack stack) {
+        return USE_TICKS;
     }
 
     @Override
-    public boolean isUsedOnRelease(ItemStack stack) {
-        return true;
+    public ActionResult<ItemStack> onItemRightClick(World world, EntityPlayer player, EnumHand hand) {
+        player.setActiveHand(hand);
+        return new ActionResult<>(EnumActionResult.SUCCESS, player.getHeldItem(hand));
     }
 
     @Override
-    public void onStoppedUsing(ItemStack stack, World world, LivingEntity user, int remainingUseTicks) {
-        float strength = user.getItemUseTimeLeft() / (float)getMaxUseTime(stack);
-        world.playSound(null, user.getX(), user.getY(), user.getZ(), SoundEvents.ENTITY_ARROW_SHOOT, SoundCategory.NEUTRAL, 0.5f, 0.4f / (world.getRandom().nextFloat() * 0.4f + 0.8f));
+    public ItemStack onItemUseFinish(ItemStack stack, World world, EntityLivingBase entity) {
+        return stack;
+    }
 
-        if (!world.isClient) {
-            MolotovCocktailEntity projectile = new MolotovCocktailEntity(world, user);
-            projectile.setItem(stack);
-            projectile.setVelocity(user, user.getPitch(), user.getYaw(), 0, 0.5F * strength, 1F);
-            world.spawnEntity(projectile);
+    @Override
+    public void onPlayerStoppedUsing(ItemStack stack, World world, EntityLivingBase user, int remainingUseTicks) {
+        if (world.isRemote || stack.isEmpty()) return;
+        MolotovCocktailEntity projectile = new MolotovCocktailEntity(world, user, stack);
+        float speed = 0.5F * MathHelper.clamp(remainingUseTicks, 0, USE_TICKS) / USE_TICKS;
+        projectile.shoot(user, user.rotationPitch, user.rotationYaw, 0, speed, 1);
+        if (!world.spawnEntity(projectile)) return;
+
+        world.playSound(null, user.posX, user.posY, user.posZ, SoundEvents.ENTITY_ARROW_SHOOT, SoundCategory.NEUTRAL,
+                0.5F, 0.4F / (world.rand.nextFloat() * 0.4F + 0.8F));
+        if (user instanceof EntityPlayer) {
+            EntityPlayer player = (EntityPlayer) user;
+            if (!player.capabilities.isCreativeMode) stack.shrink(1);
+            player.addStat(StatList.getObjectUseStats(this));
         }
-
-        if (user instanceof PlayerEntity player) {
-            if (!player.isCreative()) {
-                stack.decrement(1);
-            }
-            player.incrementStat(Stats.USED.getOrCreateStat(this));
-        }
     }
 
     @Override
-    public TypedActionResult<ItemStack> use(World world, PlayerEntity user, Hand hand) {
-        user.setCurrentHand(hand);
-        return TypedActionResult.success(user.getStackInHand(hand));
+    public String getItemStackDisplayName(ItemStack stack) {
+        FluidStack fluid = contents(stack);
+        String key = getUnlocalizedName(stack);
+        if (fluid == null) return I18n.translateToLocal(key + ".empty");
+        float strength = BrewFluid.projectileStrength(fluid);
+        int quality = MathHelper.clamp(MathHelper.floor(strength * (0.6F * 0.8F + 2F * 0.6F) + 0.5F), 0, 7);
+        return I18n.translateToLocal(key + ".quality." + quality);
     }
 
     @Override
-    public Text getName(ItemStack stack) {
-        if (getFluid(stack).isEmpty()) {
-            return Text.translatable(getTranslationKey(stack) + ".empty");
-        }
-
-        return Text.translatable(getTranslationKey(stack) + ".quality." + getQuality(stack));
-    }
-
-    private int getQuality(ItemStack stack) {
-        if (getFluid(stack) instanceof Combustable exploding) {
-            float explStr = exploding.getExplosionStrength(stack) * 0.8f;
-            float fireStr = exploding.getFireStrength(stack) * 0.6f;
-
-            return MathHelper.clamp(MathHelper.floor((fireStr + explStr) + 0.5f), 0, 7);
-        }
-
-        return 0;
+    @SideOnly(Side.CLIENT)
+    public void getSubItems(CreativeTabs tab, NonNullList<ItemStack> stacks) {
+        if (!PSConfig.balancing.disableMolotovs) super.getSubItems(tab, stacks);
     }
 }

@@ -1,110 +1,152 @@
 package ivorius.psychedelicraft.config;
 
-import java.util.function.Consumer;
-import java.util.function.Predicate;
+import ivorius.psychedelicraft.Psychedelicraft;
+import net.minecraftforge.common.config.Config;
 
-import net.fabricmc.fabric.api.biome.v1.BiomeSelectionContext;
+@Config(modid = Psychedelicraft.MOD_ID)
+public final class PSConfig {
+    private static final int MINUTE = 60 * 20;
+    public static final Balancing balancing = new Balancing();
+    public static final Visual visual = new Visual();
 
-public class PSConfig {
-    public static final int MINUTE = 20 * 60;
+    private PSConfig() {
+    }
 
-    public Balancing balancing = new Balancing();
+    public static final class Visual {
+        public boolean shader2DEnabled = true;
+        @Config.LangKey("gui.psychedelicraft.option.shaders_3d")
+        public boolean shader3DEnabled = true;
+        public boolean doHeatDistortion = true;
+        public boolean doWaterDistortion = true;
+        public boolean waterOverlayEnabled = true;
+        public boolean hurtOverlayEnabled = true;
+        public boolean doMotionBlur = true;
+        @Config.LangKey("gui.psychedelicraft.option.sun_glare_intensity")
+        @Config.RangeDouble(min = 0, max = 1)
+        public float sunFlareIntensity = 0.25F;
+        @Config.Comment("Blur intensity while the singleplayer game is paused.")
+        public float pauseMenuBlur;
+        @Config.Comment("Near focus distance in blocks.")
+        public float dofFocalPointNear = 0.2F;
+        @Config.Comment("Far focus distance in blocks.")
+        public float dofFocalPointFar = 128F;
+        public float dofFocalBlurNear;
+        public float dofFocalBlurFar;
+        @Config.RangeDouble(min = 0.01, max = 1)
+        public float digitalEffectPixelRescaleX = 0.05F;
+        @Config.RangeDouble(min = 0.01, max = 1)
+        public float digitalEffectPixelRescaleY = 0.05F;
+    }
 
     public static final class Balancing {
-        public int randomTicksUntilRiftSpawn = MINUTE * 180;
-        public int dryingTableTickDuration = MINUTE * 16;
-        public int ironDryingTableTickDuration = MINUTE * 12;
-        public int slurryHardeningTime = MINUTE * 30;
-        public boolean enableHarmonium;
+        @Config.Comment("Random chance per player tick to spawn a nearby Reality Rift, expressed as one in this many ticks. Zero disables spawning.")
+        public int randomTicksUntilRiftSpawn = 180 * MINUTE;
+
+        @Config.Comment("Show empty and filled Rift Jar variants in the creative inventory.")
         public boolean enableRiftJars;
+
+        @Config.Comment("Hide the Molotov Cocktail variants in the creative inventory.")
         public boolean disableMolotovs;
-        public Generation worldGeneration = new Generation(
-                Generation.FeatureConfig.DEFAULT, Generation.FeatureConfig.DEFAULT,
-                Generation.FeatureConfig.DEFAULT, Generation.FeatureConfig.DEFAULT,
-                Generation.FeatureConfig.DEFAULT, Generation.FeatureConfig.DEFAULT,
-                Generation.FeatureConfig.DEFAULT, Generation.FeatureConfig.DEFAULT,
-                Generation.FeatureConfig.DEFAULT, Generation.FeatureConfig.DEFAULT,
-                Generation.FeatureConfig.DEFAULT,
-                true, true, true
-        );
-        public FluidProperties fluidAttributes = new Balancing.FluidProperties(
-                new FluidProperties.TickInfo(30 * MINUTE, 60 * MINUTE, 100 * MINUTE, 30 * MINUTE),
-                FluidProperties.TickInfo.DEFAULT,
-                FluidProperties.TickInfo.DEFAULT,
-                FluidProperties.TickInfo.DEFAULT,
-                FluidProperties.TickInfo.DEFAULT,
-                FluidProperties.TickInfo.DEFAULT,
-                new FluidProperties.TickInfo(30 * MINUTE, 80 * MINUTE, 40 * MINUTE, 90 * MINUTE),
-                FluidProperties.TickInfo.DEFAULT,
-                FluidProperties.TickInfo.DEFAULT,
-                FluidProperties.TickInfo.DEFAULT,
-                FluidProperties.TickInfo.DEFAULT,
-                FluidProperties.TickInfo.DEFAULT,
-                FluidProperties.TickInfo.DEFAULT,
-                FluidProperties.TickInfo.DEFAULT,
-                FluidProperties.TickInfo.DEFAULT,
-                FluidProperties.TickInfo.DEFAULT,
-                new FluidProperties.TickInfo(40 * MINUTE, 1 * MINUTE, 30 * MINUTE, 30 * MINUTE)
-        );
-        public MessageDistortion messageDistortion = new MessageDistortion();
 
-        public static final class MessageDistortion {
-            public boolean incoming = true;
-            public boolean outgoing = true;
+        @Config.Comment("Show colored Harmonium variants in the creative inventory and enable dealer offers for them.")
+        public boolean enableHarmonium;
+
+        @Config.Comment("Ticks at maximum heat to finish one wooden drying table batch.")
+        @Config.RangeInt(min = 1)
+        public int dryingTableTickDuration = 16 * 60 * 20;
+
+        @Config.Comment("Ticks at maximum heat to finish one iron drying table batch.")
+        @Config.RangeInt(min = 1)
+        public int ironDryingTableTickDuration = 12 * 60 * 20;
+
+        @Config.RangeInt(min = 1)
+        public int slurryHardeningTime = 30 * MINUTE;
+
+        public final FluidProperties fluidAttributes = new FluidProperties();
+        public final MessageDistortion messageDistortion = new MessageDistortion();
+        public final Generation worldGeneration = new Generation();
+    }
+
+    public static final class MessageDistortion {
+        public boolean incoming = true;
+        public boolean outgoing = true;
+    }
+
+    public static final class FluidProperties {
+        public final FluidTicks wheatHop = new FluidTicks(30, 60, 100, 30);
+        public final FluidTicks agave = new FluidTicks(30, 80, 40, 90);
+        public final FluidTicks wheat = new FluidTicks();
+        public final FluidTicks potato = new FluidTicks();
+        public final FluidTicks tomato = new FluidTicks();
+        public final FluidTicks redGrapes = new FluidTicks();
+        public final FluidTicks rice = new FluidTicks();
+        public final FluidTicks juniper = new FluidTicks();
+        public final FluidTicks honey = new FluidTicks();
+        public final FluidTicks sugarCane = new FluidTicks();
+        public final FluidTicks corn = new FluidTicks();
+        public final FluidTicks apple = new FluidTicks();
+        public final FluidTicks pineapple = new FluidTicks();
+        public final FluidTicks banana = new FluidTicks();
+        public final FluidTicks milk = new FluidTicks();
+        @Config.RangeInt(min = 1, max = Integer.MAX_VALUE / 2)
+        public int flowerExtractDistillationTicks = MINUTE;
+    }
+
+    public static final class FluidTicks {
+        @Config.RangeInt(min = 1)
+        public int ticksPerFermentation;
+        @Config.RangeInt(min = 1)
+        public int ticksPerDistillation;
+        @Config.RangeInt(min = 1)
+        public int ticksPerMaturation;
+        @Config.RangeInt(min = 1)
+        public int ticksUntilAcetification;
+
+        FluidTicks() {
+            this(40, 40, 30, 30);
         }
-        public record FluidProperties (
-                TickInfo alcInfoWheatHop,
-                TickInfo alcInfoKava,
-                TickInfo alcInfoWheat,
-                TickInfo alcInfoCorn,
-                TickInfo alcInfoPotato,
-                TickInfo alcInfoTomato,
-                TickInfo alcInfoAgave,
-                TickInfo alcInfoRedGrapes,
-                TickInfo alcInfoRice,
-                TickInfo alcInfoJuniper,
-                TickInfo alcInfoSugarCane,
-                TickInfo alcInfoHoney,
-                TickInfo alcInfoApple,
-                TickInfo alcInfoPineapple,
-                TickInfo alcInfoBanana,
-                TickInfo alcInfoMilk,
-                TickInfo alcInfoFlowerExtract) {
-            public record TickInfo (int ticksPerFermentation, int ticksPerDistillation, int ticksPerMaturation, int ticksUntilAcetification) {
-                static final TickInfo DEFAULT = new TickInfo(40 * MINUTE, 40 * MINUTE, 30 * MINUTE, 30 * MINUTE);
-            }
+
+        FluidTicks(int fermentationMinutes, int distillationMinutes, int maturationMinutes, int acetificationMinutes) {
+            ticksPerFermentation = fermentationMinutes * MINUTE;
+            ticksPerDistillation = distillationMinutes * MINUTE;
+            ticksPerMaturation = maturationMinutes * MINUTE;
+            ticksUntilAcetification = acetificationMinutes * MINUTE;
         }
+    }
 
-        public record Generation (
-                FeatureConfig juniper,
-                FeatureConfig cannabis,
-                FeatureConfig hop,
-                FeatureConfig tobacco,
-                FeatureConfig morningGlories,
-                FeatureConfig belladonna,
-                FeatureConfig jimsonweed,
-                FeatureConfig tomato,
-                FeatureConfig coffea,
-                FeatureConfig coca,
-                FeatureConfig peyote,
+    public static final class Generation {
+        @Config.Comment("Generate copper ore in new Overworld chunks. The machines also accept ingotCopper from other mods.")
+        public boolean copperOre = true;
 
-                boolean farmerDrugDeals,
-                boolean dungeonChests,
-                boolean villageChests) {
-            public record FeatureConfig(boolean enabled, InclusionFilter spawnableBiomes) {
-                static final FeatureConfig DEFAULT = new FeatureConfig(true, new InclusionFilter(new String[0], new String[0]));
-                public void ifEnabled(Consumer<InclusionFilter> register) {
-                    if (enabled) {
-                        register.accept(spawnableBiomes);
-                    }
-                }
+        @Config.Comment("Allow novice farmers to sell Psychedelicraft goods.")
+        public boolean farmerDrugDeals = true;
 
-                public record InclusionFilter (String[] included, String[] excluded) {
-                    public Predicate<BiomeSelectionContext> createPredicate(Predicate<BiomeSelectionContext> inherentPredicate) {
-                        return BiomeSelector.compile(included, excluded, inherentPredicate);
-                    }
-                }
-            }
-        }
+        @Config.Comment("Add Psychedelicraft loot to dungeon and mineshaft chests when loot tables load.")
+        public boolean dungeonChests = true;
+
+        @Config.Comment("Add Psychedelicraft loot to village blacksmith chests when loot tables load.")
+        public boolean villageChests = true;
+
+        public final Feature juniper = new Feature();
+        public final Feature beeNests = new Feature();
+        public final Feature cannabis = new Feature();
+        public final Feature hop = new Feature();
+        public final Feature tobacco = new Feature();
+        public final Feature coffea = new Feature();
+        public final Feature coca = new Feature();
+        public final Feature morningGlories = new Feature();
+        public final Feature belladonna = new Feature();
+        public final Feature jimsonweed = new Feature();
+        public final Feature tomato = new Feature();
+        @Config.Comment("Biome selection for both peyote and agave.")
+        public final Feature peyote = new Feature();
+    }
+
+    public static final class Feature {
+        public boolean enabled = true;
+        @Config.Comment("Add biomes matching all selectors. Use biome IDs, supported Minecraft biome tags, or #forge:TYPE.")
+        public String[] included = {};
+        @Config.Comment("Exclude any biome matching one of these selectors.")
+        public String[] excluded = {};
     }
 }

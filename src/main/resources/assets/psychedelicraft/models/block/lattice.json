@@ -1,8 +1,8 @@
 {
 	"parent": "block/cube_all",
 	"textures": {
-		"all": "psychedelicraft:block/lattice",
-		"particle": "#all"
+		"all": "psychedelicraft:blocks/lattice",
+		"particle": "psychedelicraft:blocks/lattice"
 	},
 	"elements": [
     {

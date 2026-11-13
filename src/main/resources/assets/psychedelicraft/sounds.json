@@ -35,7 +35,7 @@
     ]
   },
   "drug.generic": {
-    "category": "player",
+    "category": "ambient",
     "sounds": [
       {
         "name": "psychedelicraft:drugs/generic",

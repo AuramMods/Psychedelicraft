@@ -1,123 +1,90 @@
 /*
- *  Copyright (c) 2014, Lukas Tenbrink.
- *  * http://lukas.axxim.net
+ * Copyright (c) 2014, Lukas Tenbrink.
+ * Updated by Sollace on Jan 1 2023.
  */
 
 package ivorius.psychedelicraft.item;
 
+import ivorius.psychedelicraft.Psychedelicraft;
+import ivorius.psychedelicraft.entity.drug.DrugCapability;
 import ivorius.psychedelicraft.entity.drug.DrugProperties;
 import ivorius.psychedelicraft.entity.drug.influence.DrugInfluence;
-import ivorius.psychedelicraft.recipe.RecipeUtils;
-import net.minecraft.entity.EquipmentSlot;
-import net.minecraft.entity.LivingEntity;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.entity.player.PlayerInventory;
+import net.minecraft.advancements.CriteriaTriggers;
+import net.minecraft.entity.EntityLivingBase;
+import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.entity.player.EntityPlayerMP;
+import net.minecraft.entity.player.InventoryPlayer;
+import net.minecraft.init.SoundEvents;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
-import net.minecraft.util.*;
 import net.minecraft.world.World;
 
-import java.util.*;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.function.Function;
 
-import org.joml.Vector3f;
+public final class BongItem extends SmokingItem {
+    private final Map<Item, Function<ItemStack, DrugInfluence>> ingredients = new HashMap<>();
+    private final boolean bubbles;
 
-/**
- * Created by calebmanley on 4/05/2014.
- *
- * Updated by Sollace on Jan 1 2023
- */
-public class BongItem extends Item {
-    public final ArrayList<Consumable> consumables = new ArrayList<>();
-
-    public BongItem(Settings settings) {
-        super(settings);
+    public BongItem(int uses, int burnTime, boolean bubbles) {
+        super(uses, 30, burnTime);
+        this.bubbles = bubbles;
+        addPropertyOverride(Psychedelicraft.id("filled"), (stack, world, entity) -> filledModel(stack, entity));
     }
 
-    public BongItem consumes(Consumable consumable) {
-        consumables.add(consumable);
+    BongItem consumes(Item item, DrugInfluence influence) {
+        return consumes(item, stack -> influence.copy());
+    }
+
+    BongItem consumes(Item item, Function<ItemStack, DrugInfluence> influence) {
+        ingredients.put(item, influence);
         return this;
     }
 
     @Override
-    public UseAction getUseAction(ItemStack stack) {
-        return UseAction.TOOT_HORN;
+    boolean canDraw(EntityPlayer player) {
+        return ingredientSlot(player.inventory) >= 0;
+    }
+
+    private float filledModel(ItemStack stack, EntityLivingBase entity) {
+        if (!(entity instanceof EntityPlayer)) return 0F;
+        EntityPlayer player = (EntityPlayer) entity;
+        // Other clients can see the active hand, but do not receive the whole inventory.
+        return canDraw(player) || !player.isUser() && PowderItem.useModel(stack, player) > 0F ? 1F : 0F;
+    }
+
+    private int ingredientSlot(InventoryPlayer inventory) {
+        for (int slot = 0; slot < inventory.getSizeInventory(); slot++) {
+            ItemStack stack = inventory.getStackInSlot(slot);
+            if (!stack.isEmpty() && ingredients.containsKey(stack.getItem())) return slot;
+        }
+        return -1;
     }
 
     @Override
-    public ItemStack finishUsing(ItemStack stack, World world, LivingEntity entity) {
-        DrugProperties.of(entity).ifPresent(drugProperties -> {
-            getUsedConsumable(drugProperties.asEntity()).ifPresent(consumable -> {
-                PlayerInventory inventory = drugProperties.asEntity().getInventory();
-                int slot = inventory.indexOf(consumable.getKey());
-                inventory.removeStack(slot, 1);
-                drugProperties.addAll(consumable.getValue().drugInfluences().apply(consumable.getKey()));
-                stack.damage(1, drugProperties.asEntity(), p -> p.sendEquipmentBreakStatus(EquipmentSlot.MAINHAND));
-                drugProperties.startBreathingSmoke(10 + world.random.nextInt(10), consumable.getValue().smokeColor);
-            });
-        });
-
-        return super.finishUsing(stack, world, entity);
+    public void onUsingTick(ItemStack stack, EntityLivingBase entity, int count) {
+        if (bubbles && !entity.world.isRemote && entity.getRNG().nextInt(3) == 0) {
+            entity.playSound(SoundEvents.BLOCK_LAVA_POP, 1, 1);
+        }
     }
 
     @Override
-    public TypedActionResult<ItemStack> use(World world, PlayerEntity player, Hand hand) {
-        ItemStack stack = player.getStackInHand(hand);
-
-        if (!DrugProperties.of(player).isBreathingSmoke() && hasUsableConsumable(player)) {
-            player.setCurrentHand(hand);
-            return TypedActionResult.consume(stack);
+    public ItemStack onItemUseFinish(ItemStack stack, World world, EntityLivingBase entity) {
+        if (!(entity instanceof EntityPlayer)) return stack;
+        EntityPlayer player = (EntityPlayer) entity;
+        DrugProperties properties = DrugCapability.get(player);
+        int slot = ingredientSlot(player.inventory);
+        if (properties == null || slot < 0) return stack;
+        if (world.isRemote) {
+            properties.startBreathingSmoke(player, 0xffffff);
+            return stack;
         }
-
-        return TypedActionResult.fail(stack);
-    }
-
-    public Optional<Map.Entry<ItemStack, Consumable>> getUsedConsumable(LivingEntity entity) {
-        if (!(entity instanceof PlayerEntity)) {
-            return Optional.empty();
-        }
-
-        return RecipeUtils.stacks(((PlayerEntity)entity)
-                .getInventory())
-                .flatMap(stack -> consumables.stream()
-                    .filter(consumable -> ItemStack.areItemsEqual(stack, consumable.consumedItem))
-                    .limit(1)
-                    .map(c -> Map.entry(stack, c)))
-                .findFirst();
-    }
-
-    public boolean hasUsableConsumable(LivingEntity entity) {
-        if (!(entity instanceof PlayerEntity)) {
-            return false;
-        }
-
-        PlayerInventory inventory = ((PlayerEntity)entity).getInventory();
-        for (int i = 0; i < inventory.size(); i++) {
-            for (Consumable consumable : consumables) {
-                if (ItemStack.areItemsEqual(inventory.getStack(i), consumable.consumedItem)) {
-                    return true;
-                }
-            }
-        }
-        return false;
-    }
-
-    @Override
-    public int getMaxUseTime(ItemStack stack) {
-        return 30;
-    }
-
-    public record Consumable (
-            ItemStack consumedItem,
-            Function<ItemStack, List<DrugInfluence>> drugInfluences,
-            Vector3f smokeColor
-    ) {
-        public Consumable(ItemStack consumedItem, DrugInfluence...drugInfluences) {
-            this(consumedItem, stack -> List.of(drugInfluences), SmokeableItem.WHITE);
-        }
-
-        public Consumable(ItemStack consumedItem, Function<ItemStack, DrugInfluence> drugInfluences) {
-            this(consumedItem, stack -> List.of(drugInfluences.apply(stack)), SmokeableItem.WHITE);
-        }
+        ItemStack used = player.inventory.decrStackSize(slot, 1);
+        properties.addInfluence(ingredients.get(used.getItem()).apply(used));
+        if (player instanceof EntityPlayerMP) CriteriaTriggers.CONSUME_ITEM.trigger((EntityPlayerMP) player, used);
+        properties.startBreathingSmoke(player, 0xffffff);
+        recordDraw(player, stack);
+        return wear(stack, player);
     }
 }

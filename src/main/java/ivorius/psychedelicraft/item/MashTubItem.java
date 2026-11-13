@@ -1,64 +1,68 @@
 /*
- *  Copyright (c) 2014, Lukas Tenbrink.
- *  * http://lukas.axxim.net
+ * Copyright (c) 2014, Lukas Tenbrink.
  */
 
 package ivorius.psychedelicraft.item;
 
-import java.util.Optional;
-
-import org.jetbrains.annotations.Nullable;
-
+import ivorius.psychedelicraft.block.MashTubBlock;
 import ivorius.psychedelicraft.block.PSBlocks;
-import ivorius.psychedelicraft.block.entity.PSBlockEntities;
-import net.minecraft.block.*;
-import net.minecraft.item.*;
-import net.minecraft.util.hit.BlockHitResult;
+import ivorius.psychedelicraft.block.entity.MashTubBlockEntity;
+import net.minecraft.advancements.CriteriaTriggers;
+import net.minecraft.block.SoundType;
+import net.minecraft.block.state.IBlockState;
+import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.entity.player.EntityPlayerMP;
+import net.minecraft.item.ItemStack;
+import net.minecraft.util.EnumActionResult;
+import net.minecraft.util.EnumFacing;
+import net.minecraft.util.EnumHand;
+import net.minecraft.util.SoundCategory;
 import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.Direction;
-import net.minecraft.world.WorldView;
+import net.minecraft.world.World;
 
-/**
- * Updated by Sollace on 8 Feb 2023
- */
-public class MashTubItem extends FlaskItem {
-    public MashTubItem(Block block, Settings settings, int capacity) {
-        super(block, settings, capacity);
+public final class MashTubItem extends FluidMachineItem {
+    public MashTubItem() {
+        super(PSBlocks.MASH_TUB, MashTubBlockEntity.CAPACITY);
     }
 
     @Override
-    @Nullable
-    public ItemPlacementContext getPlacementContext(ItemPlacementContext context) {
-        return findPlacementPosition(context.getWorld(), context.getBlockPos()).map(position -> {
-            return new ItemPlacementContext(
-                    context.getPlayer(), context.getHand(), context.getStack(),
-                    new BlockHitResult(position.toCenterPos(), Direction.UP, position, false)
-            );
-        }).orElse(context);
-    }
-
-    @Override
-    protected boolean place(ItemPlacementContext context, BlockState state) {
-        if (super.place(context, state)) {
-            BlockPos center = context.getBlockPos();
-            BlockPos.iterateOutwards(center, 1, 0, 1).forEach(p -> {
-                if (!p.equals(center)) {
-                    context.getWorld().setBlockState(p, PSBlocks.MASH_TUB_EDGE.getDefaultState(), Block.NOTIFY_ALL);
-                    context.getWorld().getBlockEntity(p, PSBlockEntities.MASH_TUB_EDGE).ifPresent(be -> be.setMasterPos(center));
+    public EnumActionResult onItemUse(EntityPlayer player, World world, BlockPos pos, EnumHand hand,
+                                      EnumFacing side, float x, float y, float z) {
+        if (!world.getBlockState(pos).getBlock().isReplaceable(world, pos)) pos = pos.offset(side);
+        ItemStack stack = player.getHeldItem(hand);
+        BlockPos center = null;
+        for (int distance = 0; distance <= 2 && center == null; distance++) {
+            for (int dx = -1; dx <= 1 && center == null; dx++) {
+                for (int dz = -1; dz <= 1; dz++) {
+                    BlockPos candidate = pos.add(dx, 0, dz);
+                    if (Math.abs(dx) + Math.abs(dz) == distance && MashTubBlock.canPlaceBasin(world, candidate, player, side, stack)) {
+                        center = candidate;
+                        break;
+                    }
                 }
-            });
-            return true;
+            }
         }
-        return false;
-    }
-
-    public static Optional<BlockPos> findPlacementPosition(WorldView world, BlockPos pos) {
-        return BlockPos.streamOutwards(pos, 1, 0, 1)
-                .filter(center -> BlockPos.streamOutwards(center, 1, 0, 1).allMatch(p -> {
-                    BlockState s = world.getBlockState(p);
-                    return world.isAir(p) || s.isReplaceable();
-                }))
-                .findFirst()
-                .map(p -> p.toImmutable());
+        if (center == null) return EnumActionResult.FAIL;
+        if (world.isRemote) return EnumActionResult.SUCCESS;
+        IBlockState centerState = block.getDefaultState();
+        if (!world.setBlockState(center, centerState, 3)) return EnumActionResult.FAIL;
+        for (int dx = -1; dx <= 1; dx++) {
+            for (int dz = -1; dz <= 1; dz++) {
+                if ((dx != 0 || dz != 0) && !world.setBlockState(center.add(dx, 0, dz),
+                        PSBlocks.MASH_TUB_EDGE.edgeState(dx, dz), 3)) {
+                    world.destroyBlock(center, false);
+                    return EnumActionResult.FAIL;
+                }
+            }
+        }
+        block.onBlockPlacedBy(world, center, centerState, player, stack);
+        if (player instanceof EntityPlayerMP) {
+            CriteriaTriggers.PLACED_BLOCK.trigger((EntityPlayerMP) player, center, stack);
+        }
+        SoundType sound = block.getSoundType(centerState, world, center, player);
+        world.playSound(player, center, sound.getPlaceSound(), SoundCategory.BLOCKS,
+                (sound.getVolume() + 1) / 2, sound.getPitch() * 0.8F);
+        if (!player.capabilities.isCreativeMode) stack.shrink(1);
+        return EnumActionResult.SUCCESS;
     }
 }

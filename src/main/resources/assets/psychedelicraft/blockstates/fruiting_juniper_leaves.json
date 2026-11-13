@@ -1,7 +1,7 @@
 {
   "variants": {
-    "": {
-      "model": "psychedelicraft:block/fruiting_juniper_leaves"
+    "normal": {
+      "model": "psychedelicraft:fruiting_juniper_leaves"
     }
   }
 }

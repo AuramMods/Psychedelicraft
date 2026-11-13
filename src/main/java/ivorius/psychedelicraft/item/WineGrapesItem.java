@@ -1,39 +1,35 @@
 /*
- *  Copyright (c) 2014, Lukas Tenbrink.
- *  * http://lukas.axxim.net
+ * Copyright (c) 2014, Lukas Tenbrink.
  */
 
 package ivorius.psychedelicraft.item;
 
 import ivorius.psychedelicraft.block.LatticeBlock;
 import ivorius.psychedelicraft.block.PSBlocks;
-import net.minecraft.block.BlockState;
-import net.minecraft.item.ItemUsageContext;
-import net.minecraft.sound.SoundEvents;
-import net.minecraft.util.ActionResult;
+import net.minecraft.block.SoundType;
+import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.util.EnumActionResult;
+import net.minecraft.util.EnumFacing;
+import net.minecraft.util.EnumHand;
+import net.minecraft.util.SoundCategory;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.world.World;
 
-public class WineGrapesItem extends SpecialFoodItem {
-    public WineGrapesItem(Settings settings, int eatSpeed) {
-        super(settings, eatSpeed);
+final class WineGrapesItem extends QuickFoodItem {
+    WineGrapesItem() {
+        super(1, 0.5F, true);
     }
 
     @Override
-    public ActionResult useOnBlock(ItemUsageContext context) {
-        if (context.shouldCancelInteraction() || !context.getPlayer().canModifyAt(context.getWorld(), context.getBlockPos())) {
-            return ActionResult.PASS;
+    public EnumActionResult onItemUse(EntityPlayer player, World world, BlockPos pos, EnumHand hand,
+                                     EnumFacing face, float x, float y, float z) {
+        if (player.isSneaking() || !world.isBlockModifiable(player, pos)
+                || world.getBlockState(pos).getBlock() != PSBlocks.LATTICE) {
+            return EnumActionResult.PASS;
         }
-
-        BlockPos pos = context.getBlockPos();
-        BlockState state = context.getWorld().getBlockState(pos);
-
-        if (state.isOf(PSBlocks.LATTICE)) {
-
-            context.getWorld().playSoundFromEntity(null, context.getPlayer(), SoundEvents.BLOCK_AZALEA_LEAVES_HIT, context.getPlayer().getSoundCategory(), 1, 1);
-            context.getWorld().setBlockState(pos, LatticeBlock.copyStateProperties(PSBlocks.WINE_GRAPE_LATTICE.getDefaultState(), state));
-            return ActionResult.SUCCESS;
+        if (!world.isRemote && LatticeBlock.growOnto(world, pos, PSBlocks.WINE_GRAPE_LATTICE)) {
+            world.playSound(null, pos, SoundType.PLANT.getHitSound(), SoundCategory.BLOCKS, 1F, 1F);
         }
-
-        return ActionResult.PASS;
+        return EnumActionResult.SUCCESS;
     }
 }

@@ -1,333 +1,187 @@
+/*
+ * Copyright (c) 2014, Lukas Tenbrink.
+ */
+
 package ivorius.psychedelicraft.block;
 
-import java.util.Optional;
-import java.util.Stack;
-import java.util.stream.Collectors;
-import java.util.stream.StreamSupport;
-
-import io.netty.util.collection.IntObjectHashMap;
-import io.netty.util.collection.IntObjectMap;
-import ivorius.psychedelicraft.PSTags;
-import ivorius.psychedelicraft.Psychedelicraft;
-import ivorius.psychedelicraft.block.entity.PSBlockEntities;
-import ivorius.psychedelicraft.block.entity.SyncedBlockEntity;
+import ivorius.psychedelicraft.block.entity.PlacedDrinkBlockEntity;
+import ivorius.psychedelicraft.item.PSItems;
 import net.minecraft.block.Block;
-import net.minecraft.block.BlockState;
-import net.minecraft.block.BlockWithEntity;
-import net.minecraft.block.ShapeContext;
-import net.minecraft.block.entity.BlockEntity;
+import net.minecraft.block.SoundType;
+import net.minecraft.block.material.Material;
+import net.minecraft.block.material.EnumPushReaction;
+import net.minecraft.block.state.BlockFaceShape;
+import net.minecraft.block.state.IBlockState;
 import net.minecraft.entity.Entity;
-import net.minecraft.entity.LivingEntity;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.item.ItemPlacementContext;
+import net.minecraft.entity.EntityLivingBase;
+import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.init.SoundEvents;
+import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
-import net.minecraft.item.ItemUsageContext;
-import net.minecraft.nbt.NbtCompound;
-import net.minecraft.nbt.NbtElement;
-import net.minecraft.nbt.NbtList;
-import net.minecraft.server.world.ServerWorld;
-import net.minecraft.sound.SoundCategory;
-import net.minecraft.sound.SoundEvents;
-import net.minecraft.util.ActionResult;
-import net.minecraft.util.Hand;
-import net.minecraft.util.TypedActionResult;
-import net.minecraft.util.hit.BlockHitResult;
-import net.minecraft.util.hit.HitResult;
+import net.minecraft.tileentity.TileEntity;
+import net.minecraft.util.EnumActionResult;
+import net.minecraft.util.EnumBlockRenderType;
+import net.minecraft.util.EnumFacing;
+import net.minecraft.util.EnumHand;
+import net.minecraft.util.SoundCategory;
+import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.Direction;
-import net.minecraft.util.math.Vec3d;
-import net.minecraft.util.shape.VoxelShape;
-import net.minecraft.world.BlockView;
+import net.minecraft.util.math.RayTraceResult;
+import net.minecraft.world.IBlockAccess;
 import net.minecraft.world.World;
 
-public class PlacedDrinksBlock extends BlockWithEntity {
-    private static final Optional<TypedActionResult<ItemStack>> FAILURE = Optional.of(TypedActionResult.fail(ItemStack.EMPTY));
-    private static final VoxelShape SHAPE = Block.createCuboidShape(0, 0, 0, 16, 1, 16);
+public final class PlacedDrinksBlock extends Block {
+    private static final AxisAlignedBB SELECTION = new AxisAlignedBB(0, 0, 0, 1, 1 / 16D, 1);
 
-    protected PlacedDrinksBlock(Settings settings) {
-        super(settings.noCollision());
-    }
-
-    @Override
-    public boolean canMobSpawnInside(BlockState state) {
-        return true;
-    }
-
-    @Override
-    @Deprecated
-    public VoxelShape getOutlineShape(BlockState state, BlockView world, BlockPos pos, ShapeContext context) {
-        return SHAPE;
-    }
-
-    @Override
-    @Deprecated
-    public VoxelShape getRaycastShape(BlockState state, BlockView world, BlockPos pos) {
-        return SHAPE;
-    }
-
-    @Override
-    public boolean hasSidedTransparency(BlockState state) {
-        return true;
-    }
-
-    @Override
-    public float getAmbientOcclusionLightLevel(BlockState state, BlockView world, BlockPos pos) {
-        return 1;
-    }
-
-    @Override
-    public ItemStack getPickStack(BlockView world, BlockPos pos, BlockState state) {
-        return Psychedelicraft.getCrossHairTarget()
-                .filter(hit -> hit.getType() == HitResult.Type.BLOCK)
-                .map(hit -> (BlockHitResult)hit)
-                .filter(hit -> hit.getBlockPos().equals(pos))
-                .flatMap(Data::getHitPos)
-                .flatMap(hitPos -> world.getBlockEntity(pos, PSBlockEntities.PLACED_DRINK).flatMap(be -> be.getDrink(hitPos)))
-                .orElseGet(() -> super.getPickStack(world, pos, state));
+    public PlacedDrinksBlock() {
+        super(Material.CIRCUITS);
+        setHardness(0);
+        setSoundType(SoundType.GLASS);
     }
 
     public static boolean canPlace(ItemStack stack) {
-        return stack.isIn(PSTags.Items.PLACEABLE);
+        if (stack.isEmpty()) return false;
+        Item item = stack.getItem();
+        return item == PSItems.WOODEN_MUG || item == PSItems.STONE_CUP || item == PSItems.GLASS_CHALICE
+                || item == PSItems.SHOT_GLASS || item == PSItems.BOTTLE || item == PSItems.MOLOTOV_COCKTAIL;
+    }
+
+    public static EnumActionResult placeOnBlock(EntityPlayer player, World world, BlockPos pos, EnumHand hand,
+                                                 EnumFacing side, float hitX, float hitY, float hitZ) {
+        ItemStack held = player.getHeldItem(hand);
+        if (!canPlace(held)) return EnumActionResult.PASS;
+        IBlockState target = world.getBlockState(pos);
+        if (target.getBlock() == PSBlocks.PLACED_DRINK) {
+            return PSBlocks.PLACED_DRINK.onBlockActivated(world, pos, target, player, hand, side, hitX, hitY, hitZ)
+                    ? EnumActionResult.SUCCESS : EnumActionResult.PASS;
+        }
+        boolean replaceable = target.getBlock().isReplaceable(world, pos);
+        if (side != EnumFacing.UP && !replaceable) return EnumActionResult.PASS;
+        BlockPos placement = replaceable ? pos : pos.offset(side);
+        PlacedDrinksBlock block = PSBlocks.PLACED_DRINK;
+        if (!player.canPlayerEdit(placement, side, held) || !world.isBlockModifiable(player, pos)
+                || !world.isBlockModifiable(player, placement)) return EnumActionResult.FAIL;
+        if (!world.mayPlace(block, placement, false, side, player)) return EnumActionResult.PASS;
+        if (world.isRemote) return EnumActionResult.SUCCESS;
+        if (!world.setBlockState(placement, block.getDefaultState(), 3)) return EnumActionResult.FAIL;
+        float localX = hitX + pos.getX() - placement.getX();
+        float localZ = hitZ + pos.getZ() - placement.getZ();
+        if (!block.place(world, placement, player, held, PlacedDrinkBlockEntity.cell(localX, localZ), player.rotationYaw)) {
+            world.setBlockToAir(placement);
+            return EnumActionResult.FAIL;
+        }
+        return EnumActionResult.SUCCESS;
     }
 
     @Override
-    public ActionResult onUse(BlockState state, World world, BlockPos pos, PlayerEntity player, Hand hand, BlockHitResult hit) {
-        return world.getBlockEntity(pos, PSBlockEntities.PLACED_DRINK).flatMap(be -> {
+    public boolean onBlockActivated(World world, BlockPos pos, IBlockState state, EntityPlayer player, EnumHand hand,
+                                    EnumFacing side, float hitX, float hitY, float hitZ) {
+        if (side.getAxis() != EnumFacing.Axis.Y || !world.isBlockModifiable(player, pos)) return false;
+        PlacedDrinkBlockEntity display = display(world, pos);
+        if (display == null) return false;
+        ItemStack held = player.getHeldItem(hand);
+        int cell = PlacedDrinkBlockEntity.cell(hitX, hitZ);
+        if (held.isEmpty()) {
+            if (world.isRemote) return !display.peek(cell).isEmpty();
+            ItemStack retrieved = display.take(cell);
+            if (retrieved.isEmpty()) return false;
+            if (!player.inventory.addItemStackToInventory(retrieved)) player.dropItem(retrieved, false);
+            playSound(world, pos);
+            return true;
+        }
+        if (!canPlace(held) || !player.canPlayerEdit(pos, side, held)) return false;
+        return world.isRemote ? display.canPlace(cell) : place(world, pos, player, held, cell, player.rotationYawHead);
+    }
 
-            ItemStack heldStack = player.getStackInHand(hand);
+    private boolean place(World world, BlockPos pos, EntityPlayer player, ItemStack held, int cell, float yaw) {
+        PlacedDrinkBlockEntity display = display(world, pos);
+        if (display == null || !display.place(cell, held, yaw)) return false;
+        if (!player.capabilities.isCreativeMode) held.shrink(1);
+        playSound(world, pos);
+        return true;
+    }
 
-            if (heldStack.isEmpty()) {
-                return Data.getHitPos(hit).map(be::removeDrink).map(extracted -> {
-                    ItemStack stack = extracted.getValue();
-                    if (!stack.isEmpty()) {
-                        player.giveItemStack(stack);
-                    }
-                    return extracted;
-                });
-            }
+    private static void playSound(World world, BlockPos pos) {
+        world.playSound(null, pos, SoundEvents.BLOCK_GLASS_PLACE, SoundCategory.BLOCKS, 0.65F, 1.2F);
+    }
 
-            if (!canPlace(heldStack)) {
-                return FAILURE;
-            }
-
-            return Data.getHitPos(hit).map(position -> {
-                return be.placeDrink(position, player.isCreative() ? heldStack.copyWithCount(1) : heldStack, player.getHeadYaw());
-            });
-        }).map(TypedActionResult::getResult).orElse(ActionResult.FAIL);
+    private static PlacedDrinkBlockEntity display(IBlockAccess world, BlockPos pos) {
+        TileEntity tile = world.getTileEntity(pos);
+        return tile instanceof PlacedDrinkBlockEntity ? (PlacedDrinkBlockEntity) tile : null;
     }
 
     @Override
-    @Deprecated
-    public void onStacksDropped(BlockState state, ServerWorld world, BlockPos pos, ItemStack stack, boolean dropExperience) {
-        world.getBlockEntity(pos, PSBlockEntities.PLACED_DRINK).ifPresent(be -> {
-            be.forEachDrink((y, entry) -> {
-                Block.dropStack(world, pos, entry.stack());
-                return 0;
-            });
-            be.entries.clear();
-        });
+    public void breakBlock(World world, BlockPos pos, IBlockState state) {
+        PlacedDrinkBlockEntity display = display(world, pos);
+        if (!world.isRemote && display != null) display.dropContents();
+        super.breakBlock(world, pos, state);
     }
 
     @Override
-    public void onEntityCollision(BlockState state, World world, BlockPos pos, Entity entity) {
-        if (!world.isClient && (entity.getY() > pos.getY() || entity.getY() >= pos.getY() && !entity.isSneaking()) && entity instanceof LivingEntity && Math.max(
-                Math.abs(entity.getX() - entity.lastRenderX),
-                Math.abs(entity.getZ() - entity.lastRenderZ)
-            ) >= 0.003F) {
-            Block.dropStacks(state, world, pos, world.getBlockEntity(pos), entity, ItemStack.EMPTY);
-            world.removeBlock(pos, false);
-            world.playSound(null, pos, SoundEvents.BLOCK_CANDLE_PLACE, SoundCategory.BLOCKS);
+    public void onEntityCollidedWithBlock(World world, BlockPos pos, IBlockState state, Entity entity) {
+        if (!world.isRemote && entity instanceof EntityLivingBase
+                && (entity.posY > pos.getY() || entity.posY >= pos.getY() && !entity.isSneaking())
+                && Math.max(Math.abs(entity.posX - entity.prevPosX), Math.abs(entity.posZ - entity.prevPosZ)) >= 0.003) {
+            world.setBlockToAir(pos);
+            playSound(world, pos);
         }
     }
 
     @Override
-    public BlockEntity createBlockEntity(BlockPos pos, BlockState state) {
-        return new Data(pos, state);
+    public ItemStack getPickBlock(IBlockState state, RayTraceResult target, World world, BlockPos pos, EntityPlayer player) {
+        PlacedDrinkBlockEntity display = display(world, pos);
+        if (display == null || target.sideHit.getAxis() != EnumFacing.Axis.Y) return ItemStack.EMPTY;
+        return display.peek(PlacedDrinkBlockEntity.cell((float) (target.hitVec.x - pos.getX()),
+                (float) (target.hitVec.z - pos.getZ())));
     }
 
-    public static ActionResult tryPlace(ItemUsageContext context) {
-        if (!canPlace(context.getStack())) {
-            return ActionResult.PASS;
-        }
-
-        BlockState state = context.getWorld().getBlockState(context.getBlockPos());
-        boolean replaceable = state.canReplace(new ItemPlacementContext(context));
-
-        if (!replaceable && context.getSide() != Direction.UP) {
-            return ActionResult.PASS;
-        }
-
-        if (state.isOf(PSBlocks.PLACED_DRINK)) {
-            return state.onUse(context.getWorld(), context.getPlayer(), context.getHand(), new BlockHitResult(
-                    context.getHitPos(), context.getSide(), context.getBlockPos(), true
-            ));
-        }
-
-        BlockPos blockPos = replaceable ? context.getBlockPos() : context.getBlockPos().offset(context.getSide());
-        if (!replaceable && !context.getWorld().isAir(blockPos)) {
-            return ActionResult.PASS;
-        }
-        BlockPos hitPos = Data.getHitPos(blockPos, context.getHitPos());
-        context.getWorld().setBlockState(blockPos, PSBlocks.PLACED_DRINK.getDefaultState());
-        return context.getWorld().getBlockEntity(blockPos, PSBlockEntities.PLACED_DRINK).map(be -> {
-            return be.placeDrink(hitPos, context.getStack().split(1), context.getPlayerYaw()).getResult();
-        }).orElse(ActionResult.FAIL);
+    @Override
+    public EnumBlockRenderType getRenderType(IBlockState state) {
+        return EnumBlockRenderType.INVISIBLE;
     }
 
-    public static class Data extends SyncedBlockEntity {
-        static final int MAX_COORD = 16;
-        static final int MAX_INDEX = MAX_COORD * MAX_COORD;
-        static final int MAX_STACK_HEIGHT = 5;
+    @Override
+    public AxisAlignedBB getBoundingBox(IBlockState state, IBlockAccess world, BlockPos pos) {
+        return SELECTION;
+    }
 
-        private final IntObjectMap<Stack<Entry>> entries = new IntObjectHashMap<>(MAX_INDEX);
+    @Override
+    public AxisAlignedBB getCollisionBoundingBox(IBlockState state, IBlockAccess world, BlockPos pos) {
+        return NULL_AABB;
+    }
 
-        public Data(BlockPos pos, BlockState state) {
-            super(PSBlockEntities.PLACED_DRINK, pos, state);
-        }
+    @Override
+    public boolean isOpaqueCube(IBlockState state) {
+        return false;
+    }
 
-        public void forEachDrink(DrinkConsumer consumer) {
-            entries.values().forEach(list -> {
-                final float[] y = new float[1];
-                list.forEach(drink -> {
-                    y[0] += consumer.accept(y[0], drink);
-                });
-            });
-        }
+    @Override
+    public boolean isFullCube(IBlockState state) {
+        return false;
+    }
 
-        public TypedActionResult<ItemStack> removeDrink(BlockPos center) {
-            return StreamSupport.stream(BlockPos.iterateInSquare(center, 2, Direction.EAST, Direction.NORTH).spliterator(), false).map(pos -> {
-                int index = getIndex(pos);
-                Stack<Entry> list = entries.get(index);
-                if (list != null) {
-                    Entry entry = list.pop();
-                    if (entry != null) {
-                        if (list.isEmpty()) {
-                            entries.remove(index);
-                            if (entries.isEmpty()) {
-                                getWorld().removeBlock(getPos(), false);
-                            }
-                        }
-                        markDirty();
-                        return TypedActionResult.success(entry.stack());
-                    }
-                }
+    @Override
+    public boolean isPassable(IBlockAccess world, BlockPos pos) {
+        return true;
+    }
 
-                return TypedActionResult.fail(ItemStack.EMPTY);
-            }).filter(i -> i.getResult().isAccepted()).findFirst().orElseGet(() -> TypedActionResult.fail(ItemStack.EMPTY));
-        }
+    @Override
+    public EnumPushReaction getMobilityFlag(IBlockState state) {
+        return EnumPushReaction.DESTROY;
+    }
 
-        public boolean hasDrink(BlockPos center) {
-            return StreamSupport.stream(BlockPos.iterateInSquare(center, 2, Direction.EAST, Direction.NORTH).spliterator(), false)
-                    .map(pos -> entries.get(getIndex(pos)))
-                    .anyMatch(list -> list != null && !list.empty());
-        }
+    @Override
+    public BlockFaceShape getBlockFaceShape(IBlockAccess world, IBlockState state, BlockPos pos, EnumFacing side) {
+        return BlockFaceShape.UNDEFINED;
+    }
 
-        public Optional<ItemStack> getDrink(BlockPos center) {
-            return StreamSupport.stream(BlockPos.iterateInSquare(center, 2, Direction.EAST, Direction.NORTH).spliterator(), false)
-                    .map(pos -> entries.get(getIndex(pos)))
-                    .filter(list -> list != null && !list.empty())
-                    .map(Stack::peek)
-                    .map(Entry::stack)
-                    .findFirst();
-        }
+    @Override
+    public boolean hasTileEntity(IBlockState state) {
+        return true;
+    }
 
-        public TypedActionResult<ItemStack> placeDrink(BlockPos position, ItemStack stack, float yaw) {
-            int index = getIndex(position);
-            Stack<Entry> list = entries.get(index);
-            if (list == null) {
-                list = new Stack<>();
-                entries.put(index, list);
-            }
-            if (list.size() < MAX_STACK_HEIGHT) {
-                list.add(new Entry(position.getX() / 16F - 0.5F, position.getZ() / 16F - 0.5F, (-yaw) % 360, stack.split(1)));
-                getWorld().playSound(null, getPos(), SoundEvents.BLOCK_CANDLE_PLACE, SoundCategory.BLOCKS);
-                markDirty();
-                return TypedActionResult.success(stack);
-            }
-            return TypedActionResult.fail(stack);
-        }
-
-        @Override
-        public void readNbt(NbtCompound nbt) {
-            readEntriesFromNbt(nbt.getCompound("entries"));
-        }
-
-        @Override
-        protected void writeNbt(NbtCompound nbt) {
-            nbt.put("entries", writeEntriesToNbt(new NbtCompound()));
-        }
-
-        private void readEntriesFromNbt(NbtCompound nbt) {
-            entries.clear();
-            nbt.getKeys().forEach(key -> {
-                int index = Integer.parseInt(key);
-                NbtList list = nbt.getList(key, NbtElement.COMPOUND_TYPE);
-                if (!list.isEmpty()) {
-                    entries.put(index, list
-                            .stream()
-                            .map(e -> (NbtCompound)e).map(Entry::new)
-                            .collect(Collectors.toCollection(Stack::new))
-                    );
-                }
-            });
-        }
-
-        private NbtCompound writeEntriesToNbt(NbtCompound nbt) {
-            entries.entries().forEach(entry -> {
-                NbtList list = new NbtList();
-                entry.value().forEach(e -> {
-                    list.add(e.toNbt(new NbtCompound()));
-                });
-                nbt.put(entry.key() + "", list);
-            });
-            return nbt;
-        }
-
-        public static Optional<BlockPos> getHitPos(BlockHitResult hit) {
-            Direction direction = hit.getSide();
-
-            if (direction.getAxis() != Direction.Axis.Y) {
-                return Optional.empty();
-            }
-
-            return Optional.of(getHitPos(hit.getBlockPos().offset(direction), hit.getPos()));
-        }
-
-        public static BlockPos getHitPos(BlockPos pos, Vec3d relativePos) {
-            return BlockPos.ofFloored(
-                    (relativePos.getX() - pos.getX()) * MAX_COORD,
-                    0,
-                    (relativePos.getZ() - pos.getZ()) * MAX_COORD
-            );
-        }
-
-        private static int getIndex(BlockPos position) {
-            return ((Math.max(0, position.getX()) * MAX_COORD) + Math.max(0, position.getZ())) % MAX_INDEX;
-        }
-
-        public record Entry (float x, float z, float rotation, ItemStack stack) {
-
-            public Entry(NbtCompound compound) {
-                this(
-                        compound.getFloat("x"),
-                        compound.getFloat("z"),
-                        compound.getFloat("rotation"),
-                        ItemStack.fromNbt(compound.getCompound("stack"))
-                );
-            }
-
-            public NbtCompound toNbt(NbtCompound compound) {
-                compound.putFloat("x", x);
-                compound.putFloat("z", z);
-                compound.putFloat("rotation", rotation);
-                compound.put("stack", stack.writeNbt(new NbtCompound()));
-                return compound;
-            }
-        }
-
-        public interface DrinkConsumer {
-            float accept(float y, Entry drink);
-        }
+    @Override
+    public TileEntity createTileEntity(World world, IBlockState state) {
+        return new PlacedDrinkBlockEntity();
     }
 }
-

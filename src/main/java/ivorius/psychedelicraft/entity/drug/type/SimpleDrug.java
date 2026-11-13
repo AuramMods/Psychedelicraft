@@ -1,78 +1,48 @@
 /*
- *  Copyright (c) 2014, Lukas Tenbrink.
- *  * http://lukas.axxim.net
+ * Copyright (c) 2014, Lukas Tenbrink.
  */
 
 package ivorius.psychedelicraft.entity.drug.type;
 
-import java.util.Optional;
-
 import ivorius.psychedelicraft.PSDamageTypes;
-import ivorius.psychedelicraft.entity.drug.*;
-import ivorius.psychedelicraft.util.MathUtils;
-import net.minecraft.entity.Entity;
-import net.minecraft.nbt.NbtCompound;
-import net.minecraft.text.Text;
-import net.minecraft.util.math.BlockPos;
+import ivorius.psychedelicraft.entity.drug.Drug;
+import ivorius.psychedelicraft.entity.drug.DrugProperties;
+import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.math.MathHelper;
 
-public class SimpleDrug implements Drug {
-    protected double effect;
-    protected double effectActive;
-    protected boolean locked = false;
+import javax.annotation.Nullable;
 
+public class SimpleDrug implements Drug {
     private final double decreaseSpeed;
     private final double decreaseSpeedPlus;
-    private final boolean invisible;
 
-    private final DrugType type;
-
+    private double desired;
+    private double active;
+    private boolean locked;
     private int ticksActive;
 
-    public SimpleDrug(DrugType type, double decSpeed, double decSpeedPlus) {
-        this(type, decSpeed, decSpeedPlus, false);
-    }
-
-    public SimpleDrug(DrugType type, double decSpeed, double decSpeedPlus, boolean invisible) {
-        this.type = type;
-        decreaseSpeed = decSpeed;
-        decreaseSpeedPlus = decSpeedPlus;
-
-        this.invisible = invisible;
-    }
-
-    @Override
-    public final DrugType getType() {
-        return type;
-    }
-
-    public void setActiveValue(double value) {
-        effectActive = value;
+    public SimpleDrug(double decreaseSpeed, double decreaseSpeedPlus) {
+        this.decreaseSpeed = decreaseSpeed;
+        this.decreaseSpeedPlus = decreaseSpeedPlus;
     }
 
     @Override
     public double getActiveValue() {
-        return effectActive;
+        return active;
     }
 
-    public double getDesiredValue() {
-        return effect;
-    }
-
-    public int getTicksActive() {
+    protected final int ticksActive() {
         return ticksActive;
+    }
+
+    protected final float activeRamp(float start) {
+        return MathHelper.clamp(((float) active - start) / (1F - start), 0F, 1F);
     }
 
     @Override
     public void setDesiredValue(double value) {
-        effect = value;
-    }
-
-    @Override
-    public void addToDesiredValue(double value) {
-        if (!locked) {
-            effect += value;
-        }
+        desired = MathHelper.clamp(value, 0, 1);
     }
 
     @Override
@@ -81,85 +51,76 @@ public class SimpleDrug implements Drug {
     }
 
     @Override
-    public boolean isLocked() {
-        return locked;
+    public void addToDesiredValue(double value) {
+        if (!locked) {
+            desired += value;
+        }
+    }
+
+    protected final void scaleDesiredValue(double scale) {
+        desired *= scale;
+    }
+
+    protected final void clearActiveValue() {
+        if (!locked) active = 0;
     }
 
     @Override
-    public boolean isVisible() {
-        return !invisible;
+    public void update() {
+        advance(null, null);
     }
 
     @Override
-    public void update(DrugProperties drugProperties) {
-        if (getActiveValue() > 0) {
-            ticksActive++;
+    public void update(DrugProperties properties, @Nullable EntityPlayer player) {
+        advance(properties, player);
+    }
 
-            if (heartbeatSpeed() > 3) {
-                drugProperties.asEntity().damage(drugProperties.damageOf(PSDamageTypes.HEART_ATTACK), Integer.MAX_VALUE);
-                reset(drugProperties);
+    private void advance(@Nullable DrugProperties properties, @Nullable EntityPlayer player) {
+        ticksActive = active > 0 ? ticksActive + 1 : 0;
+        if (ticksActive > 0 && player != null && !player.world.isRemote && player.isEntityAlive() && heartbeatSpeed() > 3F) {
+            player.attackEntityFrom(PSDamageTypes.HEART_ATTACK, Integer.MAX_VALUE);
+            if (!locked) {
+                reset();
+                properties.markDirty();
             }
+        }
+        if (!locked) {
+            desired = desired * decreaseSpeed - decreaseSpeedPlus;
+        }
+        desired = MathHelper.clamp(desired, 0, 1);
+
+        double interpolated = active + (desired - active) * 0.05;
+        if (interpolated > desired) {
+            active = Math.max(interpolated - 0.005, desired);
         } else {
-            ticksActive = 0;
+            active = Math.min(interpolated + 0.005, desired);
         }
+    }
 
+    @Override
+    public void reset() {
         if (!locked) {
-            effect *= decreaseSpeed;
-            effect -= decreaseSpeedPlus;
-        }
-
-        effect = MathHelper.clamp(effect, 0, 1);
-        setActiveValue(MathUtils.nearValue(effectActive, effect, 0.05, 0.005));
-    }
-
-    @Override
-    public void onWakeUp(DrugProperties drugProperties) {
-        reset(drugProperties);
-    }
-
-    @Override
-    public void reset(DrugProperties drugProperties) {
-        if (!locked) {
-            effect = 0;
+            desired = 0;
         }
     }
 
     @Override
-    public void fromNbt(NbtCompound compound) {
-        setDesiredValue(compound.getDouble("effect"));
-        setActiveValue(compound.getDouble("effectActive"));
-        setLocked(compound.getBoolean("locked"));
-        ticksActive = compound.getInt("ticksActive");
+    public void toNbt(NBTTagCompound tag) {
+        tag.setDouble("effect", desired);
+        tag.setDouble("effectActive", active);
+        tag.setBoolean("locked", locked);
+        tag.setInteger("ticksActive", ticksActive);
     }
 
     @Override
-    public void toNbt(NbtCompound compound) {
-        compound.putDouble("effect", getDesiredValue());
-        compound.putDouble("effectActive", getActiveValue());
-        compound.putBoolean("locked", isLocked());
-        compound.putInt("ticksActive", ticksActive);
-    }
-
-    @Override
-    public Optional<Text> trySleep(BlockPos pos) {
-        return Optional.empty();
-    }
-
-    @Override
-    public void applyContrastColorization(float[] rgba) {
-
-    }
-
-    @Override
-    public void applyColorBloom(float[] rgba) {
-
-    }
-
-    protected static void rotateEntityPitch(Entity entity, double amount) {
-        entity.setPitch((float)MathHelper.clamp(entity.getPitch() + amount, -90, 90));
-    }
-
-    protected static void rotateEntityYaw(Entity entity, double amount) {
-        entity.setYaw(entity.getYaw() + (float)amount);
+    public void fromNbt(NBTTagCompound tag) {
+        desired = tag.getDouble("effect");
+        if (!Double.isFinite(desired)) {
+            desired = 0;
+        }
+        double savedActive = tag.getDouble("effectActive");
+        active = Double.isFinite(savedActive) ? MathHelper.clamp(savedActive, 0, 1) : 0;
+        locked = tag.getBoolean("locked");
+        ticksActive = Math.max(0, tag.getInteger("ticksActive"));
     }
 }

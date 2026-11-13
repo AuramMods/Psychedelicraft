@@ -1,7 +1,7 @@
 {
   "variants": {
-    "": {
-      "model": "psychedelicraft:block/jungle_barrel"
+    "normal": {
+      "model": "psychedelicraft:jungle_barrel"
     }
   }
 }

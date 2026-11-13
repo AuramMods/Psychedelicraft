@@ -1,7 +1,7 @@
 {
   "variants": {
-    "": {
-      "model": "psychedelicraft:block/juniper_planks"
+    "normal": {
+      "model": "psychedelicraft:juniper_planks"
     }
   }
 }

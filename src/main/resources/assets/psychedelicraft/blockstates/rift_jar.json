@@ -1,7 +1,7 @@
 {
   "variants": {
-    "": {
-      "model": "psychedelicraft:block/rift_jar"
+    "normal": {
+      "model": "psychedelicraft:rift_jar"
     }
   }
 }

@@ -1,135 +1,123 @@
 /*
- *  Copyright (c) 2014, Lukas Tenbrink.
- *  * http://lukas.axxim.net
+ * Copyright (c) 2014, Lukas Tenbrink.
  */
 
 package ivorius.psychedelicraft.block.entity;
 
-import ivorius.psychedelicraft.fluid.*;
-import ivorius.psychedelicraft.fluid.container.Resovoir;
-import net.minecraft.block.BlockState;
-import net.minecraft.block.entity.BlockEntityType;
-import net.minecraft.nbt.NbtCompound;
-import net.minecraft.server.world.ServerWorld;
-import net.minecraft.util.math.*;
+import ivorius.psychedelicraft.fluid.BrewProcess;
+import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.init.Blocks;
+import net.minecraft.item.ItemStack;
+import net.minecraft.nbt.NBTTagCompound;
+import net.minecraftforge.fluids.FluidStack;
+import net.minecraftforge.items.ItemHandlerHelper;
 
-public abstract class FluidProcessingBlockEntity extends FlaskBlockEntity implements Processable.ByProductConsumer {
-    public FluidProcessingBlockEntity(
-            BlockEntityType<? extends FluidProcessingBlockEntity> type,
-            BlockPos pos, BlockState state, int capacity) {
-        super(type, pos, state, capacity);
+public abstract class FluidProcessingBlockEntity extends FluidMachineBlockEntity {
+    private BrewProcess stage = BrewProcess.IDLE;
+    private FluidStack batch;
+    private int elapsed;
+    private int duration;
+    private ItemStack solidOutput = ItemStack.EMPTY;
+
+    protected FluidProcessingBlockEntity(int capacity) {
+        super(capacity);
+    }
+
+    public final BrewProcess getStage() {
+        return stage;
+    }
+
+    public final int getRemainingTicks() {
+        return Math.max(0, duration - elapsed);
+    }
+
+    public float getProcessingProgress() {
+        return duration > 0 ? (float) elapsed / duration : 0;
+    }
+
+    public final ItemStack getSolidOutput() {
+        return solidOutput;
+    }
+
+    public final boolean collectSolidOutput(EntityPlayer player) {
+        if (solidOutput.isEmpty()) return false;
+        ItemStack output = solidOutput;
+        solidOutput = ItemStack.EMPTY;
+        ItemHandlerHelper.giveItemToPlayer(player, output);
+        changed();
+        return true;
     }
 
     @Override
-    protected int getTotalProperties() {
-        return super.getTotalProperties() + 2;
-    }
-
-    public int getTimeNeeded() {
-        return propertyDelegate.get(4);
-    }
-
-    public void setTimeNeeded(int value) {
-        if (value > 0 && getWorld() instanceof ServerWorld sw) {
-            value = Math.max(1, value / getTickRate(sw));
-        }
-        propertyDelegate.set(4, value);
-    }
-
-    public int getTimeProcessed() {
-        return propertyDelegate.get(5);
-    }
-
-    public void setTimeProcessed(int value) {
-        propertyDelegate.set(5, value);
-    }
-
-    public float getProgress() {
-        if (isActive()) {
-            return (float)getTimeProcessed() / getTimeNeeded();
-        }
-        return 0;
-    }
-
-    public abstract Processable.ProcessType getProcessType();
-
-    public Processable.ProcessType getActiveProcess() {
-        Resovoir tank = getPrimaryTank();
-
-        if (isActive() && tank.getFluidType() instanceof Processable p) {
-            return p.modifyProcess(tank, getProcessType());
-        }
-        return Processable.ProcessType.IDLE;
-    }
-
-    public boolean isActive() {
-        return getTimeNeeded() != Processable.UNCONVERTABLE;
-    }
-
-    protected int getTickRate(ServerWorld world) {
-        return 1;
-    }
-
-    @Override
-    public void tick(ServerWorld world) {
-        super.tick(world);
-
-        Resovoir tank = getPrimaryTank();
-
-        if (tank.getFluidType() instanceof Processable p) {
-            Processable.ProcessType type = p.modifyProcess(tank, getProcessType());
-            setTimeNeeded(p.getProcessingTime(tank, type));
-
-            if (canProcess(world, getTimeNeeded())) {
-                if (getTimeProcessed() >= getTimeNeeded()) {
-                    p.process(tank, type, this);
-                    onProcessCompleted(world, tank);
-                } else {
-                    setTimeProcessed(getTimeProcessed() + 1);
-                }
-            } else {
-                setTimeProcessed(0);
-            }
-        } else {
-            setTimeNeeded(Processable.UNCONVERTABLE);
+    protected final void onTankContentsChanged() {
+        FluidStack contents = getTank().getFluid();
+        if (contents == null || !contents.isFluidEqual(batch)) {
+            batch = contents == null ? null : contents.copy();
+            reset(BrewProcess.IDLE, 0);
         }
     }
 
-    protected boolean canProcess(ServerWorld world, int timeNeeded) {
-        return timeNeeded >= 0;
+    protected final void processFluid(boolean aging) {
+        processFluid(BrewProcess.find(getTank().getFluid(), aging, solidOutput.getCount() < 64), 1, true);
     }
 
-    protected void onProcessCompleted(ServerWorld world, Resovoir tank) {
-        setTimeProcessed(0);
-        setTimeNeeded(Processable.UNCONVERTABLE);
-
-        markForUpdate();
-    }
-
-    @Override
-    public void onDrain(Resovoir resovoir) {
-        if (resovoir.isEmpty()) {
-            setTimeProcessed(0);
+    protected final void processFluid(BrewProcess next, int tickRate, boolean ready) {
+        if (next == BrewProcess.IDLE) {
+            if (stage != BrewProcess.IDLE) reset(BrewProcess.IDLE, 0);
+            return;
         }
-        super.onDrain(resovoir);
+
+        FluidStack contents = getTank().getFluid();
+        int ticks = Math.max(1, next.duration(contents));
+        if (next != stage) reset(next, ticks);
+        else if (duration != ticks) {
+            duration = ticks;
+            changed();
+        }
+        if (!ready) return;
+        int previous = elapsed;
+        elapsed += Math.min(tickRate, duration - elapsed);
+        if (elapsed >= duration) {
+            if (completeProcess(next, contents)) reset(BrewProcess.IDLE, 0);
+        } else if (previous / 20 != elapsed / 20) {
+            changed();
+        }
+    }
+
+    protected boolean completeProcess(BrewProcess process, FluidStack contents) {
+        getTank().replace(process.finish(contents));
+        if (process == BrewProcess.HARDEN) {
+            if (solidOutput.isEmpty()) solidOutput = new ItemStack(Blocks.DIRT);
+            else solidOutput.grow(1);
+        }
+        return true;
+    }
+
+    private void reset(BrewProcess next, int ticks) {
+        stage = next;
+        duration = ticks;
+        elapsed = 0;
+        changed();
     }
 
     @Override
-    public void onFill(Resovoir resovoir, int amountFilled) {
-        super.onFill(resovoir, amountFilled);
+    public NBTTagCompound writeToNBT(NBTTagCompound compound) {
+        super.writeToNBT(compound);
+        compound.setInteger("process", stage.ordinal());
+        compound.setInteger("timeProcessed", elapsed);
+        compound.setInteger("timeNeeded", duration);
+        if (!solidOutput.isEmpty()) compound.setTag("solidContents", solidOutput.writeToNBT(new NBTTagCompound()));
+        return compound;
     }
 
     @Override
-    public void writeNbt(NbtCompound compound) {
-        super.writeNbt(compound);
-        compound.putInt("timeProcessed", getTimeProcessed());
-        compound.putInt("timeNeeded", getTimeNeeded());
-    }
-
-    @Override
-    public void readNbt(NbtCompound compound) {
-        super.readNbt(compound);
-        setTimeProcessed(compound.getInt("timeProcessed"));
-        setTimeNeeded(compound.getInt("timeNeeded"));
+    public void readFromNBT(NBTTagCompound compound) {
+        super.readFromNBT(compound);
+        FluidStack contents = getTank().getFluid();
+        batch = contents == null ? null : contents.copy();
+        stage = BrewProcess.fromId(compound.getInteger("process"));
+        duration = Math.max(0, compound.getInteger("timeNeeded"));
+        elapsed = Math.max(0, Math.min(duration, compound.getInteger("timeProcessed")));
+        solidOutput = new ItemStack(compound.getCompoundTag("solidContents"));
     }
 }

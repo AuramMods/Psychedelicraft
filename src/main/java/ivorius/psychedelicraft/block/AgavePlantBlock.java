@@ -1,137 +1,95 @@
 /*
- *  Copyright (c) 2014, Lukas Tenbrink.
- *  * http://lukas.axxim.net
+ * Copyright (c) 2014, Lukas Tenbrink.
  */
 
 package ivorius.psychedelicraft.block;
 
+import java.util.Set;
+
 import ivorius.psychedelicraft.item.PSItems;
-import net.fabricmc.fabric.api.tag.convention.v1.ConventionalItemTags;
-import net.minecraft.block.Block;
-import net.minecraft.block.BlockState;
+import net.minecraft.block.properties.PropertyInteger;
+import net.minecraft.block.state.IBlockState;
 import net.minecraft.entity.Entity;
-import net.minecraft.entity.EntityType;
-import net.minecraft.entity.EquipmentSlot;
-import net.minecraft.entity.LivingEntity;
-import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.entity.EntityLivingBase;
+import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.item.ItemHoe;
 import net.minecraft.item.ItemStack;
-import net.minecraft.item.Items;
-import net.minecraft.registry.tag.ItemTags;
-import net.minecraft.sound.SoundCategory;
-import net.minecraft.sound.SoundEvents;
-import net.minecraft.state.property.IntProperty;
-import net.minecraft.state.property.Properties;
-import net.minecraft.util.ActionResult;
-import net.minecraft.util.Hand;
-import net.minecraft.util.hit.BlockHitResult;
+import net.minecraft.item.ItemSword;
+import net.minecraft.util.DamageSource;
+import net.minecraft.util.EnumFacing;
+import net.minecraft.util.EnumHand;
+import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.Vec3d;
-import net.minecraft.util.shape.VoxelShape;
 import net.minecraft.world.World;
-import net.minecraft.world.event.GameEvent;
 
-public class AgavePlantBlock extends SucculentPlantBlock {
-    public static final IntProperty AGE = Properties.AGE_5;
-    public static final int MAX_AGE = Properties.AGE_5_MAX;
-
-    public static final VoxelShape[] SHAPES = {
-            Block.createCuboidShape(6, 0, 6, 10,  4, 10),
-            Block.createCuboidShape(6, 0, 6, 10,  8, 10),
-            Block.createCuboidShape(5, 0, 5, 11, 10, 11),
-            Block.createCuboidShape(5, 0, 5, 11, 10, 11),
-            Block.createCuboidShape(4, 0, 4, 12, 12, 12),
-            Block.createCuboidShape(2, 0, 2, 14, 14, 14)
+public final class AgavePlantBlock extends SucculentPlantBlock {
+    public static final PropertyInteger AGE = PropertyInteger.create("age", 0, 5);
+    private static final AxisAlignedBB[] SHAPES = {
+            shape(2, 4), shape(2, 8), shape(3, 10), shape(3, 10), shape(4, 12), shape(6, 14)
     };
 
-    public AgavePlantBlock(Settings settings) {
-        super(settings);
+    AgavePlantBlock() {
+        super(5);
     }
 
     @Override
-    public VoxelShape[] getShapes() {
-        return SHAPES;
-    }
-
-    @Override
-    protected IntProperty getAgeProperty() {
+    protected PropertyInteger ageProperty() {
         return AGE;
     }
 
     @Override
-    protected int getMaxAge() {
-        return MAX_AGE;
+    protected AxisAlignedBB[] shapes() {
+        return SHAPES;
     }
 
     @Override
-    protected int getGrowthRate(BlockState state) {
+    protected int growthInterval() {
         return 320;
     }
 
     @Override
-    public void onEntityCollision(BlockState state, World world, BlockPos pos, Entity entity) {
-        if (!(entity instanceof LivingEntity) || entity.getType() == EntityType.FOX || entity.getType() == EntityType.BEE) {
-            return;
-        }
-        entity.slowMovement(state, new Vec3d(0.8F, 0.75F, 0.8F));
-        if (!(world.isClient
-                || state.get(getAgeProperty()) <= 0
-                || entity.lastRenderX == entity.getX() && entity.lastRenderZ == entity.getZ()
-                || entity.isSneaking())) {
-            if (Math.max(
-                    Math.abs(entity.getX() - entity.lastRenderX),
-                    Math.abs(entity.getZ() - entity.lastRenderZ)
-                ) >= 0.003F) {
-                entity.damage(entity.getDamageSources().cactus(), 1);
+    public void onEntityCollidedWithBlock(World world, BlockPos pos, IBlockState state, Entity entity) {
+        if (entity instanceof EntityLivingBase) {
+            slow(entity);
+            if (!world.isRemote && state.getValue(AGE) > 0 && !entity.isSneaking()) {
+                double movedX = Math.abs(entity.posX - entity.lastTickPosX);
+                double movedZ = Math.abs(entity.posZ - entity.lastTickPosZ);
+                if (Math.max(movedX, movedZ) >= 0.003F) {
+                    entity.attackEntityFrom(DamageSource.CACTUS, 1);
+                }
             }
         }
     }
 
-    @Deprecated
     @Override
-    public ActionResult onUse(BlockState state, World world, BlockPos pos, PlayerEntity player, Hand hand, BlockHitResult hit) {
-        ItemStack stack = player.getStackInHand(hand);
-        int age = state.get(getAgeProperty());
-
-        if ((stack.isIn(ConventionalItemTags.SHEARS) && age >= 1)) {
-            stack.damage(1, player, p -> p.sendEquipmentBreakStatus(EquipmentSlot.MAINHAND));
-            dropStack(world, pos, new ItemStack(PSItems.AGAVE_LEAF, 1 + world.random.nextInt(2)));
-
-            state = state.with(getAgeProperty(), age - 1);
-            world.setBlockState(pos, state, Block.NOTIFY_LISTENERS);
-            world.emitGameEvent(GameEvent.BLOCK_CHANGE, pos, GameEvent.Emitter.of(player, state));
-
-            if (stack.isOf(Items.BONE_MEAL)) {
-                return ActionResult.PASS;
+    public boolean onBlockActivated(World world, BlockPos pos, IBlockState state, EntityPlayer player,
+                                    EnumHand hand, EnumFacing face, float x, float y, float z) {
+        ItemStack tool = player.getHeldItem(hand);
+        if (isShears(tool) && state.getValue(AGE) > 0) {
+            harvest(world, pos, state, player, tool, PSItems.AGAVE_LEAF, true);
+            return true;
+        }
+        if (tool.isEmpty()) {
+            if (!world.isRemote) {
+                player.attackEntityFrom(DamageSource.CACTUS, 1);
             }
-
-            world.playSound(null, pos, SoundEvents.ENTITY_SHEEP_SHEAR, SoundCategory.BLOCKS,
-                    1,
-                    0.8F + world.random.nextFloat() * 0.4F
-            );
-            return ActionResult.success(world.isClient);
+            return true;
         }
-        if (stack.isEmpty()) {
-            player.damage(player.getDamageSources().cactus(), 1);
-            return ActionResult.SUCCESS;
-        }
-
-        return super.onUse(state, world, pos, player, hand, hit);
+        return false;
     }
 
     @Override
-    public void onBreak(World world, BlockPos pos, BlockState state, PlayerEntity player) {
-        super.onBreak(world, pos, state, player);
-        if (!isAppropriateTool(player.getStackInHand(Hand.MAIN_HAND))) {
-            player.damage(player.getDamageSources().cactus(), 1);
+    public void onBlockHarvested(World world, BlockPos pos, IBlockState state, EntityPlayer player) {
+        if (!world.isRemote && !isAppropriateTool(player.getHeldItemMainhand())) {
+            player.attackEntityFrom(DamageSource.CACTUS, 1);
         }
+        super.onBlockHarvested(world, pos, state, player);
     }
 
-    private boolean isAppropriateTool(ItemStack stack) {
-        return stack.isIn(ItemTags.PICKAXES)
-                || stack.isIn(ItemTags.SHOVELS)
-                || stack.isIn(ItemTags.SWORDS)
-                || stack.isIn(ItemTags.AXES)
-                || stack.isIn(ItemTags.HOES)
-                || stack.isIn(ConventionalItemTags.SHEARS);
+    private static boolean isAppropriateTool(ItemStack stack) {
+        Set<String> classes = stack.getItem().getToolClasses(stack);
+        return isShears(stack) || stack.getItem() instanceof ItemSword || stack.getItem() instanceof ItemHoe
+                || classes.contains("pickaxe") || classes.contains("shovel") || classes.contains("axe")
+                || classes.contains("sword") || classes.contains("hoe");
     }
 }

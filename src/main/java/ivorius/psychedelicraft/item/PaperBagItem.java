@@ -1,339 +1,319 @@
+/*
+ * Copyright (c) 2014, Lukas Tenbrink.
+ */
+
 package ivorius.psychedelicraft.item;
 
-import java.util.List;
-import java.util.Optional;
-import org.jetbrains.annotations.Nullable;
-
-import ivorius.psychedelicraft.PSTags;
-import net.minecraft.block.DispenserBlock;
-import net.minecraft.block.dispenser.ItemDispenserBehavior;
-import net.minecraft.client.item.TooltipContext;
+import ivorius.psychedelicraft.Psychedelicraft;
+import net.minecraft.block.Block;
+import net.minecraft.block.BlockButton;
+import net.minecraft.block.BlockDispenser;
+import net.minecraft.block.BlockFlower;
+import net.minecraft.client.util.ITooltipFlag;
+import net.minecraft.dispenser.BehaviorDefaultDispenseItem;
+import net.minecraft.dispenser.IBlockSource;
 import net.minecraft.entity.Entity;
-import net.minecraft.entity.ItemEntity;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.inventory.Inventory;
-import net.minecraft.inventory.StackReference;
+import net.minecraft.entity.item.EntityItem;
+import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.init.Blocks;
+import net.minecraft.init.Items;
+import net.minecraft.init.SoundEvents;
+import net.minecraft.inventory.ClickType;
+import net.minecraft.inventory.Container;
+import net.minecraft.inventory.Slot;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
-import net.minecraft.item.ItemUsageContext;
-import net.minecraft.nbt.NbtCompound;
-import net.minecraft.screen.slot.Slot;
-import net.minecraft.sound.SoundEvents;
-import net.minecraft.stat.Stats;
-import net.minecraft.text.Text;
+import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.stats.StatList;
 import net.minecraft.util.ActionResult;
-import net.minecraft.util.ClickType;
-import net.minecraft.util.Hand;
-import net.minecraft.util.TypedActionResult;
-import net.minecraft.util.math.BlockPointer;
-import net.minecraft.util.math.Box;
+import net.minecraft.util.EnumActionResult;
+import net.minecraft.util.EnumFacing;
+import net.minecraft.util.EnumHand;
+import net.minecraft.util.math.AxisAlignedBB;
+import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.text.translation.I18n;
 import net.minecraft.world.World;
+import net.minecraftforge.fml.relauncher.Side;
+import net.minecraftforge.fml.relauncher.SideOnly;
+import net.minecraftforge.items.ItemHandlerHelper;
+import net.minecraftforge.oredict.DyeUtils;
+import net.minecraftforge.oredict.OreDictionary;
 
-public class PaperBagItem extends Item {
+import javax.annotation.Nullable;
+import java.util.List;
 
-    public PaperBagItem(Settings settings) {
-        super(settings);
-        DispenserBlock.registerBehavior(this, new ItemDispenserBehavior(){
-            @Override
-            public ItemStack dispenseSilently(BlockPointer pointer, ItemStack stack) {
-                Contents contents = getContents(stack);
-                if (contents.isEmpty() || stack.getCount() > 1) {
-                    return super.dispenseSilently(pointer, stack);
-                }
-                Contents.Builder builder = new Contents.Builder(contents);
-                ItemStack dispensed = builder.split(1);
-                setContents(stack, builder.build());
-                return super.dispenseSilently(pointer, dispensed);
-            }
+public final class PaperBagItem extends Item {
+    private static final int MAX_CONTENTS = 64_000;
+
+    public PaperBagItem() {
+        addPropertyOverride(Psychedelicraft.id("filled"), (stack, world, entity) -> {
+            int count = getContents(stack).count;
+            return count > 16_000 ? 1 : count > 0 ? 0.5F : 0;
         });
     }
 
     @Override
-    public boolean onStackClicked(ItemStack bag, Slot slot, ClickType clickType, PlayerEntity player) {
-        if (clickType != ClickType.RIGHT || bag.getCount() != 1) {
-            return false;
-        }
+    public int getItemStackLimit(ItemStack stack) {
+        return getContents(stack).isEmpty() ? super.getItemStackLimit(stack) : 1;
+    }
 
-        Contents contents = getContents(bag);
-        Contents.Builder builder = new Contents.Builder(contents);
-
-        ItemStack slotStack = slot.getStack();
-
-        if (slotStack.isEmpty()) {
-            if (!contents.isEmpty()) {
-                // dispense into empty slot
-                builder.add(slot.insertStack(builder.split(contents.stack().getMaxCount())));
-                player.playSound(SoundEvents.ITEM_BUNDLE_REMOVE_ONE, 1, 1);
-                setContents(bag, builder.build());
-                return true;
+    public static void registerDispenserBehavior() {
+        BlockDispenser.DISPENSE_BEHAVIOR_REGISTRY.putObject(PSItems.PAPER_BAG, new BehaviorDefaultDispenseItem() {
+            @Override
+            protected ItemStack dispenseStack(IBlockSource source, ItemStack bag) {
+                Contents contents = getContents(bag);
+                if (bag.getCount() != 1 || contents.isEmpty()) return super.dispenseStack(source, bag);
+                ItemStack output = contents.take(1);
+                setContents(bag, contents);
+                doDispense(source.getWorld(), output, 6, source.getBlockState().getValue(BlockDispenser.FACING),
+                        BlockDispenser.getDispensePosition(source));
+                return bag;
             }
-        } else if (canPickUp(slotStack) && builder.canAdd(slotStack)) {
-            // pick up from filled slot
-            int maxTaken = getMaxCountForItem(slotStack.getItem()) - contents.count();
+        });
+    }
 
-            builder.add(slot.takeStackRange(slotStack.getCount(), maxTaken, player));
-            player.playSound(SoundEvents.ITEM_BUNDLE_INSERT, 1, 1);
-            setContents(bag, builder.build());
-            return true;
+    @Nullable
+    public static ItemStack handleClick(Container container, int index, int button, ClickType type, EntityPlayer player) {
+        if (button != 1 || type != ClickType.PICKUP || index < 0 || index >= container.inventorySlots.size()) return null;
+        Slot slot = container.inventorySlots.get(index);
+        if (slot == null) return null;
+        ItemStack stored = slot.getStack();
+        ItemStack cursor = player.inventory.getItemStack();
+        if (cursor.getItem() == PSItems.PAPER_BAG && cursor.getCount() == 1) {
+            Contents contents = getContents(cursor);
+            if (stored.isEmpty() && !contents.isEmpty() && slot.isItemValid(contents.stack)) {
+                int limit = Math.min(slot.getItemStackLimit(contents.stack), contents.stack.getMaxStackSize());
+                if (limit <= 0) return null;
+                slot.putStack(contents.take(limit));
+                setContents(cursor, contents);
+                playRemove(player);
+                return ItemStack.EMPTY;
+            }
+            if (!slot.canTakeStack(player) || contents.roomFor(stored) <= 0) return null;
+            ItemStack previous = stored.copy();
+            ItemStack taken = slot.decrStackSize(Math.min(stored.getCount(), contents.roomFor(stored)));
+            if (taken.isEmpty()) return null;
+            contents.insert(taken.copy());
+            slot.onTake(player, taken);
+            setContents(cursor, contents);
+            playInsert(player);
+            return previous;
         }
-        return false;
+        if (stored.getItem() == PSItems.PAPER_BAG && stored.getCount() == 1
+                && slot.canTakeStack(player) && slot.isItemValid(stored)) {
+            Contents contents = getContents(stored);
+            ItemStack previous = stored.copy();
+            if (cursor.isEmpty() && !contents.isEmpty()) {
+                player.inventory.setItemStack(contents.take(contents.stack.getMaxStackSize()));
+                playRemove(player);
+            } else if (contents.insert(cursor)) {
+                if (cursor.isEmpty()) player.inventory.setItemStack(ItemStack.EMPTY);
+                playInsert(player);
+            } else {
+                return null;
+            }
+            setContents(stored, contents);
+            slot.onSlotChanged();
+            return previous;
+        }
+        return null;
     }
 
     @Override
-    public boolean onClicked(ItemStack clickedStack, ItemStack cursorStack, Slot slot, ClickType clickType, PlayerEntity player, StackReference cursorStackReference) {
-        if (clickType != ClickType.RIGHT || !(cursorStack.getItem() instanceof PaperBagItem || slot.canTakePartial(player)) || clickedStack.getCount() != 1) {
-            return false;
-        }
-
-        Contents contents = getContents(clickedStack);
-        Contents.Builder builder = new Contents.Builder(contents);
-
-        if (cursorStack.isEmpty()) {
-            // remove from bag into held stack
-            cursorStackReference.set(builder.split(64));
-            player.playSound(SoundEvents.ITEM_BUNDLE_INSERT, 1, 1);
-            setContents(clickedStack, builder.build());
-            return true;
-        }
-
-        if (builder.canAdd(cursorStack)) {
-            int maxTaken = getMaxCountForItem(cursorStack.getItem()) - contents.count();
-
-            if (canPickUp(cursorStack)) {
-                // insert into bag from held stack
-                builder.add(cursorStack.split(maxTaken));
-                player.playSound(SoundEvents.ITEM_BUNDLE_INSERT, 1, 1);
-                setContents(clickedStack, builder.build());
-                return true;
-            }
-
-            // bag to bag transfer
-            /*
-            if (cursorStack.getItem() instanceof PaperBagItem) {
-                Contents.Builder cursorContents = new Contents.Builder(getContents(cursorStack));
-                builder.add(cursorContents.split(maxTaken));
-                player.playSound(SoundEvents.ITEM_BUNDLE_INSERT, 1, 1);
-                setContents(clickedStack, builder.build());
-                setContents(cursorStack, cursorContents.build());
-                return true;
-            }
-            */
-        }
-
-        return false;
-    }
-
-    @Override
-    public TypedActionResult<ItemStack> use(World world, PlayerEntity user, Hand hand) {
-        ItemStack bag = user.getStackInHand(hand);
+    public EnumActionResult onItemUse(EntityPlayer player, World world, BlockPos pos, EnumHand hand,
+                                      EnumFacing face, float hitX, float hitY, float hitZ) {
+        ItemStack bag = player.getHeldItem(hand);
         Contents contents = getContents(bag);
-
-        if (!contents.isEmpty()) {
-            user.dropItem(removeItems(bag, contents, user.isSneaky() ? 1 : contents.stack().getMaxCount()), false, false);
-            user.playSound(SoundEvents.ITEM_BUNDLE_REMOVE_ONE, 1, 1);
-            user.incrementStat(Stats.USED.getOrCreateStat(this));
-            return TypedActionResult.success(bag, world.isClient());
-        }
-        return TypedActionResult.fail(bag);
-    }
-
-    @Override
-    public ActionResult useOnBlock(ItemUsageContext context) {
-        ItemStack bag = context.getStack();
-
-        Contents contents = getContents(bag);
-
-        Contents.Builder builder = new Contents.Builder(contents);
-
-        if (context.getWorld().getOtherEntities(context.getPlayer(),
-                Box.from(context.getHitPos()).expand(0.25),
-                e -> e instanceof ItemEntity i && canPickUp(i.getStack()))
-            .stream().filter(e -> {
-                if (builder.add(((ItemEntity)e).getStack())) {
-                    if (((ItemEntity)e).getStack().isEmpty()) {
-                        e.discard();
-                    }
-                    return true;
+        if (!world.isBlockModifiable(player, pos)) return EnumActionResult.PASS;
+        double x = pos.getX() + hitX;
+        double y = pos.getY() + hitY;
+        double z = pos.getZ() + hitZ;
+        AxisAlignedBB pickup = new AxisAlignedBB(x, y, z, x, y, z).grow(0.25);
+        for (EntityItem drop : world.getEntitiesWithinAABB(EntityItem.class, pickup)) {
+            if (contents.roomFor(drop.getItem()) <= 0) continue;
+            if (!world.isRemote) {
+                ItemStack remaining = drop.getItem().copy();
+                contents.insert(remaining);
+                if (remaining.isEmpty()) drop.setDead();
+                else drop.setItem(remaining);
+                if (bag.getCount() == 1) {
+                    setContents(bag, contents);
+                } else {
+                    ItemStack filled = bag.splitStack(1);
+                    setContents(filled, contents);
+                    ItemHandlerHelper.giveItemToPlayer(player, filled);
                 }
-                return false;
-            }).findAny().isEmpty()) {
-
-            if (!contents.isEmpty()) {
-                context.getPlayer().dropItem(removeItems(bag, contents, context.getPlayer().isSneaky() ? 1 : contents.stack().getMaxCount()), false, false);
-                context.getPlayer().playSound(SoundEvents.ITEM_BUNDLE_REMOVE_ONE, 1, 1);
-                return ActionResult.SUCCESS;
+                playInsert(player);
             }
-
-            return ActionResult.FAIL;
+            return EnumActionResult.SUCCESS;
         }
-
-        if (bag.getCount() > 1) {
-            bag = bag.split(1);
-            setContents(bag, builder.build());
-            context.getPlayer().getInventory().insertStack(bag);
-        } else {
-            setContents(bag, builder.build());
-        }
-        context.getPlayer().playSound(SoundEvents.ITEM_BUNDLE_INSERT, 1, 1);
-        return ActionResult.SUCCESS;
+        return empty(player, world, bag, contents);
     }
 
     @Override
-    public void inventoryTick(ItemStack stack, World world, Entity entity, int slot, boolean selected) {
-        if (world.isClient() || !selected || stack.getCount() != 1) {
+    public ActionResult<ItemStack> onItemRightClick(World world, EntityPlayer player, EnumHand hand) {
+        ItemStack bag = player.getHeldItem(hand);
+        return new ActionResult<>(empty(player, world, bag, getContents(bag)), bag);
+    }
+
+    private EnumActionResult empty(EntityPlayer player, World world, ItemStack bag, Contents contents) {
+        if (contents.isEmpty() || bag.getCount() != 1) return EnumActionResult.PASS;
+        if (!world.isRemote) {
+            player.dropItem(contents.take(player.isSneaking() ? 1 : contents.stack.getMaxStackSize()), false, false);
+            setContents(bag, contents);
+            playRemove(player);
+            player.addStat(StatList.getObjectUseStats(this));
+        }
+        return EnumActionResult.SUCCESS;
+    }
+
+    @Override
+    public void onUpdate(ItemStack bag, World world, Entity entity, int slot, boolean selected) {
+        if (world.isRemote || !selected || bag.getCount() != 1 || !(entity instanceof EntityPlayer)) return;
+        EntityPlayer player = (EntityPlayer) entity;
+        if (slot < 0 || slot >= player.inventory.mainInventory.size() || player.inventory.getStackInSlot(slot) != bag) return;
+        Contents contents = getContents(bag);
+        if (contents.isEmpty()) return;
+        boolean changed = slot + 1 < player.inventory.mainInventory.size() && contents.insert(player.inventory.getStackInSlot(slot + 1));
+        changed |= slot > 0 && contents.insert(player.inventory.getStackInSlot(slot - 1));
+        if (changed) {
+            setContents(bag, contents);
+            player.inventory.markDirty();
+            playInsert(player);
+        }
+    }
+
+    @Override
+    public String getItemStackDisplayName(ItemStack bag) {
+        Contents contents = getContents(bag);
+        return contents.isEmpty() ? super.getItemStackDisplayName(bag)
+                : I18n.translateToLocalFormatted(getUnlocalizedName(bag) + ".filled", contents.stack.getDisplayName());
+    }
+
+    @Override
+    @SideOnly(Side.CLIENT)
+    public void addInformation(ItemStack bag, @Nullable World world, List<String> tooltip, ITooltipFlag flag) {
+        Contents contents = getContents(bag);
+        if (!contents.isEmpty()) tooltip.add(contents.count + " × " + contents.stack.getDisplayName());
+    }
+
+    private static void playInsert(EntityPlayer player) {
+        if (!player.world.isRemote) player.world.playSound(null, player.posX, player.posY, player.posZ,
+                SoundEvents.ITEM_ARMOR_EQUIP_LEATHER, player.getSoundCategory(), 0.55F, 1.25F);
+    }
+
+    private static void playRemove(EntityPlayer player) {
+        if (!player.world.isRemote) player.world.playSound(null, player.posX, player.posY, player.posZ,
+                SoundEvents.ITEM_ARMOR_EQUIP_LEATHER, player.getSoundCategory(), 0.55F, 0.85F);
+    }
+
+    private static boolean canStore(ItemStack stack) {
+        if (stack.isEmpty()) return false;
+        Item item = stack.getItem();
+        Block block = Block.getBlockFromItem(item);
+        if (block instanceof BlockFlower) {
+            BlockFlower flower = (BlockFlower) block;
+            return isVariant(stack, BlockFlower.EnumFlowerType.getTypes(flower.getBlockType()).length - 1);
+        }
+        return block instanceof BlockButton
+                || block == Blocks.RED_MUSHROOM || block == Blocks.BROWN_MUSHROOM
+                || item == Items.COOKIE || item == Items.NETHER_WART || item == Items.WHEAT_SEEDS
+                || item == Items.BEETROOT_SEEDS || item == Items.CARROT || item == Items.POTATO
+                || item == Items.SPIDER_EYE || (item == Items.FISH && isVariant(stack, 3))
+                || (item == Items.COOKED_FISH && isVariant(stack, 1))
+                || item == Items.GOLDEN_CARROT || item == Items.MELON || item == Items.POISONOUS_POTATO
+                || item == Items.BAKED_POTATO || item == Items.BEETROOT || item == Items.CHORUS_FRUIT
+                || item == Items.ROTTEN_FLESH || item == Items.APPLE
+                || (item == Items.DYE && isVariant(stack, 15)) || item == PSItems.IRON_CHAIN || item == PSItems.BOTTLE
+                || item == PSItems.BROWN_MAGIC_MUSHROOMS || item == PSItems.RED_MAGIC_MUSHROOMS
+                || item == PSItems.TOMATO || item == PSItems.BELLADONNA_BERRIES || item == PSItems.AGAVE_LEAF
+                || item == PSItems.SYRINGE || item == PSItems.MORNING_GLORY || item == PSItems.HASH_MUFFIN
+                || item == PSItems.COCAINE_POWDER || item == PSItems.OBSIDIAN_DUST || item == PSItems.JOINT
+                || item == PSItems.CIGAR || item == PSItems.CIGARETTE || item == PSItems.SMOKING_PIPE
+                || matchesCommonTag(stack);
+    }
+
+    private static boolean isVariant(ItemStack stack, int last) {
+        return stack.getMetadata() >= 0 && stack.getMetadata() <= last;
+    }
+
+    private static boolean matchesCommonTag(ItemStack stack) {
+        if (stack.getItem() == Items.DYE) return false; // Forge's vanilla dye registration uses wildcard metadata.
+        for (int id : OreDictionary.getOreIDs(stack)) {
+            String ore = OreDictionary.getOreName(id);
+            if ("cropApple".equals(ore) || "dye".equals(ore)) return true;
+        }
+        return DyeUtils.isDye(stack);
+    }
+
+    private static int capacity(ItemStack stack) {
+        return stack.getItem() == PSItems.BOTTLE ? 1 : MAX_CONTENTS;
+    }
+
+    public static Contents getContents(ItemStack bag) {
+        NBTTagCompound tag = bag.getSubCompound("contents");
+        if (tag == null) return new Contents(ItemStack.EMPTY, 0);
+        ItemStack prototype = new ItemStack(tag.getCompoundTag("stack"));
+        if (prototype.isEmpty()) return new Contents(ItemStack.EMPTY, 0);
+        prototype.setCount(1);
+        return new Contents(prototype, Math.min(capacity(prototype), Math.max(0, tag.getInteger("count"))));
+    }
+
+    static void setContents(ItemStack bag, Contents contents) {
+        if (contents.isEmpty()) {
+            if (bag.hasTagCompound()) {
+                bag.getTagCompound().removeTag("contents");
+                if (bag.getTagCompound().hasNoTags()) bag.setTagCompound(null);
+            }
             return;
         }
-
-        if (entity instanceof PlayerEntity player) {
-            Inventory inv = player.getInventory();
-
-            if (inv.getStack(slot) != stack) {
-                return;
-            }
-
-            Contents contents = getContents(stack);
-            if (contents.isFull() || contents.isEmpty()) {
-                return;
-            }
-
-            Contents.Builder builder = new Contents.Builder(contents);
-
-
-            boolean changed = false;
-
-            if (slot < inv.size() - 1) {
-                changed |= builder.add(inv.getStack(slot + 1));
-            }
-            if (slot > 0) {
-                changed |= builder.add(inv.getStack(slot - 1));
-            }
-
-            if (changed) {
-                player.playSound(SoundEvents.ITEM_BUNDLE_REMOVE_ONE, player.getSoundCategory(), 1, 1);
-                setContents(stack, builder.build());
-                inv.setStack(slot, stack);
-            }
-        }
+        NBTTagCompound tag = new NBTTagCompound();
+        tag.setTag("stack", contents.stack.writeToNBT(new NBTTagCompound()));
+        tag.setInteger("count", contents.count);
+        bag.setTagInfo("contents", tag);
     }
 
-    private static ItemStack removeItems(ItemStack bag, Contents contents, int count) {
-        ItemStack dispensed = contents.stack().copyWithCount(Math.min(contents.count(), count));
-        setContents(bag, new Contents(contents.stack(), contents.count() - dispensed.getCount()));
-        return dispensed;
-    }
+    public static final class Contents {
+        private ItemStack stack;
+        private int count;
 
-    @Override
-    public void appendTooltip(ItemStack stack, @Nullable World world, List<Text> tooltip, TooltipContext context) {
-        Contents contents = getContents(stack);
-        if (!contents.isEmpty()) {
-            tooltip.add(Text.literal(contents.count() + " x ").append(contents.stack().getName()));
-        }
-    }
-
-    @Override
-    public Text getName(ItemStack stack) {
-        Contents contents = getContents(stack);
-        if (!contents.isEmpty()) {
-            return Text.translatable(getTranslationKey(stack) + ".filled", contents.stack().getName());
-        }
-        return super.getName(stack);
-    }
-
-    private boolean canPickUp(ItemStack incomingStack) {
-        return incomingStack.isIn(PSTags.Items.CAN_GO_INTO_PAPER_BAG);
-    }
-
-    public static Contents getContents(ItemStack stack) {
-        return Optional.ofNullable(stack.getSubNbt("contents")).map(Contents::fromNbt).orElse(Contents.EMPTY);
-    }
-
-    public static void setContents(ItemStack stack, Contents contents) {
-        contents.writeNbt(stack.getOrCreateSubNbt("contents"));
-    }
-
-    public static int getMaxCountForItem(Item item) {
-        if (item instanceof BottleItem) {
-            return 1;
-        }
-        return 64 * 1000;
-    }
-
-    public record Contents(ItemStack stack, int count) {
-        static final Contents EMPTY = new Contents(ItemStack.EMPTY, 0);
-
-        public static Contents fromNbt(NbtCompound nbt) {
-            return from(ItemStack.fromNbt(nbt.getCompound("stack")), Math.max(0, nbt.getInt("count")));
-        }
-
-        public static Contents from(ItemStack stack, int count) {
-            if (count <= 0 || stack.isEmpty()) {
-                return EMPTY;
-            }
-            return new Contents(stack, count);
-        }
-
-        public boolean isFull() {
-            return count >= getMaxCountForItem(stack.getItem());
+        Contents(ItemStack stack, int count) {
+            this.stack = stack;
+            this.count = count;
         }
 
         public boolean isEmpty() {
-            return stack.isEmpty() || count <= 0;
+            return count == 0 || stack.isEmpty();
         }
 
-        public NbtCompound writeNbt(NbtCompound nbt) {
-            nbt.put("stack", stack.writeNbt(new NbtCompound()));
-            nbt.putInt("count", count);
-            return nbt;
+        public int getCount() {
+            return count;
         }
 
-        static class Builder {
-            private ItemStack stack;
-            private int count;
+        int roomFor(ItemStack incoming) {
+            return canStore(incoming) && (isEmpty() || ItemHandlerHelper.canItemStacksStack(stack, incoming))
+                    ? capacity(incoming) - count : 0;
+        }
 
-            public Builder(Contents contents) {
-                stack = contents.stack();
-                count = contents.count();
+        boolean insert(ItemStack incoming) {
+            int amount = Math.min(incoming.getCount(), roomFor(incoming));
+            if (amount <= 0) return false;
+            if (isEmpty()) {
+                stack = incoming.copy();
+                stack.setCount(1);
             }
+            incoming.shrink(amount);
+            count += amount;
+            return true;
+        }
 
-            public boolean canAdd(ItemStack stack) {
-                if (stack.getItem() instanceof PaperBagItem) {
-                    return false;
-                }
-
-                if (this.stack.isEmpty()) {
-                    return true;
-                }
-                //if (stack.getItem() instanceof PaperBagItem) {
-                //    return canAdd(getContents(stack).stack());
-                //}
-                return (this.stack.isEmpty() || ItemStack.canCombine(this.stack, stack)) && count < getMaxCountForItem(stack.getItem());
-            }
-
-            public boolean add(ItemStack stack) {
-                /*if (stack.getItem() instanceof PaperBagItem) {
-                    Builder builder = new Builder(getContents(stack));
-                    this.stack = builder.stack.copy();
-                    count += builder.split(getMaxCountForItem(builder.stack.getItem()) - count).getCount();
-                    setContents(stack, builder.build());
-                    return true;
-                }*/
-                if (canAdd(stack)) {
-                    this.stack = stack.copyWithCount(1);
-                    count += stack.split(getMaxCountForItem(stack.getItem()) - count).getCount();
-                    return true;
-                }
-                return false;
-            }
-
-            public ItemStack split(int count) {
-                ItemStack dispensed = stack.copyWithCount(Math.min(this.count, count));
-                this.count -= dispensed.getCount();
-                return dispensed;
-            }
-
-            public Contents build() {
-                return Contents.from(stack, count);
-            }
+        ItemStack take(int amount) {
+            int taken = Math.min(amount, count);
+            if (taken <= 0) return ItemStack.EMPTY;
+            ItemStack result = stack.copy();
+            result.setCount(taken);
+            count -= taken;
+            return result;
         }
     }
 }

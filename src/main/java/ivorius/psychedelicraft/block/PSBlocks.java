@@ -1,154 +1,184 @@
-/*
- *  Copyright (c) 2014, Lukas Tenbrink.
- *  * http://lukas.axxim.net
- */
-
 package ivorius.psychedelicraft.block;
 
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
+
 import ivorius.psychedelicraft.Psychedelicraft;
-import ivorius.psychedelicraft.block.entity.BlockEntityTypeSupportHelper;
-import ivorius.psychedelicraft.block.entity.PSBlockEntities;
+import ivorius.psychedelicraft.block.TallCropBlock.Crop;
+import ivorius.psychedelicraft.block.entity.BarrelBlockEntity;
+import ivorius.psychedelicraft.block.entity.BottleRackBlockEntity;
+import ivorius.psychedelicraft.block.entity.DistilleryBlockEntity;
+import ivorius.psychedelicraft.block.entity.FlaskBlockEntity;
+import ivorius.psychedelicraft.block.entity.DryingTableBlockEntity;
+import ivorius.psychedelicraft.block.entity.JuniperSignBlockEntity;
+import ivorius.psychedelicraft.block.entity.LatticeCropBlockEntity;
+import ivorius.psychedelicraft.block.entity.MashTubBlockEntity;
+import ivorius.psychedelicraft.block.entity.PeyoteBlockEntity;
+import ivorius.psychedelicraft.block.entity.PlacedDrinkBlockEntity;
+import ivorius.psychedelicraft.block.entity.RiftJarBlockEntity;
+import ivorius.psychedelicraft.block.entity.WaterloggedBlockEntity;
+import ivorius.psychedelicraft.fluid.PSFluids;
+import ivorius.psychedelicraft.fluid.physical.FluidAttributesTile;
+import ivorius.psychedelicraft.fluid.physical.PhysicalFluidBlock;
 import ivorius.psychedelicraft.item.PSItems;
-import ivorius.psychedelicraft.world.gen.JuniperTreeSaplingGenerator;
-import net.fabricmc.fabric.api.registry.FlammableBlockRegistry;
-import net.fabricmc.fabric.api.registry.StrippableBlockRegistry;
-import net.minecraft.block.*;
-import net.minecraft.block.AbstractBlock.Settings;
-import net.minecraft.block.entity.BlockEntityType;
-import net.minecraft.block.enums.Instrument;
-import net.minecraft.block.piston.PistonBehavior;
-import net.minecraft.registry.Registries;
-import net.minecraft.registry.Registry;
-import net.minecraft.sound.BlockSoundGroup;
+import net.minecraft.block.Block;
+import net.minecraft.block.BlockButtonWood;
+import net.minecraft.block.BlockDoor;
+import net.minecraft.block.BlockFence;
+import net.minecraft.block.BlockFenceGate;
+import net.minecraft.block.BlockPressurePlate;
+import net.minecraft.block.BlockSlab;
+import net.minecraft.block.BlockStairs;
+import net.minecraft.block.BlockTrapDoor;
+import net.minecraft.block.material.Material;
+import net.minecraft.init.Blocks;
+import net.minecraftforge.fluids.Fluid;
+import net.minecraftforge.event.RegistryEvent;
+import net.minecraftforge.fml.common.Mod;
+import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
+import net.minecraftforge.fml.common.registry.GameRegistry;
 
-public interface PSBlocks {
-    Block MASH_TUB = register("mash_tub", new MashTubBlock(Settings.create()
-            .sounds(BlockSoundGroup.WOOD)
-            .hardness(2).nonOpaque().suffocates(BlockConstructionUtils::never).blockVision(BlockConstructionUtils::never)
-            .pistonBehavior(PistonBehavior.BLOCK)
-    ));
-    Block MASH_TUB_EDGE = register("mash_tub_edge", new MashTubWallBlock(Settings.copy(MASH_TUB)));
-    Block PLACED_DRINK = register("placed_drink", new PlacedDrinksBlock(Settings.create()
-            .breakInstantly().nonOpaque().suffocates(BlockConstructionUtils::never).blockVision(BlockConstructionUtils::never)
-            .pistonBehavior(PistonBehavior.DESTROY)
-    ));
+@Mod.EventBusSubscriber(modid = Psychedelicraft.MOD_ID)
+public final class PSBlocks {
+    public static final TallCropBlock CANNABIS = named("cannabis", new TallCropBlock(Crop.CANNABIS, false));
+    public static final TallCropBlock HOP = named("hop", new TallCropBlock(Crop.HOP, false));
+    public static final TallCropBlock COCA = named("coca", new TallCropBlock.Coca(false));
+    public static final TallCropBlock TOBACCO = named("tobacco", new TallCropBlock.TwoPart(Crop.TOBACCO, false));
+    public static final TallCropBlock COFFEA = named("coffea", new TallCropBlock.TwoPart(Crop.COFFEA, false));
+    // Age and upper-section state can use all four metadata bits.
+    public static final TallCropBlock NATURAL_CANNABIS = named("natural_cannabis", new TallCropBlock(Crop.CANNABIS, true));
+    public static final TallCropBlock NATURAL_HOP = named("natural_hop", new TallCropBlock(Crop.HOP, true));
+    public static final TallCropBlock NATURAL_COCA = named("natural_coca", new TallCropBlock.Coca(true));
+    public static final TallCropBlock NATURAL_TOBACCO = named("natural_tobacco", new TallCropBlock.TwoPart(Crop.TOBACCO, true));
+    public static final TallCropBlock NATURAL_COFFEA = named("natural_coffea", new TallCropBlock.TwoPart(Crop.COFFEA, true));
+    public static final PeyoteBlock PEYOTE = named("peyote", new PeyoteBlock());
+    public static final AgavePlantBlock AGAVE_PLANT = named("agave_plant", new AgavePlantBlock());
+    public static final NightshadeBlock JIMSONWEED = named("jimsonweed",
+            new NightshadeBlock(() -> PSItems.JIMSONWEED_SEED_POD, () -> PSItems.JIMSONWEED_LEAF));
+    public static final NightshadeBlock BELLADONNA = named("belladonna",
+            new NightshadeBlock(() -> PSItems.BELLADONNA_BERRIES, () -> PSItems.BELLADONNA_LEAF));
+    public static final NightshadeBlock TOMATOES = named("tomatoes",
+            new NightshadeBlock(() -> PSItems.TOMATO, () -> PSItems.TOMATO_LEAF));
+    public static final LatticeBlock LATTICE = named("lattice", new LatticeBlock());
+    public static final VineStemBlock MORNING_GLORY = named("morning_glory", new VineStemBlock());
+    public static final LatticeCropBlock MORNING_GLORY_LATTICE = named("morning_glory_lattice",
+            new LatticeCropBlock(true, 2, () -> PSItems.MORNING_GLORY));
+    public static final LatticeCropBlock WINE_GRAPE_LATTICE = named("wine_grape_lattice",
+            new LatticeCropBlock(false, 1, () -> PSItems.WINE_GRAPES));
+    public static final JuniperLogBlock STRIPPED_JUNIPER_LOG = named("stripped_juniper_log", new JuniperLogBlock(null));
+    public static final JuniperLogBlock STRIPPED_JUNIPER_WOOD = named("stripped_juniper_wood", new JuniperLogBlock(null));
+    public static final JuniperLogBlock JUNIPER_LOG = named("juniper_log", new JuniperLogBlock(() -> STRIPPED_JUNIPER_LOG));
+    public static final JuniperLogBlock JUNIPER_WOOD = named("juniper_wood", new JuniperLogBlock(() -> STRIPPED_JUNIPER_WOOD));
+    public static final JuniperLeavesBlock JUNIPER_LEAVES = named("juniper_leaves", new JuniperLeavesBlock(false));
+    public static final JuniperLeavesBlock FRUITING_JUNIPER_LEAVES = named("fruiting_juniper_leaves", new JuniperLeavesBlock(true));
+    public static final JuniperSaplingBlock JUNIPER_SAPLING = named("juniper_sapling", new JuniperSaplingBlock());
+    public static final Block JUNIPER_PLANKS = named("juniper_planks", new JuniperPlanksBlock());
+    public static final BlockStairs JUNIPER_STAIRS = named("juniper_stairs",
+            new JuniperBuildingBlocks.Stairs(JUNIPER_PLANKS.getDefaultState()));
+    public static final BlockSlab JUNIPER_SLAB = named("juniper_slab", new JuniperSlabBlock.Single());
+    public static final BlockSlab JUNIPER_DOUBLE_SLAB = named("juniper_double_slab", new JuniperSlabBlock.Double());
+    public static final BlockFence JUNIPER_FENCE = named("juniper_fence", new JuniperBuildingBlocks.Fence());
+    public static final BlockFenceGate JUNIPER_FENCE_GATE = named("juniper_fence_gate", new JuniperBuildingBlocks.Gate());
+    public static final BlockDoor JUNIPER_DOOR = named("juniper_door", new JuniperBuildingBlocks.Door());
+    public static final BlockTrapDoor JUNIPER_TRAPDOOR = named("juniper_trapdoor", new JuniperTrapDoorBlock(false));
+    public static final BlockTrapDoor POWERED_JUNIPER_TRAPDOOR = named("powered_juniper_trapdoor", new JuniperTrapDoorBlock(true));
+    public static final BlockButtonWood JUNIPER_BUTTON = named("juniper_button", new JuniperButtonBlock());
+    public static final BlockPressurePlate JUNIPER_PRESSURE_PLATE = named("juniper_pressure_plate",
+            new JuniperBuildingBlocks.PressurePlate());
+    public static final JuniperSignBlock JUNIPER_SIGN = named("juniper_sign", new JuniperSignBlock.Standing());
+    public static final JuniperSignBlock JUNIPER_WALL_SIGN = named("juniper_wall_sign", new JuniperSignBlock.Wall());
+    public static final JuniperSignBlock JUNIPER_HANGING_SIGN = named("juniper_hanging_sign", new JuniperHangingSigns.Ceiling());
+    public static final JuniperSignBlock JUNIPER_WALL_HANGING_SIGN = named("juniper_wall_hanging_sign", new JuniperHangingSigns.Wall());
+    static final List<PottedPlantBlock> POTTED_PLANTS = Collections.unmodifiableList(Arrays.asList(
+            named("potted_morning_glory", new PottedPlantBlock(() -> PSItems.MORNING_GLORY_SEEDS)),
+            named("potted_juniper_sapling", new PottedPlantBlock(() -> PSItems.JUNIPER_SAPLING)),
+            named("potted_cannabis", new PottedPlantBlock(() -> PSItems.CANNABIS_SEEDS)),
+            named("potted_hop", new PottedPlantBlock(() -> PSItems.HOP_SEEDS)),
+            named("potted_tobacco", new PottedPlantBlock(() -> PSItems.TOBACCO_SEEDS)),
+            named("potted_coca", new PottedPlantBlock(() -> PSItems.COCA_SEEDS)),
+            named("potted_coffea", new PottedPlantBlock(() -> PSItems.COFFEA_CHERRIES))));
+    public static final DryingTableBlock DRYING_TABLE = named("drying_table", new DryingTableBlock(Material.WOOD));
+    public static final DryingTableBlock IRON_DRYING_TABLE = named("iron_drying_table", new DryingTableBlock(Material.IRON));
+    public static final MashTubBlock MASH_TUB = named("mash_tub", new MashTubBlock(false));
+    public static final MashTubBlock MASH_TUB_EDGE = named("mash_tub_edge", new MashTubBlock(true));
+    public static final BarrelBlock OAK_BARREL = named("oak_barrel", new BarrelBlock());
+    public static final BarrelBlock SPRUCE_BARREL = named("spruce_barrel", new BarrelBlock());
+    public static final BarrelBlock BIRCH_BARREL = named("birch_barrel", new BarrelBlock());
+    public static final BarrelBlock JUNGLE_BARREL = named("jungle_barrel", new BarrelBlock());
+    public static final BarrelBlock ACACIA_BARREL = named("acacia_barrel", new BarrelBlock());
+    public static final BarrelBlock DARK_OAK_BARREL = named("dark_oak_barrel", new BarrelBlock());
+    public static final FlaskBlock FLASK = named("flask", new FlaskBlock());
+    public static final DistilleryBlock DISTILLERY = named("distillery", new DistilleryBlock());
+    public static final PlacedDrinksBlock PLACED_DRINK = named("placed_drink", new PlacedDrinksBlock());
+    public static final BottleRackBlock BOTTLE_RACK = named("bottle_rack", new BottleRackBlock());
+    public static final Block TRAY = named("tray", new LabPropBlock.Tray());
+    public static final Block BUNSEN_BURNER = named("bunsen_burner", LabPropBlock.burner());
+    public static final RiftJarBlock RIFT_JAR = named("rift_jar", new RiftJarBlock());
+    public static final Block GLITCH = named("glitch", new GlitchedBlock());
+    public static final Block COPPER_ORE = named("copper_ore", new CopperOreBlock());
+    public static final BeeNestBlock BEE_NEST = named("bee_nest", new BeeNestBlock());
 
-    Block OAK_BARREL = register("oak_barrel", BlockConstructionUtils.barrel(MapColor.OAK_TAN));
-    Block SPRUCE_BARREL = register("spruce_barrel", BlockConstructionUtils.barrel(MapColor.SPRUCE_BROWN));
-    Block BIRCH_BARREL = register("birch_barrel", BlockConstructionUtils.barrel(MapColor.PALE_YELLOW));
-    Block JUNGLE_BARREL = register("jungle_barrel", BlockConstructionUtils.barrel(MapColor.DIRT_BROWN));
-    Block ACACIA_BARREL = register("acacia_barrel", BlockConstructionUtils.barrel(MapColor.ORANGE));
-    Block DARK_OAK_BARREL = register("dark_oak_barrel", BlockConstructionUtils.barrel(MapColor.BROWN));
-
-    Block FLASK = register("flask", new FlaskBlock(Settings.create().sounds(BlockSoundGroup.COPPER).hardness(1).pistonBehavior(PistonBehavior.BLOCK)));
-    Block DISTILLERY = register("distillery", new DistilleryBlock(Settings.create().sounds(BlockSoundGroup.COPPER).hardness(1).pistonBehavior(PistonBehavior.BLOCK)));
-    Block BOTTLE_RACK = register("bottle_rack", new BottleRackBlock(Settings.create().mapColor(MapColor.OAK_TAN).sounds(BlockSoundGroup.WOOD).hardness(0.5F).burnable()));
-
-    Block DRYING_TABLE = register("drying_table", new DryingTableBlock(Settings.create().mapColor(MapColor.OAK_TAN).solid().sounds(BlockSoundGroup.WOOD).hardness(2).burnable()));
-    Block IRON_DRYING_TABLE = register("iron_drying_table", new DryingTableBlock(Settings.create().mapColor(MapColor.IRON_GRAY).sounds(BlockSoundGroup.METAL).hardness(5)));
-
-    JuniperLeavesBlock JUNIPER_LEAVES = register("juniper_leaves", new JuniperLeavesBlock(BlockConstructionUtils.leaves(BlockSoundGroup.GRASS)));
-    JuniperLeavesBlock FRUITING_JUNIPER_LEAVES = register("fruiting_juniper_leaves", new JuniperLeavesBlock(BlockConstructionUtils.leaves(BlockSoundGroup.GRASS)));
-    Block JUNIPER_LOG = register("juniper_log", BlockConstructionUtils.log(MapColor.CYAN, MapColor.LIGHT_BLUE_GRAY));
-    Block JUNIPER_WOOD = register("juniper_wood", BlockConstructionUtils.log(MapColor.CYAN, MapColor.LIGHT_BLUE_GRAY));
-    Block STRIPPED_JUNIPER_LOG = register("stripped_juniper_log", BlockConstructionUtils.log(MapColor.CYAN, MapColor.LIGHT_BLUE_GRAY));
-    Block STRIPPED_JUNIPER_WOOD = register("stripped_juniper_wood", BlockConstructionUtils.log(MapColor.CYAN, MapColor.LIGHT_BLUE_GRAY));
-    Block JUNIPER_SAPLING = register("juniper_sapling", new SaplingBlock(new JuniperTreeSaplingGenerator(), BlockConstructionUtils.plant(BlockSoundGroup.GRASS)));
-
-    Block JUNIPER_PLANKS = register("juniper_planks", new Block(Settings.create().mapColor(MapColor.LIGHT_BLUE_GRAY).instrument(Instrument.BASS).strength(2, 3).sounds(BlockSoundGroup.WOOD).burnable()));
-    Block JUNIPER_STAIRS = register("juniper_stairs", new StairsBlock(JUNIPER_PLANKS.getDefaultState(), Settings.copy(JUNIPER_PLANKS)));
-    Block JUNIPER_SIGN = register("juniper_sign", new SignBlock(Settings.create().mapColor(JUNIPER_PLANKS.getDefaultMapColor()).solid().instrument(Instrument.BASS).noCollision().strength(1).burnable().sounds(BlockSoundGroup.WOOD), PSWoodTypes.JUNIPER));
-    Block JUNIPER_DOOR = register("juniper_door", new DoorBlock(Settings.create().mapColor(JUNIPER_PLANKS.getDefaultMapColor()).instrument(Instrument.BASS).strength(3.0f).nonOpaque().burnable().pistonBehavior(PistonBehavior.DESTROY), PSWoodTypes.JUNIPER.setType()));
-    Block JUNIPER_WALL_SIGN = register("juniper_wall_sign", new WallSignBlock(Settings.create().mapColor(JUNIPER_PLANKS.getDefaultMapColor()).solid().instrument(Instrument.BASS).noCollision().strength(1).dropsLike(JUNIPER_SIGN).burnable(), PSWoodTypes.JUNIPER));
-    Block JUNIPER_HANGING_SIGN = register("juniper_hanging_sign", new HangingSignBlock(Settings.create().mapColor(JUNIPER_LOG.getDefaultMapColor()).solid().instrument(Instrument.BASS).noCollision().strength(1).burnable(), PSWoodTypes.JUNIPER));
-    Block JUNIPER_WALL_HANGING_SIGN = register("juniper_wall_hanging_sign", new WallHangingSignBlock(Settings.create().mapColor(JUNIPER_LOG.getDefaultMapColor()).solid().instrument(Instrument.BASS).noCollision().strength(1.0f).burnable().dropsLike(JUNIPER_HANGING_SIGN), PSWoodTypes.JUNIPER));
-    Block JUNIPER_PRESSURE_PLATE = register("juniper_pressure_plate", new PressurePlateBlock(PressurePlateBlock.ActivationRule.EVERYTHING, Settings.create().mapColor(JUNIPER_PLANKS.getDefaultMapColor()).solid().instrument(Instrument.BASS).noCollision().strength(0.5F).burnable().pistonBehavior(PistonBehavior.DESTROY), PSWoodTypes.JUNIPER.setType()));
-    Block JUNIPER_FENCE = register("juniper_fence", new FenceBlock(Settings.create().mapColor(JUNIPER_PLANKS.getDefaultMapColor()).solid().instrument(Instrument.BASS).strength(2, 3).sounds(BlockSoundGroup.WOOD).burnable()));
-    Block JUNIPER_TRAPDOOR = register("juniper_trapdoor", new TrapdoorBlock(Settings.create().mapColor(JUNIPER_PLANKS.getDefaultMapColor()).instrument(Instrument.BASS).strength(3).nonOpaque().allowsSpawning(BlockConstructionUtils::never).burnable(), PSWoodTypes.JUNIPER.setType()));
-    Block JUNIPER_FENCE_GATE = register("juniper_fence_gate", new FenceGateBlock(Settings.create().mapColor(JUNIPER_PLANKS.getDefaultMapColor()).solid().instrument(Instrument.BASS).strength(2, 3).burnable(), PSWoodTypes.JUNIPER));
-    Block JUNIPER_BUTTON = register("juniper_button", BlockConstructionUtils.woodenButton(PSWoodTypes.JUNIPER.setType()));
-    Block JUNIPER_SLAB = register("juniper_slab", new SlabBlock(Settings.copy(JUNIPER_PLANKS)));
-
-    CannabisPlantBlock CANNABIS = register("cannabis", new CannabisPlantBlock(BlockConstructionUtils.plant(BlockSoundGroup.GRASS)));
-    HopPlantBlock HOP = register("hop", new HopPlantBlock(BlockConstructionUtils.plant(BlockSoundGroup.GRASS)));
-    TobaccoPlantBlock TOBACCO = register("tobacco", new TobaccoPlantBlock(BlockConstructionUtils.plant(BlockSoundGroup.GRASS)));
-    CocaPlantBlock COCA = register("coca", new CocaPlantBlock(BlockConstructionUtils.plant(BlockSoundGroup.GRASS)));
-    CoffeaPlantBlock COFFEA = register("coffea", new CoffeaPlantBlock(BlockConstructionUtils.plant(BlockSoundGroup.GRASS)));
-    PeyoteBlock PEYOTE = register("peyote", new PeyoteBlock(BlockConstructionUtils.plant(BlockSoundGroup.GRASS)));
-    AgavePlantBlock AGAVE_PLANT = register("agave_plant", new AgavePlantBlock(BlockConstructionUtils.plant(BlockSoundGroup.GRASS)));
-    NightshadeBlock JIMSONWEEED = register("jimsonweed", new NightshadeBlock(BlockConstructionUtils.plant(BlockSoundGroup.GRASS),
-            () -> PSItems.JIMSONWEED_SEED_POD,
-            () -> PSItems.JIMSONWEED_LEAF
-    ));
-    NightshadeBlock BELLADONNA = register("belladonna", new NightshadeBlock(BlockConstructionUtils.plant(BlockSoundGroup.GRASS),
-            () -> PSItems.BELLADONNA_BERRIES,
-            () -> PSItems.BELLADONNA_LEAF
-    ));
-    NightshadeBlock TOMATOES = register("tomatoes", new NightshadeBlock(BlockConstructionUtils.plant(BlockSoundGroup.GRASS),
-            () -> PSItems.TOMATO,
-            () -> PSItems.TOMATO_LEAF
-    ));
-
-    Block LATTICE = register("lattice", new LatticeBlock(Settings.create().mapColor(MapColor.OAK_TAN)
-            .sounds(BlockSoundGroup.WOOD).hardness(0.3F).nonOpaque().burnable()));
-    Block WINE_GRAPE_LATTICE = register("wine_grape_lattice", new BurdenedLatticeBlock(true, null, 1, Settings.create().mapColor(MapColor.OAK_TAN)
-            .sounds(BlockSoundGroup.WOOD).hardness(0.3F).ticksRandomly().nonOpaque().burnable()
-    ));
-    Block MORNING_GLORY = register("morning_glory", new VineStemBlock(() -> PSBlocks.MORNING_GLORY_LATTICE, Block.Settings.create()
-            .mapColor(MapColor.DARK_GREEN)
-            .noCollision()
-            .breakInstantly()
-            .ticksRandomly()
-            .sounds(BlockSoundGroup.GRASS)
-            .offset(AbstractBlock.OffsetType.XZ)
-            .burnable()
-    ));
-    Block MORNING_GLORY_LATTICE = register("morning_glory_lattice", new BurdenedLatticeBlock(true, MORNING_GLORY, 2, Block.Settings.create()
-            .mapColor(MapColor.OAK_TAN)
-            .sounds(BlockSoundGroup.WOOD)
-            .hardness(0.3F)
-            .ticksRandomly()
-            .nonOpaque()
-            .burnable()
-    ));
-
-    Block POTTED_MORNING_GLORY = register("potted_morning_glory", BlockConstructionUtils.pottedPlant(MORNING_GLORY));
-    Block POTTED_JUNIPER_SAPLING = register("potted_juniper_sapling", BlockConstructionUtils.pottedPlant(JUNIPER_SAPLING));
-    Block POTTED_CANNABIS = register("potted_cannabis", BlockConstructionUtils.pottedPlant(CANNABIS));
-    Block POTTED_HOP = register("potted_hop", BlockConstructionUtils.pottedPlant(HOP));
-    Block POTTED_TOBACCO = register("potted_tobacco", BlockConstructionUtils.pottedPlant(TOBACCO));
-    Block POTTED_COCA = register("potted_coca", BlockConstructionUtils.pottedPlant(COCA));
-    Block POTTED_COFFEA = register("potted_coffea", BlockConstructionUtils.pottedPlant(COFFEA));
-
-    Block RIFT_JAR = register("rift_jar", new RiftJarBlock(Settings.create().hardness(0.5F).sounds(BlockSoundGroup.GLASS).nonOpaque().pistonBehavior(PistonBehavior.DESTROY)));
-    Block GLITCH = register("glitch", new GlitchedBlock(Settings.create().mapColor(MapColor.BLACK).breakInstantly().hardness(0)
-            .emissiveLighting(BlockConstructionUtils::always)
-            .air().nonOpaque().noBlockBreakParticles().dropsNothing()
-    ));
-
-    Block TRAY = register("tray", new TrayBlock(Settings.create().mapColor(MapColor.IRON_GRAY).hardness(0.7F).sounds(BlockSoundGroup.METAL).nonOpaque()));
-    Block BUNSEN_BURNER = register("bunsen_burner", new BurnerBlock(Settings.create().mapColor(MapColor.IRON_GRAY).hardness(0.7F).sounds(BlockSoundGroup.METAL).nonOpaque()));
-
-    static <T extends Block> T register(String name, T block) {
-        return Registry.register(Registries.BLOCK, Psychedelicraft.id(name), block);
+    private PSBlocks() {
     }
 
-    static void bootstrap() {
-        PSBlockEntities.bootstrap();
+    private static <T extends Block> T named(String name, T block) {
+        block.setRegistryName(Psychedelicraft.id(name));
+        block.setUnlocalizedName(Psychedelicraft.MOD_ID + "." + name);
+        return block;
+    }
 
-        BlockEntityTypeSupportHelper.of(BlockEntityType.SIGN).addSupportedBlocks(JUNIPER_SIGN, JUNIPER_WALL_SIGN);
-        BlockEntityTypeSupportHelper.of(BlockEntityType.HANGING_SIGN).addSupportedBlocks(JUNIPER_HANGING_SIGN, JUNIPER_WALL_HANGING_SIGN);
-
-        FlammableBlockRegistry.getDefaultInstance().add(JUNIPER_LOG, 5, 5);
-        FlammableBlockRegistry.getDefaultInstance().add(STRIPPED_JUNIPER_LOG, 5, 5);
-        FlammableBlockRegistry.getDefaultInstance().add(JUNIPER_WOOD, 5, 5);
-        FlammableBlockRegistry.getDefaultInstance().add(STRIPPED_JUNIPER_WOOD, 5, 5);
-        FlammableBlockRegistry.getDefaultInstance().add(JUNIPER_LEAVES, 30, 60);
-        FlammableBlockRegistry.getDefaultInstance().add(LATTICE, 5, 20);
-        FlammableBlockRegistry.getDefaultInstance().add(WINE_GRAPE_LATTICE, 5, 20);
-        FlammableBlockRegistry.getDefaultInstance().add(MORNING_GLORY_LATTICE, 5, 20);
-
-        StrippableBlockRegistry.register(JUNIPER_LOG, STRIPPED_JUNIPER_LOG);
-        StrippableBlockRegistry.register(JUNIPER_WOOD, STRIPPED_JUNIPER_WOOD);
+    @SubscribeEvent
+    public static void registerBlocks(RegistryEvent.Register<Block> event) {
+        event.getRegistry().registerAll(CANNABIS, NATURAL_CANNABIS, HOP, COCA, TOBACCO, COFFEA,
+                PEYOTE, AGAVE_PLANT, JIMSONWEED, BELLADONNA, TOMATOES, DRYING_TABLE, IRON_DRYING_TABLE,
+                MASH_TUB, MASH_TUB_EDGE,
+                OAK_BARREL, SPRUCE_BARREL, BIRCH_BARREL, JUNGLE_BARREL, ACACIA_BARREL, DARK_OAK_BARREL,
+                FLASK, DISTILLERY, PLACED_DRINK, BOTTLE_RACK, TRAY, BUNSEN_BURNER, RIFT_JAR, GLITCH, COPPER_ORE,
+                LATTICE, MORNING_GLORY, MORNING_GLORY_LATTICE, WINE_GRAPE_LATTICE,
+                NATURAL_HOP, NATURAL_COCA, NATURAL_TOBACCO, NATURAL_COFFEA,
+                JUNIPER_LOG, JUNIPER_WOOD, STRIPPED_JUNIPER_LOG, STRIPPED_JUNIPER_WOOD,
+                JUNIPER_LEAVES, FRUITING_JUNIPER_LEAVES, JUNIPER_SAPLING, JUNIPER_PLANKS,
+                JUNIPER_STAIRS, JUNIPER_SLAB, JUNIPER_DOUBLE_SLAB, JUNIPER_FENCE, JUNIPER_FENCE_GATE,
+                JUNIPER_DOOR, JUNIPER_TRAPDOOR, POWERED_JUNIPER_TRAPDOOR, JUNIPER_BUTTON, JUNIPER_PRESSURE_PLATE,
+                JUNIPER_SIGN, JUNIPER_WALL_SIGN, JUNIPER_HANGING_SIGN, JUNIPER_WALL_HANGING_SIGN, BEE_NEST);
+        for (PottedPlantBlock pot : POTTED_PLANTS) {
+            event.getRegistry().register(pot);
+        }
+        for (Fluid fluid : PSFluids.all()) {
+            String name = PSFluids.id(fluid);
+            event.getRegistry().register(named(name.substring(name.indexOf(':') + 1), new PhysicalFluidBlock(fluid)));
+        }
+        GameRegistry.registerTileEntity(FluidAttributesTile.class, Psychedelicraft.id("fluid_attributes"));
+        GameRegistry.registerTileEntity(DryingTableBlockEntity.class, Psychedelicraft.id("drying_table"));
+        GameRegistry.registerTileEntity(MashTubBlockEntity.class, Psychedelicraft.id("mash_tub"));
+        GameRegistry.registerTileEntity(MashTubBlock.Edge.class, Psychedelicraft.id("mash_tub_edge"));
+        GameRegistry.registerTileEntity(BarrelBlockEntity.class, Psychedelicraft.id("barrel"));
+        GameRegistry.registerTileEntity(FlaskBlockEntity.class, Psychedelicraft.id("flask"));
+        GameRegistry.registerTileEntity(DistilleryBlockEntity.class, Psychedelicraft.id("distillery"));
+        GameRegistry.registerTileEntity(PlacedDrinkBlockEntity.class, Psychedelicraft.id("placed_drink"));
+        GameRegistry.registerTileEntity(BottleRackBlockEntity.class, Psychedelicraft.id("bottle_rack"));
+        GameRegistry.registerTileEntity(LatticeCropBlockEntity.class, Psychedelicraft.id("lattice_crop"));
+        GameRegistry.registerTileEntity(WaterloggedBlockEntity.class, Psychedelicraft.id("waterlogged_block"));
+        GameRegistry.registerTileEntity(PeyoteBlockEntity.class, Psychedelicraft.id("peyote"));
+        GameRegistry.registerTileEntity(JuniperSignBlockEntity.class, Psychedelicraft.id("juniper_sign"));
+        GameRegistry.registerTileEntity(RiftJarBlockEntity.class, Psychedelicraft.id("rift_jar"));
+        Blocks.FIRE.setFireInfo(DRYING_TABLE, 5, 20);
+        Blocks.FIRE.setFireInfo(BOTTLE_RACK, 5, 20);
+        Blocks.FIRE.setFireInfo(LATTICE, 5, 20);
+        Blocks.FIRE.setFireInfo(MORNING_GLORY_LATTICE, 5, 20);
+        Blocks.FIRE.setFireInfo(WINE_GRAPE_LATTICE, 5, 20);
+        Blocks.FIRE.setFireInfo(JUNIPER_LOG, 5, 5);
+        Blocks.FIRE.setFireInfo(JUNIPER_WOOD, 5, 5);
+        Blocks.FIRE.setFireInfo(STRIPPED_JUNIPER_LOG, 5, 5);
+        Blocks.FIRE.setFireInfo(STRIPPED_JUNIPER_WOOD, 5, 5);
+        Blocks.FIRE.setFireInfo(JUNIPER_LEAVES, 30, 60);
+        Blocks.FIRE.setFireInfo(JUNIPER_PLANKS, 5, 20);
+        Blocks.FIRE.setFireInfo(JUNIPER_STAIRS, 5, 20);
+        Blocks.FIRE.setFireInfo(JUNIPER_SLAB, 5, 20);
+        Blocks.FIRE.setFireInfo(JUNIPER_DOUBLE_SLAB, 5, 20);
+        Blocks.FIRE.setFireInfo(JUNIPER_FENCE, 5, 20);
+        Blocks.FIRE.setFireInfo(JUNIPER_FENCE_GATE, 5, 20);
+        Blocks.FIRE.setFireInfo(BEE_NEST, 5, 20);
     }
 }

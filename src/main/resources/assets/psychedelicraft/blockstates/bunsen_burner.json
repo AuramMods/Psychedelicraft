@@ -1,7 +1,7 @@
 {
   "variants": {
-    "": {
-      "model": "psychedelicraft:block/bunsen_burner"
+    "normal": {
+      "model": "psychedelicraft:bunsen_burner"
     }
   }
 }

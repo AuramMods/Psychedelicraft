@@ -1,247 +1,231 @@
 /*
- *  Copyright (c) 2014, Lukas Tenbrink.
- *  * http://lukas.axxim.net
+ * Copyright (c) 2014, Lukas Tenbrink.
  */
 
 package ivorius.psychedelicraft.item;
 
-import org.joml.Vector3f;
-
-import com.terraformersmc.terraform.boat.api.TerraformBoatTypeRegistry;
-import com.terraformersmc.terraform.boat.api.item.TerraformBoatItemHelper;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 
 import ivorius.psychedelicraft.Psychedelicraft;
-import ivorius.psychedelicraft.block.*;
-import ivorius.psychedelicraft.block.entity.*;
-import ivorius.psychedelicraft.entity.drug.*;
+import ivorius.psychedelicraft.block.PSBlocks;
+import ivorius.psychedelicraft.block.BarrelBlock;
+import ivorius.psychedelicraft.block.entity.BarrelBlockEntity;
+import ivorius.psychedelicraft.block.entity.FlaskBlockEntity;
+import ivorius.psychedelicraft.entity.drug.DrugType;
 import ivorius.psychedelicraft.entity.drug.influence.DrugInfluence;
-import ivorius.psychedelicraft.entity.drug.influence.HarmoniumDrugInfluence;
-import ivorius.psychedelicraft.fluid.ConsumableFluid;
-import ivorius.psychedelicraft.fluid.FluidVolumes;
-import ivorius.psychedelicraft.util.MathUtils;
-import net.fabricmc.fabric.api.registry.FuelRegistry;
-import net.minecraft.block.Block;
-import net.minecraft.item.*;
-import net.minecraft.item.Item.Settings;
-import net.minecraft.registry.Registries;
-import net.minecraft.registry.Registry;
+import ivorius.psychedelicraft.fluid.FluidVessel;
+import net.minecraft.creativetab.CreativeTabs;
+import net.minecraft.item.Item;
+import net.minecraft.item.ItemBlock;
+import net.minecraft.item.ItemDoor;
+import net.minecraftforge.event.RegistryEvent;
+import net.minecraftforge.event.furnace.FurnaceFuelBurnTimeEvent;
+import net.minecraftforge.fml.common.Mod;
+import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 
-/**
- * Created by lukas on 25.04.14.
- * Updated by Sollace on 1 Jan 2023
- */
-public interface PSItems {
-    DrinkableItem WOODEN_MUG = register("wooden_mug", new DrinkableItem(new Settings(), FluidVolumes.MUG, DrinkableItem.FLUID_PER_DRINKING, Item.DEFAULT_MAX_USE_TIME, ConsumableFluid.ConsumptionType.DRINK));
-    DrinkableItem STONE_CUP = register("stone_cup", new DrinkableItem(new Settings(), FluidVolumes.CUP, DrinkableItem.FLUID_PER_DRINKING, Item.DEFAULT_MAX_USE_TIME, ConsumableFluid.ConsumptionType.DRINK));
-    DrinkableItem GLASS_CHALICE = register("glass_chalice", new DrinkableItem(new Settings(), FluidVolumes.CHALLICE, DrinkableItem.FLUID_PER_DRINKING, Item.DEFAULT_MAX_USE_TIME, ConsumableFluid.ConsumptionType.DRINK));
-    DrinkableItem SHOT_GLASS = register("shot_glass", new DrinkableItem(new Settings(), FluidVolumes.SHOT, DrinkableItem.FLUID_PER_DRINKING, Item.DEFAULT_MAX_USE_TIME / 4, ConsumableFluid.ConsumptionType.DRINK));
-    DrinkableItem BOTTLE = register("bottle", new BottleItem(new Settings(), FluidVolumes.BOTTLE, DrinkableItem.FLUID_PER_DRINKING, ConsumableFluid.ConsumptionType.DRINK));
-    MolotovCocktailItem MOLOTOV_COCKTAIL = register("molotov_cocktail", new MolotovCocktailItem(new Settings().maxCount(16), FluidVolumes.BOTTLE));
+@Mod.EventBusSubscriber(modid = Psychedelicraft.MOD_ID)
+public final class PSItems {
+    private static final List<Item> ITEMS = new ArrayList<>();
+    public static final Item COFFEE_BEANS = named("coffee_beans", new Item());
+    public static final PortableFluidItem WOODEN_MUG = vessel("wooden_mug", FluidVessel.MUG);
+    public static final PortableFluidItem STONE_CUP = vessel("stone_cup", FluidVessel.CUP);
+    public static final PortableFluidItem GLASS_CHALICE = vessel("glass_chalice", FluidVessel.CHALICE);
+    public static final PortableFluidItem SHOT_GLASS = vessel("shot_glass", FluidVessel.SHOT_GLASS);
+    public static final PortableFluidItem BOTTLE = vessel("bottle", FluidVessel.BOTTLE);
+    public static final MolotovCocktailItem MOLOTOV_COCKTAIL = named("molotov_cocktail", new MolotovCocktailItem(), PSItemGroups.WEAPONS);
+    public static final PortableFluidItem SYRINGE = vessel("syringe", FluidVessel.SYRINGE);
+    public static final PortableFluidItem FILLED_BOWL = vessel("filled_bowl", FluidVessel.BOWL);
+    public static final PortableFluidItem FILLED_GLASS_BOTTLE = vessel("filled_glass_bottle", FluidVessel.GLASS_BOTTLE);
+    public static final HoneyBottleItem HONEY_BOTTLE = named("honey_bottle", new HoneyBottleItem());
+    public static final Item HONEYCOMB = named("honeycomb", new Item());
+    public static final Item BEE_NEST = named("bee_nest", new ItemBlock(PSBlocks.BEE_NEST));
+    public static final FilledBucketItem FILLED_BUCKET = named("filled_bucket", new FilledBucketItem(), PSItemGroups.DRINKS);
+    public static final Item BROWN_MAGIC_MUSHROOMS = edible("brown_magic_mushrooms", 0, 0.1F, DrugType.BROWN_SHROOMS);
+    public static final Item RED_MAGIC_MUSHROOMS = edible("red_magic_mushrooms", 0, 0.1F, DrugType.RED_SHROOMS);
+    public static final Item CANNABIS_SEEDS = named("cannabis_seeds", new CropSeedItem(PSBlocks.CANNABIS, "cannabis_seeds"));
+    public static final Item CANNABIS_LEAF = named("cannabis_leaf", new Item());
+    public static final Item CANNABIS_BUDS = named("cannabis_buds", new Item());
+    public static final Item DRIED_CANNABIS_LEAF = named("dried_cannabis_leaf", new Item());
+    public static final Item DRIED_CANNABIS_BUDS = named("dried_cannabis_buds", new Item());
+    public static final Item HASH_MUFFIN = edible("hash_muffin", 2, 0.1F,
+            new DrugInfluence(DrugType.CANNABIS, DrugInfluence.METABOLISED_DELAY, 0.004, 0.002, 0.7));
+    public static final Item JOLLY_RANCHER = edible("jolly_rancher", 0, 0.1F,
+            new DrugInfluence(DrugType.SUGAR, DrugInfluence.INGESTED_DELAY, 0.005, 0.003, 0.05));
+    public static final SmokeableItem JOINT = named("joint", new SmokeableItem(2, 20, 0xe6e6e6,
+            new DrugInfluence(DrugType.CANNABIS, DrugInfluence.INHALED_DELAY, 0.002, 0.001, 0.20)));
+    public static final Item HOP_SEEDS = named("hop_seeds", new CropSeedItem(PSBlocks.HOP, "hop_seeds"));
+    public static final Item HOP_CONES = named("hop_cones", new Item());
+    public static final Item COCA_SEEDS = named("coca_seeds", new CropSeedItem(PSBlocks.COCA, "coca_seeds"));
+    public static final Item COCA_LEAVES = named("coca_leaves", new Item());
+    public static final Item DRIED_COCA_LEAVES = named("dried_coca_leaves", new Item());
+    public static final Item COCAINE_POWDER = named("cocaine_powder", new PowderItem(
+            new DrugInfluence(DrugType.COCAINE, DrugInfluence.IMMEDIATE, 0.002, 0.003, 0.35)));
+    public static final Item OBSIDIAN_BOTTLE = named("obsidian_bottle", new Item().setMaxStackSize(16));
+    public static final Item OBSIDIAN_DUST = named("obsidian_dust", new PowderItem(
+            new DrugInfluence(DrugType.BATH_SALTS, DrugInfluence.IMMEDIATE, 0.002, 0.003, 0.35)));
+    public static final Item TOBACCO_SEEDS = named("tobacco_seeds", new CropSeedItem(PSBlocks.TOBACCO, "tobacco_seeds"));
+    public static final Item TOBACCO_LEAVES = named("tobacco", new Item());
+    public static final Item DRIED_TOBACCO = named("dried_tobacco", new Item());
+    public static final SmokeableItem CIGARETTE = named("cigarette", new SmokeableItem(1, 50, 0xffffff,
+            new DrugInfluence(DrugType.TOBACCO, DrugInfluence.IMMEDIATE, 0.1, 0.02, 0.7)));
+    public static final SmokeableItem CIGAR = named("cigar", new SmokeableItem(3, 80, 0x999980,
+            new DrugInfluence(DrugType.TOBACCO, DrugInfluence.IMMEDIATE, 0.1, 0.02, 0.7)));
+    public static final Item COFFEA_CHERRIES = named("coffea_cherries", new CropSeedItem(PSBlocks.COFFEA, "coffea_cherries"));
+    public static final Item PEYOTE = named("peyote", new ItemBlock(PSBlocks.PEYOTE));
+    public static final Item DRIED_PEYOTE = edible("dried_peyote", 0, 0.1F, DrugType.PEYOTE);
+    public static final SmokeableItem PEYOTE_JOINT = named("peyote_joint", new SmokeableItem(2, 20, 0x80e666,
+            new DrugInfluence(DrugType.PEYOTE, DrugInfluence.INHALED_DELAY, 0.003, 0.0015, 0.4),
+            new DrugInfluence(DrugType.TOBACCO, DrugInfluence.IMMEDIATE, 0.1, 0.02, 0.1)));
+    public static final Item AGAVE_LEAF = named("agave_leaf", new CropSeedItem(PSBlocks.AGAVE_PLANT, "agave_leaf"));
+    public static final Item JIMSONWEED_SEEDS = named("jimsonweed_seeds", new CropSeedItem(PSBlocks.JIMSONWEED, "jimsonweed_seeds"));
+    public static final Item JIMSONWEED_SEED_POD = named("jimsonweed_seed_pod", new Item());
+    public static final Item JIMSONWEED_LEAF = named("jimsonweed_leaf", new Item());
+    public static final Item DRIED_JIMSONWEED_LEAF = named("dried_jimsonweed_leaf", new Item());
+    public static final Item BELLADONNA_SEEDS = named("belladonna_seeds", new CropSeedItem(PSBlocks.BELLADONNA, "belladonna_seeds"));
+    public static final Item BELLADONNA_BERRIES = edible("belladonna_berries", 1, 1.5F, DrugType.ATROPINE);
+    public static final Item BELLADONNA_LEAF = named("belladonna_leaf", new Item());
+    public static final Item DRIED_BELLADONNA_LEAF = named("dried_belladonna_leaf", new Item());
+    public static final HarmoniumItem HARMONIUM = named("harmonium", new HarmoniumItem());
+    public static final BongItem SMOKING_PIPE = named("smoking_pipe", new BongItem(50, 200, false))
+            .consumes(DRIED_CANNABIS_BUDS, new DrugInfluence(DrugType.CANNABIS, DrugInfluence.INHALED_DELAY, 0.002, 0.001, 0.25))
+            .consumes(DRIED_TOBACCO, new DrugInfluence(DrugType.TOBACCO, DrugInfluence.INHALED_DELAY, 0.1, 0.02, 0.8))
+            .consumes(DRIED_BELLADONNA_LEAF, new DrugInfluence(DrugType.ATROPINE, DrugInfluence.INHALED_DELAY, 0.4, 0.1, 0.9))
+            .consumes(DRIED_JIMSONWEED_LEAF, new DrugInfluence(DrugType.ATROPINE, DrugInfluence.INHALED_DELAY, 0.5, 0.1, 0.2))
+            .consumes(HARMONIUM, stack -> DrugInfluence.harmonium(DrugInfluence.INHALED_DELAY, 0.65, HarmoniumItem.getColor(stack)));
+    public static final BongItem BONG = named("bong", new BongItem(128, 0, true))
+            .consumes(DRIED_CANNABIS_BUDS, new DrugInfluence(DrugType.CANNABIS, DrugInfluence.IMMEDIATE, 0.002, 0.001, 0.2))
+            .consumes(DRIED_TOBACCO, new DrugInfluence(DrugType.TOBACCO, DrugInfluence.IMMEDIATE, 0.1, 0.02, 0.6))
+            .consumes(DRIED_BELLADONNA_LEAF, new DrugInfluence(DrugType.ATROPINE, DrugInfluence.IMMEDIATE, 0.4, 0.1, 0.4))
+            .consumes(DRIED_JIMSONWEED_LEAF, new DrugInfluence(DrugType.ATROPINE, DrugInfluence.IMMEDIATE, 0.5, 0.1, 0.1))
+            .consumes(HARMONIUM, stack -> DrugInfluence.harmonium(DrugInfluence.IMMEDIATE, 0.9, HarmoniumItem.getColor(stack)));
+    public static final Item TOMATO_SEEDS = named("tomato_seeds", new CropSeedItem(PSBlocks.TOMATOES, "tomato_seeds"));
+    public static final Item TOMATO = named("tomato", new EdibleItem(1, 1.9F));
+    public static final Item TOMATO_LEAF = named("tomato_leaf", new Item());
+    public static final Item LATTICE = named("lattice", new WaterloggableBlockItem(PSBlocks.LATTICE));
+    public static final Item MORNING_GLORY = named("morning_glory", new Item());
+    public static final Item LSA_SQUARE = edible("lsd_square", 0, 0.1F,
+            new DrugInfluence(DrugType.LSD, DrugInfluence.CONTACT_DELAY, 0.05, 0.003, 0.1));
+    public static final Item LSD_PILL = edible("lsd_pill", 0, 0.1F,
+            new DrugInfluence(DrugType.LSD, DrugInfluence.INGESTED_DELAY, 0.05, 0.003, 0.6));
+    public static final Item MORNING_GLORY_SEEDS = named("morning_glory_seeds",
+            new CropSeedItem(PSBlocks.MORNING_GLORY, "morning_glory_seeds"));
+    public static final Item MORNING_GLORY_LATTICE = named("morning_glory_lattice",
+            new LatticeCropItem(PSBlocks.MORNING_GLORY_LATTICE), null);
+    public static final Item WINE_GRAPE_LATTICE = named("wine_grape_lattice",
+            new LatticeCropItem(PSBlocks.WINE_GRAPE_LATTICE), null);
+    public static final Item WINE_GRAPES = named("wine_grapes", new WineGrapesItem());
+    public static final Item JUNIPER_LOG = named("juniper_log", new ItemBlock(PSBlocks.JUNIPER_LOG));
+    public static final Item JUNIPER_WOOD = named("juniper_wood", new ItemBlock(PSBlocks.JUNIPER_WOOD));
+    public static final Item STRIPPED_JUNIPER_LOG = named("stripped_juniper_log", new ItemBlock(PSBlocks.STRIPPED_JUNIPER_LOG));
+    public static final Item STRIPPED_JUNIPER_WOOD = named("stripped_juniper_wood", new ItemBlock(PSBlocks.STRIPPED_JUNIPER_WOOD));
+    public static final Item JUNIPER_LEAVES = named("juniper_leaves", new WaterloggableBlockItem(PSBlocks.JUNIPER_LEAVES));
+    public static final Item FRUITING_JUNIPER_LEAVES = named("fruiting_juniper_leaves", new WaterloggableBlockItem(PSBlocks.FRUITING_JUNIPER_LEAVES));
+    public static final Item JUNIPER_SAPLING = named("juniper_sapling", new ItemBlock(PSBlocks.JUNIPER_SAPLING));
+    public static final Item JUNIPER_PLANKS = named("juniper_planks", new ItemBlock(PSBlocks.JUNIPER_PLANKS));
+    public static final Item JUNIPER_STAIRS = named("juniper_stairs", new WaterloggableBlockItem(PSBlocks.JUNIPER_STAIRS));
+    public static final Item JUNIPER_SLAB = named("juniper_slab", new JuniperSlabItem());
+    public static final Item JUNIPER_FENCE = named("juniper_fence", new WaterloggableBlockItem(PSBlocks.JUNIPER_FENCE));
+    public static final Item JUNIPER_FENCE_GATE = named("juniper_fence_gate", new ItemBlock(PSBlocks.JUNIPER_FENCE_GATE));
+    public static final Item JUNIPER_DOOR = named("juniper_door", new ItemDoor(PSBlocks.JUNIPER_DOOR));
+    public static final Item JUNIPER_TRAPDOOR = named("juniper_trapdoor", new WaterloggableBlockItem(PSBlocks.JUNIPER_TRAPDOOR));
+    public static final Item JUNIPER_BUTTON = named("juniper_button", new ItemBlock(PSBlocks.JUNIPER_BUTTON));
+    public static final Item JUNIPER_PRESSURE_PLATE = named("juniper_pressure_plate", new ItemBlock(PSBlocks.JUNIPER_PRESSURE_PLATE));
+    public static final Item JUNIPER_SIGN = named("juniper_sign", new JuniperSignItem(false));
+    public static final Item JUNIPER_HANGING_SIGN = named("juniper_hanging_sign", new JuniperSignItem(true));
+    public static final JuniperBoatItem JUNIPER_BOAT = named("juniper_boat", new JuniperBoatItem(false));
+    public static final JuniperBoatItem JUNIPER_CHEST_BOAT = named("juniper_chest_boat", new JuniperBoatItem(true));
+    public static final Item IRON_CHAIN = named("iron_chain", new Item());
+    public static final Item GLOWING_INK = named("glowing_ink", new Item());
+    public static final Item SIGN_WAX = named("sign_wax", new Item());
+    public static final Item SIGN_BLACK_DYE = named("sign_black_dye", new Item());
+    public static final Item JUNIPER_BERRIES = named("juniper_berries", new QuickFoodItem(1, 0.5F, true));
+    public static final Item DRYING_TABLE = named("drying_table", new ItemBlock(PSBlocks.DRYING_TABLE));
+    public static final Item IRON_DRYING_TABLE = named("iron_drying_table", new ItemBlock(PSBlocks.IRON_DRYING_TABLE));
+    public static final MashTubItem MASH_TUB = named("mash_tub", new MashTubItem());
+    public static final FluidMachineItem OAK_BARREL = barrel(PSBlocks.OAK_BARREL);
+    public static final FluidMachineItem SPRUCE_BARREL = barrel(PSBlocks.SPRUCE_BARREL);
+    public static final FluidMachineItem BIRCH_BARREL = barrel(PSBlocks.BIRCH_BARREL);
+    public static final FluidMachineItem JUNGLE_BARREL = barrel(PSBlocks.JUNGLE_BARREL);
+    public static final FluidMachineItem ACACIA_BARREL = barrel(PSBlocks.ACACIA_BARREL);
+    public static final FluidMachineItem DARK_OAK_BARREL = barrel(PSBlocks.DARK_OAK_BARREL);
+    public static final FluidMachineItem FLASK = named("flask", new FluidMachineItem(PSBlocks.FLASK, FlaskBlockEntity.CAPACITY));
+    public static final FluidMachineItem DISTILLERY = named("distillery", new FluidMachineItem(PSBlocks.DISTILLERY, FlaskBlockEntity.CAPACITY));
+    public static final Item BOTTLE_RACK = named("bottle_rack", new ItemBlock(PSBlocks.BOTTLE_RACK));
+    public static final Item TRAY = named("tray", new ItemBlock(PSBlocks.TRAY));
+    public static final Item BUNSEN_BURNER = named("bunsen_burner", new ItemBlock(PSBlocks.BUNSEN_BURNER));
+    public static final RiftJarItem RIFT_JAR = named("rift_jar", new RiftJarItem(PSBlocks.RIFT_JAR));
+    public static final Item COPPER_ORE = named("copper_ore", new ItemBlock(PSBlocks.COPPER_ORE));
+    public static final Item RAW_COPPER = named("raw_copper", new Item());
+    public static final Item COPPER_INGOT = named("copper_ingot", new Item());
+    public static final Item VOMIT = named("vomit", new Item());
+    public static final PaperBagItem PAPER_BAG = named("paper_bag", new PaperBagItem());
+    public static final BagOfVomitItem BAG_O_VOMIT = named("bag_o_vomit", new BagOfVomitItem());
 
-    FlaskItem OAK_BARREL = register("oak_barrel", new FlaskItem(PSBlocks.OAK_BARREL, new Settings().maxCount(16), FluidVolumes.BARREL));
-    FlaskItem SPRUCE_BARREL = register("spruce_barrel", new FlaskItem(PSBlocks.SPRUCE_BARREL, new Settings().maxCount(16), FluidVolumes.BARREL));
-    FlaskItem BIRCH_BARREL = register("birch_barrel", new FlaskItem(PSBlocks.BIRCH_BARREL, new Settings().maxCount(16), FluidVolumes.BARREL));
-    FlaskItem JUNGLE_BARREL = register("jungle_barrel", new FlaskItem(PSBlocks.JUNGLE_BARREL, new Settings().maxCount(16), FluidVolumes.BARREL));
-    FlaskItem ACACIA_BARREL = register("acacia_barrel", new FlaskItem(PSBlocks.ACACIA_BARREL, new Settings().maxCount(16), FluidVolumes.BARREL));
-    FlaskItem DARK_OAK_BARREL = register("dark_oak_barrel", new FlaskItem(PSBlocks.DARK_OAK_BARREL, new Settings().maxCount(16), FluidVolumes.BARREL));
-
-    FlaskItem MASH_TUB = register("mash_tub", new MashTubItem(PSBlocks.MASH_TUB, new Settings().maxCount(16), FluidVolumes.VAT));
-    FlaskItem FLASK = register("flask", new FlaskItem(PSBlocks.FLASK, new Settings().maxCount(16), FlaskBlockEntity.FLASK_CAPACITY));
-    FlaskItem DISTILLERY = register("distillery", new FlaskItem(PSBlocks.DISTILLERY, new Settings().maxCount(16), DistilleryBlockEntity.DISTILLERY_CAPACITY));
-    RiftJarItem RIFT_JAR = register("rift_jar", new RiftJarItem(PSBlocks.RIFT_JAR, new Settings()));
-
-    DrinkableItem FILLED_GLASS_BOTTLE = register("filled_glass_bottle", new ProxyDrinkableItem(Items.GLASS_BOTTLE, new Settings(), FluidVolumes.GLASS_BOTTLE, ConsumableFluid.ConsumptionType.DRINK));
-    FilledBucketItem FILLED_BUCKET = register("filled_bucket", new FilledBucketItem(new Settings().maxCount(1)));
-    DrinkableItem FILLED_BOWL = register("filled_bowl", new ProxyDrinkableItem(Items.BOWL, new Settings(), FluidVolumes.BOWL, ConsumableFluid.ConsumptionType.DRINK));
-
-    Item WINE_GRAPES = register("wine_grapes", new WineGrapesItem(new Settings().food(
-            new FoodComponent.Builder().hunger(1).saturationModifier(0.5F).meat().build()
-    ), 15));
-
-    Item CANNABIS_SEEDS = register("cannabis_seeds", new AliasedBlockItem(PSBlocks.CANNABIS, new Settings()));
-    Item CANNABIS_LEAF = register("cannabis_leaf");
-    Item CANNABIS_BUDS = register("cannabis_buds");
-    Item DRIED_CANNABIS_LEAF = register("dried_cannabis_leaf");
-    Item DRIED_CANNABIS_BUDS = register("dried_cannabis_buds");
-
-    Item HASH_MUFFIN = register("hash_muffin", new EdibleItem(
-            new Settings().food(EdibleItem.HAS_MUFFIN),
-            new DrugInfluence(DrugType.CANNABIS, DrugInfluence.DelayType.METABOLISED, 0.004, 0.002, 0.7f)
-    ));
-
-    Item HOP_CONES = register("hop_cones");
-    Item HOP_SEEDS = register("hop_seeds", new AliasedBlockItem(PSBlocks.HOP, new Settings()));
-
-    Item BROWN_MAGIC_MUSHROOMS = register("brown_magic_mushrooms", new EdibleItem(
-            new Settings().food(EdibleItem.NON_FILLING_EDIBLE),
-            new DrugInfluence(DrugType.BROWN_SHROOMS, DrugInfluence.DelayType.INGESTED, 0.005, 0.003, 0.5f)
-    ));
-    Item RED_MAGIC_MUSHROOMS = register("red_magic_mushrooms", new EdibleItem(
-            new Settings().food(EdibleItem.NON_FILLING_EDIBLE),
-            new DrugInfluence(DrugType.RED_SHROOMS, DrugInfluence.DelayType.INGESTED, 0.005, 0.003, 0.5f)
-    ));
-
-    Item JOLLY_RANCHER = register("jolly_rancher", new EdibleItem(
-            new Settings().food(EdibleItem.NON_FILLING_EDIBLE),
-            new DrugInfluence(DrugType.SUGAR, DrugInfluence.DelayType.INGESTED, 0.005, 0.003, 0.05f)
-    ));
-
-    Item TOBACCO_LEAVES = register("tobacco");
-    Item TOBACCO_SEEDS = register("tobacco_seeds", new AliasedBlockItem(PSBlocks.TOBACCO, new Settings()));
-    Item DRIED_TOBACCO = register("dried_tobacco");
-
-    SmokeableItem CIGARETTE = register("cigarette", new SmokeableItem(
-            new Settings().maxCount(1).maxDamage(1), 2, SmokeableItem.WHITE,
-            new DrugInfluence(DrugType.TOBACCO, DrugInfluence.DelayType.IMMEDIATE, 0.1, 0.02, 0.7f)
-    ));
-    SmokeableItem CIGAR = register("cigar", new SmokeableItem(
-            new Settings().maxCount(1).maxDamage(3), 4, new Vector3f(0.6F, 0.6F, 0.5F),
-            new DrugInfluence(DrugType.TOBACCO, DrugInfluence.DelayType.IMMEDIATE, 0.1, 0.02, 0.7f)
-    ));
-    SmokeableItem JOINT = register("joint", new SmokeableItem(
-            new Settings().maxCount(1).maxDamage(2), 2, new Vector3f(0.9F, 0.9F, 0.9F),
-            new DrugInfluence(DrugType.CANNABIS, DrugInfluence.DelayType.INHALED, 0.002, 0.001, 0.20f)
-    ));
-
-    Item COCA_SEEDS = register("coca_seeds", new AliasedBlockItem(PSBlocks.COCA, new Settings()));
-    Item COCA_LEAVES = register("coca_leaves");
-    Item DRIED_COCA_LEAVES = register("dried_coca_leaves");
-    Item COCAINE_POWDER = register("cocaine_powder", new CocainePowderItem(
-            new Settings().food(EdibleItem.NON_FILLING_EDIBLE),
-            new DrugInfluence(DrugType.COCAINE, DrugInfluence.DelayType.IMMEDIATE, 0.002, 0.003, 0.35f)
-    ));
-
-    InjectableItem SYRINGE = register("syringe", new InjectableItem(new Settings(), FluidVolumes.SYRINGE));
-
-    Item JUNIPER_LEAVES = register("juniper_leaves", PSBlocks.JUNIPER_LEAVES);
-    Item FRUITING_JUNIPER_LEAVES = register("fruiting_juniper_leaves", PSBlocks.FRUITING_JUNIPER_LEAVES);
-    Item JUNIPER_LOG = register("juniper_log", PSBlocks.JUNIPER_LOG);
-    Item JUNIPER_WOOD = register("juniper_wood", PSBlocks.JUNIPER_WOOD);
-    Item STRIPPED_JUNIPER_LOG = register("stripped_juniper_log", PSBlocks.STRIPPED_JUNIPER_LOG);
-    Item STRIPPED_JUNIPER_WOOD = register("stripped_juniper_wood", PSBlocks.STRIPPED_JUNIPER_WOOD);
-    Item JUNIPER_BERRIES = register("juniper_berries", new SpecialFoodItem(
-            new Settings().food(new FoodComponent.Builder().hunger(1).saturationModifier(0.5F).meat().build()), 15
-    ));
-    Item JUNIPER_SAPLING = register("juniper_sapling", PSBlocks.JUNIPER_SAPLING);
-    Item JUNIPER_PLANKS = register("juniper_planks", PSBlocks.JUNIPER_PLANKS);
-    Item JUNIPER_STAIRS = register("juniper_stairs", PSBlocks.JUNIPER_STAIRS);
-    Item JUNIPER_SIGN = register("juniper_sign", new SignItem(new Settings().maxCount(16), PSBlocks.JUNIPER_SIGN, PSBlocks.JUNIPER_WALL_SIGN));
-    Item JUNIPER_DOOR = register("juniper_door", PSBlocks.JUNIPER_DOOR);
-    Item JUNIPER_HANGING_SIGN = register("juniper_hanging_sign", new HangingSignItem(PSBlocks.JUNIPER_HANGING_SIGN, PSBlocks.JUNIPER_WALL_HANGING_SIGN, new Settings().maxCount(16)));
-    Item JUNIPER_PRESSURE_PLATE = register("juniper_pressure_plate", PSBlocks.JUNIPER_PRESSURE_PLATE);
-    Item JUNIPER_FENCE = register("juniper_fence", PSBlocks.JUNIPER_FENCE);
-    Item JUNIPER_TRAPDOOR = register("juniper_trapdoor", PSBlocks.JUNIPER_TRAPDOOR);
-    Item JUNIPER_FENCE_GATE = register("juniper_fence_gate", PSBlocks.JUNIPER_FENCE_GATE);
-    Item JUNIPER_BUTTON = register("juniper_button", PSBlocks.JUNIPER_BUTTON);
-    Item JUNIPER_SLAB = register("juniper_slab", PSBlocks.JUNIPER_SLAB);
-    Item JUNIPER_BOAT = TerraformBoatItemHelper.registerBoatItem(Psychedelicraft.id("juniper_boat"), TerraformBoatTypeRegistry.createKey(Psychedelicraft.id("juniper")), false);
-    Item JUNIPER_CHEST_BOAT = TerraformBoatItemHelper.registerBoatItem(Psychedelicraft.id("juniper_chest_boat"), TerraformBoatTypeRegistry.createKey(Psychedelicraft.id("juniper")), true);
-
-    Item COFFEA_CHERRIES = register("coffea_cherries", new AliasedBlockItem(PSBlocks.COFFEA, new Settings()));
-    Item COFFEE_BEANS = register("coffee_beans");
-
-    Item PEYOTE = register("peyote", PSBlocks.PEYOTE);
-    Item DRIED_PEYOTE = register("dried_peyote", new EdibleItem(
-            new Settings().food(EdibleItem.NON_FILLING_EDIBLE),
-            new DrugInfluence(DrugType.PEYOTE, DrugInfluence.DelayType.INGESTED, 0.005, 0.003, 0.5f)
-    ));
-    Item PEYOTE_JOINT = register("peyote_joint", new SmokeableItem(
-            new Settings().maxCount(1).maxDamage(2), 2, new Vector3f(0.5F, 0.9F, 0.4F),
-            new DrugInfluence(DrugType.PEYOTE, DrugInfluence.DelayType.INHALED, 0.003, 0.0015, 0.4f),
-            new DrugInfluence(DrugType.TOBACCO, DrugInfluence.DelayType.IMMEDIATE, 0.1, 0.02, 0.1f)
-    ));
-
-    Item LATTICE = register("lattice", PSBlocks.LATTICE);
-    Item WINE_GRAPE_LATTICE = register("wine_grape_lattice", PSBlocks.WINE_GRAPE_LATTICE);
-    Item MORNING_GLORY_LATTICE = register("morning_glory_lattice", PSBlocks.MORNING_GLORY_LATTICE);
-    Item BOTTLE_RACK = register("bottle_rack", PSBlocks.BOTTLE_RACK);
-    Item DRYING_TABLE = register("drying_table", PSBlocks.DRYING_TABLE);
-    Item IRON_DRYING_TABLE = register("iron_drying_table", PSBlocks.IRON_DRYING_TABLE);
-
-    HarmoniumItem HARMONIUM = register("harmonium", new HarmoniumItem(new Settings()));
-
-    Item OBSIDIAN_BOTTLE = register("obsidian_bottle", new Item(new Settings().maxCount(16)));
-    Item OBSIDIAN_DUST = register("obsidian_dust", new CocainePowderItem(
-            new Settings().food(EdibleItem.NON_FILLING_EDIBLE),
-            new DrugInfluence(DrugType.BATH_SALTS, DrugInfluence.DelayType.IMMEDIATE, 0.002, 0.003, 0.35f)
-    ));
-
-    // TODO: https://www.erowid.org/plants/kava/kava.shtml
-    //Item KAVA_SEEDS = register("kava_seeds", new Item(new Settings()));
-    //Item KAVA_ROOT = register("kava_root", new Item(new Settings()));
-
-    Item MORNING_GLORY = register("morning_glory");
-    Item MORNING_GLORY_SEEDS = register("morning_glory_seeds", new AliasedBlockItem(PSBlocks.MORNING_GLORY, new Settings()));
-    Item LSA_SQUARE = register("lsd_square", new EdibleItem(
-            new Settings().food(EdibleItem.NON_FILLING_EDIBLE),
-            new DrugInfluence(DrugType.LSD, DrugInfluence.DelayType.CONTACT, 0.05, 0.003, 0.1F)
-    ));
-    Item LSD_PILL = register("lsd_pill", new EdibleItem(
-            new Settings().food(EdibleItem.NON_FILLING_EDIBLE),
-            new DrugInfluence(DrugType.LSD, DrugInfluence.DelayType.INGESTED, 0.05, 0.003, 0.6F)
-    ));
-
-    Item JIMSONWEED_SEEDS = register("jimsonweed_seeds", new AliasedBlockItem(PSBlocks.JIMSONWEEED, new Settings()));
-    Item JIMSONWEED_SEED_POD = register("jimsonweed_seed_pod");
-    Item JIMSONWEED_LEAF = register("jimsonweed_leaf");
-    Item DRIED_JIMSONWEED_LEAF = register("dried_jimsonweed_leaf");
-
-    Item TOMATO_SEEDS = register("tomato_seeds", new AliasedBlockItem(PSBlocks.TOMATOES, new Settings()));
-    Item TOMATO = register("tomato", new Item(new Settings().food(EdibleItem.TOMATO)));
-    Item TOMATO_LEAF = register("tomato_leaf");
-
-    Item BELLADONNA_SEEDS = register("belladonna_seeds", new AliasedBlockItem(PSBlocks.BELLADONNA, new Settings()));
-    Item BELLADONNA_LEAF = register("belladonna_leaf");
-    Item DRIED_BELLADONNA_LEAF = register("dried_belladonna_leaf");
-    Item BELLADONNA_BERRIES = register("belladonna_berries", new EdibleItem(
-            new Settings().food(new FoodComponent.Builder().hunger(1).saturationModifier(1.5F).alwaysEdible().build()),
-            new DrugInfluence(DrugType.ATROPINE, DrugInfluence.DelayType.INGESTED, 0.005, 0.003, 0.5f)
-    ));
-
-    Item AGAVE_LEAF = register("agave_leaf", new AliasedBlockItem(PSBlocks.AGAVE_PLANT, new Settings()));
-
-    BongItem SMOKING_PIPE = register("smoking_pipe", new BongItem(new Settings().maxDamage(50)))
-            .consumes(new BongItem.Consumable(DRIED_CANNABIS_BUDS.getDefaultStack(), new DrugInfluence(DrugType.CANNABIS, DrugInfluence.DelayType.INHALED, 0.002, 0.001, 0.25F)))
-            .consumes(new BongItem.Consumable(DRIED_TOBACCO.getDefaultStack(), new DrugInfluence(DrugType.TOBACCO, DrugInfluence.DelayType.INHALED, 0.1, 0.02, 0.8F)))
-            .consumes(new BongItem.Consumable(DRIED_BELLADONNA_LEAF.getDefaultStack(), new DrugInfluence(DrugType.ATROPINE, DrugInfluence.DelayType.INHALED, 0.4, 0.1, 0.9F)))
-            .consumes(new BongItem.Consumable(DRIED_JIMSONWEED_LEAF.getDefaultStack(), new DrugInfluence(DrugType.ATROPINE, DrugInfluence.DelayType.INHALED, 0.5, 0.1, 0.2F)))
-            .consumes(new BongItem.Consumable(HARMONIUM.getDefaultStack(), stack -> new HarmoniumDrugInfluence(DrugInfluence.DelayType.INHALED, 0.04, 0.01, 0.65F, MathUtils.unpackRgb(HARMONIUM.getColor(stack)))));
-    // TODO: Play around with the bongs benefits
-    BongItem BONG = register("bong", new BongItem(new Settings().maxDamage(128)))
-            .consumes(new BongItem.Consumable(DRIED_CANNABIS_BUDS.getDefaultStack(), new DrugInfluence(DrugType.CANNABIS, DrugInfluence.DelayType.IMMEDIATE, 0.002, 0.001, 0.2F)))
-            .consumes(new BongItem.Consumable(DRIED_TOBACCO.getDefaultStack(), new DrugInfluence(DrugType.TOBACCO, DrugInfluence.DelayType.IMMEDIATE, 0.1, 0.02, 0.6F)))
-            .consumes(new BongItem.Consumable(DRIED_BELLADONNA_LEAF.getDefaultStack(), new DrugInfluence(DrugType.ATROPINE, DrugInfluence.DelayType.IMMEDIATE, 0.4, 0.1, 0.4F)))
-            .consumes(new BongItem.Consumable(DRIED_JIMSONWEED_LEAF.getDefaultStack(), new DrugInfluence(DrugType.ATROPINE, DrugInfluence.DelayType.IMMEDIATE, 0.5, 0.1, 0.1F)))
-            .consumes(new BongItem.Consumable(HARMONIUM.getDefaultStack(), stack -> new HarmoniumDrugInfluence(DrugInfluence.DelayType.IMMEDIATE, 0.04, 0.01, 0.9F, MathUtils.unpackRgb(HARMONIUM.getColor(stack)))));
-
-    Item VOMIT = register("vomit", new Item(new Settings()));
-    Item PAPER_BAG = register("paper_bag", new PaperBagItem(new Settings()));
-    Item BAG_O_VOMIT = register("bag_o_vomit", new SuspiciousItem(new Settings()
-            .food(new FoodComponent.Builder().hunger(8).saturationModifier(0.8f).meat().alwaysEdible().build()
-    ), SuspiciousItem.createForms(Items.COOKIE, Items.MUSHROOM_STEW, Items.GOLDEN_APPLE, Items.COOKED_BEEF, Items.COOKED_CHICKEN)));
-
-    Item TRAY = register("tray", PSBlocks.TRAY);
-    Item BUNSEN_BURNER = register("bunsen_burner", PSBlocks.BUNSEN_BURNER);
-
-    static Item register(String name, Block block) {
-        return register(name, new BlockItem(block, new Settings()));
+    private PSItems() {
     }
 
-    static Item register(String name) {
-        return register(name, new Item(new Settings()));
+    private static FluidMachineItem barrel(BarrelBlock block) {
+        return named(block.getRegistryName().getResourcePath(), new FluidMachineItem(block, BarrelBlockEntity.CAPACITY));
     }
 
-    static <T extends Item> T register(String name, T item) {
-        return Registry.register(Registries.ITEM, Psychedelicraft.id(name), item);
+    private static Item edible(String name, int hunger, float saturation, DrugType type) {
+        return edible(name, hunger, saturation, new DrugInfluence(type, DrugInfluence.INGESTED_DELAY, 0.005, 0.003, 0.5F));
     }
 
-    static void bootstrap() {
-        FuelRegistry.INSTANCE.add(LATTICE, 700);
-        FuelRegistry.INSTANCE.add(SMOKING_PIPE, 200);
-        FuelRegistry.INSTANCE.add(JOINT, 20);
-        FuelRegistry.INSTANCE.add(PEYOTE_JOINT, 20);
-        FuelRegistry.INSTANCE.add(CIGAR, 80);
-        FuelRegistry.INSTANCE.add(CIGARETTE, 50);
-        FuelRegistry.INSTANCE.add(WOODEN_MUG, 50);
+    private static Item edible(String name, int hunger, float saturation, DrugInfluence influence) {
+        return named(name, new EdibleItem(hunger, saturation, influence::copy));
+    }
+
+    private static PortableFluidItem vessel(String name, FluidVessel vessel) {
+        return named(name, new PortableFluidItem(vessel),
+                vessel == FluidVessel.SYRINGE ? PSItemGroups.GENERAL : PSItemGroups.DRINKS);
+    }
+
+    private static <T extends Item> T named(String name, T item) {
+        return named(name, item, PSItemGroups.GENERAL);
+    }
+
+    private static <T extends Item> T named(String name, T item, CreativeTabs tab) {
+        item.setRegistryName(Psychedelicraft.id(name))
+                .setUnlocalizedName(Psychedelicraft.MOD_ID + "." + name)
+                .setCreativeTab(tab);
+        if (item instanceof ItemBlock) ((ItemBlock) item).getBlock().setCreativeTab(tab);
+        ITEMS.add(item);
+        return item;
+    }
+
+    public static List<Item> items() {
+        return Collections.unmodifiableList(ITEMS);
+    }
+
+    @SubscribeEvent
+    public static void registerItems(RegistryEvent.Register<Item> event) {
+        for (Item item : ITEMS) {
+            event.getRegistry().register(item);
+        }
+    }
+
+    @SubscribeEvent
+    public static void furnaceFuel(FurnaceFuelBurnTimeEvent event) {
+        Item item = event.getItemStack().getItem();
+        if (item == LATTICE) {
+            event.setBurnTime(700);
+        } else if (item == WOODEN_MUG) {
+            event.setBurnTime(50);
+        } else if (item == MORNING_GLORY_LATTICE || item == WINE_GRAPE_LATTICE) {
+            event.setBurnTime(0);
+        } else if (item == JUNIPER_SAPLING || item == JUNIPER_BUTTON) {
+            event.setBurnTime(100);
+        } else if (item == JUNIPER_SLAB) {
+            event.setBurnTime(150);
+        } else if (item == JUNIPER_DOOR || item == JUNIPER_SIGN) {
+            event.setBurnTime(200);
+        } else if (item == JUNIPER_HANGING_SIGN) {
+            event.setBurnTime(800);
+        } else if (item == JUNIPER_BOAT || item == JUNIPER_CHEST_BOAT) {
+            event.setBurnTime(1200);
+        }
     }
 }

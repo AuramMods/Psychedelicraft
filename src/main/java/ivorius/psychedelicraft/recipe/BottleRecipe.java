@@ -1,72 +1,84 @@
+/*
+ * Copyright (c) 2014, Lukas Tenbrink.
+ */
+
 package ivorius.psychedelicraft.recipe;
 
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Objects;
-
 import com.google.gson.JsonObject;
-
-import net.minecraft.inventory.RecipeInputInventory;
-import net.minecraft.item.DyeableItem;
+import ivorius.psychedelicraft.item.PSItems;
+import net.minecraft.init.Blocks;
+import net.minecraft.inventory.InventoryCrafting;
+import net.minecraft.item.EnumDyeColor;
 import net.minecraft.item.Item;
+import net.minecraft.item.ItemArmor;
 import net.minecraft.item.ItemStack;
-import net.minecraft.item.Items;
-import net.minecraft.network.PacketByteBuf;
-import net.minecraft.recipe.ShapedRecipe;
-import net.minecraft.registry.DynamicRegistryManager;
-import net.minecraft.util.DyeColor;
-import net.minecraft.util.Identifier;
-import net.minecraft.util.Util;
+import net.minecraft.item.crafting.IRecipe;
+import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.util.JsonUtils;
+import net.minecraft.util.ResourceLocation;
+import net.minecraftforge.common.crafting.CraftingHelper.ShapedPrimer;
+import net.minecraftforge.common.crafting.IRecipeFactory;
+import net.minecraftforge.common.crafting.JsonContext;
+import net.minecraftforge.common.util.Constants;
+import net.minecraftforge.oredict.ShapedOreRecipe;
 
-public class BottleRecipe extends ShapedRecipe {
-    public static final Map<Item, DyeColor> COLORS = Util.make(new HashMap<>(), map -> {
-        map.put(Items.WHITE_STAINED_GLASS, DyeColor.WHITE);
-        map.put(Items.ORANGE_STAINED_GLASS, DyeColor.ORANGE);
-        map.put(Items.MAGENTA_STAINED_GLASS, DyeColor.MAGENTA);
-        map.put(Items.LIGHT_BLUE_STAINED_GLASS, DyeColor.LIGHT_BLUE);
-        map.put(Items.YELLOW_STAINED_GLASS, DyeColor.YELLOW);
-        map.put(Items.LIME_STAINED_GLASS, DyeColor.LIME);
-        map.put(Items.PINK_STAINED_GLASS, DyeColor.PINK);
-        map.put(Items.GRAY_STAINED_GLASS, DyeColor.GRAY);
-        map.put(Items.LIGHT_GRAY_STAINED_GLASS, DyeColor.LIGHT_GRAY);
-        map.put(Items.CYAN_STAINED_GLASS, DyeColor.CYAN);
-        map.put(Items.PURPLE_STAINED_GLASS, DyeColor.PURPLE);
-        map.put(Items.BLUE_STAINED_GLASS, DyeColor.BLUE);
-        map.put(Items.BROWN_STAINED_GLASS, DyeColor.BROWN);
-        map.put(Items.GREEN_STAINED_GLASS, DyeColor.GREEN);
-        map.put(Items.RED_STAINED_GLASS, DyeColor.RED);
-        map.put(Items.BLACK_STAINED_GLASS, DyeColor.BLACK);
-    });
+import javax.annotation.Nullable;
 
-    public BottleRecipe(Identifier id, ShapedRecipe recipe) {
-        super(id, recipe.getGroup(), recipe.getCategory(), recipe.getWidth(), recipe.getHeight(), recipe.getIngredients(), recipe.getOutput(null));
+public final class BottleRecipe extends ShapedOreRecipe {
+    // The donor uses sign colors. These are in stained glass metadata order.
+    private static final int[] SIGN_COLORS = {
+            0xFFFFFF, 0xFF681F, 0xFF00FF, 0x9AC0CD, 0xFFFF00, 0xBFFF00, 0xFF69B4, 0x808080,
+            0xD3D3D3, 0x00FFFF, 0xA020F0, 0x0000FF, 0x8B4513, 0x00FF00, 0xFF0000, 0x000000
+    };
+
+    private BottleRecipe(@Nullable ResourceLocation group, ItemStack output, ShapedPrimer pattern) {
+        super(group, output, pattern);
     }
 
     @Override
-    public ItemStack craft(RecipeInputInventory inventory, DynamicRegistryManager registries) {
-        ItemStack output = getOutput(registries).copy();
-        if (output.getItem() instanceof DyeableItem dyeable) {
-            RecipeUtils.stacks(inventory)
-                .map(stack -> stack.getItem())
-                .distinct()
-                .map(COLORS::get)
-                .filter(Objects::nonNull)
-                .findFirst().ifPresent(color -> {
-                    dyeable.setColor(output, color.getSignColor());
-                });
+    public ItemStack getCraftingResult(InventoryCrafting inventory) {
+        for (int slot = 0; slot < inventory.getSizeInventory(); slot++) {
+            ItemStack glass = inventory.getStackInSlot(slot);
+            if (glass.getItem() == Item.getItemFromBlock(Blocks.STAINED_GLASS)) {
+                return coloredOutput(EnumDyeColor.byMetadata(glass.getMetadata()));
+            }
         }
-        return output;
+        return super.getCraftingResult(inventory);
     }
 
-    public static class Serializer extends ShapedRecipe.Serializer {
-        @Override
-        public ShapedRecipe read(Identifier id, JsonObject json) {
-            return new BottleRecipe(id, super.read(id, json));
-        }
+    public ItemStack coloredOutput(EnumDyeColor color) {
+        ItemStack result = getRecipeOutput().copy();
+        if (isDyeable(result)) setColor(result, SIGN_COLORS[color.getMetadata()]);
+        return result;
+    }
 
+    static boolean isDyeable(ItemStack stack) {
+        Item item = stack.getItem();
+        return item == PSItems.BOTTLE || item == PSItems.MOLOTOV_COCKTAIL || item == PSItems.HARMONIUM
+                || item instanceof ItemArmor && ((ItemArmor) item).getArmorMaterial() == ItemArmor.ArmorMaterial.LEATHER;
+    }
+
+    static int getColor(ItemStack stack) {
+        NBTTagCompound display = stack.getSubCompound("display");
+        return display != null && display.hasKey("color", Constants.NBT.TAG_ANY_NUMERIC)
+                ? display.getInteger("color") : 0xA06540;
+    }
+
+    static void setColor(ItemStack stack, int color) {
+        stack.getOrCreateSubCompound("display").setInteger("color", color);
+    }
+
+    public static final class Factory implements IRecipeFactory {
         @Override
-        public ShapedRecipe read(Identifier id, PacketByteBuf buffer) {
-            return new BottleRecipe(id, super.read(id, buffer));
+        public IRecipe parse(JsonContext context, JsonObject json) {
+            ShapedOreRecipe recipe = ShapedOreRecipe.factory(context, json);
+            ShapedPrimer pattern = new ShapedPrimer();
+            pattern.width = recipe.getRecipeWidth();
+            pattern.height = recipe.getRecipeHeight();
+            pattern.mirrored = JsonUtils.getBoolean(json, "mirrored", true);
+            pattern.input = recipe.getIngredients();
+            String group = recipe.getGroup();
+            return new BottleRecipe(group.isEmpty() ? null : new ResourceLocation(group), recipe.getRecipeOutput(), pattern);
         }
     }
 }

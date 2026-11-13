@@ -1,79 +1,86 @@
 /*
- *  Copyright (c) 2014, Lukas Tenbrink.
- *  * http://lukas.axxim.net
+ * Copyright (c) 2014, Lukas Tenbrink.
  */
 
 package ivorius.psychedelicraft.block.entity;
 
-import ivorius.psychedelicraft.fluid.*;
-import ivorius.psychedelicraft.fluid.container.MutableFluidContainer;
-import net.minecraft.block.BlockState;
-import net.minecraft.item.ItemStack;
-import net.minecraft.nbt.NbtCompound;
-import net.minecraft.server.world.ServerWorld;
-import net.minecraft.sound.SoundCategory;
-import net.minecraft.sound.SoundEvents;
-import net.minecraft.util.math.*;
+import ivorius.psychedelicraft.block.BarrelBlock;
+import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.init.SoundEvents;
+import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.util.EnumFacing;
+import net.minecraft.util.EnumHand;
+import net.minecraft.util.SoundCategory;
+import net.minecraft.util.math.MathHelper;
+import net.minecraftforge.fluids.Fluid;
 
-public class BarrelBlockEntity extends FluidProcessingBlockEntity {
+import javax.annotation.Nullable;
 
-    public int timeFermented;
+public final class BarrelBlockEntity extends FluidProcessingBlockEntity {
+    public static final int CAPACITY = 16000;
 
-    public float tapRotation = 0;
-    public int timeLeftTapOpen = 0;
+    private int tapTicks;
+    private float tapAngle;
+    private float previousTapAngle;
 
-    public BarrelBlockEntity(BlockPos pos, BlockState state) {
-        super(PSBlockEntities.BARREL, pos, state, FluidVolumes.BARREL);
+    public BarrelBlockEntity() {
+        super(CAPACITY);
+    }
+
+    public boolean dispense(EntityPlayer player, EnumHand hand) {
+        if (!transferHeldFluid(player, hand, Fluid.BUCKET_VOLUME, true)) return false;
+        tapTicks = 20;
+        changed();
+        return true;
+    }
+
+    public int getTapTicks() {
+        return tapTicks;
+    }
+
+    public float getTapAngle(float partialTicks) {
+        return previousTapAngle + (tapAngle - previousTapAngle) * partialTicks;
     }
 
     @Override
-    public Processable.ProcessType getProcessType() {
-        return Processable.ProcessType.MATURE;
-    }
-
-    @Override
-    public void tick(ServerWorld world) {
-        super.tick(world);
-        tickAnimations();
-    }
-
-    public void tickAnimations() {
-        if (timeLeftTapOpen > 0) {
-            timeLeftTapOpen--;
+    protected void tickProcessing() {
+        processFluid(true);
+        if (tapTicks > 0 && tapTicks % 5 == 0) {
+            world.playSound(null, pos, SoundEvents.BLOCK_BREWING_STAND_BREW, SoundCategory.BLOCKS, 0.025F, 0.5F);
         }
-
-        if (timeLeftTapOpen > 0 && tapRotation < MathHelper.HALF_PI) {
-            tapRotation += MathHelper.PI * 0.1F;
-        }
-
-        if (timeLeftTapOpen == 0 && tapRotation > 0) {
-            tapRotation -= MathHelper.PI * 0.1F;
-        }
-
-        if (timeLeftTapOpen > 0 && timeLeftTapOpen % 5 == 0) {
-            world.playSound(null, getPos(), SoundEvents.BLOCK_BREWING_STAND_BREW, SoundCategory.BLOCKS, 0.025F, 0.5F);
-        }
+        animateTap();
     }
 
     @Override
-    public void accept(ItemStack stack) {
+    protected void tickClient() {
+        animateTap();
+    }
+
+    private void animateTap() {
+        previousTapAngle = tapAngle;
+        tapAngle = MathHelper.clamp(tapAngle + (tapTicks > 0 ? 18 : -18), 0, 90);
+        if (tapTicks > 0) tapTicks--;
     }
 
     @Override
-    public void accept(MutableFluidContainer fluid) {
+    @Nullable
+    protected EnumFacing relativeSide(@Nullable EnumFacing side) {
+        if (side == null || side.getAxis().isVertical() || world == null) return side;
+        EnumFacing facing = world.getBlockState(pos).getValue(BarrelBlock.FACING);
+        return facing.getAxis().isVertical() ? side
+                : EnumFacing.getHorizontal((facing.getHorizontalIndex() - side.getHorizontalIndex()) & 3);
     }
 
     @Override
-    public void writeNbt(NbtCompound compound) {
-        super.writeNbt(compound);
-        compound.putInt("timeLeftTapOpen", timeLeftTapOpen);
-        compound.putFloat("tapRotation", tapRotation);
+    public NBTTagCompound writeToNBT(NBTTagCompound compound) {
+        super.writeToNBT(compound);
+        compound.setInteger("timeLeftTapOpen", tapTicks);
+        return compound;
     }
 
     @Override
-    public void readNbt(NbtCompound compound) {
-        super.readNbt(compound);
-        timeLeftTapOpen = compound.getInt("timeLeftTapOpen");
-        tapRotation = compound.getFloat("tapRotation");
+    public void readFromNBT(NBTTagCompound compound) {
+        super.readFromNBT(compound);
+        tapTicks = compound.getInteger("timeLeftTapOpen");
     }
 }

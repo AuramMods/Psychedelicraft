@@ -1,8 +1,0 @@
-{
-  "parent": "minecraft:block/half_slab",
-  "textures": {
-    "bottom": "psychedelicraft:blocks/juniper_planks",
-    "side": "psychedelicraft:blocks/juniper_planks",
-    "top": "psychedelicraft:blocks/juniper_planks"
-  }
-}

@@ -1,6 +1,6 @@
 {
-    "parent": "psychedelicraft:item/joint",
-    "textures": {
-        "layer0": "psychedelicraft:item/cigar_1"
-    }
+  "parent": "psychedelicraft:item/joint",
+  "textures": {
+    "layer0": "psychedelicraft:items/cigar_1"
+  }
 }

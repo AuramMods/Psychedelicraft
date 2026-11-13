@@ -1,6 +1,6 @@
 {
-    "parent": "item/generated",
-    "textures": {
-        "layer0": "psychedelicraft:item/jolly_rancher"
-    }
+  "parent": "item/generated",
+  "textures": {
+    "layer0": "psychedelicraft:items/jolly_rancher"
+  }
 }

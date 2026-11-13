@@ -1,108 +1,118 @@
 /*
- *  Copyright (c) 2014, Lukas Tenbrink.
- *  * http://lukas.axxim.net
+ * Copyright (c) 2014, Lukas Tenbrink.
  */
 
 package ivorius.psychedelicraft.block;
 
-import org.jetbrains.annotations.Nullable;
+import javax.annotation.Nullable;
 
+import ivorius.psychedelicraft.Psychedelicraft;
 import ivorius.psychedelicraft.block.entity.DryingTableBlockEntity;
-import ivorius.psychedelicraft.block.entity.PSBlockEntities;
-import ivorius.psychedelicraft.screen.DryingTableScreenHandler;
-import net.fabricmc.fabric.api.screenhandler.v1.ExtendedScreenHandlerFactory;
-import net.minecraft.block.*;
-import net.minecraft.block.entity.*;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.entity.player.PlayerInventory;
-import net.minecraft.network.PacketByteBuf;
-import net.minecraft.screen.ScreenHandler;
-import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.server.world.ServerWorld;
-import net.minecraft.text.Text;
-import net.minecraft.util.ActionResult;
-import net.minecraft.util.Hand;
-import net.minecraft.util.hit.BlockHitResult;
+import ivorius.psychedelicraft.screen.PSGuiHandler;
+import net.minecraft.block.BlockContainer;
+import net.minecraft.block.SoundType;
+import net.minecraft.block.material.Material;
+import net.minecraft.block.state.BlockFaceShape;
+import net.minecraft.block.state.IBlockState;
+import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.inventory.InventoryHelper;
+import net.minecraft.tileentity.TileEntity;
+import net.minecraft.util.EnumBlockRenderType;
+import net.minecraft.util.EnumFacing;
+import net.minecraft.util.EnumHand;
+import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.Direction;
-import net.minecraft.util.shape.VoxelShape;
-import net.minecraft.world.BlockView;
+import net.minecraft.world.IBlockAccess;
 import net.minecraft.world.World;
 
-public class DryingTableBlock extends BlockWithEntity {
-    private static final VoxelShape SHAPE = Block.createCuboidShape(0, 0, 0, 16, 12, 16);
+public final class DryingTableBlock extends BlockContainer {
+    private static final AxisAlignedBB SHAPE = new AxisAlignedBB(0, 0, 0, 1, 0.75, 1);
 
-    public DryingTableBlock(Settings settings) {
-        super(settings.nonOpaque());
+    DryingTableBlock(Material material) {
+        super(material);
+        boolean wood = material == Material.WOOD;
+        setHardness(wood ? 2 : 5);
+        setSoundType(wood ? SoundType.WOOD : SoundType.METAL);
+        setLightOpacity(0);
     }
 
     @Override
-    public BlockRenderType getRenderType(BlockState state) {
-        return BlockRenderType.MODEL;
+    public TileEntity createNewTileEntity(World world, int metadata) {
+        return new DryingTableBlockEntity();
     }
 
     @Override
-    public VoxelShape getOutlineShape(BlockState state, BlockView world, BlockPos pos, ShapeContext context) {
+    public EnumBlockRenderType getRenderType(IBlockState state) {
+        return EnumBlockRenderType.MODEL;
+    }
+
+    @Override
+    public AxisAlignedBB getBoundingBox(IBlockState state, IBlockAccess world, BlockPos pos) {
         return SHAPE;
     }
 
     @Override
-    public ActionResult onUse(BlockState state, World world, BlockPos pos, PlayerEntity player, Hand hand, BlockHitResult hit) {
-        return world.getBlockEntity(pos, PSBlockEntities.DRYING_TABLE).map(be -> {
-            player.openHandledScreen(new ExtendedScreenHandlerFactory() {
-                @Override
-                public Text getDisplayName() {
-                    return DryingTableBlock.this.getName();
-                }
-                @Override
-                public ScreenHandler createMenu(int syncId, PlayerInventory inv, PlayerEntity player) {
-                    return new DryingTableScreenHandler(syncId, inv, be);
-                }
-
-                @Override
-                public void writeScreenOpeningData(ServerPlayerEntity player, PacketByteBuf buf) {
-                    buf.writeBlockPos(pos);
-                }
-            });
-            return ActionResult.SUCCESS;
-        }).orElse(ActionResult.FAIL);
+    public boolean isOpaqueCube(IBlockState state) {
+        return false;
     }
 
     @Override
+    public boolean isFullCube(IBlockState state) {
+        return false;
+    }
+
+    @Override
+    public BlockFaceShape getBlockFaceShape(IBlockAccess world, IBlockState state, BlockPos pos, EnumFacing face) {
+        return face == EnumFacing.DOWN ? BlockFaceShape.SOLID : BlockFaceShape.UNDEFINED;
+    }
+
+    @Override
+    public boolean onBlockActivated(World world, BlockPos pos, IBlockState state, EntityPlayer player,
+                                    EnumHand hand, EnumFacing side, float x, float y, float z) {
+        if (getTable(world, pos) == null) {
+            return false;
+        }
+        if (!world.isRemote) {
+            player.openGui(Psychedelicraft.MOD_ID, PSGuiHandler.DRYING_TABLE, world, pos.getX(), pos.getY(), pos.getZ());
+        }
+        return true;
+    }
+
+    @Override
+    public void breakBlock(World world, BlockPos pos, IBlockState state) {
+        DryingTableBlockEntity table = getTable(world, pos);
+        if (!world.isRemote && table != null) {
+            InventoryHelper.dropInventoryItems(world, pos, table);
+            world.updateComparatorOutputLevel(pos, this);
+        }
+        super.breakBlock(world, pos, state);
+    }
+
+    @Override
+    public boolean hasComparatorInputOverride(IBlockState state) {
+        return true;
+    }
+
+    @Override
+    public int getComparatorInputOverride(IBlockState state, World world, BlockPos pos) {
+        DryingTableBlockEntity table = getTable(world, pos);
+        return table == null ? 0 : (int) (table.getHeatRatio() * 15);
+    }
+
+    @Override
+    public boolean canProvidePower(IBlockState state) {
+        return true;
+    }
+
+    @Override
+    public int getWeakPower(IBlockState state, IBlockAccess world, BlockPos pos, EnumFacing side) {
+        DryingTableBlockEntity table = getTable(world, pos);
+        return table == null ? 0 : (int) (table.getDryingProgress() * 15);
+    }
+
     @Nullable
-    public <T extends BlockEntity> BlockEntityTicker<T> getTicker(World world, BlockState state, BlockEntityType<T> type) {
-        return world.isClient ? null : checkType(type, PSBlockEntities.DRYING_TABLE, (w, p, s, entity) -> entity.tick((ServerWorld)w));
-    }
-
-    @Override
-    public BlockEntity createBlockEntity(BlockPos pos, BlockState state) {
-        return new DryingTableBlockEntity(pos, state);
-    }
-
-    @Override
-    @Deprecated
-    public boolean hasComparatorOutput(BlockState state) {
-        return true;
-    }
-
-    @Override
-    @Deprecated
-    public int getComparatorOutput(BlockState state, World world, BlockPos pos) {
-        return world.getBlockEntity(pos, PSBlockEntities.DRYING_TABLE).map(be -> {
-            return (int)(be.getHeatRatio() * 15);
-        }).orElse(0);
-    }
-
-    @Override
-    public boolean emitsRedstonePower(BlockState state) {
-        return true;
-    }
-
-    @Override
-    @Deprecated
-    public int getWeakRedstonePower(BlockState state, BlockView world, BlockPos pos, Direction direction) {
-        return world.getBlockEntity(pos, PSBlockEntities.DRYING_TABLE).map(be -> {
-            return (int)(be.getDryingProgress() * 15);
-        }).orElse(0);
+    public static DryingTableBlockEntity getTable(IBlockAccess world, BlockPos pos) {
+        TileEntity tile = world.getTileEntity(pos);
+        return tile instanceof DryingTableBlockEntity ? (DryingTableBlockEntity) tile : null;
     }
 }

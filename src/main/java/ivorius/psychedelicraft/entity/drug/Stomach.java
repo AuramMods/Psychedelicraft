@@ -4,130 +4,192 @@ import ivorius.psychedelicraft.PSDamageTypes;
 import ivorius.psychedelicraft.item.PSItems;
 import ivorius.psychedelicraft.item.PaperBagItem;
 import ivorius.psychedelicraft.util.NbtSerialisable;
-import net.minecraft.entity.effect.StatusEffectInstance;
-import net.minecraft.entity.effect.StatusEffects;
-import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.entity.item.EntityItem;
+import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.init.MobEffects;
+import net.minecraft.init.SoundEvents;
 import net.minecraft.item.ItemStack;
-import net.minecraft.nbt.NbtCompound;
-import net.minecraft.nbt.NbtElement;
-import net.minecraft.sound.SoundEvents;
-import net.minecraft.util.Hand;
+import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.potion.PotionEffect;
+import net.minecraft.util.EnumHand;
 import net.minecraft.util.math.MathHelper;
+import net.minecraftforge.items.ItemHandlerHelper;
 
-public class Stomach implements NbtSerialisable {
+import javax.annotation.Nullable;
+import java.util.Random;
 
-    private final DrugProperties properties;
+public final class Stomach implements NbtSerialisable {
+    private static final float EPSILON = 1.0E-5F;
+    private static final int MAX_VOMITING_TICKS = 100;
+    private static final int MAX_VOMIT_COUNT = 17;
 
+    @Nullable
+    private HungerLock lock;
+    private float overeating;
     private int vomitCount;
-    private int vomitCooldown;
     private int vomitingTicks;
+    private boolean dirty;
 
-    private final PlayerEntity entity;
-
-    public Stomach(DrugProperties properties) {
-        this.properties = properties;
-        this.entity = properties.asEntity();
+    boolean isLocked() {
+        return lock != null;
     }
 
-    public LockableHungerManager getStomach() {
-        return (LockableHungerManager)entity.getHungerManager();
+    boolean needsFood(boolean vanilla) {
+        return lock == null ? vanilla : !lock.full;
     }
 
-    public GluttonyManager getGlut() {
-        return (GluttonyManager)entity.getHungerManager();
+    int perceivedFood(int actual) {
+        return lock == null ? actual : (int) HungerLock.project(actual, lock.food, lock.rate);
     }
 
-    public void onTick() {
-        final float hungerSuppression = MathHelper.clamp(properties.getModifier(Drug.HUNGER_SUPPRESSION), -1, 1);
-        final boolean shouldLockHunger = Math.abs(hungerSuppression) > MathHelper.EPSILON;
+    float perceivedSaturation(float actual) {
+        return lock == null ? actual : HungerLock.project(actual, lock.saturation, lock.rate);
+    }
 
-        if (shouldLockHunger != (getStomach().getLockedState() != null)) {
-            if (shouldLockHunger) {
-                getStomach().lockHunger(hungerSuppression > 0, hungerSuppression);
-            } else {
-                getStomach().unlockHunger();
-            }
-
-            properties.markDirty();
+    void recordFood(int actual, int food) {
+        if (lock != null && !lock.full && food > 0 && actual + food > 20) {
+            overeating += food / 8F;
+            dirty = true;
         }
+    }
 
-        if (getStomach().getLockedState() != null) {
-            getStomach().getLockedState().setRate(hungerSuppression);
+    void bind(EntityPlayer player) {
+        if (player.getFoodStats() instanceof StomachFoodStats) {
+            ((StomachFoodStats) player.getFoodStats()).bind(this, player.world.isRemote);
         }
+    }
 
-        if (getGlut().getOvereating() >= 10) {
-            vomit();
+    void tick(EntityPlayer player, float hungerSuppression) {
+        bind(player);
+        if (player.getFoodStats() instanceof StomachFoodStats) {
+            StomachFoodStats food = (StomachFoodStats) player.getFoodStats();
+            updateHunger(food.actualFoodLevel(), food.actualSaturation(), hungerSuppression);
         }
-
+        if (player.world.isRemote || !player.isEntityAlive()) return;
+        if (overeating >= 10) vomit(player);
         if (vomitingTicks > 0) {
-            if (entity.age % (int)(1 + entity.getWorld().random.nextFloat() * 3) == 0) {
-                int count = (int)(entity.getWorld().random.nextFloat() * (vomitingTicks / 2));
+            vomitingTicks--;
+            Random random = player.getRNG();
+            if (player.ticksExisted % (1 + random.nextInt(3)) == 0) {
+                int count = (int) (random.nextFloat() * (vomitingTicks / 2));
                 for (int i = 0; i < count; i++) {
-                    vomitingTicks--;
-                    if (!entity.getWorld().isClient) {
-                        entity.dropItem(PSItems.VOMIT.getDefaultStack(), true, true).setPickupDelayInfinite();
-                        playBarfNoise();
-                    }
+                    EntityItem expelled = player.dropItem(new ItemStack(PSItems.VOMIT), true, true);
+                    if (expelled != null) expelled.setInfinitePickupDelay();
+                    playVomitSound(player);
                 }
-                properties.markDirty();
+                vomitingTicks -= count;
             }
-        }
-        if (vomitCooldown > 0) {
-            properties.markDirty();
-            if (vomitCooldown-- <= 0) {
-                vomitCount = 0;
-            }
+            if (vomitingTicks == 0) dirty = true;
         }
     }
 
-    public void vomit() {
-        ItemStack heldItem = entity.getStackInHand(Hand.OFF_HAND);
-        if (heldItem.isOf(PSItems.PAPER_BAG) && PaperBagItem.getContents(heldItem).isEmpty()) {
-            playBarfNoise();
+    void updateHunger(int food, float saturation, float modifier) {
+        float rate = MathHelper.clamp(modifier, -1, 1);
+        if (Math.abs(rate) <= EPSILON) {
+            if (lock != null) {
+                lock = null;
+                dirty = true;
+            }
+            return;
+        }
+        if (lock == null) {
+            lock = new HungerLock(food, saturation, rate > 0, rate);
+            dirty = true;
+        }
+        lock.rate = rate;
+        float newFood = rate > 0 ? Math.max(lock.food, food) : Math.min(lock.food, food);
+        float newSaturation = rate > 0 ? Math.max(lock.saturation, saturation) : Math.min(lock.saturation, saturation);
+        dirty |= lock.food != newFood || lock.saturation != newSaturation;
+        lock.food = newFood;
+        lock.saturation = newSaturation;
+    }
 
-            if (!entity.isCreative()) {
-                heldItem.decrement(1);
-            }
-            if (heldItem.isEmpty()) {
-                entity.setStackInHand(Hand.OFF_HAND, PSItems.BAG_O_VOMIT.getDefaultStack());
-            } else {
-                entity.getInventory().offerOrDrop(PSItems.BAG_O_VOMIT.getDefaultStack());
-            }
+    public void vomit(EntityPlayer player) {
+        if (player.world.isRemote || !player.isEntityAlive()) return;
+        ItemStack bag = player.getHeldItemOffhand();
+        if (bag.getItem() == PSItems.PAPER_BAG && PaperBagItem.getContents(bag).isEmpty()) {
+            playVomitSound(player);
+            if (!player.isCreative()) bag.shrink(1);
+            ItemStack filled = new ItemStack(PSItems.BAG_O_VOMIT);
+            if (bag.isEmpty()) player.setHeldItem(EnumHand.OFF_HAND, filled);
+            else ItemHandlerHelper.giveItemToPlayer(player, filled);
         } else {
-            vomitingTicks = entity.getWorld().random.nextBetween(10, 100);
-            if (++vomitCount > 16) {
-                entity.damage(properties.damageOf(PSDamageTypes.OVER_EATING), Integer.MAX_VALUE);
+            vomitingTicks = 10 + player.getRNG().nextInt(MAX_VOMITING_TICKS - 9);
+            if (vomitCount < MAX_VOMIT_COUNT) vomitCount++;
+            if (vomitCount >= MAX_VOMIT_COUNT) {
+                player.attackEntityFrom(PSDamageTypes.OVER_EATING, Integer.MAX_VALUE);
             }
         }
-        entity.addStatusEffect(new StatusEffectInstance(StatusEffects.NAUSEA, 100, 1));
-        getGlut().setOvereating(0);
-        properties.markDirty();
+        player.addPotionEffect(new PotionEffect(MobEffects.NAUSEA, 100, 1));
+        overeating = 0;
+        dirty = true;
     }
 
-    private void playBarfNoise() {
-        entity.getWorld().playSoundFromEntity(null, entity, SoundEvents.ENTITY_VILLAGER_DEATH, entity.getSoundCategory(), 1, (float)entity.getWorld().random.nextTriangular(0.5, 0.25));
+    private static void playVomitSound(EntityPlayer player) {
+        Random random = player.getRNG();
+        player.world.playSound(null, player.posX, player.posY, player.posZ, SoundEvents.ENTITY_VILLAGER_DEATH,
+                player.getSoundCategory(), 1, 0.5F + (random.nextFloat() - random.nextFloat()) * 0.25F);
+    }
+
+    boolean takeDirty() {
+        boolean changed = dirty;
+        dirty = false;
+        return changed;
     }
 
     @Override
-    public void fromNbt(NbtCompound compound) {
-        if (compound.contains("hunger", NbtElement.COMPOUND_TYPE)) {
-            getStomach().setLockedState(LockableHungerManager.State.fromNbt(compound.getCompound("hunger")));
-        } else {
-            getStomach().unlockHunger();
-        }
-        vomitCount = compound.getInt("vomitCount");
-        vomitCooldown = compound.getInt("vomitCooldown");
-        vomitingTicks = compound.getInt("vomitingTicks");
+    public void toNbt(NBTTagCompound tag) {
+        if (lock != null) tag.setTag("hunger", lock.toNbt());
+        tag.setFloat("overeating", overeating);
+        tag.setInteger("vomitCount", vomitCount);
+        tag.setInteger("vomitingTicks", vomitingTicks);
     }
 
     @Override
-    public void toNbt(NbtCompound compound) {
-        LockableHungerManager.State lockedHungerState = getStomach().getLockedState();
-        if (lockedHungerState != null) {
-            compound.put("hunger", lockedHungerState.toNbt());
+    public void fromNbt(NBTTagCompound tag) {
+        lock = tag.hasKey("hunger", 10) ? HungerLock.fromNbt(tag.getCompoundTag("hunger")) : null;
+        float saved = tag.getFloat("overeating");
+        overeating = Float.isFinite(saved) ? Math.max(0, saved) : 0;
+        vomitCount = MathHelper.clamp(tag.getInteger("vomitCount"), 0, MAX_VOMIT_COUNT);
+        vomitingTicks = MathHelper.clamp(tag.getInteger("vomitingTicks"), 0, MAX_VOMITING_TICKS);
+        dirty = false;
+    }
+
+    private static final class HungerLock {
+        private float food;
+        private float saturation;
+        private final boolean full;
+        private float rate;
+
+        private HungerLock(float food, float saturation, boolean full, float rate) {
+            this.food = food;
+            this.saturation = saturation;
+            this.full = full;
+            this.rate = rate;
         }
-        compound.putInt("vomitCount", vomitCount);
-        compound.putInt("vomitCooldown", vomitCooldown);
-        compound.putInt("vomitingTicks", vomitingTicks);
+
+        private static float project(float actual, float anchor, float rate) {
+            anchor = rate > 0 ? Math.max(anchor, actual) : Math.min(anchor, actual);
+            return Math.max(0, actual + (anchor - actual) * Math.abs(rate));
+        }
+
+        private NBTTagCompound toNbt() {
+            NBTTagCompound tag = new NBTTagCompound();
+            tag.setFloat("food", food);
+            tag.setFloat("saturation", saturation);
+            tag.setBoolean("full", full);
+            tag.setFloat("rate", rate);
+            return tag;
+        }
+
+        @Nullable
+        private static HungerLock fromNbt(NBTTagCompound tag) {
+            float food = tag.getFloat("food");
+            float saturation = tag.getFloat("saturation");
+            float rate = tag.getFloat("rate");
+            if (!Float.isFinite(food) || !Float.isFinite(saturation) || !Float.isFinite(rate)) return null;
+            return new HungerLock(MathHelper.clamp(food, 0, 20), MathHelper.clamp(saturation, 0, 20),
+                    tag.getBoolean("full"), MathHelper.clamp(rate, -1, 1));
+        }
     }
 }

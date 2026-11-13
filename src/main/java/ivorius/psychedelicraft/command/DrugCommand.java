@@ -1,191 +1,128 @@
 package ivorius.psychedelicraft.command;
 
-import java.util.Arrays;
-import java.util.List;
-import java.util.function.BiConsumer;
-import java.util.stream.Stream;
-
-import com.google.common.collect.Streams;
-import com.mojang.brigadier.CommandDispatcher;
-import com.mojang.brigadier.arguments.*;
-import com.mojang.brigadier.context.CommandContext;
-import com.mojang.brigadier.exceptions.CommandSyntaxException;
-import com.mojang.brigadier.exceptions.SimpleCommandExceptionType;
-import com.mojang.brigadier.suggestion.*;
-
 import ivorius.psychedelicraft.Psychedelicraft;
-import ivorius.psychedelicraft.entity.drug.*;
-import net.minecraft.command.CommandRegistryAccess;
-import net.minecraft.command.CommandSource;
-import net.minecraft.command.argument.EntityArgumentType;
-import net.minecraft.command.argument.IdentifierArgumentType;
-import net.minecraft.server.command.CommandManager;
-import net.minecraft.server.command.ServerCommandSource;
-import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.text.Text;
-import net.minecraft.util.Identifier;
-import net.minecraft.world.GameRules;
+import ivorius.psychedelicraft.entity.drug.DrugCapability;
+import ivorius.psychedelicraft.entity.drug.DrugProperties;
+import ivorius.psychedelicraft.entity.drug.DrugType;
+import net.minecraft.command.CommandBase;
+import net.minecraft.command.CommandException;
+import net.minecraft.command.ICommandSender;
+import net.minecraft.command.WrongUsageException;
+import net.minecraft.entity.player.EntityPlayerMP;
+import net.minecraft.server.MinecraftServer;
+import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.text.TextComponentTranslation;
 
-/**
- * @author Sollace
- * @since 5 Jan 2023
- */
-class DrugCommand {
-    private static final Identifier ALL = Psychedelicraft.id("all");
-    public static final SimpleCommandExceptionType INVALID_DRUG_NAME = new SimpleCommandExceptionType(Text.translatable("commands.drug.nodrug"));
-    private static final SuggestionProvider<ServerCommandSource> DRUG_NAME_SUGGESTIONS = (context, builder) -> CommandSource.suggestIdentifiers(DrugType.REGISTRY.getIds(), builder);
+import javax.annotation.Nullable;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
 
-    public static void register(CommandDispatcher<ServerCommandSource> dispatcher, CommandRegistryAccess registries) {
-        dispatcher.register(CommandManager.literal("drug")
-                .requires(source -> source.hasPermissionLevel(2))
-            .then(CommandManager.argument("target", EntityArgumentType.players())
-                .then(CommandManager.literal("lock")
-                    .then(CommandManager.literal("all")
-                        .then(CommandManager.argument("locked", BoolArgumentType.bool()).executes(ctx -> lockDrugs(ctx, ALL))))
-                    .then(CommandManager.argument("drug", IdentifierArgumentType.identifier()).suggests(DRUG_NAME_SUGGESTIONS)
-                        .then(CommandManager.argument("locked", BoolArgumentType.bool()).executes(ctx -> lockDrugs(ctx, IdentifierArgumentType.getIdentifier(ctx, "drug")))
-                    )
-                ))
-                .then(CommandManager.literal("get").executes(DrugCommand::getAllDrugs)
-                    .then(CommandManager.argument("drug", IdentifierArgumentType.identifier()).suggests(DRUG_NAME_SUGGESTIONS).executes(DrugCommand::getDrugs)
-                ))
-                .then(CommandManager.literal("set")
-                    .then(CommandManager.literal("all")
-                        .then(CommandManager.argument("value", DoubleArgumentType.doubleArg(0, 1)).executes(ctx -> setDrugs(ctx, ALL))))
-                    .then(CommandManager.argument("drug", IdentifierArgumentType.identifier()).suggests(DRUG_NAME_SUGGESTIONS)
-                        .then(CommandManager.argument("value", DoubleArgumentType.doubleArg(0, 1)).executes(ctx -> setDrugs(ctx, IdentifierArgumentType.getIdentifier(ctx, "drug")))))
-                )
-                .then(CommandManager.literal("add")
-                    .then(CommandManager.literal("all")
-                        .then(CommandManager.argument("value", DoubleArgumentType.doubleArg(0, 1)).executes(ctx -> addToDrugs(ctx, ALL))))
-                    .then(CommandManager.argument("drug", IdentifierArgumentType.identifier()).suggests(DRUG_NAME_SUGGESTIONS)
-                        .then(CommandManager.argument("value", DoubleArgumentType.doubleArg(0, 1)).executes(ctx -> addToDrugs(ctx, IdentifierArgumentType.getIdentifier(ctx, "drug")))))
-                )
-            )
-        );
+/** Legacy command adapter for the donor command by Sollace. */
+public final class DrugCommand extends CommandBase {
+    private static final String KEY = "commands.psychedelicraft.drug.";
+
+    @Override
+    public String getName() {
+        return "drug";
     }
 
-    private static int getAllDrugs(CommandContext<ServerCommandSource> context) throws CommandSyntaxException {
-        ServerCommandSource source = context.getSource();
-        ServerPlayerEntity player = EntityArgumentType.getPlayer(context, "target");
-        DrugProperties properties = DrugProperties.of(player);
+    @Override
+    public String getUsage(ICommandSender sender) {
+        return KEY + "usage";
+    }
 
-        List<Drug> drugs = properties.getAllDrugs().stream().filter(drug -> drug.getActiveValue() > 0).toList();
+    @Override
+    public int getRequiredPermissionLevel() {
+        return 2;
+    }
 
-        if (drugs.isEmpty()) {
-            source.sendFeedback(() -> Text.translatable("commands.drug.success.get.sober", player.getName()), true);
-        } else {
-            source.sendFeedback(() -> Text.translatable("commands.drug.success.get", player.getName(), drugs.size()), true);
-            drugs.forEach(drug -> {
-                double value = drug.getActiveValue();
-                source.sendFeedback(() -> Text.literal(DrugType.REGISTRY.getId(drug.getType()).getPath() + ": " + value), true);
-            });
+    @Override
+    public void execute(MinecraftServer server, ICommandSender sender, String[] args) throws CommandException {
+        if (args.length < 2) throw new WrongUsageException(getUsage(sender));
+        EntityPlayerMP player = getPlayer(server, sender, args[0]);
+        DrugProperties drugs = DrugCapability.get(player);
+        if (drugs == null) throw new CommandException("commands.generic.exception");
+        String action = args[1];
+        if ("get".equals(action)) {
+            if (args.length == 2) sendActive(sender, player, drugs);
+            else if (args.length == 3) {
+                DrugType type = resolve(args[2]);
+                sender.sendMessage(new TextComponentTranslation(KEY + "level", player.getDisplayName(), path(type),
+                        drugs.getActiveValue(type)));
+            } else throw new WrongUsageException(getUsage(sender));
+            return;
         }
 
-        return 0;
-    }
-
-    private static int getDrugs(CommandContext<ServerCommandSource> context) throws CommandSyntaxException {
-        ServerCommandSource source = context.getSource();
-        ServerPlayerEntity player = EntityArgumentType.getPlayer(context, "target");
-        Identifier drugName = IdentifierArgumentType.getIdentifier(context, "drug");
-        DrugProperties properties = DrugProperties.of(player);
-
-        DrugType.REGISTRY.getOrEmpty(drugName).ifPresentOrElse(drugType -> {
-            float value = properties.isDrugActive(drugType) ? properties.getDrugValue(drugType) : 0;
-            source.sendFeedback(() -> Text.translatable("commands.drug.success.get." + (player == source.getEntity() ? "self" : "other"), player.getName(), drugName.getPath(), value), true);
-        }, () -> {
-            source.sendFeedback(() -> Text.translatable("commands.drug.fail.get", drugName), true);
-        });
-
-        return 0;
-    }
-
-    private static int lockDrugs(CommandContext<ServerCommandSource> context, Identifier drugName) throws CommandSyntaxException {
-        boolean locked = BoolArgumentType.getBool(context, "locked");
-        applyDrugChange(context, drugName, (properties, type) -> properties.getDrug(type).setLocked(locked), (player, type) -> {
-            if (type == UpdateType.NONE) {
-                sendFeedback(context.getSource(), player, false, "none", drugName);
-            } else if (type == UpdateType.ALL) {
-                sendFeedback(context.getSource(), player, true, (locked ? "lock" : "unlock") + ".all");
-            } else {
-                sendFeedback(context.getSource(), player, true, (locked ? "lock" : "unlock"), drugName);
-            }
-        });
-        return 0;
-    }
-
-    private static int setDrugs(CommandContext<ServerCommandSource> context, Identifier drugName) throws CommandSyntaxException {
-        double value = DoubleArgumentType.getDouble(context, "value");
-        applyDrugChange(context, drugName, (properties, type) -> properties.setDrugValue(type, value), (player, type) -> {
-            if (type == UpdateType.NONE) {
-                sendFeedback(context.getSource(), player, false, "set", drugName);
-            } else if (type == UpdateType.ALL) {
-                sendFeedback(context.getSource(), player, true, "set.all", value);
-            } else {
-                sendFeedback(context.getSource(), player, true, "set", drugName.getPath(), value);
-            }
-        });
-
-        return 0;
-    }
-
-    private static int addToDrugs(CommandContext<ServerCommandSource> context, Identifier drugName) throws CommandSyntaxException {
-        double value = DoubleArgumentType.getDouble(context, "value");
-        applyDrugChange(context, drugName, (properties, type) -> properties.addToDrug(type, value), (player, type) -> {
-            if (type == UpdateType.NONE) {
-                sendFeedback(context.getSource(), player, false, "add", drugName);
-            } else if (type == UpdateType.ALL) {
-                sendFeedback(context.getSource(), player, true, "add.all", value);
-            } else {
-                sendFeedback(context.getSource(), player, true, "add", drugName.getPath(), value);
-            }
-        });
-
-        return 0;
-    }
-
-    static void applyDrugChange(CommandContext<ServerCommandSource> context, Identifier drugName, BiConsumer<DrugProperties, DrugType> change, FeedbackConsumer feedback) throws CommandSyntaxException {
-        ServerPlayerEntity player = EntityArgumentType.getPlayer(context, "target");
-        DrugProperties properties = DrugProperties.of(player);
-
-        if ("all".equals(drugName.getPath())) {
-            DrugType.REGISTRY.forEach(type -> {
-                change.accept(properties, type);
-            });
-            feedback.accept(player, UpdateType.ALL);
-        } else {
-            DrugType.REGISTRY.getOrEmpty(drugName).ifPresentOrElse(type -> {
-                change.accept(properties, type);
-                feedback.accept(player, UpdateType.ONE);
-            }, () -> feedback.accept(player, UpdateType.NONE));
+        if (args.length != 4) throw new WrongUsageException(getUsage(sender));
+        boolean all = "all".equals(args[2]);
+        Iterable<DrugType> types = all ? DrugType.values() : Collections.singleton(resolve(args[2]));
+        Object subject = all ? new TextComponentTranslation(KEY + "all") : path(types.iterator().next());
+        switch (action) {
+            case "set":
+            case "add":
+                double amount = parseDouble(args[3], 0, 1);
+                for (DrugType type : types) {
+                    if ("set".equals(action)) drugs.setDrugValue(type, amount);
+                    else drugs.addToDrug(type, amount);
+                }
+                report(sender, player, action, player.getDisplayName(), subject, amount);
+                break;
+            case "lock":
+                boolean locked = parseBoolean(args[3]);
+                for (DrugType type : types) drugs.setDrugLocked(type, locked);
+                report(sender, player, locked ? "lock" : "unlock", player.getDisplayName(), subject);
+                break;
+            default:
+                throw new WrongUsageException(getUsage(sender));
         }
-
-        properties.markDirty();
     }
 
-    interface FeedbackConsumer {
-        void accept(ServerPlayerEntity player, UpdateType updateType);
-    }
-
-    enum UpdateType {
-        ALL,
-        ONE,
-        NONE
-    }
-
-    private static void sendFeedback(ServerCommandSource source, ServerPlayerEntity player, boolean succeeded, String key, Object... arguments) {
-        if (source.getEntity() == player) {
-            source.sendFeedback(() -> Text.translatable("commands.drug." + (succeeded ? "success" : "fail") + "." + key + ".self", arguments), true);
-        } else {
-            if (succeeded && source.getWorld().getGameRules().getBoolean(GameRules.SEND_COMMAND_FEEDBACK)) {
-                player.sendMessage(Text.translatable("commands.drug." + key + ".changed", arguments));
-            }
-
-            source.sendFeedback(() -> Text.translatable("commands.drug." + (succeeded ? "success" : "fail") + "." + key + ".other", Streams.concat(
-                    Stream.of(player.getDisplayName()),
-                    Arrays.stream(arguments)).toArray()
-            ), true);
+    private void report(ICommandSender sender, EntityPlayerMP player, String action, Object... arguments) {
+        String key = KEY + action;
+        notifyCommandListener(sender, this, key, arguments);
+        if (sender.getCommandSenderEntity() != player && player.world.getGameRules().getBoolean("sendCommandFeedback")) {
+            player.sendMessage(new TextComponentTranslation(key, arguments));
         }
+    }
+
+    private static DrugType resolve(String value) throws CommandException {
+        String id = value.indexOf(':') < 0 ? Psychedelicraft.MOD_ID + ":" + value : value;
+        return DrugType.byId(id).orElseThrow(() -> new CommandException(KEY + "unknown", value));
+    }
+
+    private static String path(DrugType type) {
+        return type.id().substring(type.id().indexOf(':') + 1);
+    }
+
+    private static void sendActive(ICommandSender sender, EntityPlayerMP player, DrugProperties drugs) {
+        List<DrugType> active = new ArrayList<>();
+        for (DrugType type : DrugType.values()) {
+            if (drugs.getActiveValue(type) > 0) active.add(type);
+        }
+        if (active.isEmpty()) {
+            sender.sendMessage(new TextComponentTranslation(KEY + "sober", player.getDisplayName()));
+            return;
+        }
+        sender.sendMessage(new TextComponentTranslation(KEY + "active", player.getDisplayName(), active.size()));
+        for (DrugType type : active) {
+            sender.sendMessage(new TextComponentTranslation(KEY + "level", player.getDisplayName(), path(type),
+                    drugs.getActiveValue(type)));
+        }
+    }
+
+    @Override
+    public List<String> getTabCompletions(MinecraftServer server, ICommandSender sender, String[] args, @Nullable BlockPos pos) {
+        if (args.length == 1) return getListOfStringsMatchingLastWord(args, server.getOnlinePlayerNames());
+        if (args.length == 2) return getListOfStringsMatchingLastWord(args, "get", "set", "add", "lock");
+        if (args.length == 3 && Arrays.asList("get", "set", "add", "lock").contains(args[1])) {
+            List<String> names = new ArrayList<>();
+            if (!"get".equals(args[1])) names.add("all");
+            for (DrugType type : DrugType.values()) names.add(type.id());
+            return getListOfStringsMatchingLastWord(args, names);
+        }
+        if (args.length == 4 && "lock".equals(args[1])) return getListOfStringsMatchingLastWord(args, "true", "false");
+        return Collections.emptyList();
     }
 }

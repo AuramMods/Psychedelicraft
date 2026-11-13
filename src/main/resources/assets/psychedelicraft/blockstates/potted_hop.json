@@ -1,7 +1,7 @@
 {
   "variants": {
-    "": {
-      "model": "psychedelicraft:block/potted_hop"
+    "normal": {
+      "model": "psychedelicraft:potted_hop"
     }
   }
 }

@@ -1,145 +1,130 @@
 /*
- *  Copyright (c) 2014, Lukas Tenbrink.
- *  * http://lukas.axxim.net
+ * Copyright (c) 2014, Lukas Tenbrink.
  */
 
 package ivorius.psychedelicraft.block;
 
-import java.util.Map;
-
-import org.jetbrains.annotations.Nullable;
-
 import ivorius.psychedelicraft.block.entity.BarrelBlockEntity;
-import ivorius.psychedelicraft.block.entity.PSBlockEntities;
-import ivorius.psychedelicraft.fluid.*;
-import ivorius.psychedelicraft.fluid.container.FluidContainer;
-import ivorius.psychedelicraft.fluid.container.Resovoir;
-import ivorius.psychedelicraft.screen.FluidContraptionScreenHandler;
-import ivorius.psychedelicraft.screen.PSScreenHandlers;
-import net.minecraft.block.*;
-import net.minecraft.block.entity.*;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.item.ItemPlacementContext;
-import net.minecraft.item.ItemStack;
-import net.minecraft.screen.ScreenHandlerType;
-import net.minecraft.state.StateManager;
-import net.minecraft.state.property.BooleanProperty;
-import net.minecraft.state.property.DirectionProperty;
-import net.minecraft.state.property.Properties;
-import net.minecraft.util.*;
+import ivorius.psychedelicraft.screen.PSGuiHandler;
+import net.minecraft.block.BlockHopper;
+import net.minecraft.block.SoundType;
+import net.minecraft.block.material.Material;
+import net.minecraft.block.properties.PropertyBool;
+import net.minecraft.block.properties.PropertyDirection;
+import net.minecraft.block.state.BlockStateContainer;
+import net.minecraft.block.state.IBlockState;
+import net.minecraft.entity.Entity;
+import net.minecraft.entity.EntityLivingBase;
+import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.tileentity.TileEntity;
+import net.minecraft.util.EnumBlockRenderType;
+import net.minecraft.util.EnumFacing;
+import net.minecraft.util.EnumHand;
+import net.minecraft.util.Mirror;
+import net.minecraft.util.Rotation;
+import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.Direction;
-import net.minecraft.util.math.Direction.Axis;
-import net.minecraft.util.shape.VoxelShape;
-import net.minecraft.util.shape.VoxelShapes;
-import net.minecraft.world.BlockView;
+import net.minecraft.world.IBlockAccess;
 import net.minecraft.world.World;
 
-public class BarrelBlock extends BlockWithFluid<BarrelBlockEntity> {
-    public static final int MAX_TAP_AMOUNT = FluidVolumes.BUCKET;
-    public static final DirectionProperty FACING = Properties.HOPPER_FACING;
-    public static final BooleanProperty TAPPED = BooleanProperty.of("tapped");
+import javax.annotation.Nullable;
+import java.util.List;
 
-    private static final Map<Axis, VoxelShape> STANDING_SHAPES = Map.of(
-        Axis.X, VoxelShapes.union(
-            Block.createCuboidShape(0, 5, 2, 16, 13, 14),
-            Block.createCuboidShape(0, 3, 4, 16, 15, 12)
-        ),
-        Axis.Y, VoxelShapes.union(
-            Block.createCuboidShape(2, 0, 4, 14, 16, 12),
-            Block.createCuboidShape(4, 0, 2, 12, 16, 14)
-        ),
-        Axis.Z, VoxelShapes.union(
-            Block.createCuboidShape(2, 5, 0, 14, 13, 16),
-            Block.createCuboidShape(4, 3, 0, 12, 15, 16)
-        )
-    );
+public final class BarrelBlock extends FluidMachineBlock {
+    public static final PropertyDirection FACING = BlockHopper.FACING;
+    public static final PropertyBool TAPPED = PropertyBool.create("tapped");
+    private static final AxisAlignedBB[][] SHAPES = {
+            {box(0, 5, 2, 16, 13, 14), box(0, 3, 4, 16, 15, 12)},
+            {box(2, 0, 4, 14, 16, 12), box(4, 0, 2, 12, 16, 14)},
+            {box(2, 5, 0, 14, 13, 16), box(4, 3, 0, 12, 15, 16)}
+    };
 
-    public BarrelBlock(Settings settings) {
-        super(settings.nonOpaque());
-        setDefaultState(getDefaultState().with(FACING, Direction.NORTH).with(TAPPED, true));
+    BarrelBlock() {
+        super(Material.WOOD);
+        setDefaultState(blockState.getBaseState().withProperty(FACING, EnumFacing.NORTH).withProperty(TAPPED, true));
+        setHardness(2);
+        setSoundType(SoundType.WOOD);
     }
 
     @Override
-    protected void appendProperties(StateManager.Builder<Block, BlockState> builder) {
-        super.appendProperties(builder);
-        builder.add(FACING, TAPPED);
+    protected BlockStateContainer createBlockState() {
+        return new BlockStateContainer(this, FACING, TAPPED);
     }
 
     @Override
-    @Deprecated
-    public BlockRenderType getRenderType(BlockState state) {
-        return BlockRenderType.ENTITYBLOCK_ANIMATED;
+    public TileEntity createNewTileEntity(World world, int metadata) {
+        return new BarrelBlockEntity();
     }
 
     @Override
-    public VoxelShape getOutlineShape(BlockState state, BlockView world, BlockPos pos, ShapeContext context) {
-        return STANDING_SHAPES.get(state.get(FACING).getAxis());
+    public EnumBlockRenderType getRenderType(IBlockState state) {
+        return EnumBlockRenderType.ENTITYBLOCK_ANIMATED;
     }
 
     @Override
-    public BlockState rotate(BlockState state, BlockRotation rotation) {
-        return state.with(FACING, rotation.rotate(state.get(FACING)));
+    public IBlockState getStateFromMeta(int metadata) {
+        EnumFacing facing = EnumFacing.getFront(metadata & 7);
+        if (facing == EnumFacing.UP) facing = EnumFacing.DOWN;
+        return getDefaultState().withProperty(FACING, facing).withProperty(TAPPED, (metadata & 8) == 0);
     }
 
     @Override
-    public BlockState mirror(BlockState state, BlockMirror mirror) {
-        return state.rotate(mirror.getRotation(state.get(FACING)));
+    public int getMetaFromState(IBlockState state) {
+        return state.getValue(FACING).getIndex() | (state.getValue(TAPPED) ? 0 : 8);
     }
 
     @Override
-    public BlockState getPlacementState(ItemPlacementContext ctx) {
-        Direction side = ctx.getPlayerLookDirection().getOpposite();
-        return getDefaultState().with(FACING, side.getAxis() == Axis.Y ? Direction.DOWN : side);
+    public IBlockState withRotation(IBlockState state, Rotation rotation) {
+        return state.withProperty(FACING, rotation.rotate(state.getValue(FACING)));
     }
 
     @Override
-    protected ActionResult onInteract(BlockState state, World world, BlockPos pos, PlayerEntity player, Hand hand, BarrelBlockEntity blockEntity) {
-        if (!state.get(TAPPED) || state.get(FACING).getAxis() == Axis.Y) {
-            return ActionResult.FAIL;
+    public IBlockState withMirror(IBlockState state, Mirror mirror) {
+        return withRotation(state, mirror.toRotation(state.getValue(FACING)));
+    }
+
+    @Override
+    public IBlockState getStateForPlacement(World world, BlockPos pos, EnumFacing side, float x, float y, float z,
+                                           int metadata, EntityLivingBase placer, EnumHand hand) {
+        EnumFacing facing = EnumFacing.getDirectionFromEntityLiving(pos, placer);
+        return getDefaultState().withProperty(FACING, facing.getAxis().isVertical() ? EnumFacing.DOWN : facing);
+    }
+
+    @Override
+    public AxisAlignedBB getBoundingBox(IBlockState state, IBlockAccess world, BlockPos pos) {
+        AxisAlignedBB[] parts = SHAPES[state.getValue(FACING).getAxis().ordinal()];
+        return parts[0].union(parts[1]);
+    }
+
+    @Override
+    public void addCollisionBoxToList(IBlockState state, World world, BlockPos pos, AxisAlignedBB query,
+                                     List<AxisAlignedBB> boxes, @Nullable Entity entity, boolean actualState) {
+        for (AxisAlignedBB part : SHAPES[state.getValue(FACING).getAxis().ordinal()]) {
+            addCollisionBoxToList(pos, query, boxes, part);
         }
+    }
 
-        ItemStack stack = player.getStackInHand(hand);
-        if (stack.getItem() instanceof FluidContainer container) {
+    private static AxisAlignedBB box(int x, int y, int z, int maxX, int maxY, int maxZ) {
+        return new AxisAlignedBB(x / 16.0, y / 16.0, z / 16.0, maxX / 16.0, maxY / 16.0, maxZ / 16.0);
+    }
 
-            if (container.getLevel(stack) < container.getMaxCapacity(stack)) {
-
-                Resovoir tank = blockEntity.getTankOnSide(Direction.DOWN);
-                if (tank.getLevel() > 0 && tank.getFluidType().isSuitableContainer(container)) {
-                    if (!world.isClient) {
-                        if (stack.getCount() > 1) {
-                            player.getInventory().offerOrDrop(tank.drain(MAX_TAP_AMOUNT, stack.split(1)));
-                        } else {
-                            player.setStackInHand(hand, tank.drain(MAX_TAP_AMOUNT, stack.split(1)));
-                        }
-
-                        blockEntity.timeLeftTapOpen = 20;
-                        blockEntity.markForUpdate();
-                    }
-
-                    return ActionResult.SUCCESS;
-                }
-            }
-
-            return ActionResult.FAIL;
+    @Override
+    public boolean onBlockActivated(World world, BlockPos pos, IBlockState state, EntityPlayer player,
+                                    EnumHand hand, EnumFacing side, float x, float y, float z) {
+        BarrelBlockEntity barrel = getBarrel(world, pos);
+        if (barrel == null) return false;
+        if (!world.isRemote) {
+            if (state.getValue(TAPPED) && state.getValue(FACING).getAxis().isHorizontal()
+                    && barrel.dispense(player, hand)) return true;
+            if (player.getHeldItem(hand).isEmpty() && barrel.collectSolidOutput(player)) return true;
+            openMachine(world, pos, player, PSGuiHandler.BARREL);
         }
-
-        return ActionResult.PASS;
+        return true;
     }
 
-    @Override
-    protected BlockEntityType<BarrelBlockEntity> getBlockEntityType() {
-        return PSBlockEntities.BARREL;
-    }
-
-    @Override
-    protected ScreenHandlerType<FluidContraptionScreenHandler<BarrelBlockEntity>> getScreenHandlerType() {
-        return PSScreenHandlers.BARREL;
-    }
-
-    @Override
     @Nullable
-    public <Q extends BlockEntity> BlockEntityTicker<Q> getTicker(World world, BlockState state, BlockEntityType<Q> type) {
-        return world.isClient ? checkType(type, getBlockEntityType(), (w, p, s, entity) -> entity.tickAnimations()) : super.getTicker(world, state, type);
+    public static BarrelBlockEntity getBarrel(IBlockAccess world, BlockPos pos) {
+        TileEntity tile = world.getTileEntity(pos);
+        return tile instanceof BarrelBlockEntity && !tile.isInvalid() ? (BarrelBlockEntity) tile : null;
     }
 }

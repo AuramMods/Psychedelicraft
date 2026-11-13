@@ -1,54 +1,77 @@
 /*
- *  Copyright (c) 2014, Lukas Tenbrink.
- *  * http://lukas.axxim.net
+ * Copyright (c) 2014, Lukas Tenbrink.
  */
 
 package ivorius.psychedelicraft.block;
 
-import ivorius.psychedelicraft.block.entity.PSBlockEntities;
-import net.minecraft.block.*;
-import net.minecraft.block.entity.BlockEntity;
-import net.minecraft.state.property.IntProperty;
-import net.minecraft.state.property.Properties;
+import java.util.Random;
+
+import ivorius.psychedelicraft.block.entity.PeyoteBlockEntity;
+import ivorius.psychedelicraft.item.PSItems;
+import net.minecraft.block.properties.PropertyInteger;
+import net.minecraft.block.state.IBlockState;
+import net.minecraft.item.Item;
+import net.minecraft.item.ItemStack;
+import net.minecraft.tileentity.TileEntity;
+import net.minecraft.util.NonNullList;
+import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.shape.VoxelShape;
+import net.minecraft.world.World;
 
-public class PeyoteBlock extends SucculentPlantBlock implements BlockEntityProvider {
-    public static final IntProperty AGE = Properties.AGE_3;
-    public static final int MAX_AGE = Properties.AGE_3_MAX;
-    private static final VoxelShape[] SHAPES = {
-            Block.createCuboidShape(6, 0, 6, 10, 4, 10),
-            Block.createCuboidShape(5, 0, 5, 11, 4, 11),
-            Block.createCuboidShape(4, 0, 4, 12, 4, 12),
-            Block.createCuboidShape(3, 0, 3, 13, 4, 13)
-    };
+public final class PeyoteBlock extends SucculentPlantBlock {
+    public static final PropertyInteger AGE = PropertyInteger.create("age", 0, 3);
+    private static final AxisAlignedBB[] SHAPES = {shape(2, 4), shape(3, 4), shape(4, 4), shape(5, 4)};
 
-    public PeyoteBlock(Settings settings) {
-        super(settings);
+    PeyoteBlock() {
+        super(3);
     }
 
     @Override
-    public VoxelShape[] getShapes() {
-        return SHAPES;
-    }
-
-    @Override
-    protected IntProperty getAgeProperty() {
+    protected PropertyInteger ageProperty() {
         return AGE;
     }
 
     @Override
-    protected int getMaxAge() {
-        return MAX_AGE;
+    protected AxisAlignedBB[] shapes() {
+        return SHAPES;
     }
 
     @Override
-    protected int getGrowthRate(BlockState state) {
-        return state.get(getAgeProperty()) < getMaxAge() ? 20 : 120;
+    protected int growthInterval() {
+        return 20;
     }
 
     @Override
-    public BlockEntity createBlockEntity(BlockPos pos, BlockState state) {
-        return PSBlockEntities.PEYOTE.instantiate(pos, state);
+    public boolean hasTileEntity(IBlockState state) {
+        return true;
+    }
+
+    @Override
+    public TileEntity createTileEntity(World world, IBlockState state) {
+        return new PeyoteBlockEntity();
+    }
+
+    @Override
+    public Item getItemDropped(IBlockState state, Random random, int fortune) {
+        return PSItems.PEYOTE;
+    }
+
+    @Override
+    public int quantityDropped(IBlockState state, int fortune, Random random) {
+        return 1 + state.getValue(AGE);
+    }
+
+    @Override
+    public void dropBlockAsItemWithChance(World world, BlockPos pos, IBlockState state, float chance, int fortune) {
+        if (!PlantDrops.usesDecay(world, chance)) {
+            super.dropBlockAsItemWithChance(world, pos, state, chance, fortune);
+            return;
+        }
+        NonNullList<ItemStack> drops = NonNullList.create();
+        if (PlantDrops.survives(world.rand, chance)) {
+            getDrops(drops, world, pos, state, fortune);
+            for (ItemStack stack : drops) PlantDrops.decay(stack, world.rand, chance);
+        }
+        PlantDrops.spawn(drops, world, pos, state, fortune, harvesters.get());
     }
 }

@@ -1,7 +1,7 @@
 {
 	"textures": {
-		"texture": "psychedelicraft:item/bottle_on_ground",
-    "particle": "#texture"
+		"texture": "psychedelicraft:items/bottle_on_ground",
+    "particle": "psychedelicraft:items/bottle_on_ground"
 	},
 	"elements": [
 		{

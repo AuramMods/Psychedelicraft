@@ -1,7 +1,7 @@
 {
   "variants": {
-    "": {
-      "model": "psychedelicraft:block/drying_table"
+    "normal": {
+      "model": "psychedelicraft:drying_table"
     }
   }
 }

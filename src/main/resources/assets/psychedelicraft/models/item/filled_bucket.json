@@ -1,6 +1,6 @@
 {
     "parent": "minecraft:item/bucket",
     "textures": {
-        "layer1": "psychedelicraft:item/bucket_liquid"
+        "layer1": "psychedelicraft:items/bucket_liquid"
     }
 }

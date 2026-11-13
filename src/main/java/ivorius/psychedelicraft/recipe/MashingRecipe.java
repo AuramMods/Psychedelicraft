@@ -1,157 +1,151 @@
 /*
- *  Copyright (c) 2014, Lukas Tenbrink.
- *  * http://lukas.axxim.net
+ * Copyright (c) 2014, Lukas Tenbrink.
+ * Updated by Sollace on 7 Feb 2023.
  */
 
 package ivorius.psychedelicraft.recipe;
 
-import net.minecraft.item.Item;
-import net.minecraft.item.ItemStack;
-import net.minecraft.network.PacketByteBuf;
-import net.minecraft.recipe.*;
-import net.minecraft.recipe.book.CraftingRecipeCategory;
-import net.minecraft.util.Identifier;
-import net.minecraft.util.JsonHelper;
-import net.minecraft.util.collection.DefaultedList;
-
-import java.util.*;
-
-import com.google.gson.*;
-
-import it.unimi.dsi.fastutil.objects.Object2IntMap;
-import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonSyntaxException;
+import ivorius.psychedelicraft.fluid.FluidContents;
 import ivorius.psychedelicraft.item.PSItems;
+import net.minecraft.inventory.InventoryCrafting;
+import net.minecraft.item.ItemStack;
+import net.minecraft.item.crafting.IRecipe;
+import net.minecraft.item.crafting.Ingredient;
+import net.minecraft.nbt.JsonToNBT;
+import net.minecraft.nbt.NBTException;
+import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.nbt.NBTUtil;
+import net.minecraft.util.JsonUtils;
+import net.minecraft.util.NonNullList;
+import net.minecraft.world.World;
+import net.minecraftforge.common.crafting.CraftingHelper;
+import net.minecraftforge.common.crafting.IRecipeFactory;
+import net.minecraftforge.common.crafting.JsonContext;
+import net.minecraftforge.fluids.Fluid;
+import net.minecraftforge.fluids.FluidStack;
+import net.minecraftforge.registries.IForgeRegistryEntry;
 
-/**
- * Created from by Sollace on 7 Feb 2023
- *
- * Used by the mash table to produce a particular fluid from items dropped in.
- */
-public class MashingRecipe extends FillRecepticalRecipe {
+import javax.annotation.Nullable;
+import java.util.List;
 
+public final class MashingRecipe extends IForgeRegistryEntry.Impl<IRecipe> implements IRecipe {
+    public static final int MAX_INGREDIENTS = 8;
+
+    private final Fluid pool;
+    private final int minimumAmount;
+    private final NBTTagCompound poolAttributes;
+    private final Fluid result;
+    private final NBTTagCompound resultAttributes;
+    private final NonNullList<Ingredient> ingredients;
     private final int stewTime;
 
-    private final FluidIngredient fluid;
-
-    public MashingRecipe(Identifier id, String group, CraftingRecipeCategory category,
-            FluidIngredient output,
-            FluidIngredient fluid,
-            DefaultedList<Ingredient> input,
-            int stewTime) {
-        super(id, group, category, output, Ingredient.ofItems(PSItems.MASH_TUB), input);
-        this.fluid = fluid;
+    private MashingRecipe(Fluid pool, int minimumAmount, NBTTagCompound poolAttributes, Fluid result,
+                          NBTTagCompound resultAttributes, NonNullList<Ingredient> ingredients, int stewTime) {
+        this.pool = pool;
+        this.minimumAmount = minimumAmount;
+        this.poolAttributes = poolAttributes;
+        this.result = result;
+        this.resultAttributes = resultAttributes;
+        this.ingredients = ingredients;
         this.stewTime = stewTime;
     }
 
-    @Override
-    public RecipeSerializer<?> getSerializer() {
-        return PSRecipes.MASHING;
+    public boolean matchesPool(@Nullable FluidStack contents) {
+        return contents != null && contents.getFluid() == pool && contents.amount >= minimumAmount
+                && (poolAttributes.hasNoTags() || NBTUtil.areNBTEquals(poolAttributes, contents.tag, true));
     }
 
-    @Override
-    public RecipeType<?> getType() {
-        return PSRecipes.MASHING_TYPE;
+    public boolean acceptsIngredient(ItemStack stack) {
+        return ingredients.stream().anyMatch(ingredient -> ingredient.apply(stack));
+    }
+
+    public FluidStack getMinimumPool() {
+        return new FluidStack(pool, minimumAmount, poolAttributes.hasNoTags() ? null : poolAttributes.copy());
+    }
+
+    public boolean matchesPartial(List<ItemStack> supplied) {
+        if (supplied.size() > ingredients.size()) return false;
+        return assign(supplied, 0, 0);
+    }
+
+    private boolean assign(List<ItemStack> supplied, int index, int occupied) {
+        if (index == supplied.size()) return true;
+        for (int i = 0; i < ingredients.size(); i++) {
+            int bit = 1 << i;
+            if ((occupied & bit) == 0 && ingredients.get(i).apply(supplied.get(index))
+                    && assign(supplied, index + 1, occupied | bit)) return true;
+        }
+        return false;
+    }
+
+    public FluidStack finish(int amount) {
+        return new FluidStack(result, amount, resultAttributes.hasNoTags() ? null : resultAttributes.copy());
     }
 
     public int getStewTime() {
         return stewTime;
     }
 
-    public FluidIngredient getPoolFluid() {
-        return fluid;
+    @Override
+    public NonNullList<Ingredient> getIngredients() {
+        return ingredients;
     }
 
-    public MatchResult matchPartially(Object2IntMap<Item> inputs) {
-        final List<Ingredient> expectedInputs = new ArrayList<>(getIngredients());
-        final Object2IntMap<Item> unmatchedInputs = new Object2IntOpenHashMap<>(inputs);
+    // Forge 1.12 loads machine recipes through the same JSON registry as table recipes.
+    @Override
+    public boolean matches(InventoryCrafting inventory, World world) {
+        return false;
+    }
 
-        for (Item item : inputs.keySet()) {
-            ItemStack stack = item.getDefaultStack();
+    @Override
+    public ItemStack getCraftingResult(InventoryCrafting inventory) {
+        return ItemStack.EMPTY;
+    }
 
-            if (expectedInputs.isEmpty()) {
-                // fail match as the supplied ingredients exceeds the expected inputs
-                return MatchResult.NONE;
+    @Override
+    public ItemStack getRecipeOutput() {
+        ItemStack vat = new ItemStack(PSItems.MASH_TUB);
+        vat.setTagInfo("fluid", FluidContents.write(finish(PSItems.MASH_TUB.getCapacity())));
+        return vat;
+    }
+
+    @Override
+    public boolean canFit(int width, int height) {
+        return false;
+    }
+
+    @Override
+    public boolean isDynamic() {
+        return true;
+    }
+
+    public static final class Factory implements IRecipeFactory {
+        @Override
+        public IRecipe parse(JsonContext context, JsonObject json) {
+            NonNullList<Ingredient> ingredients = NonNullList.create();
+            for (JsonElement ingredient : JsonUtils.getJsonArray(json, "ingredients")) {
+                ingredients.add(CraftingHelper.getIngredient(ingredient, context));
             }
-
-            Iterator<Ingredient> iter = expectedInputs.iterator();
-
-            while (iter.hasNext()) {
-                Ingredient ingredient = iter.next();
-                if (ingredient.test(stack)) {
-                    iter.remove();
-                    if (!unmatchedInputs.containsKey(item)) {
-                        return MatchResult.of(unmatchedInputs.isEmpty(), expectedInputs.isEmpty());
-                    }
-
-                    unmatchedInputs.computeInt(item, (s, i) -> i <= 1 ? null : i - 1);
-
-                    if (unmatchedInputs.isEmpty()) {
-                        // succeed if all supplied inputs are matched.
-                        // The recipe might be expecting more additional inputs.
-                        // We don't actually care. Crafting is done when only one recipe fits our current selection.
-                        return MatchResult.of(true, expectedInputs.isEmpty());
-                    }
-                }
+            if (ingredients.isEmpty() || ingredients.size() > MAX_INGREDIENTS) {
+                throw new JsonSyntaxException("Expected one to eight mashing ingredients");
             }
+            JsonObject pool = JsonUtils.getJsonObject(json, "base_fluid");
+            JsonObject result = JsonUtils.getJsonObject(json, "result");
+            int stewTime = Math.max(0, JsonUtils.getInt(json, "stew_time", 0));
+            return new MashingRecipe(FluidStackIngredient.readFluid(pool), JsonUtils.getInt(pool, "level", 1),
+                    attributes(pool), FluidStackIngredient.readFluid(result), attributes(result), ingredients, stewTime);
         }
 
-        return MatchResult.of(unmatchedInputs.isEmpty(), expectedInputs.isEmpty());
-    }
-
-    static class Serializer implements RecipeSerializer<MashingRecipe> {
-        @SuppressWarnings("deprecation")
-        @Override
-        public MashingRecipe read(Identifier id, JsonObject json) {
-            return new MashingRecipe(id,
-                    JsonHelper.getString(json, "group", ""),
-                    CraftingRecipeCategory.CODEC.byId(JsonHelper.getString(json, "category", null), CraftingRecipeCategory.MISC),
-                    FluidIngredient.fromJson(JsonHelper.getObject(json, "result")),
-                    FluidIngredient.fromJson(JsonHelper.getObject(json, "base_fluid")),
-                    RecipeUtils.getIngredients(JsonHelper.getArray(json, "ingredients")),
-                    JsonHelper.getInt(json, "stew_time", 0)
-            );
-        }
-
-        @Override
-        public MashingRecipe read(Identifier id, PacketByteBuf buffer) {
-            return new MashingRecipe(id,
-                    buffer.readString(),
-                    buffer.readEnumConstant(CraftingRecipeCategory.class),
-                    new FluidIngredient(buffer),
-                    new FluidIngredient(buffer),
-                    buffer.readCollection(DefaultedList::ofSize, Ingredient::fromPacket),
-                    buffer.readVarInt()
-            );
-        }
-
-        @Override
-        public void write(PacketByteBuf buffer, MashingRecipe recipe) {
-            buffer.writeString(recipe.getGroup());
-            buffer.writeEnumConstant(recipe.getCategory());
-            recipe.getOutputFluid().write(buffer);
-            recipe.getPoolFluid().write(buffer);
-            buffer.writeCollection(recipe.getIngredients(), (b, c) -> c.write(b));
-            buffer.writeVarInt(recipe.getStewTime());
-        }
-    }
-
-
-    public enum MatchResult {
-        NONE,
-        INPUTS_ONLY,
-        INGREDIENTS_ONLY,
-        BOTH;
-
-        public boolean isMatch() {
-            return this == INPUTS_ONLY || this == BOTH;
-        }
-
-        public boolean isCraftable() {
-            return this == BOTH;
-        }
-
-        public static MatchResult of(boolean inputs, boolean ingredients) {
-            return inputs && ingredients ? BOTH : inputs ? INPUTS_ONLY : ingredients ? INGREDIENTS_ONLY : NONE;
+        private static NBTTagCompound attributes(JsonObject json) {
+            if (!json.has("attributes")) return new NBTTagCompound();
+            try {
+                return JsonToNBT.getTagFromJson(json.get("attributes").toString());
+            } catch (NBTException exception) {
+                throw new JsonSyntaxException("Invalid fluid attributes", exception);
+            }
         }
     }
 }

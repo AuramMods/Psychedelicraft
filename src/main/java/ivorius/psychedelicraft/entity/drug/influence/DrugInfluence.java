@@ -1,154 +1,93 @@
 /*
- *  Copyright (c) 2014, Lukas Tenbrink.
- *  * http://lukas.axxim.net
+ * Copyright (c) 2014, Lukas Tenbrink.
  */
 
 package ivorius.psychedelicraft.entity.drug.influence;
 
-import java.util.Locale;
 import java.util.Optional;
 
-import ivorius.psychedelicraft.Psychedelicraft;
 import ivorius.psychedelicraft.entity.drug.DrugProperties;
 import ivorius.psychedelicraft.entity.drug.DrugType;
-import ivorius.psychedelicraft.util.NbtSerialisable;
-import net.minecraft.nbt.NbtCompound;
-import net.minecraft.nbt.NbtElement;
-import net.minecraft.util.Identifier;
+import net.minecraft.nbt.NBTTagCompound;
+import net.minecraftforge.common.util.Constants;
 
-public class DrugInfluence implements NbtSerialisable {
+public final class DrugInfluence {
+    public static final int IMMEDIATE = 0;
+    public static final int INGESTED_DELAY = 15;
+    public static final int INHALED_DELAY = 20;
+    public static final int CONTACT_DELAY = 30;
+    public static final int METABOLISED_DELAY = 60;
 
-    public static Optional<DrugInfluence> loadFromNbt(NbtCompound compound) {
-        return InfluenceType.of(compound.getString("type")).map(type -> type.create(compound));
+    private final DrugType drugType;
+    private final double influenceSpeed;
+    private final double influenceSpeedPlus;
+    private final int color;
+    private int delay;
+    private double remaining;
+
+    public DrugInfluence(DrugType drugType, int delay, double influenceSpeed, double influenceSpeedPlus, double remaining) {
+        this(drugType, delay, influenceSpeed, influenceSpeedPlus, remaining, -1);
     }
 
-    protected DrugType drugType;
-
-    protected int delay;
-
-    protected double influenceSpeed;
-    protected double influenceSpeedPlus;
-
-    protected double maxInfluence;
-
-    private final InfluenceType type;
-
-    public DrugInfluence(DrugType drugType, int delay, double influenceSpeed, double influenceSpeedPlus, double maxInfluence) {
-        this(InfluenceType.DEFAULT, drugType, delay, influenceSpeed, influenceSpeedPlus, maxInfluence);
-    }
-
-    public DrugInfluence(InfluenceType type, DrugType drugType, int delay, double influenceSpeed, double influenceSpeedPlus, double maxInfluence) {
-        this(type);
+    private DrugInfluence(DrugType drugType, int delay, double influenceSpeed, double influenceSpeedPlus, double remaining, int color) {
         this.drugType = drugType;
-
         this.delay = delay;
-
         this.influenceSpeed = influenceSpeed;
         this.influenceSpeedPlus = influenceSpeedPlus;
-
-        this.maxInfluence = maxInfluence;
+        this.remaining = remaining;
+        this.color = color;
     }
 
-    protected DrugInfluence(InfluenceType type) {
-        this.type = type;
+    public static DrugInfluence harmonium(int delay, double remaining, int color) {
+        return new DrugInfluence(DrugType.HARMONIUM, delay, 0.04, 0.01, remaining, color & 0xffffff);
     }
 
-    public final DrugType getDrugType() {
-        return drugType;
-    }
-
-    public boolean isOf(DrugType type) {
-        return getDrugType() == type;
-    }
-
-    public int getDelay() {
-        return delay;
-    }
-
-    public void setDelay(int delay) {
-        this.delay = delay;
-    }
-
-    public double getInfluenceSpeed() {
-        return influenceSpeed;
-    }
-
-    public void setInfluenceSpeed(double influenceSpeed) {
-        this.influenceSpeed = influenceSpeed;
-    }
-
-    public double getInfluenceSpeedPlus() {
-        return influenceSpeedPlus;
-    }
-
-    public void setInfluenceSpeedPlus(double influenceSpeedPlus) {
-        this.influenceSpeedPlus = influenceSpeedPlus;
-    }
-
-    public double getMaxInfluence() {
-        return maxInfluence;
-    }
-
-    public void setMaxInfluence(double maxInfluence) {
-        this.maxInfluence = maxInfluence;
-    }
-
-    public boolean update(DrugProperties drugProperties) {
+    public boolean update(DrugProperties properties) {
         if (delay > 0) {
             delay--;
         }
-
-        if (delay == 0 && maxInfluence > 0) {
-            double addition = Math.min(maxInfluence, influenceSpeedPlus + maxInfluence * influenceSpeed);
-
-            addToDrug(drugProperties, addition);
-            maxInfluence -= addition;
+        if (delay == 0 && remaining > 0) {
+            double addition = Math.min(remaining, influenceSpeedPlus + remaining * influenceSpeed);
+            if (color >= 0) properties.addToHarmonium(addition, color);
+            else properties.addToDrug(drugType, addition);
+            remaining -= addition;
         }
-
-        return isDone();
+        return remaining <= 0;
     }
 
-    public void addToDrug(DrugProperties drugProperties, double value) {
-        drugProperties.addToDrug(drugType, value);
+    public DrugInfluence copy() {
+        return new DrugInfluence(drugType, delay, influenceSpeed, influenceSpeedPlus, remaining, color);
     }
 
-    public boolean isDone() {
-        return maxInfluence <= 0.0;
+    public NBTTagCompound toNbt() {
+        NBTTagCompound tag = new NBTTagCompound();
+        tag.setString("type", color < 0 ? "default" : "harmonium");
+        if (color >= 0) tag.setInteger("color", color);
+        tag.setString("drugType", drugType.id());
+        tag.setInteger("delay", delay);
+        tag.setDouble("influenceSpeed", influenceSpeed);
+        tag.setDouble("influenceSpeedPlus", influenceSpeedPlus);
+        tag.setDouble("maxInfluence", remaining);
+        return tag;
     }
 
-    @Override
-    public DrugInfluence clone() {
-        return type.create(toNbt());
-    }
-
-    @Override
-    public void fromNbt(NbtCompound compound) {
-        if (compound.contains("drugName", NbtElement.STRING_TYPE)) {
-            drugType = DrugType.REGISTRY.get(Psychedelicraft.id(compound.getString("drugName").toLowerCase(Locale.ROOT)));
-        } else {
-            drugType = DrugType.REGISTRY.get(Identifier.tryParse(compound.getString("drugType")));
+    public static Optional<DrugInfluence> loadFromNbt(NBTTagCompound tag) {
+        double speed = tag.getDouble("influenceSpeed");
+        double speedPlus = tag.getDouble("influenceSpeedPlus");
+        double remaining = tag.getDouble("maxInfluence");
+        if (!Double.isFinite(speed) || speed < 0
+                || !Double.isFinite(speedPlus) || speedPlus < 0 || speed + speedPlus <= 0
+                || !Double.isFinite(remaining) || remaining <= 0) {
+            return Optional.empty();
         }
-        delay = compound.getInt("delay");
-        influenceSpeed = compound.getDouble("influenceSpeed");
-        influenceSpeedPlus = compound.getDouble("influenceSpeedPlus");
-        maxInfluence = compound.getDouble("maxInfluence");
-    }
-
-    @Override
-    public void toNbt(NbtCompound compound) {
-        compound.putString("type", type.identifier());
-        compound.putString("drugType", drugType.id().toString());
-        compound.putInt("delay", delay);
-        compound.putDouble("influenceSpeed", influenceSpeed);
-        compound.putDouble("influenceSpeedPlus", influenceSpeedPlus);
-        compound.putDouble("maxInfluence", maxInfluence);
-    }
-
-    public interface DelayType {
-        int IMMEDIATE = 0;
-        int INGESTED = 15;
-        int INHALED = 20;
-        int CONTACT = 30;
-        int METABOLISED = 60;
+        int delay = Math.max(0, tag.getInteger("delay"));
+        if ("harmonium".equals(tag.getString("type")) && DrugType.HARMONIUM.id().equals(tag.getString("drugType"))
+                && tag.hasKey("color", Constants.NBT.TAG_INT)) {
+            int color = tag.getInteger("color") & 0xffffff;
+            return Optional.of(new DrugInfluence(DrugType.HARMONIUM, delay, speed, speedPlus, remaining, color));
+        }
+        if (!"default".equals(tag.getString("type"))) return Optional.empty();
+        return DrugType.byId(tag.getString("drugType"))
+                .map(type -> new DrugInfluence(type, delay, speed, speedPlus, remaining));
     }
 }

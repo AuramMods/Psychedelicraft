@@ -1,18 +1,12 @@
 /*
- *  Copyright (c) 2014, Lukas Tenbrink.
- *  * http://lukas.axxim.net
+ * Copyright (c) 2014, Lukas Tenbrink.
  */
 
 package ivorius.psychedelicraft.entity.drug.type;
 
-import ivorius.psychedelicraft.entity.drug.DrugType;
-
-/**
- * Created by lukas on 01.11.14.
- */
-public class PeyoteDrug extends SimpleDrug {
-    public PeyoteDrug(double decSpeed, double decSpeedPlus) {
-        super(DrugType.PEYOTE, decSpeed, decSpeedPlus);
+public final class PeyoteDrug extends SimpleDrug {
+    public PeyoteDrug(double decreaseSpeed, double decreaseSpeedPlus) {
+        super(decreaseSpeed, decreaseSpeedPlus);
     }
 
     @Override

@@ -1,7 +1,7 @@
 {
   "variants": {
-    "": {
-      "model": "psychedelicraft:block/oak_barrel"
+    "normal": {
+      "model": "psychedelicraft:oak_barrel"
     }
   }
 }

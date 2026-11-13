@@ -1,122 +1,200 @@
+/*
+ * Copyright (c) 2014, Lukas Tenbrink.
+ */
+
 package ivorius.psychedelicraft.block;
 
-import ivorius.psychedelicraft.block.entity.PSBlockEntities;
-import ivorius.psychedelicraft.client.render.blocks.VoxelShapeUtil;
-
-import java.util.Arrays;
-import java.util.Map;
-import java.util.function.Function;
-import java.util.stream.Collectors;
-
 import ivorius.psychedelicraft.block.entity.BottleRackBlockEntity;
-import net.minecraft.block.*;
-import net.minecraft.block.entity.BlockEntity;
-import net.minecraft.entity.player.*;
-import net.minecraft.item.ItemPlacementContext;
+import net.minecraft.block.BlockHorizontal;
+import net.minecraft.block.SoundType;
+import net.minecraft.block.material.Material;
+import net.minecraft.block.state.BlockFaceShape;
+import net.minecraft.block.state.BlockStateContainer;
+import net.minecraft.block.state.IBlockState;
+import net.minecraft.entity.Entity;
+import net.minecraft.entity.EntityLivingBase;
+import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.init.SoundEvents;
 import net.minecraft.item.ItemStack;
-import net.minecraft.state.StateManager;
-import net.minecraft.state.property.DirectionProperty;
-import net.minecraft.state.property.Properties;
-import net.minecraft.util.*;
-import net.minecraft.util.hit.BlockHitResult;
+import net.minecraft.tileentity.TileEntity;
+import net.minecraft.util.EnumFacing;
+import net.minecraft.util.EnumHand;
+import net.minecraft.util.Mirror;
+import net.minecraft.util.Rotation;
+import net.minecraft.util.SoundCategory;
+import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.Direction;
-import net.minecraft.util.math.Direction.Axis;
-import net.minecraft.util.shape.VoxelShape;
-import net.minecraft.util.shape.VoxelShapes;
-import net.minecraft.world.*;
+import net.minecraft.util.math.MathHelper;
+import net.minecraft.util.math.RayTraceResult;
+import net.minecraft.util.math.Vec3d;
+import net.minecraft.world.IBlockAccess;
+import net.minecraft.world.World;
+import net.minecraftforge.items.ItemStackHandler;
 
-/**
- * Created by lukas on 16.11.14.
- */
-public class BottleRackBlock extends BlockWithEntity {
-    public static final DirectionProperty FACING = Properties.HORIZONTAL_FACING;
+import javax.annotation.Nullable;
+import java.util.List;
 
-    private static final Map<Direction, VoxelShape> SHAPES = Arrays.stream(Direction.values())
-            .filter(d -> d.getAxis() != Axis.Y)
-            .collect(Collectors.toMap(
-                    Function.identity(),
-                    VoxelShapeUtil.rotator(VoxelShapes.union(
-                            Block.createCuboidShape(0, 0, 3, 1, 16, 11),
-                            Block.createCuboidShape(5, 0, 3, 6, 16, 11),
-                            Block.createCuboidShape(10, 0, 3, 11, 16, 11),
-                            Block.createCuboidShape(15, 0, 3, 16, 16, 11),
+public final class BottleRackBlock extends BlockHorizontal {
+    private static final AxisAlignedBB[] NORTH_PARTS = {
+            bounds(0, 0, 5, 1, 16, 13), bounds(5, 0, 5, 6, 16, 13),
+            bounds(10, 0, 5, 11, 16, 13), bounds(15, 0, 5, 16, 16, 13),
+            bounds(1, 0, 3.7, 15, 0.9, 13.2), bounds(1, 5, 3.7, 15, 6, 13.2),
+            bounds(1, 10, 3.7, 15, 11, 13.2), bounds(1, 15.1, 3.7, 15, 16, 13.2)
+    };
+    private static final AxisAlignedBB[][] PARTS = new AxisAlignedBB[4][NORTH_PARTS.length];
 
-                            Block.createCuboidShape(1, 0, 2.75F, 15, 1, 12.35F),
-                            Block.createCuboidShape(1, 5, 2.75F, 15, 6, 12.35F),
-                            Block.createCuboidShape(1, 10, 2.75F, 15, 11, 12.35F),
-                            Block.createCuboidShape(1, 15, 2.75F, 15, 16, 12.35F)
-                    )))
-            );
-
-    public BottleRackBlock(Settings settings) {
-        super(settings.nonOpaque());
-    }
-
-    @Override
-    public BlockRenderType getRenderType(BlockState state) {
-        return BlockRenderType.MODEL;
-    }
-
-    @Override
-    protected void appendProperties(StateManager.Builder<Block, BlockState> builder) {
-        super.appendProperties(builder);
-        builder.add(FACING);
-    }
-
-    @Override
-    public BlockState getPlacementState(ItemPlacementContext ctx) {
-        return getDefaultState().with(FACING, ctx.getHorizontalPlayerFacing().getOpposite());
-    }
-
-    @Override
-    @Deprecated
-    public VoxelShape getOutlineShape(BlockState state, BlockView world, BlockPos pos, ShapeContext context) {
-        return SHAPES.getOrDefault(state.get(FACING), VoxelShapes.fullCube());
-    }
-
-    @Override
-    public BlockState rotate(BlockState state, BlockRotation rotation) {
-        return state.with(FACING, rotation.rotate(state.get(FACING)));
-    }
-
-    @Override
-    public BlockState mirror(BlockState state, BlockMirror mirror) {
-        return state.rotate(mirror.getRotation(state.get(FACING)));
-    }
-
-    @Override
-    public ActionResult onUse(BlockState state, World world, BlockPos pos, PlayerEntity player, Hand hand, BlockHitResult hit) {
-        return world.getBlockEntity(pos, PSBlockEntities.BOTTLE_RACK).map(be -> {
-
-            ItemStack heldStack = player.getStackInHand(hand);
-
-            if (heldStack.isEmpty()) {
-                TypedActionResult<ItemStack> extracted = be.extractItem(hit, state.get(FACING));
-                if (extracted.getResult().isAccepted()) {
-                    player.setStackInHand(hand, extracted.getValue());
+    static {
+        for (EnumFacing face : EnumFacing.HORIZONTALS) {
+            int rotations = (face.getHorizontalIndex() + 2) % 4;
+            AxisAlignedBB[] parts = PARTS[face.getHorizontalIndex()];
+            for (int part = 0; part < NORTH_PARTS.length; part++) {
+                AxisAlignedBB box = NORTH_PARTS[part];
+                for (int turn = 0; turn < rotations; turn++) {
+                    box = new AxisAlignedBB(1 - box.maxZ, box.minY, box.minX,
+                            1 - box.minZ, box.maxY, box.maxX);
                 }
-                return extracted.getResult();
+                parts[part] = box;
             }
-
-            return be.insertItem(heldStack, hit, state.get(FACING));
-        }).orElse(ActionResult.FAIL);
-    }
-
-    @Deprecated
-    @Override
-    public void onStateReplaced(BlockState state, World world, BlockPos pos, BlockState newState, boolean moved) {
-        if (!state.isOf(newState.getBlock()) && !world.isClient) {
-            world.getBlockEntity(pos, PSBlockEntities.BOTTLE_RACK).ifPresent(be -> {
-                ItemScatterer.spawn(world, pos, be);
-                world.updateComparators(pos, this);
-            });
         }
-        super.onStateReplaced(state, world, pos, newState, moved);
+    }
+
+    public BottleRackBlock() {
+        super(Material.WOOD);
+        setDefaultState(blockState.getBaseState().withProperty(FACING, EnumFacing.NORTH));
+        setHardness(0.5F);
+        setSoundType(SoundType.WOOD);
+        setLightOpacity(0);
+    }
+
+    private static AxisAlignedBB bounds(double x1, double y1, double z1, double x2, double y2, double z2) {
+        return new AxisAlignedBB(x1 / 16, y1 / 16, z1 / 16, x2 / 16, y2 / 16, z2 / 16);
     }
 
     @Override
-    public BlockEntity createBlockEntity(BlockPos pos, BlockState state) {
-        return new BottleRackBlockEntity(pos, state);
+    protected BlockStateContainer createBlockState() {
+        return new BlockStateContainer(this, FACING);
+    }
+
+    @Override
+    public IBlockState getStateFromMeta(int meta) {
+        return getDefaultState().withProperty(FACING, EnumFacing.getHorizontal(meta));
+    }
+
+    @Override
+    public int getMetaFromState(IBlockState state) {
+        return state.getValue(FACING).getHorizontalIndex();
+    }
+
+    @Override
+    public IBlockState getStateForPlacement(World world, BlockPos pos, EnumFacing side, float x, float y, float z,
+                                            int meta, EntityLivingBase placer, EnumHand hand) {
+        return getDefaultState().withProperty(FACING, placer.getHorizontalFacing().getOpposite());
+    }
+
+    @Override
+    public IBlockState withRotation(IBlockState state, Rotation rotation) {
+        return state.withProperty(FACING, rotation.rotate(state.getValue(FACING)));
+    }
+
+    @Override
+    public IBlockState withMirror(IBlockState state, Mirror mirror) {
+        return withRotation(state, mirror.toRotation(state.getValue(FACING)));
+    }
+
+    public static int slotAt(EnumFacing facing, EnumFacing side, float hitX, float hitY, float hitZ) {
+        if (side != facing && side.getAxis().isHorizontal()) return -1;
+        float horizontal;
+        switch (facing) {
+            case NORTH: horizontal = 1 - hitX; break;
+            case SOUTH: horizontal = hitX; break;
+            case WEST: horizontal = hitZ; break;
+            case EAST: horizontal = 1 - hitZ; break;
+            default: return -1;
+        }
+        int column = MathHelper.clamp(MathHelper.floor(horizontal * 3), 0, 2);
+        int row = MathHelper.clamp(MathHelper.floor((1 - hitY) * 3), 0, 2);
+        return column + 3 * row;
+    }
+
+    @Override
+    public boolean onBlockActivated(World world, BlockPos pos, IBlockState state, EntityPlayer player, EnumHand hand,
+                                    EnumFacing side, float hitX, float hitY, float hitZ) {
+        int slot = slotAt(state.getValue(FACING), side, hitX, hitY, hitZ);
+        TileEntity tile = world.getTileEntity(pos);
+        if (slot < 0 || !(tile instanceof BottleRackBlockEntity) || !world.isBlockModifiable(player, pos)) return false;
+        ItemStackHandler bottles = ((BottleRackBlockEntity) tile).getBottles();
+        ItemStack held = player.getHeldItem(hand);
+        if (held.isEmpty()) {
+            ItemStack bottle = bottles.extractItem(slot, 1, world.isRemote);
+            if (bottle.isEmpty()) return false;
+            if (!world.isRemote) player.setHeldItem(hand, bottle);
+        } else {
+            ItemStack remainder = bottles.insertItem(slot, held.copy(), world.isRemote);
+            if (remainder.getCount() == held.getCount()) return false;
+            if (!world.isRemote && !player.capabilities.isCreativeMode) player.setHeldItem(hand, remainder);
+        }
+        if (!world.isRemote) {
+            world.playSound(null, pos, SoundEvents.BLOCK_WOOD_PLACE, SoundCategory.BLOCKS, 0.65F, held.isEmpty() ? 1 : 1.5F);
+        }
+        return true;
+    }
+
+    @Override
+    public void breakBlock(World world, BlockPos pos, IBlockState state) {
+        TileEntity tile = world.getTileEntity(pos);
+        if (!world.isRemote && tile instanceof BottleRackBlockEntity) ((BottleRackBlockEntity) tile).dropContents();
+        super.breakBlock(world, pos, state);
+    }
+
+    @Override
+    public AxisAlignedBB getBoundingBox(IBlockState state, IBlockAccess world, BlockPos pos) {
+        return state.getValue(FACING).getAxis() == EnumFacing.Axis.Z
+                ? bounds(0, 0, 2.8, 16, 16, 13.2) : bounds(2.8, 0, 0, 13.2, 16, 16);
+    }
+
+    @Override
+    public void addCollisionBoxToList(IBlockState state, World world, BlockPos pos, AxisAlignedBB entityBox,
+                                      List<AxisAlignedBB> collisionBoxes, @Nullable Entity entity, boolean actual) {
+        for (AxisAlignedBB box : PARTS[state.getValue(FACING).getHorizontalIndex()]) {
+            addCollisionBoxToList(pos, entityBox, collisionBoxes, box);
+        }
+    }
+
+    @Override
+    @Nullable
+    public RayTraceResult collisionRayTrace(IBlockState state, World world, BlockPos pos, Vec3d start, Vec3d end) {
+        RayTraceResult closest = null;
+        for (AxisAlignedBB box : PARTS[state.getValue(FACING).getHorizontalIndex()]) {
+            RayTraceResult hit = rayTrace(pos, start, end, box);
+            if (hit != null && (closest == null || hit.hitVec.squareDistanceTo(start) < closest.hitVec.squareDistanceTo(start))) {
+                closest = hit;
+            }
+        }
+        return closest;
+    }
+
+    @Override
+    public boolean isOpaqueCube(IBlockState state) {
+        return false;
+    }
+
+    @Override
+    public boolean isFullCube(IBlockState state) {
+        return false;
+    }
+
+    @Override
+    public BlockFaceShape getBlockFaceShape(IBlockAccess world, IBlockState state, BlockPos pos, EnumFacing side) {
+        return BlockFaceShape.UNDEFINED;
+    }
+
+    @Override
+    public boolean hasTileEntity(IBlockState state) {
+        return true;
+    }
+
+    @Override
+    public TileEntity createTileEntity(World world, IBlockState state) {
+        return new BottleRackBlockEntity();
     }
 }

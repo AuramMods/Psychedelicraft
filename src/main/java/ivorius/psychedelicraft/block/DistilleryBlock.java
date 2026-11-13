@@ -1,103 +1,93 @@
 /*
- *  Copyright (c) 2014, Lukas Tenbrink.
- *  * http://lukas.axxim.net
+ * Copyright (c) 2014, Lukas Tenbrink.
  */
 
 package ivorius.psychedelicraft.block;
 
-import ivorius.psychedelicraft.PSTags;
-import ivorius.psychedelicraft.block.entity.*;
-import ivorius.psychedelicraft.screen.FluidContraptionScreenHandler;
-import ivorius.psychedelicraft.screen.PSScreenHandlers;
-import net.minecraft.block.*;
-import net.minecraft.block.entity.*;
-import net.minecraft.item.ItemPlacementContext;
-import net.minecraft.screen.ScreenHandlerType;
-import net.minecraft.state.StateManager;
-import net.minecraft.state.property.*;
-import net.minecraft.util.BlockMirror;
-import net.minecraft.util.BlockRotation;
+import ivorius.psychedelicraft.block.entity.DistilleryBlockEntity;
+import ivorius.psychedelicraft.screen.PSGuiHandler;
+import net.minecraft.block.Block;
+import net.minecraft.block.properties.PropertyDirection;
+import net.minecraft.block.state.BlockStateContainer;
+import net.minecraft.block.state.IBlockState;
+import net.minecraft.entity.EntityLivingBase;
+import net.minecraft.tileentity.TileEntity;
+import net.minecraft.util.EnumFacing;
+import net.minecraft.util.EnumHand;
+import net.minecraft.util.Mirror;
+import net.minecraft.util.Rotation;
 import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.Direction;
-import net.minecraft.util.math.Direction.Axis;
-import net.minecraft.util.shape.VoxelShape;
-import net.minecraft.util.shape.VoxelShapes;
-import net.minecraft.world.*;
+import net.minecraft.world.World;
 
-/**
- * Created by lukas on 25.10.14.
- */
-public class DistilleryBlock extends BlockWithFluid<DistilleryBlockEntity> {
-    private static final VoxelShape SHAPE = VoxelShapes.union(
-        Block.createCuboidShape(5, 0, 5, 11, 6, 11),
-        Block.createCuboidShape(4, 0, 6, 12, 5, 10),
-        Block.createCuboidShape(6, 0, 4, 10, 5, 12),
-        Block.createCuboidShape(6, 6, 6, 10, 14, 10),
-        Block.createCuboidShape(5, 9, 6, 11, 13, 10),
-        Block.createCuboidShape(6, 9, 5, 10, 13, 11)
-    );
-    public static final DirectionProperty FACING = Properties.FACING;
+public final class DistilleryBlock extends FlaskBlock {
+    public static final PropertyDirection FACING = PropertyDirection.create("facing");
 
-    public DistilleryBlock(Settings settings) {
-        super(settings.nonOpaque());
-        setDefaultState(getDefaultState().with(FACING, Direction.UP));
+    DistilleryBlock() {
+        super(PSGuiHandler.DISTILLERY, box(5, 0, 5, 11, 6, 11), box(4, 0, 6, 12, 5, 10),
+                box(6, 0, 4, 10, 5, 12), box(6, 6, 6, 10, 14, 10),
+                box(5, 9, 6, 11, 13, 10), box(6, 9, 5, 10, 13, 11));
+        setDefaultState(blockState.getBaseState().withProperty(FACING, EnumFacing.UP));
     }
 
     @Override
-    public VoxelShape getOutlineShape(BlockState state, BlockView world, BlockPos pos, ShapeContext context) {
-        return SHAPE;
+    protected BlockStateContainer createBlockState() {
+        return new BlockStateContainer(this, FACING);
     }
 
     @Override
-    public BlockState rotate(BlockState state, BlockRotation rotation) {
-        return state.with(FACING, rotation.rotate(state.get(FACING)));
+    public TileEntity createNewTileEntity(World world, int metadata) {
+        return new DistilleryBlockEntity();
     }
 
     @Override
-    public BlockState mirror(BlockState state, BlockMirror mirror) {
-        return state.rotate(mirror.getRotation(state.get(FACING)));
+    public IBlockState getStateFromMeta(int metadata) {
+        return getDefaultState().withProperty(FACING, metadata < 6 ? EnumFacing.getFront(metadata) : EnumFacing.UP);
     }
 
     @Override
-    public BlockState getPlacementState(ItemPlacementContext ctx) {
-        return getDefaultState().with(FACING, Direction.Type.HORIZONTAL.stream().filter(direction -> {
-            return canConnectTo(ctx.getWorld().getBlockState(ctx.getBlockPos().offset(direction)), direction);
-        }).findAny().orElse(Direction.UP));
+    public int getMetaFromState(IBlockState state) {
+        return state.getValue(FACING).getIndex();
     }
 
-    public static boolean canConnectTo(BlockState state, Direction direction) {
-        return state.isIn(PSTags.BARRELS)
-            || state.isOf(PSBlocks.MASH_TUB_EDGE)
-            || state.isOf(PSBlocks.FLASK)
-            || (state.isOf(PSBlocks.DISTILLERY) && state.get(FACING) != direction.getOpposite());
-    }
-
-    @Deprecated
     @Override
-    public BlockState getStateForNeighborUpdate(BlockState state, Direction direction, BlockState neighborState, WorldAccess world, BlockPos pos, BlockPos neighborPos) {
-        if (state.get(FACING).getAxis() == Axis.Y || state.get(FACING) == direction) {
-            return state.with(FACING, Direction.Type.HORIZONTAL.stream().filter(d -> {
-                return canConnectTo(world.getBlockState(pos.offset(d)), d);
-            }).findAny().orElse(Direction.UP));
+    public IBlockState withRotation(IBlockState state, Rotation rotation) {
+        return state.withProperty(FACING, rotation.rotate(state.getValue(FACING)));
+    }
+
+    @Override
+    public IBlockState withMirror(IBlockState state, Mirror mirror) {
+        return withRotation(state, mirror.toRotation(state.getValue(FACING)));
+    }
+
+    @Override
+    public IBlockState getStateForPlacement(World world, BlockPos pos, EnumFacing side, float x, float y, float z,
+                                           int metadata, EntityLivingBase placer, EnumHand hand) {
+        return getDefaultState().withProperty(FACING, findOutput(world, pos));
+    }
+
+    @Override
+    public void neighborChanged(IBlockState state, World world, BlockPos pos, Block neighbor, BlockPos changed) {
+        if (world.isRemote) return;
+        EnumFacing current = state.getValue(FACING);
+        if (!current.getAxis().isHorizontal() || !canConnectTo(world, pos, current)) {
+            EnumFacing output = findOutput(world, pos);
+            if (output != current) world.setBlockState(pos, state.withProperty(FACING, output), 3);
         }
-
-        return super.getStateForNeighborUpdate(state, direction, neighborState, world, pos, neighborPos);
     }
 
-
-    @Override
-    protected BlockEntityType<DistilleryBlockEntity> getBlockEntityType() {
-        return PSBlockEntities.DISTILLERY;
+    private static EnumFacing findOutput(World world, BlockPos pos) {
+        for (EnumFacing direction : EnumFacing.Plane.HORIZONTAL) {
+            if (canConnectTo(world, pos, direction)) return direction;
+        }
+        return EnumFacing.UP;
     }
 
-    @Override
-    protected ScreenHandlerType<FluidContraptionScreenHandler<DistilleryBlockEntity>> getScreenHandlerType() {
-        return PSScreenHandlers.DISTILLERY;
-    }
-
-    @Override
-    protected void appendProperties(StateManager.Builder<Block, BlockState> builder) {
-        super.appendProperties(builder);
-        builder.add(FACING);
+    public static boolean canConnectTo(World world, BlockPos pos, EnumFacing direction) {
+        BlockPos destination = pos.offset(direction);
+        if (!world.isBlockLoaded(destination)) return false;
+        IBlockState state = world.getBlockState(destination);
+        Block block = state.getBlock();
+        if (block instanceof DistilleryBlock) return state.getValue(FACING) != direction.getOpposite();
+        return block instanceof FlaskBlock || block instanceof BarrelBlock || block == PSBlocks.MASH_TUB_EDGE;
     }
 }

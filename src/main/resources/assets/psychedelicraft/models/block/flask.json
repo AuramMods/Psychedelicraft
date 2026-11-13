@@ -1,7 +1,7 @@
 {
-  "parent": "psychedelicraft:block/complex_block",
 	"textures": {
-		"texture": "psychedelicraft:block/flask"
+		"texture": "psychedelicraft:blocks/flask",
+		"particle": "psychedelicraft:blocks/flask"
 	},
 	"elements": [
 		{

@@ -1,7 +1,8 @@
 {
   "ambientocclusion": false,
 	"textures": {
-		"connection": "psychedelicraft:block/morning_glory_connection"
+		"particle": "psychedelicraft:blocks/morning_glory_connection",
+		"connection": "psychedelicraft:blocks/morning_glory_connection"
 	},
 	"elements": [
 		{

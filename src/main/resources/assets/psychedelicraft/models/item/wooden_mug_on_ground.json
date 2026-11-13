@@ -1,7 +1,7 @@
 {
 	"textures": {
-    "mug": "psychedelicraft:item/mug_placed",
-		"particle": "#mug"
+    "mug": "psychedelicraft:items/mug_placed",
+		"particle": "psychedelicraft:items/mug_placed"
 	},
 	"elements": [
 		{

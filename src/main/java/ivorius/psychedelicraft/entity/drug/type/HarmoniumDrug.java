@@ -1,44 +1,45 @@
 /*
- *  Copyright (c) 2014, Lukas Tenbrink.
- *  * http://lukas.axxim.net
+ * Copyright (c) 2014, Lukas Tenbrink.
  */
 
 package ivorius.psychedelicraft.entity.drug.type;
 
-import ivorius.psychedelicraft.entity.drug.DrugType;
-import ivorius.psychedelicraft.util.MathUtils;
-import net.minecraft.nbt.NbtCompound;
+import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.util.math.MathHelper;
+import net.minecraftforge.common.util.Constants;
 
-public class HarmoniumDrug extends SimpleDrug {
-    public float[] currentColor = { 1, 1, 1 };
+public final class HarmoniumDrug extends SimpleDrug {
+    private final float[] color = {1, 1, 1};
 
-    public HarmoniumDrug(double decSpeed, double decSpeedPlus) {
-        super(DrugType.HARMONIUM, decSpeed, decSpeedPlus);
+    public HarmoniumDrug() {
+        super(1, 0.0003);
+    }
+
+    public void mixColor(double dose, int tint) {
+        double weight = dose + (1 - dose) * (1 - getActiveValue());
+        for (int i = 0; i < color.length; i++) {
+            float component = (tint >> ((2 - i) * 8) & 255) / 255F;
+            color[i] += (component - color[i]) * weight;
+        }
+    }
+
+    public float[] color() {
+        return color.clone();
     }
 
     @Override
-    public void applyContrastColorization(float[] rgba) {
-        MathUtils.mixColorsDynamic(currentColor, rgba, (float) getActiveValue(), false);
+    public void toNbt(NBTTagCompound tag) {
+        super.toNbt(tag);
+        for (int i = 0; i < color.length; i++) tag.setFloat("currentColor[" + i + "]", color[i]);
     }
 
     @Override
-    public void applyColorBloom(float[] rgba) {
-        MathUtils.mixColorsDynamic(currentColor, rgba, (float) getActiveValue() * 3, false);
-    }
-
-    @Override
-    public void toNbt(NbtCompound tagCompound) {
-        super.toNbt(tagCompound);
-        tagCompound.putFloat("currentColor[0]", currentColor[0]);
-        tagCompound.putFloat("currentColor[1]", currentColor[1]);
-        tagCompound.putFloat("currentColor[2]", currentColor[2]);
-    }
-
-    @Override
-    public void fromNbt(NbtCompound tagCompound) {
-        super.fromNbt(tagCompound);
-        currentColor[0] = tagCompound.getFloat("currentColor[0]");
-        currentColor[1] = tagCompound.getFloat("currentColor[1]");
-        currentColor[2] = tagCompound.getFloat("currentColor[2]");
+    public void fromNbt(NBTTagCompound tag) {
+        super.fromNbt(tag);
+        for (int i = 0; i < color.length; i++) {
+            String key = "currentColor[" + i + "]";
+            float component = tag.hasKey(key, Constants.NBT.TAG_ANY_NUMERIC) ? tag.getFloat(key) : 1F;
+            color[i] = Float.isFinite(component) ? MathHelper.clamp(component, 0F, 1F) : 1F;
+        }
     }
 }

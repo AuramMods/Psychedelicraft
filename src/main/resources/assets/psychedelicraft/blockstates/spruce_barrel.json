@@ -1,7 +1,7 @@
 {
   "variants": {
-    "": {
-      "model": "psychedelicraft:block/spruce_barrel"
+    "normal": {
+      "model": "psychedelicraft:spruce_barrel"
     }
   }
 }

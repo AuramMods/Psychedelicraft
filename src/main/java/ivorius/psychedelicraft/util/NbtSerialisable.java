@@ -1,16 +1,15 @@
 package ivorius.psychedelicraft.util;
 
-import net.minecraft.nbt.NbtCompound;
+import net.minecraft.nbt.NBTTagCompound;
 
 public interface NbtSerialisable {
-
-    default NbtCompound toNbt() {
-        NbtCompound tagCompound = new NbtCompound();
-        toNbt(tagCompound);
-        return tagCompound;
+    default NBTTagCompound toNbt() {
+        NBTTagCompound tag = new NBTTagCompound();
+        toNbt(tag);
+        return tag;
     }
 
-    void toNbt(NbtCompound compound);
+    void toNbt(NBTTagCompound tag);
 
-    void fromNbt(NbtCompound compound);
+    void fromNbt(NBTTagCompound tag);
 }

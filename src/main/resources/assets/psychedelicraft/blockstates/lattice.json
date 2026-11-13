@@ -2,7 +2,7 @@
   "multipart": [
     {
       "apply": {
-        "model": "psychedelicraft:block/lattice",
+        "model": "psychedelicraft:lattice",
         "uvlock": true
       },
       "when": {
@@ -11,7 +11,7 @@
     },
     {
       "apply": {
-        "model": "psychedelicraft:block/lattice",
+        "model": "psychedelicraft:lattice",
         "uvlock": true,
         "y": 90
       },
@@ -21,7 +21,7 @@
     },
     {
       "apply": {
-        "model": "psychedelicraft:block/lattice",
+        "model": "psychedelicraft:lattice",
         "uvlock": true,
         "y": 180
       },
@@ -31,7 +31,7 @@
     },
     {
       "apply": {
-        "model": "psychedelicraft:block/lattice",
+        "model": "psychedelicraft:lattice",
         "uvlock": true,
         "y": 270
       },

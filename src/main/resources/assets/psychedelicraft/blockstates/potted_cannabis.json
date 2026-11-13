@@ -1,7 +1,7 @@
 {
   "variants": {
-    "": {
-      "model": "psychedelicraft:block/potted_cannabis"
+    "normal": {
+      "model": "psychedelicraft:potted_cannabis"
     }
   }
 }

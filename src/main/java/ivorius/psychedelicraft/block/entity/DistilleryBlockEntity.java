@@ -1,129 +1,133 @@
 /*
- *  Copyright (c) 2014, Lukas Tenbrink.
- *  * http://lukas.axxim.net
+ * Copyright (c) 2014, Lukas Tenbrink.
  */
 
 package ivorius.psychedelicraft.block.entity;
 
 import ivorius.psychedelicraft.block.DistilleryBlock;
-import ivorius.psychedelicraft.block.MashTubWallBlock;
-import ivorius.psychedelicraft.fluid.*;
-import ivorius.psychedelicraft.fluid.container.FluidContainer;
-import ivorius.psychedelicraft.fluid.container.MutableFluidContainer;
-import ivorius.psychedelicraft.fluid.container.Resovoir;
+import ivorius.psychedelicraft.block.MashTubBlock;
+import ivorius.psychedelicraft.fluid.BrewProcess;
+import ivorius.psychedelicraft.fluid.ProcessingTank;
 import net.minecraft.block.Block;
-import net.minecraft.block.BlockState;
-import net.minecraft.block.entity.BlockEntity;
-import net.minecraft.item.ItemStack;
-import net.minecraft.particle.ParticleTypes;
-import net.minecraft.registry.tag.BlockTags;
-import net.minecraft.registry.tag.FluidTags;
-import net.minecraft.server.world.ServerWorld;
-import net.minecraft.sound.SoundCategory;
-import net.minecraft.sound.SoundEvents;
-import net.minecraft.util.math.*;
-import net.minecraft.util.math.Direction.Axis;
+import net.minecraft.block.material.Material;
+import net.minecraft.init.Blocks;
+import net.minecraft.init.SoundEvents;
+import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.tileentity.TileEntity;
+import net.minecraft.util.EnumFacing;
+import net.minecraft.util.EnumParticleTypes;
+import net.minecraft.util.SoundCategory;
+import net.minecraft.util.math.BlockPos;
+import net.minecraft.world.WorldServer;
+import net.minecraftforge.fluids.FluidStack;
 
-/**
- * Created by lukas on 25.10.14.
- */
-public class DistilleryBlockEntity extends FluidProcessingBlockEntity {
-    public static final int DISTILLERY_CAPACITY = FlaskBlockEntity.FLASK_CAPACITY;
+import javax.annotation.Nullable;
+import java.util.Locale;
 
-    public DistilleryBlockEntity(BlockPos pos, BlockState state) {
-        super(PSBlockEntities.DISTILLERY, pos, state, DISTILLERY_CAPACITY);
+public final class DistilleryBlockEntity extends FluidProcessingBlockEntity {
+    private Outlet outlet = Outlet.MISSING;
+
+    public DistilleryBlockEntity() {
+        super(FlaskBlockEntity.CAPACITY);
+    }
+
+    public Outlet getOutlet() {
+        return outlet;
     }
 
     @Override
-    public Processable.ProcessType getProcessType() {
-        return Processable.ProcessType.DISTILL;
-    }
-
-    @Override
-    protected int getTickRate(ServerWorld world) {
-        if (world.getFluidState(getPos().down()).isIn(FluidTags.LAVA)) {
-            return 7;
+    protected void tickProcessing() {
+        FluidStack contents = getTank().getFluid();
+        BrewProcess process = BrewProcess.findDistillation(contents);
+        ProcessingTank output = findOutput();
+        Outlet status = Outlet.MISSING;
+        if (output != null) {
+            FluidStack byproduct = process == BrewProcess.DISTILL ? BrewProcess.distillationOutput(contents) : null;
+            status = byproduct == null || output.fill(byproduct, false) == byproduct.amount
+                    ? Outlet.READY : Outlet.BLOCKED;
         }
-        BlockState below = world.getBlockState(getPos().down());
-        if (below.isIn(BlockTags.FIRE) || below.isIn(BlockTags.CAMPFIRES)) {
-            return 3;
+        if (status != outlet) {
+            outlet = status;
+            changed();
         }
-        return 1;
-    }
-
-    @Override
-    protected boolean canProcess(ServerWorld world, int timeNeeded) {
-
-        if (world.random.nextInt(120) == 0) {
-            world.spawnParticles(ParticleTypes.CLOUD,
-                    pos.getX() + world.getRandom().nextTriangular(0.5F, 0.5F),
-                    pos.getY() + 0.6F,
-                    pos.getZ() + world.getRandom().nextTriangular(0.5F, 0.5F),
-                    2, 0, 0, 0, 0);
-        }
-        if (world.getRandom().nextInt(50) == 0) {
-            world.playSound(null, getPos(), SoundEvents.BLOCK_BREWING_STAND_BREW, SoundCategory.BLOCKS, 0.25F, 0.02F);
-        }
-
-        return super.canProcess(world, timeNeeded)
-                && getFacing().getAxis() != Axis.Y
-                && DistilleryBlock.canConnectTo(world.getBlockState(getOutputPos()), getFacing())
-                && getOutput(world, getPos()) instanceof FlaskBlockEntity;
-    }
-
-
-    @Override
-    public void accept(ItemStack stack) {
-        Block.dropStack(world, getOutputPos(), stack);
-    }
-
-    @Override
-    public void accept(MutableFluidContainer fluid) {
-        if (getWorld() instanceof ServerWorld world) {
-            BlockPos outputPos = getOutputPos();
-            if (getOutput(world, getPos()) instanceof FlaskBlockEntity destination) {
-                ItemStack overflow = destination.getTankOnSide(getFacing().getOpposite()).deposit(fluid.asStack());
-                if (FluidContainer.of(overflow).getLevel(overflow) > 0) {
-                    Block.dropStack(world, outputPos, overflow);
-                }
-            } else {
-                world.spawnParticles(ParticleTypes.CLOUD,
-                        pos.getX() + world.getRandom().nextTriangular(0.5F, 0.5F),
-                        pos.getY() + 0.6F,
-                        pos.getZ() + world.getRandom().nextTriangular(0.5F, 0.5F),
-                        2, 0, 0, 0, 0);
-                world.playSound(null, getPos(), SoundEvents.BLOCK_BREWING_STAND_BREW, SoundCategory.BLOCKS, 0.25F, 0.02F);
+        boolean ready = outlet == Outlet.READY;
+        processFluid(process, heatRate(), ready);
+        if (process == BrewProcess.DISTILL && ready) {
+            if (world.rand.nextInt(120) == 0) steam();
+            if (world.rand.nextInt(50) == 0) {
+                world.playSound(null, pos, SoundEvents.BLOCK_BREWING_STAND_BREW, SoundCategory.BLOCKS, 0.25F, 0.5F);
             }
         }
     }
 
     @Override
-    protected void onProcessCompleted(ServerWorld world, Resovoir tank) {
-        world.spawnParticles(ParticleTypes.CLOUD,
-                pos.getX() + world.getRandom().nextTriangular(0.5F, 0.5F),
-                pos.getY() + 0.6F,
-                pos.getZ() + world.getRandom().nextTriangular(0.5F, 0.5F),
-                2, 0, 0, 0, 0);
-        if (world.getRandom().nextInt(10) == 0) {
-            world.playSound(null, getPos(), SoundEvents.BLOCK_BREWING_STAND_BREW, SoundCategory.BLOCKS, 0.25F, 0.02F);
+    protected boolean completeProcess(BrewProcess process, FluidStack contents) {
+        ProcessingTank output = findOutput();
+        if (output == null) return false;
+        FluidStack byproduct = BrewProcess.distillationOutput(contents);
+        if (byproduct != null) {
+            if (output.fill(byproduct, false) != byproduct.amount) return false;
+            output.fill(byproduct, true);
         }
-        super.onProcessCompleted(world, tank);
+        steam();
+        return super.completeProcess(process, contents);
     }
 
-    private BlockEntity getOutput(ServerWorld world, BlockPos pos) {
-        pos = getOutputPos();
-        BlockState state = world.getBlockState(pos);
-        if (state.getBlock() instanceof MashTubWallBlock) {
-            pos = world.getBlockEntity(pos, PSBlockEntities.MASH_TUB_EDGE).map(p -> p.getMasterPos()).orElse(pos);
+    private void steam() {
+        ((WorldServer) world).spawnParticle(EnumParticleTypes.CLOUD, pos.getX() + 0.5,
+                pos.getY() + 0.6, pos.getZ() + 0.5, 2, 0.12, 0.05, 0.12, 0.02);
+    }
+
+    private int heatRate() {
+        net.minecraft.block.state.IBlockState below = world.getBlockState(pos.down());
+        Block block = below.getBlock();
+        if (below.getMaterial() == Material.LAVA) return 7;
+        if (block == Blocks.FIRE) return 3;
+        if (block == Blocks.MAGMA) return 2;
+        return 1;
+    }
+
+    @Nullable
+    private ProcessingTank findOutput() {
+        EnumFacing direction = world.getBlockState(pos).getValue(DistilleryBlock.FACING);
+        if (!direction.getAxis().isHorizontal() || !DistilleryBlock.canConnectTo(world, pos, direction)) return null;
+        BlockPos destination = pos.offset(direction);
+        TileEntity tile = world.getBlockState(destination).getBlock() == ivorius.psychedelicraft.block.PSBlocks.MASH_TUB_EDGE
+                ? MashTubBlock.getVat(world, destination) : world.getTileEntity(destination);
+        return tile instanceof FluidMachineBlockEntity && !tile.isInvalid()
+                ? ((FluidMachineBlockEntity) tile).getTank() : null;
+    }
+
+    @Override
+    @Nullable
+    protected EnumFacing relativeSide(@Nullable EnumFacing side) {
+        if (side == null || side.getAxis().isVertical() || world == null) return side;
+        EnumFacing facing = world.getBlockState(pos).getValue(DistilleryBlock.FACING);
+        return facing.getAxis().isVertical() ? side
+                : EnumFacing.getHorizontal((facing.getHorizontalIndex() - side.getHorizontalIndex()) & 3);
+    }
+
+    @Override
+    public NBTTagCompound writeToNBT(NBTTagCompound compound) {
+        super.writeToNBT(compound);
+        compound.setInteger("outlet", outlet.ordinal());
+        return compound;
+    }
+
+    @Override
+    public void readFromNBT(NBTTagCompound compound) {
+        super.readFromNBT(compound);
+        int index = compound.getInteger("outlet");
+        outlet = index >= 0 && index < Outlet.values().length ? Outlet.values()[index] : Outlet.MISSING;
+    }
+
+    public enum Outlet {
+        MISSING,
+        READY,
+        BLOCKED;
+
+        public String key() {
+            return "psychedelicraft.distillery.outlet." + name().toLowerCase(Locale.ROOT);
         }
-        return world.getBlockEntity(pos);
-    }
-
-    private BlockPos getOutputPos() {
-        return getPos().offset(getFacing());
-    }
-
-    private Direction getFacing() {
-        return getCachedState().get(DistilleryBlock.FACING);
     }
 }

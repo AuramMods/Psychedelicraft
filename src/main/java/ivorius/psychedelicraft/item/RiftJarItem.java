@@ -1,74 +1,62 @@
 /*
- *  Copyright (c) 2014, Lukas Tenbrink.
- *  * http://lukas.axxim.net
+ * Copyright (c) 2014, Lukas Tenbrink.
  */
 
 package ivorius.psychedelicraft.item;
 
+import ivorius.psychedelicraft.config.PSConfig;
 import net.minecraft.block.Block;
-import net.minecraft.block.BlockState;
-import net.minecraft.block.entity.BlockEntity;
-import net.minecraft.client.item.TooltipContext;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.item.*;
-import net.minecraft.text.Text;
-import net.minecraft.util.Formatting;
-import net.minecraft.util.math.BlockPos;
+import net.minecraft.client.util.ITooltipFlag;
+import net.minecraft.creativetab.CreativeTabs;
+import net.minecraft.item.ItemBlock;
+import net.minecraft.item.ItemStack;
+import net.minecraft.nbt.NBTTagFloat;
+import net.minecraft.util.NonNullList;
+import net.minecraft.util.text.TextFormatting;
+import net.minecraft.util.text.translation.I18n;
 import net.minecraft.world.World;
+import net.minecraftforge.fml.relauncher.Side;
+import net.minecraftforge.fml.relauncher.SideOnly;
 
+import javax.annotation.Nullable;
 import java.util.List;
 
-import org.jetbrains.annotations.Nullable;
+public final class RiftJarItem extends ItemBlock {
+    private static final String FILL = "riftFraction";
 
-import ivorius.psychedelicraft.block.entity.RiftJarBlockEntity;
+    RiftJarItem(Block block) {
+        super(block);
+    }
 
-public class RiftJarItem extends BlockItem {
-    public static ItemStack createFilledRiftJar(float riftFraction, Item item) {
-        ItemStack stack = item.getDefaultStack();
-        if (riftFraction > 0) {
-            stack.getOrCreateNbt().putFloat("riftFraction", riftFraction);
-        }
+    public ItemStack filled(float amount) {
+        ItemStack stack = new ItemStack(this);
+        if (amount > 0) stack.setTagInfo(FILL, new NBTTagFloat(amount));
         return stack;
     }
 
-    public RiftJarItem(Block block, Settings settings) {
-        super(block, settings);
+    public static float getRiftFraction(ItemStack stack) {
+        float amount = stack.hasTagCompound() ? stack.getTagCompound().getFloat(FILL) : 0;
+        return Float.isFinite(amount) ? Math.max(amount, 0) : 0;
     }
 
     @Override
-    protected boolean postPlacement(BlockPos pos, World world, @Nullable PlayerEntity player, ItemStack stack, BlockState state) {
-        BlockEntity be = world.getBlockEntity(pos);
-        if (be instanceof RiftJarBlockEntity jar) {
-            jar.currentRiftFraction = getRiftFraction(stack);
+    public void getSubItems(CreativeTabs tab, NonNullList<ItemStack> stacks) {
+        if (isInCreativeTab(tab) && PSConfig.balancing.enableRiftJars) {
+            for (float amount : new float[]{0, 0.25F, 0.55F, 0.75F, 0.9F}) stacks.add(filled(amount));
         }
-        return super.postPlacement(pos, world, player, stack, state);
     }
 
     @Override
-    public void appendTooltip(ItemStack stack, @Nullable World world, List<Text> tooltip, TooltipContext context) {
-        super.appendTooltip(stack, world, tooltip, context);
-        float fillAmount = getRiftFraction(stack);
-        tooltip.add(Text.translatable(getTranslationKey() + "." + getUnlocalizedFractionName(fillAmount)).formatted(Formatting.GRAY));
+    @SideOnly(Side.CLIENT)
+    public void addInformation(ItemStack stack, @Nullable World world, List<String> tooltip, ITooltipFlag flag) {
+        tooltip.add(TextFormatting.GRAY + I18n.translateToLocal(getUnlocalizedName() + "." + fillName(getRiftFraction(stack))));
     }
 
-    public float getRiftFraction(ItemStack itemStack) {
-        return itemStack.hasNbt() ? itemStack.getNbt().getFloat("riftFraction") : 0;
-    }
-
-    private static String getUnlocalizedFractionName(float fraction) {
-        if (fraction <= 0) {
-            return "empty";
-        }
-        if (fraction < 0.4F) {
-            return "slightly_filled";
-        }
-        if (fraction < 0.6F) {
-            return "half_filled";
-        }
-        if (fraction < 0.8F) {
-            return "filled";
-        }
-
+    private static String fillName(float amount) {
+        if (amount <= 0) return "empty";
+        if (amount < 0.4F) return "slightly_filled";
+        if (amount < 0.6F) return "half_filled";
+        if (amount < 0.8F) return "filled";
         return "over_filled";
     }
 }

@@ -1,7 +1,7 @@
 {
     "parent": "item/generated",
     "textures": {
-        "layer0": "psychedelicraft:item/wooden_mug"
+        "layer0": "psychedelicraft:items/wooden_mug"
     },
     "overrides": [
         {

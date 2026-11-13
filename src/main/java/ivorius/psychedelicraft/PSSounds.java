@@ -1,29 +1,30 @@
-/*
- *  Copyright (c) 2014, Lukas Tenbrink.
- *  * http://lukas.axxim.net
- */
-
 package ivorius.psychedelicraft;
 
-import net.minecraft.registry.*;
-import net.minecraft.sound.SoundEvent;
-import net.minecraft.util.Identifier;
+import net.minecraft.util.ResourceLocation;
+import net.minecraft.util.SoundEvent;
+import net.minecraftforge.event.RegistryEvent;
+import net.minecraftforge.fml.common.Mod;
+import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 
-public interface PSSounds {
+@Mod.EventBusSubscriber(modid = Psychedelicraft.MOD_ID)
+public final class PSSounds {
+    public static final SoundEvent BREATH = sound("entity.player.breath");
+    public static final SoundEvent HEARTBEAT = sound("entity.player.heartbeat");
+    public static final SoundEvent RIFT_JAR_TOGGLE = sound("block.rift_jar.toggle");
+    public static final SoundEvent RIFT_JAR_OPEN = sound("block.rift_jar.open");
+    public static final SoundEvent RIFT_JAR_CLOSE = sound("block.rift_jar.close");
+    public static final SoundEvent DRUG_GENERIC = sound("drug.generic");
 
-    SoundEvent ENTITY_PLAYER_HEARTBEAT = register("entity.player.heartbeat");
-    SoundEvent ENTITY_PLAYER_BREATH = register("entity.player.breath");
-
-    SoundEvent BLOCK_RIFT_JAR_TOGGLE = register("block.rift_jar.toggle");
-    SoundEvent BLOCK_RIFT_JAR_OPEN = register("block.rift_jar.open");
-    SoundEvent BLOCK_RIFT_JAR_CLOSE = register("block.rift_jar.close");
-
-    SoundEvent DRUG_GENERIC = register("drug.generic");
-
-    static SoundEvent register(String name) {
-        Identifier id = Psychedelicraft.id(name);
-        return Registry.register(Registries.SOUND_EVENT, id, SoundEvent.of(id));
+    private PSSounds() {
     }
 
-    static void bootstrap() {}
+    private static SoundEvent sound(String name) {
+        ResourceLocation id = Psychedelicraft.id(name);
+        return new SoundEvent(id).setRegistryName(id);
+    }
+
+    @SubscribeEvent
+    public static void registerSounds(RegistryEvent.Register<SoundEvent> event) {
+        event.getRegistry().registerAll(BREATH, HEARTBEAT, RIFT_JAR_TOGGLE, RIFT_JAR_OPEN, RIFT_JAR_CLOSE, DRUG_GENERIC);
+    }
 }

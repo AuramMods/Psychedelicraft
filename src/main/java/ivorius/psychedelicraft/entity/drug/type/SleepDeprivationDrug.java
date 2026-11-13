@@ -1,52 +1,38 @@
 /*
- *  Copyright (c) 2014, Lukas Tenbrink.
- *  * http://lukas.axxim.net
+ * Copyright (c) 2014, Lukas Tenbrink.
+ * Created by Sollace on 19 Apr 2023.
  */
 
 package ivorius.psychedelicraft.entity.drug.type;
 
-import ivorius.psychedelicraft.PSGameRules;
 import ivorius.psychedelicraft.entity.drug.DrugProperties;
 import ivorius.psychedelicraft.entity.drug.DrugType;
-import ivorius.psychedelicraft.util.MathUtils;
-import net.minecraft.nbt.NbtCompound;
+import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.util.math.MathHelper;
 
-/**
- * Created by Sollace on April 19 2023.
- */
-public class SleepDeprivationDrug extends SimpleDrug {
-    public static final int TICKS_PER_DAY = 24000;
-    public static final int TICKS_UNTIL_PHANTOM_SPAWN = TICKS_PER_DAY * 3;
+import javax.annotation.Nullable;
 
-    private static final float INCREASE_PER_TICKS = 1F / TICKS_UNTIL_PHANTOM_SPAWN;
+public final class SleepDeprivationDrug extends SimpleDrug {
+    public static final String GAME_RULE = "doSleepDeprivation";
 
     private float storedEnergy;
 
     public SleepDeprivationDrug() {
-        super(DrugType.SLEEP_DEPRIVATION, 1, 0);
+        super(1, 0);
     }
 
     @Override
-    public void update(DrugProperties drugProperties) {
-        super.update(drugProperties);
-
-        float caffiene = drugProperties.getDrugValue(DrugType.CAFFEINE) + drugProperties.getDrugValue(DrugType.COCAINE);
-
-        storedEnergy = MathUtils.approach(storedEnergy, Math.min(1, caffiene * 10F), 0.02F);
-
-        if (caffiene > 0.1F) {
-            setDesiredValue(0);
-        } else {
-            if (drugProperties.asEntity().getWorld().getGameRules().getBoolean(PSGameRules.DO_SLEEP_DEPRIVATION)) {
-                setDesiredValue(getDesiredValue() + (INCREASE_PER_TICKS / 3));
-            }
+    public void update(DrugProperties properties, @Nullable EntityPlayer player) {
+        super.update(properties, player);
+        float stimulants = (float) (properties.getActiveValue(DrugType.CAFFEINE) + properties.getActiveValue(DrugType.COCAINE));
+        float target = Math.min(1, stimulants * 10);
+        storedEnergy += MathHelper.clamp(target - storedEnergy, -0.02F, 0.02F);
+        if (stimulants > 0.1F) {
+            scaleDesiredValue(0);
+        } else if (player != null && player.world.getGameRules().getBoolean(GAME_RULE)) {
+            addToDesiredValue(1D / 216000);
         }
-    }
-
-    @Override
-    public void onWakeUp(DrugProperties drugProperties) {
-        super.onWakeUp(drugProperties);
-        setActiveValue(0);
     }
 
     @Override
@@ -55,33 +41,28 @@ public class SleepDeprivationDrug extends SimpleDrug {
     }
 
     @Override
-    public float digSpeedModifier() {
-        return 1 - Math.max(0, (float)getActiveValue() * 0.9F - 0.4F);
+    public float drowsiness() {
+        return (float) getActiveValue();
     }
 
     @Override
     public float speedModifier() {
-        return digSpeedModifier();
+        return 1 - Math.max(0, (float) getActiveValue() * 0.9F - 0.4F);
+    }
+
+    @Override
+    public float digSpeedModifier() {
+        return speedModifier();
     }
 
     @Override
     public float motionBlur() {
-        return Math.max(0, (float)getActiveValue() - 0.6F) * 3;
-    }
-
-    @Override
-    public float drowsyness() {
-        return (float)getActiveValue();
-    }
-
-    @Override
-    public float headMotionInertness() {
-        return 0;
+        return Math.max(0, (float) getActiveValue() - 0.6F) * 3;
     }
 
     @Override
     public float desaturationHallucinationStrength() {
-        return Math.max(0, ((float)getActiveValue() - 0.5F) * 2);
+        return Math.max(0, ((float) getActiveValue() - 0.5F) * 2);
     }
 
     @Override
@@ -90,33 +71,37 @@ public class SleepDeprivationDrug extends SimpleDrug {
     }
 
     @Override
-    public float contextualHallucinationStrength() {
-        return Math.max(0, (float)getActiveValue() - 0.8F) * 4;
-    }
-
-    @Override
     public float movementHallucinationStrength() {
-        return Math.max(0, (float)getActiveValue() - 0.8F) * 3;
+        return Math.max(0, (float) getActiveValue() - 0.8F) * 3;
     }
 
     @Override
-    public void reset(DrugProperties drugProperties) {
-        super.reset(drugProperties);
-        if (!locked) {
-            storedEnergy = 0;
-        }
+    public float contextualHallucinationStrength() {
+        return Math.max(0, (float) getActiveValue() - 0.8F) * 4;
     }
 
     @Override
-    public void fromNbt(NbtCompound compound) {
-        super.fromNbt(compound);
-        storedEnergy = compound.getFloat("storedEnergy");
+    public void onWakeUp(DrugProperties properties, @Nullable EntityPlayer player) {
+        clearActiveValue();
+        reset();
     }
 
     @Override
-    public void toNbt(NbtCompound compound) {
-        super.toNbt(compound);
-        compound.putFloat("storedEnergy", storedEnergy);
+    public void reset() {
+        super.reset();
+        storedEnergy = 0;
     }
 
+    @Override
+    public void toNbt(NBTTagCompound tag) {
+        super.toNbt(tag);
+        tag.setFloat("storedEnergy", storedEnergy);
+    }
+
+    @Override
+    public void fromNbt(NBTTagCompound tag) {
+        super.fromNbt(tag);
+        float saved = tag.getFloat("storedEnergy");
+        storedEnergy = Float.isFinite(saved) ? MathHelper.clamp(saved, 0, 1) : 0;
+    }
 }

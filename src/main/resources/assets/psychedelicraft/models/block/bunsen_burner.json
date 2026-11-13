@@ -1,9 +1,9 @@
 {
   "parent": "minecraft:block/thin_block",
 	"textures": {
-		"texture": "psychedelicraft:block/burner_base_top",
-		"legs": "psychedelicraft:block/burner_leg",
-		"particle": "#texture"
+		"texture": "psychedelicraft:blocks/burner_base_top",
+		"legs": "psychedelicraft:blocks/burner_leg",
+		"particle": "psychedelicraft:blocks/burner_base_top"
 	},
 	"elements": [
 		{

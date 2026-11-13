@@ -1,33 +1,27 @@
 /*
- *  Copyright (c) 2014, Lukas Tenbrink.
- *  * http://lukas.axxim.net
+ * Copyright (c) 2014, Lukas Tenbrink.
+ * Updated by Sollace on 4 Jan 2023.
  */
 
 package ivorius.psychedelicraft.entity.drug.type;
 
-import ivorius.psychedelicraft.entity.drug.DrugType;
-
-/**
- * Created by lukas on 01.11.14.
- * Updated by Sollace on 4 Jan 2023
- */
-public class PowerDrug extends SimpleDrug {
-    public PowerDrug(double decSpeed, double decSpeedPlus) {
-        super(DrugType.POWER, decSpeed, decSpeedPlus, true);
-    }
-
-    @Override
-    public float soundVolumeModifier() {
-        return 1 - (float) getActiveValue();
+public final class PowerDrug extends SimpleDrug {
+    public PowerDrug() {
+        super(0.95, 0.0001);
     }
 
     @Override
     public float desaturationHallucinationStrength() {
-        return (float)getActiveValue() * 0.75F;
+        return (float) getActiveValue() * 0.75F;
     }
 
     @Override
     public float motionBlur() {
         return (float) getActiveValue() * 0.3F;
+    }
+
+    @Override
+    public float soundVolumeModifier() {
+        return 1 - (float) getActiveValue();
     }
 }

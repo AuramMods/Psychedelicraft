@@ -1,47 +1,42 @@
-/*
- *  Copyright (c) 2014, Lukas Tenbrink.
- *  * http://lukas.axxim.net
- */
-
 package ivorius.psychedelicraft.entity;
 
-import com.terraformersmc.terraform.boat.api.TerraformBoatType;
-import com.terraformersmc.terraform.boat.api.TerraformBoatTypeRegistry;
-
 import ivorius.psychedelicraft.Psychedelicraft;
-import ivorius.psychedelicraft.item.PSItems;
-import net.fabricmc.fabric.api.object.builder.v1.entity.FabricEntityTypeBuilder;
-import net.minecraft.entity.*;
-import net.minecraft.registry.Registries;
-import net.minecraft.registry.Registry;
+import net.minecraftforge.event.RegistryEvent;
+import net.minecraftforge.fml.common.Mod;
+import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
+import net.minecraftforge.fml.common.registry.EntityEntry;
+import net.minecraftforge.fml.common.registry.EntityEntryBuilder;
 
-/**
- * Created by lukas on 25.04.14.
- *
- * Updated by Sollace on 1 Jan 2023
- */
-public interface PSEntities {
-    EntityType<MolotovCocktailEntity> MOLOTOV_COCKTAIL = register("molotov_cocktail", FabricEntityTypeBuilder.<MolotovCocktailEntity>create(SpawnGroup.MISC, MolotovCocktailEntity::new)
-            .trackedUpdateRate(10).trackRangeBlocks(64)
-            .dimensions(EntityDimensions.fixed(0.1F, 0.1F)));
-    EntityType<RealityRiftEntity> REALITY_RIFT = register("reality_rift", FabricEntityTypeBuilder.create(SpawnGroup.MISC, RealityRiftEntity::new)
-            .trackedUpdateRate(3).trackRangeBlocks(80)
-            .dimensions(EntityDimensions.fixed(2F, 2F)));
-
-    TerraformBoatType JUNIPER_BOAT_TYPE = Registry.register(TerraformBoatTypeRegistry.INSTANCE, Psychedelicraft.id("juniper"), new TerraformBoatType.Builder()
-            .planks(PSItems.JUNIPER_PLANKS)
-            .item(PSItems.JUNIPER_BOAT)
-            .build());
-
-    static <T extends Entity> EntityType<T> register(String name, FabricEntityTypeBuilder<T> builder) {
-        EntityType<T> type = builder.build();
-        return Registry.register(Registries.ENTITY_TYPE, Psychedelicraft.id(name), type);
+@Mod.EventBusSubscriber(modid = Psychedelicraft.MOD_ID)
+public final class PSEntities {
+    private PSEntities() {
     }
 
-    static void bootstrap() {
-        PSTradeOffers.bootstrap();
+    @SubscribeEvent
+    public static void register(RegistryEvent.Register<EntityEntry> event) {
+        event.getRegistry().registerAll(
+                boat(EntityJuniperBoat.class, "juniper_boat", 0),
+                boat(EntityJuniperChestBoat.class, "juniper_chest_boat", 1),
+                EntityEntryBuilder.<RealityRiftEntity>create()
+                        .entity(RealityRiftEntity.class)
+                        .id(Psychedelicraft.id("reality_rift"), 2)
+                        .name(Psychedelicraft.MOD_ID + ".reality_rift")
+                        .tracker(80, 3, false)
+                        .build(),
+                EntityEntryBuilder.<MolotovCocktailEntity>create()
+                        .entity(MolotovCocktailEntity.class)
+                        .id(Psychedelicraft.id("molotov_cocktail"), 3)
+                        .name(Psychedelicraft.MOD_ID + ".molotov_cocktail")
+                        .tracker(64, 10, true)
+                        .build());
+    }
 
-
-
+    private static EntityEntry boat(Class<? extends EntityJuniperBoat> type, String name, int networkId) {
+        return EntityEntryBuilder.<EntityJuniperBoat>create()
+                .entity(type)
+                .id(Psychedelicraft.id(name), networkId)
+                .name(Psychedelicraft.MOD_ID + "." + name)
+                .tracker(80, 3, true)
+                .build();
     }
 }

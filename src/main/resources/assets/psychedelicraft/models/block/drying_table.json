@@ -1,23 +1,79 @@
 {
-	"parent": "block/block",
-	"textures": {
-		"bottom": "psychedelicraft:block/drying_table_bottom",
-		"particle": "psychedelicraft:block/drying_table",
-		"side": "psychedelicraft:block/drying_table",
-		"top": "psychedelicraft:block/drying_table_top"
-	},
-	"elements": [
-		{
-			"from": [0, 0, 0],
-			"to": [16, 12, 16],
-			"faces": {
-				"north": {"uv": [0, 4, 16, 16], "texture": "#side"},
-				"east": {"uv": [0, 4, 16, 16], "texture": "#side"},
-				"south": {"uv": [0, 4, 16, 16], "texture": "#side"},
-				"west": {"uv": [0, 4, 16, 16], "texture": "#side"},
-				"up": {"uv": [0, 0, 16, 16], "texture": "#top"},
-				"down": {"uv": [0, 0, 16, 16], "texture": "#bottom"}
-			}
-		}
-	]
+  "parent": "block/block",
+  "textures": {
+    "bottom": "psychedelicraft:blocks/drying_table_bottom",
+    "particle": "psychedelicraft:blocks/drying_table",
+    "side": "psychedelicraft:blocks/drying_table",
+    "top": "psychedelicraft:blocks/drying_table_top"
+  },
+  "elements": [
+    {
+      "from": [
+        0,
+        0,
+        0
+      ],
+      "to": [
+        16,
+        12,
+        16
+      ],
+      "faces": {
+        "north": {
+          "uv": [
+            0,
+            4,
+            16,
+            16
+          ],
+          "texture": "#side"
+        },
+        "east": {
+          "uv": [
+            0,
+            4,
+            16,
+            16
+          ],
+          "texture": "#side"
+        },
+        "south": {
+          "uv": [
+            0,
+            4,
+            16,
+            16
+          ],
+          "texture": "#side"
+        },
+        "west": {
+          "uv": [
+            0,
+            4,
+            16,
+            16
+          ],
+          "texture": "#side"
+        },
+        "up": {
+          "uv": [
+            0,
+            0,
+            16,
+            16
+          ],
+          "texture": "#top"
+        },
+        "down": {
+          "uv": [
+            0,
+            0,
+            16,
+            16
+          ],
+          "texture": "#bottom"
+        }
+      }
+    }
+  ]
 }

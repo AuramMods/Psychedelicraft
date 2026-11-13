@@ -1,7 +1,7 @@
 {
   "variants": {
-    "": {
-      "model": "psychedelicraft:block/potted_juniper_sapling"
+    "normal": {
+      "model": "psychedelicraft:potted_juniper_sapling"
     }
   }
 }

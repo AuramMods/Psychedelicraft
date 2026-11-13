@@ -1,7 +1,7 @@
 {
   "variants": {
-    "": {
-      "model": "psychedelicraft:block/flask"
+    "normal": {
+      "model": "psychedelicraft:flask"
     }
   }
 }

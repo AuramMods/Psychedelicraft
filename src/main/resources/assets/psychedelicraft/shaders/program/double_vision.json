@@ -1,21 +1,11 @@
 {
-    "blend": {
-        "func": "add",
-        "srcrgb": "srcalpha",
-        "dstrgb": "1-srcalpha"
-    },
-    "vertex": "blit",
-    "fragment": "double_vision",
-    "attributes": [ "Position" ],
-    "samplers": [
-        { "name": "DiffuseSampler" }
-    ],
-    "uniforms": [
-        { "name": "totalAlpha", "type": "float", "count": 1, "values": [ 1.0 ] },
-        { "name": "distance", "type": "float", "count": 1, "values": [ 0.0 ] },
-        { "name": "stretch", "type": "float", "count": 1, "values": [ 0.0 ] },
-
-        { "name": "ProjMat", "type": "matrix4x4", "count": 16, "values": [ 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0 ] },
-        { "name": "OutSize", "type": "float",     "count": 2,  "values": [ 1.0, 1.0 ] }
-    ]
+  "vertex": "psychedelicraft:fullscreen",
+  "fragment": "psychedelicraft:double_vision",
+  "cull": false,
+  "samplers": [{ "name": "DiffuseSampler" }],
+  "uniforms": [
+    { "name": "TextureScale", "type": "float", "count": 2, "values": [1.0, 1.0] },
+    { "name": "Strength", "type": "float", "count": 1, "values": [0.0] },
+    { "name": "Distance", "type": "float", "count": 1, "values": [0.0] }
+  ]
 }

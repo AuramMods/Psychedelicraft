@@ -1,115 +1,195 @@
 /*
- *  Copyright (c) 2014, Lukas Tenbrink.
- *  * http://lukas.axxim.net
+ * Copyright (c) 2014, Lukas Tenbrink.
  */
 
 package ivorius.psychedelicraft.block;
 
-import java.util.List;
-import java.util.Optional;
-
-import org.jetbrains.annotations.Nullable;
-
 import ivorius.psychedelicraft.PSSounds;
-import ivorius.psychedelicraft.block.entity.PSBlockEntities;
 import ivorius.psychedelicraft.block.entity.RiftJarBlockEntity;
 import ivorius.psychedelicraft.item.PSItems;
 import ivorius.psychedelicraft.item.RiftJarItem;
-import net.minecraft.block.*;
-import net.minecraft.block.entity.*;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.item.ItemPlacementContext;
+import net.minecraft.block.BlockContainer;
+import net.minecraft.block.BlockHorizontal;
+import net.minecraft.block.SoundType;
+import net.minecraft.block.material.EnumPushReaction;
+import net.minecraft.block.material.Material;
+import net.minecraft.block.properties.PropertyDirection;
+import net.minecraft.block.state.BlockStateContainer;
+import net.minecraft.block.state.BlockFaceShape;
+import net.minecraft.block.state.IBlockState;
+import net.minecraft.entity.Entity;
+import net.minecraft.entity.EntityLivingBase;
+import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
-import net.minecraft.loot.context.LootContextParameterSet;
-import net.minecraft.loot.context.LootContextParameters;
-import net.minecraft.server.world.ServerWorld;
-import net.minecraft.sound.SoundCategory;
-import net.minecraft.state.StateManager;
-import net.minecraft.state.property.DirectionProperty;
-import net.minecraft.state.property.Properties;
-import net.minecraft.util.*;
-import net.minecraft.util.hit.BlockHitResult;
+import net.minecraft.tileentity.TileEntity;
+import net.minecraft.util.EnumBlockRenderType;
+import net.minecraft.util.EnumFacing;
+import net.minecraft.util.EnumHand;
+import net.minecraft.util.Mirror;
+import net.minecraft.util.NonNullList;
+import net.minecraft.util.Rotation;
+import net.minecraft.util.SoundCategory;
+import net.minecraft.util.SoundEvent;
+import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.Direction;
-import net.minecraft.util.shape.VoxelShape;
-import net.minecraft.util.shape.VoxelShapes;
-import net.minecraft.world.BlockView;
+import net.minecraft.util.math.RayTraceResult;
+import net.minecraft.util.math.Vec3d;
+import net.minecraft.world.IBlockAccess;
 import net.minecraft.world.World;
 
-class RiftJarBlock extends BlockWithEntity {
-    private static final VoxelShape SHAPE = VoxelShapes.union(
-            Block.createCuboidShape(4, 0, 4, 12, 5, 12),
-            Block.createCuboidShape(4.5, 5, 4.5, 11.5, 7, 11.5),
-            Block.createCuboidShape(4, 7, 4, 12, 12, 12),
-            Block.createCuboidShape(5, 12, 5, 11, 14, 11)
-    );
-    public static final DirectionProperty FACING = Properties.HORIZONTAL_FACING;
+import javax.annotation.Nullable;
+import java.util.List;
 
-    public RiftJarBlock(Settings settings) {
-        super(settings);
-        setDefaultState(getDefaultState().with(FACING, Direction.NORTH));
+public final class RiftJarBlock extends BlockContainer {
+    public static final PropertyDirection FACING = BlockHorizontal.FACING;
+    private static final AxisAlignedBB BOUNDS = box(4, 0, 12, 14);
+    private static final AxisAlignedBB[] PARTS = {
+            box(4, 0, 12, 5), box(4.5, 5, 11.5, 7), box(4, 7, 12, 12), box(5, 12, 11, 14)
+    };
+
+    RiftJarBlock() {
+        super(Material.GLASS);
+        setHardness(0.5F);
+        setSoundType(SoundType.GLASS);
+        setLightOpacity(0);
+        setDefaultState(blockState.getBaseState().withProperty(FACING, EnumFacing.NORTH));
+    }
+
+    private static AxisAlignedBB box(double min, int bottom, double max, int top) {
+        return new AxisAlignedBB(min / 16, bottom / 16D, min / 16, max / 16, top / 16D, max / 16);
     }
 
     @Override
-    @Deprecated
-    public VoxelShape getOutlineShape(BlockState state, BlockView world, BlockPos pos, ShapeContext context) {
-        return SHAPE;
+    protected BlockStateContainer createBlockState() {
+        return new BlockStateContainer(this, FACING);
     }
 
     @Override
-    public BlockState rotate(BlockState state, BlockRotation rotation) {
-        return state.with(FACING, rotation.rotate(state.get(FACING)));
+    public IBlockState getStateFromMeta(int meta) {
+        return getDefaultState().withProperty(FACING, EnumFacing.getHorizontal(meta));
     }
 
     @Override
-    public BlockState mirror(BlockState state, BlockMirror mirror) {
-        return state.rotate(mirror.getRotation(state.get(FACING)));
+    public int getMetaFromState(IBlockState state) {
+        return state.getValue(FACING).getHorizontalIndex();
     }
 
     @Override
-    public BlockState getPlacementState(ItemPlacementContext ctx) {
-        return getDefaultState().with(FACING, ctx.getHorizontalPlayerFacing().getOpposite());
+    public IBlockState getStateForPlacement(World world, BlockPos pos, EnumFacing face, float hitX, float hitY,
+                                           float hitZ, int meta, EntityLivingBase placer, EnumHand hand) {
+        return getDefaultState().withProperty(FACING, placer.getHorizontalFacing().getOpposite());
     }
 
     @Override
-    public ActionResult onUse(BlockState state, World world, BlockPos pos, PlayerEntity player, Hand hand, BlockHitResult hit) {
-        return world.getBlockEntity(pos, PSBlockEntities.RIFT_JAR).map(be -> {
-            if (player.isSneaking()) {
-                be.toggleSuckingRifts();
-                world.playSound(null, pos, PSSounds.BLOCK_RIFT_JAR_TOGGLE, SoundCategory.BLOCKS);
-            } else {
-                world.playSound(null, pos, be.toggleRiftJarOpen() ? PSSounds.BLOCK_RIFT_JAR_OPEN : PSSounds.BLOCK_RIFT_JAR_CLOSE, SoundCategory.BLOCKS);
-            }
-            return ActionResult.SUCCESS;
-        }).orElse(ActionResult.FAIL);
+    public IBlockState withRotation(IBlockState state, Rotation rotation) {
+        return state.withProperty(FACING, rotation.rotate(state.getValue(FACING)));
     }
 
     @Override
-    public List<ItemStack> getDroppedStacks(BlockState state, LootContextParameterSet.Builder builder) {
-        return Optional.ofNullable(builder.getOptional(LootContextParameters.BLOCK_ENTITY)).map(RiftJarBlockEntity.class::cast).map(be -> {
-            if (!be.jarBroken) {
-                return RiftJarItem.createFilledRiftJar(be.currentRiftFraction, PSItems.RIFT_JAR);
-            }
-            return null;
-        }).stream().toList();
+    public IBlockState withMirror(IBlockState state, Mirror mirror) {
+        return state.withRotation(mirror.toRotation(state.getValue(FACING)));
     }
 
     @Override
-    public BlockEntity createBlockEntity(BlockPos pos, BlockState state) {
-        return new RiftJarBlockEntity(pos, state);
+    public boolean isOpaqueCube(IBlockState state) {
+        return false;
     }
 
     @Override
+    public boolean isFullCube(IBlockState state) {
+        return false;
+    }
+
+    @Override
+    public BlockFaceShape getBlockFaceShape(IBlockAccess world, IBlockState state, BlockPos pos, EnumFacing face) {
+        return BlockFaceShape.UNDEFINED;
+    }
+
+    @Override
+    public EnumPushReaction getMobilityFlag(IBlockState state) {
+        return EnumPushReaction.DESTROY;
+    }
+
+    @Override
+    public EnumBlockRenderType getRenderType(IBlockState state) {
+        return EnumBlockRenderType.ENTITYBLOCK_ANIMATED;
+    }
+
+    @Override
+    public AxisAlignedBB getBoundingBox(IBlockState state, IBlockAccess world, BlockPos pos) {
+        return BOUNDS;
+    }
+
+    @Override
+    public void addCollisionBoxToList(IBlockState state, World world, BlockPos pos, AxisAlignedBB box,
+                                      List<AxisAlignedBB> collisions, @Nullable Entity entity, boolean actualState) {
+        for (AxisAlignedBB part : PARTS) addCollisionBoxToList(pos, box, collisions, part);
+    }
+
     @Nullable
-    public <Q extends BlockEntity> BlockEntityTicker<Q> getTicker(World world, BlockState state, BlockEntityType<Q> type) {
-        return world.isClient
-                ? checkType(type, PSBlockEntities.RIFT_JAR, (w, p, s, entity) -> entity.tickAnimation())
-                : checkType(type, PSBlockEntities.RIFT_JAR, (w, p, s, entity) -> entity.tick((ServerWorld)w));
+    @Override
+    public RayTraceResult collisionRayTrace(IBlockState state, World world, BlockPos pos, Vec3d start, Vec3d end) {
+        RayTraceResult nearest = null;
+        double distance = Double.POSITIVE_INFINITY;
+        for (AxisAlignedBB part : PARTS) {
+            RayTraceResult hit = rayTrace(pos, start, end, part);
+            if (hit != null && start.squareDistanceTo(hit.hitVec) < distance) {
+                nearest = hit;
+                distance = start.squareDistanceTo(hit.hitVec);
+            }
+        }
+        return nearest;
     }
 
     @Override
-    protected void appendProperties(StateManager.Builder<Block, BlockState> builder) {
-        super.appendProperties(builder);
-        builder.add(FACING);
+    public TileEntity createNewTileEntity(World world, int meta) {
+        return new RiftJarBlockEntity();
+    }
+
+    @Override
+    public void onBlockPlacedBy(World world, BlockPos pos, IBlockState state, EntityLivingBase placer, ItemStack stack) {
+        TileEntity tile = world.getTileEntity(pos);
+        if (!world.isRemote && tile instanceof RiftJarBlockEntity) {
+            ((RiftJarBlockEntity) tile).setAmount(RiftJarItem.getRiftFraction(stack));
+        }
+    }
+
+    @Override
+    public boolean onBlockActivated(World world, BlockPos pos, IBlockState state, EntityPlayer player, EnumHand hand,
+                                    EnumFacing face, float hitX, float hitY, float hitZ) {
+        TileEntity tile = world.getTileEntity(pos);
+        if (!(tile instanceof RiftJarBlockEntity)) return false;
+        if (!world.isRemote) {
+            RiftJarBlockEntity jar = (RiftJarBlockEntity) tile;
+            SoundEvent sound;
+            if (player.isSneaking()) {
+                jar.toggleMode();
+                sound = PSSounds.RIFT_JAR_TOGGLE;
+            } else {
+                sound = jar.toggleLid() ? PSSounds.RIFT_JAR_OPEN : PSSounds.RIFT_JAR_CLOSE;
+            }
+            world.playSound(null, pos, sound, SoundCategory.BLOCKS, 1, 1);
+        }
+        return true;
+    }
+
+    @Override
+    public void getDrops(NonNullList<ItemStack> drops, IBlockAccess world, BlockPos pos, IBlockState state, int fortune) {
+        TileEntity tile = world.getTileEntity(pos);
+        if (tile instanceof RiftJarBlockEntity && !tile.isInvalid()) {
+            drops.add(PSItems.RIFT_JAR.filled(((RiftJarBlockEntity) tile).getAmount()));
+        }
+    }
+
+    @Override
+    public boolean removedByPlayer(IBlockState state, World world, BlockPos pos, EntityPlayer player, boolean willHarvest) {
+        return willHarvest || super.removedByPlayer(state, world, pos, player, false);
+    }
+
+    @Override
+    public void harvestBlock(World world, EntityPlayer player, BlockPos pos, IBlockState state,
+                             @Nullable TileEntity tile, ItemStack tool) {
+        super.harvestBlock(world, player, pos, state, tile, tool);
+        world.setBlockToAir(pos);
     }
 }

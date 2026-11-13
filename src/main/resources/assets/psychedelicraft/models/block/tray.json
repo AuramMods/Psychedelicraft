@@ -2,8 +2,8 @@
   "parent": "minecraft:block/thin_block",
 	"texture_size": [64, 64],
 	"textures": {
-		"tray": "psychedelicraft:block/tray",
-		"particle": "#tray"
+		"tray": "psychedelicraft:blocks/tray",
+		"particle": "psychedelicraft:blocks/tray"
 	},
 	"elements": [
 		{

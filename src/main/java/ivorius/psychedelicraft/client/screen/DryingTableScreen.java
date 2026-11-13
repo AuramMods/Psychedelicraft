@@ -1,72 +1,62 @@
 /*
- *  Copyright (c) 2014, Lukas Tenbrink.
- *  * http://lukas.axxim.net
+ * Copyright (c) 2014, Lukas Tenbrink.
+ * Updated by Sollace on 3 Jan 2023.
  */
 
 package ivorius.psychedelicraft.client.screen;
 
 import ivorius.psychedelicraft.Psychedelicraft;
-import ivorius.psychedelicraft.screen.DryingTableScreenHandler;
-import net.minecraft.client.gui.DrawContext;
-import net.minecraft.client.gui.screen.ingame.HandledScreen;
-import net.minecraft.client.render.GameRenderer;
-import net.minecraft.entity.player.PlayerInventory;
-import net.minecraft.text.Text;
-import net.minecraft.util.*;
+import ivorius.psychedelicraft.block.entity.DryingTableBlockEntity;
+import ivorius.psychedelicraft.screen.DryingTableContainer;
+import net.minecraft.client.gui.inventory.GuiContainer;
+import net.minecraft.client.resources.I18n;
+import net.minecraft.client.renderer.GlStateManager;
+import net.minecraft.entity.player.InventoryPlayer;
+import net.minecraft.inventory.Slot;
+import net.minecraft.util.ResourceLocation;
 
-import com.mojang.blaze3d.systems.RenderSystem;
+public final class DryingTableScreen extends GuiContainer {
+    private static final ResourceLocation TEXTURE = Psychedelicraft.id("textures/gui/drying_table.png");
+    private final InventoryPlayer inventory;
+    private final DryingTableBlockEntity table;
 
-/**
- * Updated by Sollace on 3 Jan 2023
- */
-public class DryingTableScreen extends HandledScreen<DryingTableScreenHandler> {
-    public static final Identifier TEXTURE = Psychedelicraft.id("textures/gui/drying_table.png");
-
-    public DryingTableScreen(DryingTableScreenHandler handler, PlayerInventory inventory, Text title) {
-        super(handler, inventory, title);
+    public DryingTableScreen(InventoryPlayer inventory, DryingTableBlockEntity table) {
+        super(new DryingTableContainer(inventory, table));
+        this.inventory = inventory;
+        this.table = table;
     }
 
     @Override
-    public void init() {
-        super.init();
-        titleX = 26;
-    }
-
-    @Override
-    public void render(DrawContext context, int mouseX, int mouseY, float delta) {
-        super.render(context, mouseX, mouseY, delta);
-        drawMouseoverTooltip(context, mouseX, mouseY);
-
-        if (handler.getCursorStack().isEmpty() && (focusedSlot == null || !focusedSlot.hasStack())) {
-            int centerX = (width - backgroundWidth) / 2 + backgroundWidth;
-            int centerY = (height - backgroundHeight) / 2;
-
-            if (mouseX > centerX - 30 && mouseX < centerX
-                    && mouseY > centerY && mouseY < centerY + 30) {
-
-                context.drawTooltip(textRenderer, Text.translatable("block.psychedelicraft.drying_table.daylight", (int)(handler.getHeatRatio() * 100)), mouseX, mouseY);
-            }
+    public void drawScreen(int mouseX, int mouseY, float partialTicks) {
+        drawDefaultBackground();
+        super.drawScreen(mouseX, mouseY, partialTicks);
+        renderHoveredToolTip(mouseX, mouseY);
+        Slot hovered = getSlotUnderMouse();
+        if (inventory.getItemStack().isEmpty() && (hovered == null || !hovered.getHasStack())
+                && mouseX > guiLeft + xSize - 30 && mouseX < guiLeft + xSize
+                && mouseY > guiTop && mouseY < guiTop + 30) {
+            drawHoveringText(I18n.format("block.psychedelicraft.drying_table.daylight",
+                    (int) (table.getHeatRatio() * 100)), mouseX, mouseY);
         }
     }
 
     @Override
-    protected void drawBackground(DrawContext context, float delta, int mouseX, int mouseY) {
-        RenderSystem.setShader(GameRenderer::getPositionTexProgram);
-        RenderSystem.setShaderColor(1, 1, 1, 1);
+    protected void drawGuiContainerForegroundLayer(int mouseX, int mouseY) {
+        fontRenderer.drawString(table.getDisplayName().getFormattedText(), 26, 6, 0x404040);
+        fontRenderer.drawString(inventory.getDisplayName().getFormattedText(), 8, ySize - 94, 0x404040);
+    }
 
-        int centerX = (width - backgroundWidth) / 2;
-        int centerY = (height - backgroundHeight) / 2;
-
-        context.drawTexture(TEXTURE, centerX, centerY, 0, 0, backgroundWidth, backgroundHeight);
-
-        if (handler.getProgress() > 0) {
-            context.drawTexture(TEXTURE, centerX + 88, centerY + 34, 176, 59, 25, 16);
+    @Override
+    protected void drawGuiContainerBackgroundLayer(float partialTicks, int mouseX, int mouseY) {
+        GlStateManager.color(1, 1, 1, 1);
+        mc.getTextureManager().bindTexture(TEXTURE);
+        drawTexturedModalRect(guiLeft, guiTop, 0, 0, xSize, ySize);
+        if (table.getDryingProgress() > 0) {
+            drawTexturedModalRect(guiLeft + 88, guiTop + 34, 176, 59, 25, 16);
         }
-
-        int progress = (int)(handler.getProgress() * 24); //Max 24, progress
-        context.drawTexture(TEXTURE, centerX + 88, centerY + 34, 176, 42, progress + 1, 16);
-
-        int heat = (int) (handler.getHeatRatio() * 20); //Max 20, sun
-        context.drawTexture(TEXTURE, centerX + 148, centerY + 6 + (20 - heat), 176, 21 + (20 - heat), 20, heat);
+        int progress = (int) (table.getDryingProgress() * 24);
+        drawTexturedModalRect(guiLeft + 88, guiTop + 34, 176, 42, progress + 1, 16);
+        int heat = (int) (table.getHeatRatio() * 20);
+        drawTexturedModalRect(guiLeft + 148, guiTop + 26 - heat, 176, 41 - heat, 20, heat);
     }
 }

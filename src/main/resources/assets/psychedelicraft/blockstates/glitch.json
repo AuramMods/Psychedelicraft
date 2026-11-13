@@ -1,7 +1,7 @@
 {
   "variants": {
-    "": {
-      "model": "psychedelicraft:block/glitch"
+    "normal": {
+      "model": "psychedelicraft:glitch"
     }
   }
 }

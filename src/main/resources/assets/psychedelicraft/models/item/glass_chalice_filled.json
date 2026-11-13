@@ -1,7 +1,7 @@
 {
     "parent": "item/generated",
     "textures": {
-        "layer0": "psychedelicraft:item/glass_chalice",
-        "layer1": "psychedelicraft:item/glass_chalice_liquid"
+        "layer0": "psychedelicraft:items/glass_chalice",
+        "layer1": "psychedelicraft:items/glass_chalice_liquid"
     }
 }

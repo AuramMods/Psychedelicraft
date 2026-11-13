@@ -1,58 +1,63 @@
 /*
- *  Copyright (c) 2014, Lukas Tenbrink.
- *  * http://lukas.axxim.net
+ * Copyright (c) 2014, Lukas Tenbrink.
  */
 
 package ivorius.psychedelicraft.entity.drug.type;
 
-import java.util.Optional;
+import net.minecraft.util.math.MathHelper;
 
-import ivorius.psychedelicraft.entity.drug.DrugType;
-import ivorius.psychedelicraft.util.MathUtils;
-import net.minecraft.text.Text;
-import net.minecraft.util.math.BlockPos;
+import javax.annotation.Nullable;
 
-/**
- * Created by lukas on 01.11.14.
- */
-public class CaffeineDrug extends SimpleDrug {
-    static final Optional<Text> SLEEP_STATUS = Optional.of(Text.translatable("psychedelicraft.sleep.fail.insomnia"));
+public final class CaffeineDrug extends SimpleDrug {
+    private final float breathMultiplier;
 
-    private final float breathVolumeMultiplier;
+    public CaffeineDrug(double decreaseSpeed, double decreaseSpeedPlus) {
+        this(decreaseSpeed, decreaseSpeedPlus, 1F);
+    }
 
-    public CaffeineDrug(DrugType type, double decSpeed, double decSpeedPlus, float breathVolumeMultiplier) {
-        super(type, decSpeed, decSpeedPlus);
-        this.breathVolumeMultiplier = breathVolumeMultiplier;
+    public CaffeineDrug(double decreaseSpeed, double decreaseSpeedPlus, float breathMultiplier) {
+        super(decreaseSpeed, decreaseSpeedPlus);
+        this.breathMultiplier = breathMultiplier;
     }
 
     @Override
     public float heartbeatVolume() {
-        return breathVolumeMultiplier * MathUtils.inverseLerp((float) getActiveValue(), 0.6F, 1) + (getTicksActive() * 0.001F);
+        return breathMultiplier * activeRamp(0.6F) + ticksActive() * 0.001F;
     }
 
     @Override
     public float heartbeatSpeed() {
-        return breathVolumeMultiplier * (float) getActiveValue() * 0.2f + (getTicksActive() * 0.001F);
+        return breathMultiplier * (float) getActiveValue() * 0.2F + ticksActive() * 0.001F;
     }
 
     @Override
     public float breathVolume() {
-        return breathVolumeMultiplier * MathUtils.inverseLerp((float) getActiveValue(), 0.4F, 1) * 0.5F;
+        return breathMultiplier * activeRamp(0.4F) * 0.5F;
     }
 
     @Override
     public float breathSpeed() {
-        return breathVolumeMultiplier * (float) getActiveValue() * 0.3F;
+        return breathMultiplier * (float) getActiveValue() * 0.3F;
     }
 
     @Override
     public float randomJumpChance() {
-        return MathUtils.inverseLerp((float) getActiveValue(), 0.6F, 1) * 0.07F;
+        return activeRamp(0.6F) * 0.07F;
     }
 
     @Override
-    public float randomPunchChance() {
-        return MathUtils.inverseLerp((float) getActiveValue(), 0.3F, 1) * 0.05F;
+    public float randomSwingChance() {
+        return activeRamp(0.3F) * 0.05F;
+    }
+
+    @Override
+    public float handTrembleStrength() {
+        return activeRamp(0.6F);
+    }
+
+    @Override
+    public float viewTrembleStrength() {
+        return activeRamp(0.8F);
     }
 
     @Override
@@ -62,48 +67,41 @@ public class CaffeineDrug extends SimpleDrug {
 
     @Override
     public float digSpeedModifier() {
-        return 1 + (float) getActiveValue() * 0.2F;
+        return speedModifier();
     }
 
     @Override
-    public Optional<Text> trySleep(BlockPos pos) {
-        return getActiveValue() > 0.1
-                ? SLEEP_STATUS
-                : Optional.empty();
+    @Nullable
+    public String sleepWarning() {
+        return getActiveValue() > 0.1 ? "psychedelicraft.sleep.fail.caffiene" : null;
     }
 
     @Override
     public float superSaturationHallucinationStrength() {
-        return (float)getActiveValue() * 0.3F;
-    }
-
-    @Override
-    public float handTrembleStrength() {
-        return MathUtils.inverseLerp((float) getActiveValue(), 0.6F, 1);
-    }
-
-    @Override
-    public float viewTrembleStrength() {
-        return MathUtils.inverseLerp((float) getActiveValue(), 0.8F, 1);
+        return (float) getActiveValue() * 0.3F;
     }
 
     @Override
     public float colorHallucinationStrength() {
-        return MathUtils.inverseLerp((float) getActiveValue() * 1.3F, 0.7F, 1) * 0.03F;
+        return hallucinationFactor() * 0.03F;
     }
 
     @Override
     public float movementHallucinationStrength() {
-        return MathUtils.inverseLerp((float) getActiveValue() * 1.3F, 0.7F, 1) * 0.03F;
+        return hallucinationFactor() * 0.03F;
     }
 
     @Override
     public float contextualHallucinationStrength() {
-        return MathUtils.inverseLerp((float) getActiveValue() * 1.3F, 0.7F, 1) * 0.05F;
+        return hallucinationFactor() * 0.05F;
     }
 
     @Override
     public float hungerSuppression() {
-        return (float)getActiveValue() * 0.15F;
+        return (float) getActiveValue() * 0.15F;
+    }
+
+    private float hallucinationFactor() {
+        return MathHelper.clamp(((float) getActiveValue() * 1.3F - 0.7F) / (1F - 0.7F), 0, 1);
     }
 }

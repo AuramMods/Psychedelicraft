@@ -1,298 +1,177 @@
 /*
- *  Copyright (c) 2014, Lukas Tenbrink.
- *  * http://lukas.axxim.net
+ * Copyright (c) 2014, Lukas Tenbrink.
  */
 
 package ivorius.psychedelicraft.fluid;
 
 import ivorius.psychedelicraft.Psychedelicraft;
+import ivorius.psychedelicraft.entity.drug.DrugCapability;
+import ivorius.psychedelicraft.entity.drug.DrugProperties;
 import ivorius.psychedelicraft.entity.drug.DrugType;
 import ivorius.psychedelicraft.entity.drug.influence.DrugInfluence;
-import ivorius.psychedelicraft.fluid.SimpleFluid.Settings;
-import ivorius.psychedelicraft.fluid.alcohol.FluidAppearance;
-import ivorius.psychedelicraft.fluid.alcohol.DrinkType;
-import ivorius.psychedelicraft.fluid.alcohol.DrinkTypes;
-import ivorius.psychedelicraft.fluid.alcohol.DrinkType.Variation;
-import ivorius.psychedelicraft.fluid.alcohol.StatePredicate;
-import net.minecraft.predicate.NumberRange.IntRange;
+import ivorius.psychedelicraft.fluid.physical.WorldFluid;
+import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.util.math.MathHelper;
+import net.minecraft.util.text.translation.I18n;
+import net.minecraftforge.fluids.Fluid;
+import net.minecraftforge.fluids.FluidRegistry;
+import net.minecraftforge.fluids.FluidStack;
 
-/**
- * Created by lukas on 22.10.14.
- */
-public interface PSFluids {
-    SimpleFluid EMPTY = new SimpleFluid(SimpleFluid.EMPTY_KEY, new Settings().color(0xFFFFFFFF), true);
-    AlcoholicFluid WHEAT_HOP = new AlcoholicFluid(Psychedelicraft.id("wheat_hop"), new AlcoholicFluid.Settings()
-            .alcohol(0.25, 1.7, 0.1)
-            .tickRate(() -> Psychedelicraft.getConfig().balancing.fluidAttributes.alcInfoWheatHop())
-            .variants(DrinkTypes.builder()
-                    .add(DrinkType.WORT.withVariation(Variation.BITTER), StatePredicate.Standard.BASE)
-                    .add(DrinkType.VINEGAR.withName("beer_vinegar").withVariation(Variation.BITTER), StatePredicate.Standard.VINEGAR)
-                    .add(DrinkType.BEER.withAppearance(FluidAppearance.CLEAR), StatePredicate.Standard.DISTILLED)
-                    .add(DrinkType.BEER, StatePredicate.Standard.MATURED)
-                    .add(DrinkType.HALF_WASH.withVariation(Variation.BITTER), StatePredicate.Standard.FERMENTED_1)
-                    .add(DrinkType.BEER.withVariation("green").withAppearance(FluidAppearance.RUM_MATURE), StatePredicate.Standard.FERMENTED_2))
-            .color(0xaafeaa08)
-    );
-    AlcoholicFluid WHEAT = new AlcoholicFluid(Psychedelicraft.id("wheat"), new AlcoholicFluid.Settings()
-            .alcohol(0.25, 1.7, 0.1)
-            .tickRate(() -> Psychedelicraft.getConfig().balancing.fluidAttributes.alcInfoWheat())
-            .variants(DrinkTypes.builder()
-                    .add(DrinkType.WORT, StatePredicate.Standard.BASE)
-                    .add(DrinkType.VINEGAR.withName("beer_vinegar"), StatePredicate.Standard.VINEGAR)
-                    .add(DrinkType.WHISKEY.withName("wheat_whiskey"), StatePredicate.builder().matured().distilled())
-                    .add(DrinkType.VODKA, StatePredicate.Standard.DISTILLED)
-                    .add(DrinkType.WASH, StatePredicate.Standard.MATURED)
-                    .add(DrinkType.HALF_WASH, StatePredicate.Standard.FERMENTED_1)
-                    .add(DrinkType.WASH, StatePredicate.Standard.FERMENTED_2))
-            .color(0xaafeaa08)
-    );
-    AlcoholicFluid POTATO = new AlcoholicFluid(Psychedelicraft.id("potato"), new AlcoholicFluid.Settings()
-            .alcohol(0.45, 1.9, 0.15)
-            .tickRate(() -> Psychedelicraft.getConfig().balancing.fluidAttributes.alcInfoPotato())
-            .variants(DrinkTypes.builder()
-                    .add(DrinkType.WORT, StatePredicate.Standard.BASE)
-                    .add(DrinkType.VINEGAR, StatePredicate.Standard.VINEGAR)
-                    .add(DrinkType.POTEEN.withAppearance(FluidAppearance.RUM_SEMI_MATURE), StatePredicate.builder().matured().distilled())
-                    .add(DrinkType.VODKA, StatePredicate.Standard.DISTILLED)
-                    .add(DrinkType.BEER, StatePredicate.Standard.MATURED)
-                    .add(DrinkType.HALF_WASH, StatePredicate.Standard.FERMENTED_1)
-                    .add(DrinkType.BEER.withAppearance(FluidAppearance.RUM_MATURE), StatePredicate.Standard.FERMENTED_2))
-            .color(0xaafeaa08)
-            .viscocity(2)
-    );
-    AlcoholicFluid TOMATO = new AlcoholicFluid(Psychedelicraft.id("tomato"), new AlcoholicFluid.Settings()
-            .alcohol(0.15, 0.9, 0.05)
-            .distilledColor(0xaaff0000)
-            .matureColor(0xaaff3300)
-            .tickRate(() -> Psychedelicraft.getConfig().balancing.fluidAttributes.alcInfoTomato())
-            .variants(DrinkTypes.builder()
-                    .add(DrinkType.KETCHUP.withExtraDrug(new DrugInfluence(DrugType.SUGAR, 20, 0.003, 0.002, 0.3)), StatePredicate.builder().unfermented().maturation(IntRange.between(1, 4)).vinegar())
-                    .add(DrinkType.WHISKEY.withAppearance(FluidAppearance.RUM_SEMI_MATURE), StatePredicate.builder().fermented().maturation(IntRange.atLeast(6)).distillation(IntRange.atLeast(3)))
-                    .add(DrinkType.MEAD, StatePredicate.builder().fermented().maturation(IntRange.atLeast(5)).undistilled())
-                    .add(DrinkType.BEER, StatePredicate.builder().fermented().distillation(IntRange.exactly(1)))
-                    .add(DrinkType.VINEGAR, StatePredicate.Standard.VINEGAR)
-                    .add(DrinkType.VODKA, StatePredicate.Standard.DISTILLED)
-                    .add(DrinkType.JUICE.withAppearance(FluidAppearance.TOMATO_JUICE), StatePredicate.Standard.ANY))
-            .color(0xaaffaa08)
-            .viscocity(1)
-    );
-    AlcoholicFluid RED_GRAPES = new AlcoholicFluid(Psychedelicraft.id("red_grapes"), new AlcoholicFluid.Settings()
-            .alcohol(0.55, 1.7, 0.2)
-            .tickRate(() -> Psychedelicraft.getConfig().balancing.fluidAttributes.alcInfoRedGrapes())
-            .distilledColor(0x993f0822)
-            .matureColor(0xee3f0822)
-            .variants(DrinkTypes.builder()
-                    .add(DrinkType.JUICE.withAppearance(FluidAppearance.WINE), StatePredicate.Standard.BASE)
-                    .add(DrinkType.VINEGAR, StatePredicate.Standard.VINEGAR)
-                    .add(DrinkType.BRANDY, StatePredicate.Standard.DISTILLED)
-                    .add(DrinkType.VINEGAR, StatePredicate.builder().maturation(IntRange.atLeast(16)))
-                    .add(DrinkType.WINE.withVariation(Variation.WELL_AGED), StatePredicate.builder().maturation(IntRange.atLeast(14)))
-                    .add(DrinkType.WINE.withVariation(Variation.AGED), StatePredicate.builder().maturation(IntRange.atLeast(8)))
-                    .add(DrinkType.WINE.withVariation(Variation.SLIGHTLY_AGED), StatePredicate.builder().maturation(IntRange.atLeast(4)))
-                    .add(DrinkType.WINE.withVariation(Variation.YOUNG), StatePredicate.Standard.MATURED)
-                    .add(DrinkType.HALF_WASH.withVariation(Variation.WINE).withAppearance(FluidAppearance.WINE), StatePredicate.Standard.FERMENTED_1)
-                    .add(DrinkType.WASH.withVariation(Variation.WINE).withAppearance(FluidAppearance.WINE), StatePredicate.Standard.FERMENTED_2))
-            .color(0xaafeaa08)
-    );
-    AlcoholicFluid RICE = new AlcoholicFluid(Psychedelicraft.id("rice"), new AlcoholicFluid.Settings()
-            .alcohol(0.25, 1.7, 0.1)
-            .tickRate(() -> Psychedelicraft.getConfig().balancing.fluidAttributes.alcInfoRice())
-            .matureColor(0x88D6BC90)
-            .variants(DrinkTypes.builder()
-                    .add(DrinkType.WORT.withAppearance(FluidAppearance.RICE_WINE), StatePredicate.Standard.BASE)
-                    .add(DrinkType.VINEGAR, StatePredicate.Standard.VINEGAR)
-                    .add(DrinkType.BRANDY.withAppearance(FluidAppearance.CLEAR), StatePredicate.Standard.DISTILLED)
-                    .add(DrinkType.WINE.withAppearance(FluidAppearance.CLEAR), StatePredicate.Standard.MATURED)
-                    .add(DrinkType.HALF_WASH.withAppearance(FluidAppearance.CLEAR), StatePredicate.Standard.FERMENTED_1)
-                    .add(DrinkType.WINE.withVariation(Variation.YOUNG).withAppearance(FluidAppearance.CLEAR), StatePredicate.Standard.FERMENTED_2))
-            .color(0xeecac4b2)
-    );
-    AlcoholicFluid JUNIPER = new AlcoholicFluid(Psychedelicraft.id("juniper"), new AlcoholicFluid.Settings()
-            .alcohol(0.4, 1.7, 0.1)
-            .tickRate(() -> Psychedelicraft.getConfig().balancing.fluidAttributes.alcInfoJuniper())
-            .variants(DrinkTypes.builder()
-                    .add(DrinkType.WORT.withAppearance(FluidAppearance.SLURRY), StatePredicate.Standard.BASE)
-                    .add(DrinkType.VINEGAR, StatePredicate.Standard.VINEGAR)
-                    .add(DrinkType.GIN, StatePredicate.Standard.DISTILLED)
-                    .add(DrinkType.WASH, StatePredicate.Standard.MATURED)
-                    .add(DrinkType.HALF_WASH, StatePredicate.Standard.FERMENTED_1)
-                    .add(DrinkType.WASH.withVariation(Variation.YOUNG), StatePredicate.Standard.FERMENTED_2))
-            .color(0xcc704E21)
-    );
-    AlcoholicFluid HONEY = new AlcoholicFluid(Psychedelicraft.id("honey"), new AlcoholicFluid.Settings()
-            .alcohol(0.35, 1.7, 0.1)
-            .distilledColor(0x99e9ae3b)
-            .matureColor(0xaaD1984D)
-            .tickRate(() -> Psychedelicraft.getConfig().balancing.fluidAttributes.alcInfoHoney())
-            .variants(DrinkTypes.builder()
-                    .add(DrinkType.WORT.withAppearance(FluidAppearance.MEAD), StatePredicate.Standard.BASE)
-                    .add(DrinkType.VINEGAR.withAppearance(FluidAppearance.MEAD), StatePredicate.Standard.VINEGAR)
-                    .add(DrinkType.BRANDY.withAppearance(FluidAppearance.MEAD), StatePredicate.Standard.DISTILLED)
-                    .add(DrinkType.MEAD, StatePredicate.Standard.MATURED)
-                    .add(DrinkType.HALF_WASH.withAppearance(FluidAppearance.MEAD), StatePredicate.Standard.FERMENTED_1)
-                    .add(DrinkType.MEAD.withVariation(Variation.YOUNG), StatePredicate.Standard.FERMENTED_2))
-            .color(0xbbe9ae3b)
-            .viscocity(5)
-    );
-    AlcoholicFluid SUGAR_CANE = new AlcoholicFluid(Psychedelicraft.id("sugar_cane"), new AlcoholicFluid.Settings()
-            .alcohol(0.35, 1.7, 0.1)
-            .variants(DrinkTypes.builder()
-                    .add(DrinkType.WORT.withAppearance(FluidAppearance.CLEAR), StatePredicate.Standard.BASE)
-                    .add(DrinkType.VINEGAR, StatePredicate.Standard.VINEGAR)
-                    .add(DrinkType.RUM.withVariation(Variation.YOUNG), StatePredicate.builder().distilled().unmatured())
-                    .add(DrinkType.RUM, StatePredicate.Standard.DISTILLED)
-                    .add(DrinkType.BASI, StatePredicate.Standard.MATURED)
-                    .add(DrinkType.HALF_WASH, StatePredicate.Standard.FERMENTED_1)
-                    .add(DrinkType.BASI.withVariation(Variation.YOUNG), StatePredicate.Standard.FERMENTED_2))
-            .tickRate(() -> Psychedelicraft.getConfig().balancing.fluidAttributes.alcInfoSugarCane())
-            .color(0xaafeaa08)
-    );
-    AlcoholicFluid CORN = new AlcoholicFluid(Psychedelicraft.id("corn"), new AlcoholicFluid.Settings()
-            .alcohol(0.25, 1.7, 0.1)
-            .tickRate(() -> Psychedelicraft.getConfig().balancing.fluidAttributes.alcInfoCorn())
-            .variants(DrinkTypes.builder()
-                    .add(DrinkType.WORT.withAppearance(FluidAppearance.BEER), StatePredicate.Standard.BASE)
-                    .add(DrinkType.VINEGAR, StatePredicate.Standard.VINEGAR)
-                    .add(DrinkType.VODKA, StatePredicate.builder().unmatured().distilled())
-                    .add(DrinkType.WHISKEY, StatePredicate.builder().matured().distilled())
-                    .add(DrinkType.BEER, StatePredicate.Standard.MATURED)
-                    .add(DrinkType.HALF_WASH, StatePredicate.Standard.FERMENTED_1)
-                    .add(DrinkType.BEER.withVariation(Variation.GREEN), StatePredicate.Standard.FERMENTED_2))
-            .color(0xaafeaa08)
-    );
-    AlcoholicFluid APPLE = new AlcoholicFluid(Psychedelicraft.id("apple"), new AlcoholicFluid.Settings()
-            .alcohol(0.35, 1.7, 0.1)
-            .distilledColor(0x66EDC13B)
-            .matureColor(0x88EDC13B)
-            .variants(DrinkTypes.builder()
-                    .add(DrinkType.CIDER.withVariation(Variation.SWEET), StatePredicate.Standard.BASE)
-                    .add(DrinkType.VINEGAR, StatePredicate.Standard.VINEGAR)
-                    .add(DrinkType.BRANDY.withAppearance(FluidAppearance.CIDER), StatePredicate.Standard.DISTILLED)
-                    .add(DrinkType.CIDER, StatePredicate.Standard.MATURED)
-                    .add(DrinkType.CIDER.withVariation(Variation.HALF_SWEET), StatePredicate.Standard.FERMENTED_1)
-                    .add(DrinkType.CIDER.withVariation(Variation.HARD), StatePredicate.Standard.FERMENTED_2))
-            .tickRate(() -> Psychedelicraft.getConfig().balancing.fluidAttributes.alcInfoApple())
-            .color(0x99EDC13B)
-    );
-    AlcoholicFluid PINEAPPLE = new AlcoholicFluid(Psychedelicraft.id("pineapple"), new AlcoholicFluid.Settings()
-            .alcohol(0.35, 1.7, 0.1)
-            .distilledColor(0x66EDC13B)
-            .matureColor(0x88EDC13B)
-            .variants(DrinkTypes.builder()
-                    .add(DrinkType.JUICE.withAppearance(FluidAppearance.CIDER), StatePredicate.Standard.BASE)
-                    .add(DrinkType.VINEGAR, StatePredicate.Standard.VINEGAR)
-                    .add(DrinkType.BRANDY.withAppearance(FluidAppearance.CIDER), StatePredicate.Standard.DISTILLED)
-                    .add(DrinkType.WINE.withAppearance(FluidAppearance.CIDER), StatePredicate.Standard.MATURED)
-                    .add(DrinkType.HALF_WASH.withAppearance(FluidAppearance.CIDER), StatePredicate.Standard.FERMENTED_1)
-                    .add(DrinkType.WINE.withVariation("young").withAppearance(FluidAppearance.CIDER), StatePredicate.Standard.FERMENTED_2))
-            .tickRate(() -> Psychedelicraft.getConfig().balancing.fluidAttributes.alcInfoPineapple())
-            .color(0x99EDC13B)
-            .viscocity(2)
-    );
-    AlcoholicFluid BANANA = new AlcoholicFluid(Psychedelicraft.id("banana"), new AlcoholicFluid.Settings()
-            .alcohol(0.35, 1.7, 0.1)
-            .distilledColor(0x99e9ae3b)
-            .matureColor(0xaaD1984D)
-            .variants(DrinkTypes.builder()
-                    .add(DrinkType.JUICE.withAppearance(FluidAppearance.MEAD), StatePredicate.Standard.BASE)
-                    .add(DrinkType.VINEGAR, StatePredicate.Standard.VINEGAR)
-                    .add(DrinkType.BRANDY.withAppearance(FluidAppearance.MEAD), StatePredicate.Standard.DISTILLED)
-                    .add(DrinkType.BEER.withAppearance(FluidAppearance.MEAD), StatePredicate.Standard.MATURED)
-                    .add(DrinkType.HALF_WASH.withAppearance(FluidAppearance.MEAD), StatePredicate.Standard.FERMENTED_1)
-                    .add(DrinkType.BEER.withAppearance(FluidAppearance.MEAD), StatePredicate.Standard.FERMENTED_2))
-            .tickRate(() -> Psychedelicraft.getConfig().balancing.fluidAttributes.alcInfoBanana())
-            .color(0xbbe9ae3b)
-            .viscocity(3)
-    );
-    AlcoholicFluid MILK = new AlcoholicFluid(Psychedelicraft.id("milk"), new AlcoholicFluid.Settings()
-            .alcohol(0.35, 1.7, 0.1)
-            .distilledColor(0x77cac4b2)
-            .matureColor(0x88D6BC90)
-            .variants(DrinkTypes.builder()
-                    .add(DrinkType.WORT.withAppearance(FluidAppearance.RICE_WINE), StatePredicate.Standard.BASE)
-                    .add(DrinkType.VINEGAR.withAppearance(FluidAppearance.RICE_WINE), StatePredicate.Standard.VINEGAR)
-                    .add(DrinkType.ARKHI.withAppearance(FluidAppearance.RICE_WINE), StatePredicate.Standard.DISTILLED)
-                    .add(DrinkType.BLAAND.withAppearance(FluidAppearance.RICE_WINE), StatePredicate.Standard.MATURED)
-                    .add(DrinkType.HALF_WASH.withAppearance(FluidAppearance.RICE_WINE), StatePredicate.Standard.FERMENTED_1)
-                    .add(DrinkType.BLAAND.withAppearance(FluidAppearance.RICE_WINE), StatePredicate.Standard.FERMENTED_2))
-            .tickRate(() -> Psychedelicraft.getConfig().balancing.fluidAttributes.alcInfoMilk())
-            .color(0x88ffffff)
-            .viscocity(2)
-    );
-    AlcoholicFluid AGAVE = new AgaveFluid(Psychedelicraft.id("agave"), new AlcoholicFluid.Settings()
-            .alcohol(0.15, 1.5, 0.05)
-            .distilledColor(0x779beb62)
-            .matureColor(0x779beb62)
-            .tickRate(() -> Psychedelicraft.getConfig().balancing.fluidAttributes.alcInfoAgave())
-            .variants(DrinkTypes.builder()
-                    .add(DrinkType.MEZCAL, StatePredicate.builder().fermented().unmatured().distillation(IntRange.exactly(1)))
-                    .add(DrinkType.TEQUILA.withVariation(Variation.BLANCO), StatePredicate.builder().fermented().unmatured().distillation(IntRange.atLeast(2)))
-                    .add(DrinkType.TEQUILA.withVariation(Variation.REPOSADO), StatePredicate.builder().fermented().matured().distillation(IntRange.atLeast(2)))
-                    .add(DrinkType.JUICE, StatePredicate.Standard.ANY))
-            .color(0x779bab62)
-            .viscocity(1)
-    );
+import javax.annotation.Nullable;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.LinkedHashMap;
+import java.util.Map;
 
-    DrugFluid COFFEE = new CoffeeFluid(Psychedelicraft.id("coffee"), new DrugFluid.Settings()
-            .drinkable()
-            .appearance(FluidAppearance.COFFEE)
-            .color(0xffa77d55)
-    );
-    DrugFluid COCA_TEA = new DrugFluid(Psychedelicraft.id("coca_tea"), new DrugFluid.Settings()
-            .drinkable()
-            .appearance(FluidAppearance.TEA)
-            .influence(new DrugInfluence(DrugType.COCAINE, 60, 0.005, 0.002, 0.2f))
-            .color(0x44787a36)
-    );
-    DrugFluid CANNABIS_TEA = new DrugFluid(Psychedelicraft.id("cannabis_tea"), new DrugFluid.Settings()
-            .drinkable()
-            .appearance(FluidAppearance.TEA)
-            .influence(new DrugInfluence(DrugType.CANNABIS, 60, 0.005, 0.002, 0.25f))
-            .color(0x446d6f3c)
-    );
-    DrugFluid PEYOTE_JUICE = new DrugFluid(Psychedelicraft.id("peyote_juice"), new DrugFluid.Settings()
-            .drinkable()
-            .influence(new DrugInfluence(DrugType.PEYOTE, 15, 0.005, 0.003, 2.0f))
-            .appearance(FluidAppearance.TEA)
-            .color(0x779bab62)
-            .viscocity(2)
-    );
-    DrugFluid KAVA = new DrugFluid(Psychedelicraft.id("kava"), new DrugFluid.Settings()
-            .drinkable()
-            .influence(new DrugInfluence(DrugType.KAVA, 20, 0.005, 0.003, 2.0f))
-            .color(0x779bab62)
-    );
+public final class PSFluids {
+    private static final String FORGE_PREFIX = Psychedelicraft.MOD_ID + "_";
+    private static final Map<String, Fluid> FLUIDS = new LinkedHashMap<>();
 
-    DrugFluid COCAINE = new DrugFluid(Psychedelicraft.id("cocaine"), new DrugFluid.Settings()
-            .injectable()
-            .appearance(FluidAppearance.CLEAR)
-            .influence(new DrugInfluence(DrugType.COCAINE, 0, 0.005, 0.01, 50.0f))
-            .color(0x44e8f4f8)
-    );
-    DrugFluid CAFFEINE = new DrugFluid(Psychedelicraft.id("caffeine"), new DrugFluid.Settings()
-            .injectable()
-            .appearance(FluidAppearance.CLEAR)
-            .influence(new DrugInfluence(DrugType.CAFFEINE, 0, 0.005, 0.01, 85.0f))
-            .color(0x66eee2d3)
-    );
-    DrugFluid BATH_SALTS = new DrugFluid(Psychedelicraft.id("bath_salts"), new DrugFluid.Settings()
-            .injectable()
-            .appearance(FluidAppearance.CLEAR)
-            .influence(new DrugInfluence(DrugType.BATH_SALTS, 0, 0.005, 0.01, 50.0f))
-            .color(0x2233f4f8)
-    );
-    ChemicalExtractFluid MORNING_GLORY_EXTRACT = new ChemicalExtractFluid(Psychedelicraft.id("morning_glory_extract"), new DrugFluid.Settings()
-            .injectable()
-            .color(0x66eee2d3), DrugType.LSD
-    );
-    ChemicalExtractFluid BELLADONA_EXTRACT = new ChemicalExtractFluid(Psychedelicraft.id("belladonna_extract"), new DrugFluid.Settings()
-            .color(0x66eee2d3), DrugType.ATROPINE
-    );
-    ChemicalExtractFluid JIMSONWEED_EXTRACT = new ChemicalExtractFluid(Psychedelicraft.id("jimsonweed_extract"), new DrugFluid.Settings()
-            .color(0x66eee2d3), DrugType.ATROPINE
-    );
+    public static final BrewFluid WHEAT_HOP = register("wheat_hop", BrewProfiles.wheatHop());
+    public static final BrewFluid WHEAT = register("wheat", BrewProfiles.wheat());
+    public static final BrewFluid POTATO = register("potato", BrewProfiles.potato());
+    public static final BrewFluid TOMATO = register("tomato", BrewProfiles.tomato());
+    public static final BrewFluid RED_GRAPES = register("red_grapes", BrewProfiles.redGrapes());
+    public static final BrewFluid RICE = register("rice", BrewProfiles.rice());
+    public static final BrewFluid JUNIPER = register("juniper", BrewProfiles.juniper());
+    public static final BrewFluid HONEY = register("honey", BrewProfiles.honey());
+    public static final BrewFluid SUGAR_CANE = register("sugar_cane", BrewProfiles.sugarCane());
+    public static final BrewFluid CORN = register("corn", BrewProfiles.corn());
+    public static final BrewFluid APPLE = register("apple", BrewProfiles.apple());
+    public static final BrewFluid PINEAPPLE = register("pineapple", BrewProfiles.pineapple());
+    public static final BrewFluid BANANA = register("banana", BrewProfiles.banana());
+    public static final BrewFluid MILK = register("milk", BrewProfiles.milk());
+    public static final BrewFluid AGAVE = register("agave", BrewProfiles.agave());
+    public static final Fluid COFFEE = fluid("coffee", "coffee", 0xffa77d55, 1);
+    public static final Fluid COCA_TEA = fluid("coca_tea", "tea", 0x44787a36, 1);
+    public static final Fluid CANNABIS_TEA = fluid("cannabis_tea", "tea", 0x446d6f3c, 1);
+    public static final Fluid PEYOTE_JUICE = fluid("peyote_juice", "tea", 0x779bab62, 2);
+    public static final Fluid KAVA = fluid("kava", "tea", 0x779bab62, 1);
+    public static final Fluid COCAINE = fluid("cocaine", "clear", 0x44e8f4f8, 1);
+    public static final Fluid CAFFEINE = fluid("caffeine", "clear", 0x66eee2d3, 1);
+    public static final Fluid BATH_SALTS = fluid("bath_salts", "clear", 0x2233f4f8, 1);
+    public static final Fluid MORNING_GLORY_EXTRACT = extract("morning_glory_extract");
+    public static final Fluid BELLADONNA_EXTRACT = extract("belladonna_extract");
+    public static final Fluid JIMSONWEED_EXTRACT = extract("jimsonweed_extract");
+    public static final Fluid SLURRY = fluid("slurry", "slurry", 0xcc704e21, 4);
 
-    SimpleFluid SLURRY = new SlurryFluid(Psychedelicraft.id("slurry"), new SimpleFluid.Settings().color(0xcc704E21).viscocity(4));
+    private PSFluids() {
+    }
 
-    static void bootstrap() { }
+    private static Fluid fluid(String path, String texture, int color, int viscosity) {
+        String sprite = "blocks/fluid/" + texture;
+        Fluid fluid = new WorldFluid(FORGE_PREFIX + path, Psychedelicraft.id(sprite + "_still"), Psychedelicraft.id(sprite + "_flow"), color)
+                .setUnlocalizedName("psychedelicraft." + path).setViscosity(1000 * viscosity);
+        return register(path, fluid);
+    }
+
+    private static <T extends Fluid> T register(String path, T fluid) {
+        FLUIDS.put(Psychedelicraft.id(path).toString(), fluid);
+        return fluid;
+    }
+
+    private static Fluid extract(String path) {
+        return register(path, new WorldFluid(FORGE_PREFIX + path,
+                BrewFluid.texture("clear", "_still"), BrewFluid.texture("clear", "_flow"), 0x66eee2d3) {
+            @Override
+            public int getColor(FluidStack stack) {
+                return BrewFluid.blend(super.getColor(stack), 0xffffffff,
+                        BrewFluid.stage(stack, BrewFluid.DISTILLATION, 2) / 16F);
+            }
+        }.setUnlocalizedName(Psychedelicraft.MOD_ID + "." + path));
+    }
+
+    public static void register() {
+        for (Fluid fluid : FLUIDS.values()) {
+            FluidRegistry.registerFluid(fluid);
+        }
+    }
+
+    public static Collection<Fluid> all() {
+        return Collections.unmodifiableCollection(FLUIDS.values());
+    }
+
+    @Nullable
+    public static Fluid resolve(String id) {
+        if ("minecraft:water".equals(id)) return FluidRegistry.WATER;
+        if ("minecraft:lava".equals(id)) return FluidRegistry.LAVA;
+        Fluid fluid = FLUIDS.get(id);
+        return fluid == null ? FluidRegistry.getFluid(id) : fluid;
+    }
+
+    public static String id(Fluid fluid) {
+        if (fluid == FluidRegistry.WATER) return "minecraft:water";
+        if (fluid == FluidRegistry.LAVA) return "minecraft:lava";
+        String name = fluid.getName();
+        if (name.startsWith(FORGE_PREFIX)) {
+            String id = Psychedelicraft.id(name.substring(FORGE_PREFIX.length())).toString();
+            if (FLUIDS.get(id) == fluid) return id;
+        }
+        return name;
+    }
+
+    public static boolean isInjectable(Fluid fluid) {
+        return fluid == COCAINE || fluid == CAFFEINE || fluid == BATH_SALTS || fluid == MORNING_GLORY_EXTRACT;
+    }
+
+    public static boolean isFlowerExtract(Fluid fluid) {
+        return fluid == MORNING_GLORY_EXTRACT || fluid == BELLADONNA_EXTRACT || fluid == JIMSONWEED_EXTRACT;
+    }
+
+    public static boolean canConsume(Fluid fluid, boolean injection) {
+        return injection ? isInjectable(fluid)
+                : fluid instanceof BrewFluid || isFlowerExtract(fluid) || fluid == COFFEE || fluid == COCA_TEA
+                || fluid == CANNABIS_TEA || fluid == PEYOTE_JUICE || fluid == KAVA;
+    }
+
+    public static void consume(EntityPlayer player, FluidStack portion) {
+        DrugProperties properties = DrugCapability.get(player);
+        if (properties != null) addServingInfluences(portion, properties);
+    }
+
+    public static void addServingInfluences(FluidStack portion, DrugProperties properties) {
+        double buckets = portion.amount / (double) Fluid.BUCKET_VOLUME;
+        Fluid fluid = portion.getFluid();
+        if (fluid instanceof BrewFluid) {
+            ((BrewFluid) fluid).addServingInfluences(portion, buckets, properties);
+        } else if (isFlowerExtract(fluid)) {
+            int concentration = BrewFluid.stage(portion, BrewFluid.DISTILLATION, 2);
+            DrugType type = fluid == MORNING_GLORY_EXTRACT ? DrugType.LSD : DrugType.ATROPINE;
+            properties.addInfluence(new DrugInfluence(type, 3, 0, 0.03, Math.pow(96, concentration) * buckets));
+        } else if (fluid == COFFEE) {
+            double warmth = warmth(portion) / 2.0;
+            properties.addInfluence(new DrugInfluence(DrugType.CAFFEINE, 20, 0.002, 0.001, (0.25 + warmth * 0.05) * buckets));
+            if (warmth > 0) {
+                properties.addInfluence(new DrugInfluence(DrugType.WARMTH, 0, 0, 0.1, 0.8 * warmth * buckets));
+            }
+        } else if (fluid == PEYOTE_JUICE) {
+            properties.addInfluence(new DrugInfluence(DrugType.PEYOTE, 15, 0.005, 0.003, 2 * buckets));
+        } else if (fluid == CAFFEINE) {
+            properties.addInfluence(new DrugInfluence(DrugType.CAFFEINE, 0, 0.005, 0.01, 85 * buckets));
+        } else if (fluid == COCA_TEA) {
+            properties.addInfluence(new DrugInfluence(DrugType.COCAINE, 60, 0.005, 0.002, 0.2 * buckets));
+        } else if (fluid == CANNABIS_TEA) {
+            properties.addInfluence(new DrugInfluence(DrugType.CANNABIS, 60, 0.005, 0.002, 0.25 * buckets));
+        } else if (fluid == KAVA) {
+            properties.addInfluence(new DrugInfluence(DrugType.KAVA, 20, 0.005, 0.003, 2 * buckets));
+        } else if (fluid == COCAINE) {
+            properties.addInfluence(new DrugInfluence(DrugType.COCAINE, 0, 0.005, 0.01, 50 * buckets));
+        } else if (fluid == BATH_SALTS) {
+            properties.addInfluence(new DrugInfluence(DrugType.BATH_SALTS, 0, 0.005, 0.01, 50 * buckets));
+        }
+    }
+
+    public static int warmth(FluidStack stack) {
+        return stack.tag == null ? 0 : MathHelper.clamp(stack.tag.getInteger("warmth"), 0, 2);
+    }
+
+    public static String displayName(FluidStack stack) {
+        if (isFlowerExtract(stack.getFluid())) {
+            return I18n.translateToLocal(stack.getUnlocalizedName() + ".distilled."
+                    + BrewFluid.stage(stack, BrewFluid.DISTILLATION, 2));
+        }
+        return stack.getFluid() == COFFEE
+                ? I18n.translateToLocal("fluid.psychedelicraft.coffee.temperature." + warmth(stack))
+                : stack.getLocalizedName();
+    }
 }

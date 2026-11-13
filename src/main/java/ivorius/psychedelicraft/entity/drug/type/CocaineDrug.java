@@ -1,65 +1,36 @@
 /*
- *  Copyright (c) 2014, Lukas Tenbrink.
- *  * http://lukas.axxim.net
+ * Copyright (c) 2014, Lukas Tenbrink.
  */
 
 package ivorius.psychedelicraft.entity.drug.type;
 
-import java.util.Optional;
-
 import ivorius.psychedelicraft.PSDamageTypes;
 import ivorius.psychedelicraft.entity.drug.DrugProperties;
-import ivorius.psychedelicraft.entity.drug.DrugType;
-import ivorius.psychedelicraft.util.MathUtils;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.text.Text;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.random.Random;
+import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.util.DamageSource;
+import net.minecraft.util.math.MathHelper;
 
-/**
- * Created by lukas on 01.11.14.
- */
-public class CocaineDrug extends SimpleDrug {
-    static final Optional<Text> SLEEP_STATUS = Optional.of(Text.translatable("psychedelicraft.sleep.fail.coccaine"));
+import javax.annotation.Nullable;
+import java.util.Random;
 
-    public CocaineDrug(double decSpeed, double decSpeedPlus) {
-        super(DrugType.COCAINE, decSpeed, decSpeedPlus);
-    }
-
-    @Override
-    public void update(DrugProperties drugProperties) {
-        super.update(drugProperties);
-
-        if (getActiveValue() > 0) {
-            PlayerEntity entity = drugProperties.asEntity();
-            Random random = entity.getWorld().random;
-            if (!entity.getWorld().isClient) {
-                double chance = (getActiveValue() - 0.8F) * 0.1F;
-
-                if (entity.age % 20 == 0 && random.nextFloat() < chance) {
-                    entity.damage(drugProperties.damageOf(random.nextFloat() < 0.4F
-                            ? PSDamageTypes.STROKE
-                            : random.nextFloat() < 0.5F
-                            ? PSDamageTypes.HEART_FAILURE
-                            : PSDamageTypes.RESPIRATORY_FAILURE), Integer.MAX_VALUE);
-                }
-            }
-        }
+public final class CocaineDrug extends SimpleDrug {
+    public CocaineDrug() {
+        super(1, 0.0003);
     }
 
     @Override
     public float heartbeatVolume() {
-        return MathUtils.inverseLerp((float) getActiveValue(), 0.4F, 1) + (getTicksActive() * 0.0001F) * 1.2F;
+        return activeRamp(0.4F) + ticksActive() * 0.0001F * 1.2F;
     }
 
     @Override
     public float heartbeatSpeed() {
-        return (float) getActiveValue() * 0.1F + (getTicksActive() * 0.0001F);
+        return (float) getActiveValue() * 0.1F + ticksActive() * 0.0001F;
     }
 
     @Override
     public float breathVolume() {
-        return MathUtils.inverseLerp((float) getActiveValue(), 0.4f, 1.0f) * 1.5F;
+        return activeRamp(0.4F) * 1.5F;
     }
 
     @Override
@@ -69,68 +40,76 @@ public class CocaineDrug extends SimpleDrug {
 
     @Override
     public float randomJumpChance() {
-        return MathUtils.inverseLerp((float) getActiveValue(), 0.6F, 1) * 0.03F;
+        return activeRamp(0.6F) * 0.03F;
     }
 
     @Override
-    public float randomPunchChance() {
-        return MathUtils.inverseLerp((float) getActiveValue(), 0.5F, 1) * 0.02F;
-    }
-
-    @Override
-    public float speedModifier() {
-        return 1.0F + (float) getActiveValue() * 0.15F;
-    }
-
-    @Override
-    public float digSpeedModifier() {
-        return 1.0F + (float) getActiveValue() * 0.15F;
-    }
-
-    @Override
-    public Optional<Text> trySleep(BlockPos pos) {
-        return getActiveValue() > 0.4
-                ? SLEEP_STATUS
-                : Optional.empty();
-    }
-
-    @Override
-    public float desaturationHallucinationStrength() {
-        return (float)getActiveValue() * 0.75f;
+    public float randomSwingChance() {
+        return activeRamp(0.5F) * 0.02F;
     }
 
     @Override
     public float handTrembleStrength() {
-        return MathUtils.inverseLerp((float)getActiveValue(), 0.6F, 1);
+        return activeRamp(0.6F);
     }
 
     @Override
     public float viewTrembleStrength() {
-        return MathUtils.inverseLerp((float)getActiveValue(), 0.8F, 1);
+        return activeRamp(0.8F);
     }
 
     @Override
-    public float headMotionInertness() {
-        return (float)getActiveValue() * 10;
+    public float headMotionInertia() {
+        return (float) getActiveValue() * 10F;
     }
 
     @Override
-    public float bloomHallucinationStrength() {
-        return MathUtils.inverseLerp((float)getActiveValue(), 0, 0.6F) * 1.5F;
+    public float bloomStrength() {
+        return Math.min(1F, (float) getActiveValue() / 0.6F) * 1.5F;
+    }
+
+    @Override
+    public void update(DrugProperties properties, @Nullable EntityPlayer player) {
+        super.update(properties, player);
+        if (player == null || player.world.isRemote || getActiveValue() <= 0.8 || player.ticksExisted % 20 != 0) return;
+        Random random = player.getRNG();
+        if (random.nextFloat() < (getActiveValue() - 0.8F) * 0.1) {
+            DamageSource cause;
+            if (random.nextFloat() < 0.4F) cause = PSDamageTypes.STROKE;
+            else if (random.nextBoolean()) cause = PSDamageTypes.HEART_FAILURE;
+            else cause = PSDamageTypes.RESPIRATORY_FAILURE;
+            player.attackEntityFrom(cause, Integer.MAX_VALUE);
+        }
+    }
+
+    @Override
+    public float speedModifier() {
+        return 1 + (float) getActiveValue() * 0.15F;
+    }
+
+    @Override
+    public float digSpeedModifier() {
+        return speedModifier();
+    }
+
+    @Override
+    @Nullable
+    public String sleepWarning() {
+        return getActiveValue() > 0.4 ? "psychedelicraft.sleep.fail.coccaine" : null;
     }
 
     @Override
     public float colorHallucinationStrength() {
-        return MathUtils.inverseLerp((float) getActiveValue() * 1.3F, 0.7F, 1) * 0.05F;
+        return MathHelper.clamp(((float) getActiveValue() * 1.3F - 0.7F) / 0.3F, 0, 1) * 0.05F;
     }
 
     @Override
     public float movementHallucinationStrength() {
-        return MathUtils.inverseLerp((float) getActiveValue() * 1.3F, 0.7F, 1) * 0.05F;
+        return colorHallucinationStrength();
     }
 
     @Override
     public float contextualHallucinationStrength() {
-        return MathUtils.inverseLerp((float) getActiveValue() * 1.3F, 0.7F, 1) * 0.05F;
+        return colorHallucinationStrength();
     }
 }

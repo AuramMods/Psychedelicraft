@@ -1,54 +1,36 @@
-#version 150
-#moj_import <psychedelicraft:linear.glsl>
+#version 120
 
 uniform sampler2D DiffuseSampler;
 uniform sampler2D DepthSampler;
-
-in vec2 texCoord;
-
-uniform vec2 pixelSize;
-uniform float vertical;
-uniform float focalPointNear;
-uniform float focalBlurNear;
-uniform float focalPointFar;
-uniform float focalBlurFar;
-
-uniform vec2 depthRange;
-
-out vec4 fragColor;
-
-float getLinearDepth(vec2 newUV) {
-  float depth = texture(DepthSampler, newUV).r;
-  return linearize(depth, depthRange.x, depthRange.y);
-}
+uniform vec2 TextureScale;
+uniform vec2 Direction;
+uniform vec2 ProjectionDepth;
+uniform vec2 FocusDistance;
+uniform vec2 BlurStrength;
+varying vec2 texCoord;
 
 void main() {
-  vec4 texel = texture(DiffuseSampler, texCoord.st);
-  vec3 newColor = texel.rgb * 0.2;
-
-  float depth = getLinearDepth(texCoord.st);
-  float focalDepth = 0.0;
-  if (depth < focalPointNear) {
-    focalDepth = (focalPointNear - depth) / focalPointNear * focalBlurNear;
-  } else if (depth > focalPointFar) {
-    focalDepth = (depth - focalPointFar) / focalPointFar * focalBlurFar;
-  }
-
-  focalDepth = min(focalDepth, 1.0);
-
-  if (focalDepth > 0.0) {
-    float xMul = (vertical == 0) ? pixelSize.x : 0.0;
-    float yMul = (vertical == 1) ? pixelSize.y : 0.0;
-
-    for(float i = -1.0; i < 2.0; i += 2.0) {
-      newColor += texture(DiffuseSampler, vec2(texCoord.s + 1.0 * i * xMul, texCoord.t + 1.0 * i * yMul)).rgb * 0.15;
-      newColor += texture(DiffuseSampler, vec2(texCoord.s + 2.0 * i * xMul, texCoord.t + 2.0 * i * yMul)).rgb * 0.11;
-      newColor += texture(DiffuseSampler, vec2(texCoord.s + 3.0 * i * xMul, texCoord.t + 3.0 * i * yMul)).rgb * 0.09;
-      newColor += texture(DiffuseSampler, vec2(texCoord.s + 4.0 * i * xMul, texCoord.t + 4.0 * i * yMul)).rgb * 0.05;
+    vec4 scene = texture2D(DiffuseSampler, texCoord);
+    float clipDepth = texture2D(DepthSampler, texCoord).r * 2.0 - 1.0;
+    float distance = ProjectionDepth.y / (clipDepth + ProjectionDepth.x);
+    float blur = 0.0;
+    if (distance < FocusDistance.x) {
+        blur = (FocusDistance.x - distance) * BlurStrength.x / FocusDistance.x;
+    } else if (distance > FocusDistance.y) {
+        blur = (distance - FocusDistance.y) * BlurStrength.y / max(FocusDistance.y, 0.0001);
     }
-    
-    newColor = mix(texel.rgb, newColor, focalDepth);
-  }
-  
-  fragColor = vec4(newColor, texel.a);
+
+    vec3 result = scene.rgb;
+    if (blur > 0.0) {
+        vec3 blurred = scene.rgb * 0.2;
+        for (int side = -1; side <= 1; side += 2) {
+            vec2 step = Direction * float(side);
+            blurred += texture2D(DiffuseSampler, clamp(texCoord + step, vec2(0.0), TextureScale)).rgb * 0.15;
+            blurred += texture2D(DiffuseSampler, clamp(texCoord + 2.0 * step, vec2(0.0), TextureScale)).rgb * 0.11;
+            blurred += texture2D(DiffuseSampler, clamp(texCoord + 3.0 * step, vec2(0.0), TextureScale)).rgb * 0.09;
+            blurred += texture2D(DiffuseSampler, clamp(texCoord + 4.0 * step, vec2(0.0), TextureScale)).rgb * 0.05;
+        }
+        result = mix(scene.rgb, blurred, min(blur, 1.0));
+    }
+    gl_FragColor = vec4(result, scene.a);
 }

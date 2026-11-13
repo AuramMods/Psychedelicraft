@@ -1,28 +1,49 @@
 package ivorius.psychedelicraft.command;
 
-import com.mojang.brigadier.CommandDispatcher;
-import ivorius.psychedelicraft.entity.drug.*;
-import net.minecraft.command.CommandRegistryAccess;
-import net.minecraft.command.argument.EntityArgumentType;
-import net.minecraft.server.command.CommandManager;
-import net.minecraft.server.command.ServerCommandSource;
-import net.minecraft.server.network.ServerPlayerEntity;
+import ivorius.psychedelicraft.entity.drug.DrugCapability;
+import ivorius.psychedelicraft.entity.drug.DrugProperties;
+import net.minecraft.command.CommandBase;
+import net.minecraft.command.CommandException;
+import net.minecraft.command.ICommandSender;
+import net.minecraft.entity.player.EntityPlayerMP;
+import net.minecraft.server.MinecraftServer;
+import net.minecraft.util.math.BlockPos;
 
-/**
- * @author Sollace
- * @since 18 April 2023
- */
-class VomitCommand {
-    public static void register(CommandDispatcher<ServerCommandSource> dispatcher, CommandRegistryAccess registries) {
-        dispatcher.register(CommandManager.literal("vomit").requires(source -> source.hasPermissionLevel(2)).executes(ctx -> {
-            DrugProperties.of(ctx.getSource().getPlayerOrThrow()).getStomach().vomit();
-            return 0;
-        })
-            .then(CommandManager.argument("target", EntityArgumentType.players()).executes(ctx -> {
-                ServerPlayerEntity player = EntityArgumentType.getPlayer(ctx, "target");
-                DrugProperties.of(player).getStomach().vomit();
-                return 0;
-            })
-        ));
+import javax.annotation.Nullable;
+import java.util.Collections;
+import java.util.List;
+
+public final class VomitCommand extends CommandBase {
+    @Override
+    public String getName() {
+        return "vomit";
+    }
+
+    @Override
+    public String getUsage(ICommandSender sender) {
+        return "commands.psychedelicraft.vomit.usage";
+    }
+
+    @Override
+    public int getRequiredPermissionLevel() {
+        return 2;
+    }
+
+    @Override
+    public void execute(MinecraftServer server, ICommandSender sender, String[] args) throws CommandException {
+        if (args.length > 1) throw new net.minecraft.command.WrongUsageException(getUsage(sender));
+        EntityPlayerMP player = args.length == 0 ? getCommandSenderAsPlayer(sender) : getPlayer(server, sender, args[0]);
+        DrugProperties properties = DrugCapability.get(player);
+        if (properties != null) properties.getStomach().vomit(player);
+    }
+
+    @Override
+    public List<String> getTabCompletions(MinecraftServer server, ICommandSender sender, String[] args, @Nullable BlockPos pos) {
+        return args.length == 1 ? getListOfStringsMatchingLastWord(args, server.getOnlinePlayerNames()) : Collections.emptyList();
+    }
+
+    @Override
+    public boolean isUsernameIndex(String[] args, int index) {
+        return index == 0;
     }
 }

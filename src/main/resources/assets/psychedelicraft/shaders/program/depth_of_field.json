@@ -1,26 +1,13 @@
 {
-    "blend": {
-        "func": "add",
-        "srcrgb": "srcalpha",
-        "dstrgb": "1-srcalpha"
-    },
-    "vertex": "blit",
-    "fragment": "depth_of_field",
-    "attributes": [ "Position" ],
-    "samplers": [
-        { "name": "DiffuseSampler" },
-        { "name": "DepthSampler" }
-    ],
-    "uniforms": [
-        { "name": "pixelSize", "type": "float", "count": 2, "values": [ 1.0, 1.0 ] },
-        { "name": "focalPointNear", "type": "float", "count": 1, "values": [ 0.0 ] },
-        { "name": "focalPointFar", "type": "float", "count": 1, "values": [ 0.0 ] },
-        { "name": "focalBlurNear", "type": "float", "count": 1, "values": [ 0.0 ] },
-        { "name": "focalBlurFar", "type": "float", "count": 1, "values": [ 0.0 ] },
-        { "name": "vertical", "type": "float", "count": 1, "values": [ 1.0 ] },
-        { "name": "depthRange", "type": "float", "count": 2, "values": [ 0.0, 1.0 ] },
-
-        { "name": "ProjMat", "type": "matrix4x4", "count": 16, "values": [ 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0 ] },
-        { "name": "OutSize", "type": "float",     "count": 2,  "values": [ 1.0, 1.0 ] }
-    ]
+  "vertex": "psychedelicraft:fullscreen",
+  "fragment": "psychedelicraft:depth_of_field",
+  "cull": false,
+  "samplers": [{ "name": "DiffuseSampler" }, { "name": "DepthSampler" }],
+  "uniforms": [
+    { "name": "TextureScale", "type": "float", "count": 2, "values": [1.0, 1.0] },
+    { "name": "Direction", "type": "float", "count": 2, "values": [0.0, 0.0] },
+    { "name": "ProjectionDepth", "type": "float", "count": 2, "values": [-1.0, -0.1] },
+    { "name": "FocusDistance", "type": "float", "count": 2, "values": [0.2, 128.0] },
+    { "name": "BlurStrength", "type": "float", "count": 2, "values": [0.0, 0.0] }
+  ]
 }

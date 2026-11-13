@@ -1,7 +1,7 @@
 {
   "variants": {
-    "": {
-      "model": "psychedelicraft:block/iron_drying_table"
+    "normal": {
+      "model": "psychedelicraft:iron_drying_table"
     }
   }
 }

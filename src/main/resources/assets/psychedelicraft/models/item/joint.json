@@ -1,14 +1,14 @@
 {
-    "parent": "psychedelicraft:item/smoking_pipe",
-    "textures": {
-        "layer0": "psychedelicraft:item/joint"
-    },
-    "overrides": [
-        {
-            "predicate": {
-                "psychedelicraft:using": 1
-            },
-            "model": "psychedelicraft:item/joint_using"
-        }
-    ]
+  "parent": "item/generated",
+  "textures": {
+    "layer0": "psychedelicraft:items/joint"
+  },
+  "overrides": [
+    {
+      "predicate": {
+        "psychedelicraft:using": 1
+      },
+      "model": "psychedelicraft:item/joint_using"
+    }
+  ]
 }

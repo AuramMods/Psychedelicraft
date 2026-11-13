@@ -1,7 +1,7 @@
 {
 	"textures": {
-		"fan": "psychedelicraft:block/agave_fan",
-		"particle": "#fan"
+		"fan": "psychedelicraft:blocks/agave_fan",
+		"particle": "psychedelicraft:blocks/agave_fan"
 	},
   "elements": [
     {

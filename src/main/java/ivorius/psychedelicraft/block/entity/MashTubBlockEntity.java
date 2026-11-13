@@ -1,295 +1,218 @@
 /*
- *  Copyright (c) 2014, Lukas Tenbrink.
- *  * http://lukas.axxim.net
+ * Copyright (c) 2014, Lukas Tenbrink.
  */
 
 package ivorius.psychedelicraft.block.entity;
 
-import java.util.*;
-
-import com.google.common.base.Suppliers;
-
-import it.unimi.dsi.fastutil.objects.Object2IntMap;
-import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
-import ivorius.psychedelicraft.ParticleHelper;
-import ivorius.psychedelicraft.block.MashTubBlock;
-import ivorius.psychedelicraft.fluid.*;
-import ivorius.psychedelicraft.fluid.container.FluidContainer;
-import ivorius.psychedelicraft.fluid.container.MutableFluidContainer;
-import ivorius.psychedelicraft.fluid.container.Resovoir;
-import ivorius.psychedelicraft.particle.BubbleParticleEffect;
+import ivorius.psychedelicraft.advancement.PSCriteria;
+import ivorius.psychedelicraft.fluid.PSFluids;
+import ivorius.psychedelicraft.fluid.FluidVesselHandler;
+import ivorius.psychedelicraft.client.particle.SlurryBubble;
+import ivorius.psychedelicraft.network.Channel;
 import ivorius.psychedelicraft.recipe.MashingRecipe;
-import ivorius.psychedelicraft.recipe.PSRecipes;
-import ivorius.psychedelicraft.util.MathUtils;
-import ivorius.psychedelicraft.util.NbtSerialisable;
-import net.minecraft.block.BlockState;
-import net.minecraft.item.*;
-import net.minecraft.nbt.NbtCompound;
-import net.minecraft.nbt.NbtElement;
-import net.minecraft.registry.Registries;
-import net.minecraft.server.world.ServerWorld;
-import net.minecraft.sound.SoundCategory;
-import net.minecraft.sound.SoundEvent;
-import net.minecraft.sound.SoundEvents;
-import net.minecraft.util.Identifier;
-import net.minecraft.util.TypedActionResult;
-import net.minecraft.util.math.*;
-import net.minecraft.util.math.random.Random;
+import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.init.SoundEvents;
+import net.minecraft.item.ItemStack;
+import net.minecraft.item.crafting.IRecipe;
+import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.nbt.NBTTagList;
+import net.minecraft.util.ResourceLocation;
+import net.minecraft.util.EnumHand;
+import net.minecraft.util.SoundCategory;
+import net.minecraft.util.math.AxisAlignedBB;
+import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.Vec3d;
+import net.minecraftforge.fluids.FluidStack;
+import net.minecraftforge.fluids.FluidUtil;
+import net.minecraftforge.fml.common.registry.ForgeRegistries;
 
-/**
- * Created by lukas on 27.10.14.
- */
-public class MashTubBlockEntity extends FluidProcessingBlockEntity {
-    public ItemStack solidContents = ItemStack.EMPTY;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 
-    private Optional<Stew> currentStew = Optional.empty();
+public final class MashTubBlockEntity extends FluidProcessingBlockEntity {
+    public static final int CAPACITY = 32000;
 
-    private Optional<MashingRecipe> expectedRecipe = Optional.empty();
-    private final Object2IntMap<Item> suppliedIngredients = new Object2IntOpenHashMap<>();
+    private final List<ItemStack> supplied = new ArrayList<>();
+    private ResourceLocation activeRecipe;
+    private int pulsesLeft;
+    private int totalPulses;
+    private int lastLight;
 
-    public MashTubBlockEntity(BlockPos pos, BlockState state) {
-        super(PSBlockEntities.MASH_TUB, pos, state, FluidVolumes.VAT);
+    public MashTubBlockEntity() {
+        super(CAPACITY);
     }
 
-    public Object2IntMap<Item> getSuppliedIngredients() {
-        return suppliedIngredients;
+    public List<ItemStack> getSuppliedIngredients() {
+        return Collections.unmodifiableList(supplied);
     }
 
-    @Override
-    public void accept(ItemStack stack) {
-        getPrimaryTank().clear();
-        solidContents = stack;
+    public float getStewProgress() {
+        return totalPulses > 0 ? 1 - (float) pulsesLeft / totalPulses : 0;
     }
 
-    @Override
-    public void accept(MutableFluidContainer fluid) {
-        getPrimaryTank().clear();
-        getPrimaryTank().deposit(fluid.asStack());
+    public float getFluidSurface() {
+        return getTank().getFluidAmount() == 0 ? 0 : 0.3F + 0.6F * getTank().getFluidAmount() / getTank().getCapacity();
     }
 
-    @Override
-    public Processable.ProcessType getProcessType() {
-        return Processable.ProcessType.FERMENT;
-    }
-
-    @Override
-    public void tick(ServerWorld world) {
-        super.tick(world);
-        currentStew = currentStew.filter(Stew::tick);
+    public boolean interactWithVessel(EntityPlayer player, EnumHand hand) {
+        FluidStack contents = getTank().getFluid();
+        int amount = getTank().getFluidAmount();
+        if (!FluidUtil.interactWithFluidHandler(player, hand, getTank())) return false;
+        if (getTank().getFluidAmount() < amount) PSCriteria.tookMash(player, contents);
+        return true;
     }
 
     @Override
-    public void onIdle(Resovoir resovoir) {
-        super.onIdle(resovoir);
-        int luminance = resovoir.getFluidType().getPhysical().getDefaultState().getBlockState().getLuminance();
-
-        int currentLuminance = getCachedState().get(MashTubBlock.LIGHT);
-        if (luminance != currentLuminance) {
-            world.setBlockState(getPos(), getCachedState().with(MashTubBlock.LIGHT, luminance));
-        }
+    public float getProcessingProgress() {
+        return activeRecipe != null ? getStewProgress() : super.getProcessingProgress();
     }
 
-    public void tickAnimations() {
-        if (!suppliedIngredients.isEmpty() && world.getRandom().nextFloat() < 0.33F && world.getTime() % 3 == 0) {
-            spawnBubbles(1 + (int)(suppliedIngredients.size() * 1.5), 0, SoundEvents.BLOCK_BUBBLE_COLUMN_BUBBLE_POP);
-        }
-    }
-
-    public TypedActionResult<ItemStack> depositIngredient(ItemStack stack) {
-        if (!FluidContainer.of(stack).getFluid(stack).isEmpty()) {
-            Resovoir tank = getPrimaryTank();
-            if (tank.getLevel() < tank.getCapacity()) {
-                getWorld().playSound(null, getPos(), SoundEvents.ITEM_BUCKET_FILL, SoundCategory.BLOCKS, 1, 1);
-                onIdle(tank);
-                return TypedActionResult.success(tank.deposit(stack));
-            }
-            return TypedActionResult.fail(stack);
-        }
-
-        if (isValidIngredient(stack)) {
-            ItemStack consumed = stack.split(1);
-            suppliedIngredients.computeInt(consumed.getItem(), (s, i) -> i == null ? 1 : (i + 1));
-            checkIngredients();
-            spawnBubbles(20, 0, SoundEvents.BLOCK_BUBBLE_COLUMN_BUBBLE_POP);
-            getWorld().playSound(null, getPos(), SoundEvents.ENTITY_GENERIC_SPLASH, SoundCategory.BLOCKS, 1, 1);
-            onIdle(getPrimaryTank());
-            return TypedActionResult.success(stack);
-        }
-        return TypedActionResult.pass(stack);
-    }
-
-    public boolean isValidIngredient(ItemStack stack) {
-        return FluidContainer.of(stack, null) == null
-            && world.getRecipeManager().listAllOfType(PSRecipes.MASHING_TYPE).stream()
-                .filter(recipe -> recipe.getPoolFluid().test(getPrimaryTank()))
-                .flatMap(recipe -> recipe.getIngredients().stream())
-                .anyMatch(ingredient -> ingredient.test(stack));
-    }
-
-    private void checkIngredients() {
-        if (suppliedIngredients.isEmpty() || getWorld().isClient()) {
-            return;
-        }
-
-        var expectedRecipeMatchPair = expectedRecipe.map(recipe -> Map.entry(recipe, recipe.matchPartially(suppliedIngredients)));
-        var matchedRecipes = world.getRecipeManager().listAllOfType(PSRecipes.MASHING_TYPE).stream()
-                .filter(recipe -> recipe.getPoolFluid().test(getPrimaryTank()))
-                .map(recipe -> Map.entry(recipe, recipe.matchPartially(suppliedIngredients)))
-                .filter(pair -> pair.getValue().isMatch())
-                .toList();
-
-        expectedRecipeMatchPair = expectedRecipeMatchPair.or(() -> matchedRecipes.stream().findFirst());
-        expectedRecipe = expectedRecipeMatchPair.filter(pair -> pair.getValue().isMatch()).map(Map.Entry::getKey);
-
-        if (expectedRecipeMatchPair.isEmpty()) {
-            onCraftingFailed();
-            return;
-        }
-
-        if (matchedRecipes.size() == 1) {
-            currentStew = expectedRecipeMatchPair
-                .filter(pair -> pair.getValue().isCraftable())
-                .map(Map.Entry::getKey)
-                .map(Stew::new);
-            markForUpdate();
-        }
-    }
-
-    private void onCraftingFailed() {
-        suppliedIngredients.clear();
-        currentStew = Optional.empty();
-        getPrimaryTank().getContents().withFluid(PSFluids.SLURRY);
-        spawnBubbles(90, 0.5F, SoundEvents.BLOCK_MUD_BREAK);
-        onIdle(getPrimaryTank());
-    }
-
-    private void spawnBubbles(int count, float spread, SoundEvent sound) {
-        Random random = getWorld().getRandom();
-        Vec3d center = ParticleHelper.apply(getPos().toCenterPos(), x -> random.nextTriangular(x, 0.25));
-
-        Resovoir tank = getPrimaryTank();
-        ParticleHelper.spawnParticles(getWorld(),
-                new BubbleParticleEffect(MathUtils.unpackRgbVector(tank.getFluidType().getColor(tank.getStack())), 1F),
-                () -> ParticleHelper.apply(center, x -> random.nextTriangular(x, 0.5 + spread)).add(0, 0.5, 0),
-                Suppliers.ofInstance(new Vec3d(
-                        random.nextTriangular(0, 0.125),
-                        random.nextTriangular(0.1, 0.125),
-                        random.nextTriangular(0, 0.125)
-                )),
-                count
-        );
-
-        if (getWorld() instanceof ServerWorld) {
-            getWorld().playSound(null, getPos(), sound, SoundCategory.BLOCKS,
-                    0.5F + getWorld().getRandom().nextFloat(),
-                    0.3F + getWorld().getRandom().nextFloat()
-            );
-        } else {
-            getWorld().playSoundAtBlockCenter(getPos(), sound, SoundCategory.BLOCKS,
-                    0.5F + getWorld().getRandom().nextFloat(),
-                    0.3F + getWorld().getRandom().nextFloat(), true);
-        }
-    }
-
-    @Override
-    public List<ItemStack> getDroppedStacks(FluidContainer container) {
-        if (!solidContents.isEmpty()) {
-            return List.of(solidContents);
-        }
-        return List.of();
-    }
-
-    @Override
-    public void onDrain(Resovoir resovoir) {
-        if (!solidContents.isEmpty() && resovoir.isEmpty()) {
-            setTimeProcessed(0);
-        }
-        onIdle(resovoir);
-    }
-
-    @Override
-    public void onFill(Resovoir resovoir, int amountFilled) {
-        if (!solidContents.isEmpty()) {
-            super.onFill(resovoir, amountFilled);
-        } else {
-            onIdle(resovoir);
-        }
-    }
-
-    @Override
-    public void writeNbt(NbtCompound compound) {
-        super.writeNbt(compound);
-        if (!solidContents.isEmpty()) {
-            compound.put("solidContents", solidContents.writeNbt(new NbtCompound()));
-        }
-        NbtCompound suppliedIngredsTag = new NbtCompound();
-        suppliedIngredients.forEach((item, count) -> {
-            suppliedIngredsTag.putInt(Registries.ITEM.getId(item).toString(), count);
-        });
-        compound.put("suppliedIngredients", suppliedIngredsTag);
-    }
-
-    @Override
-    public void readNbt(NbtCompound compound) {
-        super.readNbt(compound);
-        solidContents = compound.contains("solidContents", NbtElement.COMPOUND_TYPE)
-                ? ItemStack.fromNbt(compound.getCompound("solidContents"))
-                : ItemStack.EMPTY;
-        NbtCompound suppliedIngredsTag = compound.getCompound("suppliedIngredients");
-        suppliedIngredients.clear();
-        suppliedIngredsTag.getKeys().forEach(key -> {
-            Optional.ofNullable(Identifier.tryParse(key)).map(Registries.ITEM::get).filter(Objects::nonNull).ifPresent(item -> {
-                suppliedIngredients.put(item, suppliedIngredsTag.getInt(key));
-            });
-        });
-    }
-
-    class Stew implements NbtSerialisable {
-
-        private MashingRecipe recipe;
-        private int stewTime;
-
-        public Stew(MashingRecipe recipe) {
-            this.recipe = recipe;
-            this.stewTime = -(2 + world.getRandom().nextInt(4));
-        }
-
-        public boolean tick() {
-            markDirty();
-
-            if (recipe == null) {
-                return false;
-            }
-            if (world.getTime() % 30 == 0) {
-                spawnBubbles(9, 0.5F, SoundEvents.BLOCK_BUBBLE_COLUMN_UPWARDS_INSIDE);
-
-                if (++stewTime >= recipe.getStewTime()) {
-                    suppliedIngredients.clear();
-                    getPrimaryTank().getContents()
-                        .withFluid(recipe.getOutputFluid().fluid())
-                        .withAttributes(recipe.getOutputFluid().attributes());
-                    onIdle(getPrimaryTank());
-
-                    return false;
+    public boolean addIngredient(ItemStack held) {
+        FluidStack contents = getTank().getFluid();
+        if (activeRecipe != null || held.isEmpty() || contents == null || FluidVesselHandler.forTransfer(held) != null) return false;
+        List<MashingRecipe> recipes = new ArrayList<>();
+        boolean valid = false;
+        for (IRecipe entry : ForgeRegistries.RECIPES.getValuesCollection()) {
+            if (entry instanceof MashingRecipe) {
+                MashingRecipe recipe = (MashingRecipe) entry;
+                if (recipe.matchesPool(contents)) {
+                    recipes.add(recipe);
+                    valid |= recipe.acceptsIngredient(held);
                 }
             }
-
-            return true;
         }
-
-        @Override
-        public void toNbt(NbtCompound compound) {
-            compound.putInt("stewTime", stewTime);
-            compound.putString("recipe", recipe.getId().toString());
+        if (!valid) return false;
+        ItemStack ingredient = held.copy();
+        ingredient.setCount(1);
+        supplied.add(ingredient);
+        int matches = 0;
+        MashingRecipe complete = null;
+        for (MashingRecipe recipe : recipes) {
+            if (!recipe.matchesPartial(supplied)) continue;
+            matches++;
+            if (recipe.getIngredients().size() == supplied.size()) complete = recipe;
         }
-
-        @Override
-        public void fromNbt(NbtCompound compound) {
-            stewTime = compound.getInt("stewTime");
-            recipe = (MashingRecipe)Optional
-                    .ofNullable(Identifier.tryParse(compound.getString("recipe")))
-                    .flatMap(world.getRecipeManager()::get)
-                    .orElse(null);
+        if (matches == 0) {
+            supplied.clear();
+            getTank().replace(new FluidStack(PSFluids.SLURRY, contents.amount));
+            bubbles(90, 0.5F);
+            world.playSound(null, pos, SoundEvents.BLOCK_GRAVEL_BREAK, SoundCategory.BLOCKS, 0.8F, 0.7F);
+        } else {
+            if (matches == 1 && complete != null) {
+                activeRecipe = complete.getRegistryName();
+                pulsesLeft = totalPulses = 2 + world.rand.nextInt(4) + complete.getStewTime();
+                getTank().setCanFill(false);
+                getTank().setCanDrain(false);
+            }
+            bubbles(20, 0);
+            world.playSound(null, pos, SoundEvents.ENTITY_GENERIC_SPLASH, SoundCategory.BLOCKS, 0.5F, 1.15F);
         }
+        changed();
+        return true;
+    }
+
+    @Override
+    protected void tickProcessing() {
+        updateLight();
+        if (activeRecipe == null) {
+            processFluid(false);
+            return;
+        }
+        if (world.getTotalWorldTime() % 30 != 0) return;
+        IRecipe entry = ForgeRegistries.RECIPES.getValue(activeRecipe);
+        if (!(entry instanceof MashingRecipe)) {
+            endStew();
+            return;
+        }
+        MashingRecipe recipe = (MashingRecipe) entry;
+        if (!recipe.matchesPool(getTank().getFluid())) {
+            endStew();
+            return;
+        }
+        bubbles(9, 0.55F);
+        if (--pulsesLeft <= 0) {
+            getTank().replace(recipe.finish(getTank().getFluidAmount()));
+            supplied.clear();
+            endStew();
+        } else {
+            changed();
+        }
+    }
+
+    private void endStew() {
+        activeRecipe = null;
+        totalPulses = pulsesLeft = 0;
+        getTank().setCanFill(true);
+        getTank().setCanDrain(true);
+        changed();
+    }
+
+    @Override
+    protected void tickClient() {
+        updateLight();
+        FluidStack fluid = getTank().getFluid();
+        if (fluid != null && !supplied.isEmpty() && world.getTotalWorldTime() % 3 == 0 && world.rand.nextFloat() < 0.33F) {
+            SlurryBubble.spawn(world, bubbleOrigin(), 1 + (int) (supplied.size() * 1.5), 0,
+                    fluid.getFluid().getColor(fluid));
+        }
+    }
+
+    private void bubbles(int count, float spread) {
+        FluidStack fluid = getTank().getFluid();
+        if (fluid != null) Channel.spawnFluidBubbles(world, bubbleOrigin(), count, spread, fluid.getFluid().getColor(fluid));
+    }
+
+    private Vec3d bubbleOrigin() {
+        return new Vec3d(pos.getX() + 0.5, pos.getY() + getFluidSurface(), pos.getZ() + 0.5);
+    }
+
+    private void updateLight() {
+        FluidStack fluid = getTank().getFluid();
+        int light = fluid == null ? 0 : fluid.getFluid().getLuminosity(fluid);
+        if (light == lastLight) return;
+        lastLight = light;
+        for (BlockPos part : BlockPos.getAllInBoxMutable(pos.add(-1, 0, -1), pos.add(1, 0, 1))) {
+            world.checkLight(part);
+        }
+    }
+
+    @Override
+    public AxisAlignedBB getRenderBoundingBox() {
+        return new AxisAlignedBB(pos.add(-1, 0, -1), pos.add(2, 2, 2));
+    }
+
+    @Override
+    public NBTTagCompound writeToNBT(NBTTagCompound compound) {
+        super.writeToNBT(compound);
+        NBTTagList items = new NBTTagList();
+        for (ItemStack ingredient : supplied) items.appendTag(ingredient.writeToNBT(new NBTTagCompound()));
+        compound.setTag("suppliedIngredients", items);
+        if (activeRecipe != null) {
+            compound.setString("stewRecipe", activeRecipe.toString());
+            compound.setInteger("pulsesLeft", pulsesLeft);
+            compound.setInteger("totalPulses", totalPulses);
+        }
+        return compound;
+    }
+
+    @Override
+    public void readFromNBT(NBTTagCompound compound) {
+        super.readFromNBT(compound);
+        supplied.clear();
+        NBTTagList items = compound.getTagList("suppliedIngredients", 10);
+        for (int i = 0; i < Math.min(items.tagCount(), MashingRecipe.MAX_INGREDIENTS); i++) {
+            ItemStack ingredient = new ItemStack(items.getCompoundTagAt(i));
+            if (!ingredient.isEmpty()) {
+                ingredient.setCount(1);
+                supplied.add(ingredient);
+            }
+        }
+        pulsesLeft = compound.getInteger("pulsesLeft");
+        totalPulses = Math.max(pulsesLeft, compound.getInteger("totalPulses"));
+        activeRecipe = pulsesLeft > 0 && compound.hasKey("stewRecipe", 8)
+                ? new ResourceLocation(compound.getString("stewRecipe")) : null;
+        getTank().setCanFill(activeRecipe == null);
+        getTank().setCanDrain(activeRecipe == null);
     }
 }

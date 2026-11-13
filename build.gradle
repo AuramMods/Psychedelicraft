@@ -21,10 +21,6 @@ def mappingVersion = '20171003-1.12'
 
 sourceSets {
     main {
-        // Keep the 1.20.1 donor tree available while each feature is migrated.
-        java.setSrcDirs(['src/forge/java'])
-        resources.setSrcDirs(['src/forge/resources'])
-
         // Forge 1.12 discovers an exploded mod from a single output directory.
         def modOutput = file("$buildDir/sourceSets/main")
         output.resourcesDir = modOutput

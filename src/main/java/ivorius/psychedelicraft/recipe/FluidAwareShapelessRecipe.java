@@ -1,118 +1,90 @@
 /*
- *  Copyright (c) 2014, Lukas Tenbrink.
- *  * http://lukas.axxim.net
+ * Copyright (c) 2014, Lukas Tenbrink.
  */
 
 package ivorius.psychedelicraft.recipe;
 
-import net.minecraft.inventory.RecipeInputInventory;
-import net.minecraft.item.Item;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonSyntaxException;
+import net.minecraft.inventory.InventoryCrafting;
 import net.minecraft.item.ItemStack;
-import net.minecraft.network.PacketByteBuf;
-import net.minecraft.recipe.*;
-import net.minecraft.recipe.book.CraftingRecipeCategory;
-import net.minecraft.util.Identifier;
-import net.minecraft.util.JsonHelper;
-import net.minecraft.util.collection.DefaultedList;
+import net.minecraft.item.crafting.IRecipe;
+import net.minecraft.item.crafting.Ingredient;
+import net.minecraft.util.JsonUtils;
+import net.minecraft.util.NonNullList;
+import net.minecraft.util.ResourceLocation;
 import net.minecraft.world.World;
+import net.minecraftforge.common.ForgeHooks;
+import net.minecraftforge.common.crafting.CraftingHelper;
+import net.minecraftforge.common.crafting.IRecipeFactory;
+import net.minecraftforge.common.crafting.JsonContext;
+import net.minecraftforge.common.util.RecipeMatcher;
+import net.minecraftforge.oredict.ShapelessOreRecipe;
 
+import javax.annotation.Nullable;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
 
-import com.google.gson.*;
-
-import ivorius.psychedelicraft.fluid.container.MutableFluidContainer;
-
-public class FluidAwareShapelessRecipe extends ShapelessRecipe {
-
-    private final ItemStack output;
-    private final DefaultedList<OptionalFluidIngredient> ingredients;
-    private final List<OptionalFluidIngredient> fluidRestrictions;
-
-    public FluidAwareShapelessRecipe(Identifier id, String group, CraftingRecipeCategory category, ItemStack output,
-            DefaultedList<OptionalFluidIngredient> input) {
-        super(id, group, category, output,
-                // parent expects regular ingredients but we don't actually use them
-                input.stream()
-                .map(OptionalFluidIngredient::toVanillaIngredient)
-                .collect(Collectors.toCollection(DefaultedList::of))
-        );
-        this.output = output;
-        this.ingredients = input;
-        this.fluidRestrictions = ingredients.stream().filter(i -> i.fluid().filter(f -> f.level() > 0).isPresent()).toList();
-    }
-
-    public DefaultedList<OptionalFluidIngredient> getFluidAwareIngredients() {
-        return ingredients;
+public final class FluidAwareShapelessRecipe extends ShapelessOreRecipe {
+    FluidAwareShapelessRecipe(@Nullable ResourceLocation group, NonNullList<Ingredient> ingredients, ItemStack result) {
+        super(group, ingredients, result);
     }
 
     @Override
-    public RecipeSerializer<?> getSerializer() {
-        return PSRecipes.SHAPELESS_FLUID;
+    public boolean matches(InventoryCrafting inventory, World world) {
+        return RecipeMatcher.findMatches(occupiedStacks(inventory), input) != null;
     }
 
     @Override
-    public boolean matches(RecipeInputInventory inventory, World world) {
-        List<OptionalFluidIngredient> unmatchedInputs = new ArrayList<>(ingredients);
-        return RecipeUtils.stacks(inventory)
-                    .filter(stack -> unmatchedInputs.stream()
-                        .filter(ingredient -> ingredient.test(stack))
-                        .findFirst()
-                        .map(unmatchedInputs::remove)
-                        .orElse(false)).count() == ingredients.size() && unmatchedInputs.isEmpty();
+    public NonNullList<ItemStack> getRemainingItems(InventoryCrafting inventory) {
+        List<ItemStack> stacks = occupiedStacks(inventory);
+        int[] assignment = RecipeMatcher.findMatches(stacks, input);
+        NonNullList<ItemStack> remaining = NonNullList.withSize(inventory.getSizeInventory(), ItemStack.EMPTY);
+        if (assignment == null) return remaining;
+
+        int index = 0;
+        for (int slot = 0; slot < inventory.getSizeInventory(); slot++) {
+            ItemStack stack = inventory.getStackInSlot(slot);
+            if (stack.isEmpty()) continue;
+            Ingredient ingredient = input.get(assignment[index++]);
+            if (ingredient instanceof FluidStackIngredient && ((FluidStackIngredient) ingredient).consumesFluid()) {
+                remaining.set(slot, ((FluidStackIngredient) ingredient).drainedVessel(stack));
+            } else {
+                remaining.set(slot, ForgeHooks.getContainerItem(stack));
+            }
+        }
+        return remaining;
     }
 
-    @Override
-    public DefaultedList<ItemStack> getRemainder(RecipeInputInventory inventory) {
-        DefaultedList<ItemStack> defaultedList = DefaultedList.ofSize(inventory.size(), ItemStack.EMPTY);
-
-        for (int i = 0; i < defaultedList.size(); ++i) {
-            ItemStack stack = inventory.getStack(i);
-            Item item = stack.getItem();
-
-            defaultedList.set(i, item.hasRecipeRemainder()
-                ? new ItemStack(item.getRecipeRemainder())
-                : fluidRestrictions.stream()
-                        .filter(t -> t.test(stack))
-                        .findFirst()
-                        .flatMap(OptionalFluidIngredient::fluid)
-                        .map(fluid -> MutableFluidContainer.of(stack).decrement(fluid.level()))
-                        .map(MutableFluidContainer::asStack)
-                        .orElse(ItemStack.EMPTY)
-            );
+    private static List<ItemStack> occupiedStacks(InventoryCrafting inventory) {
+        List<ItemStack> stacks = new ArrayList<>();
+        for (int slot = 0; slot < inventory.getSizeInventory(); slot++) {
+            ItemStack stack = inventory.getStackInSlot(slot);
+            if (!stack.isEmpty()) stacks.add(stack);
         }
-        return defaultedList;
+        return stacks;
     }
 
-    static class Serializer implements RecipeSerializer<FluidAwareShapelessRecipe> {
-        @SuppressWarnings("deprecation")
+    public static final class Factory implements IRecipeFactory {
         @Override
-        public FluidAwareShapelessRecipe read(Identifier id, JsonObject json) {
-            return new FluidAwareShapelessRecipe(id,
-                    JsonHelper.getString(json, "group", ""),
-                    CraftingRecipeCategory.CODEC.byId(JsonHelper.getString(json, "category", null), CraftingRecipeCategory.MISC),
-                    ShapedRecipe.outputFromJson(JsonHelper.getObject(json, "result")),
-                    RecipeUtils.checkLength(OptionalFluidIngredient.fromJsonArray(JsonHelper.getArray(json, "ingredients")))
-            );
-        }
-
-        @Override
-        public FluidAwareShapelessRecipe read(Identifier id, PacketByteBuf buffer) {
-            return new FluidAwareShapelessRecipe(id,
-                    buffer.readString(),
-                    buffer.readEnumConstant(CraftingRecipeCategory.class),
-                    buffer.readItemStack(),
-                    buffer.readCollection(DefaultedList::ofSize, OptionalFluidIngredient::new)
-            );
-        }
-
-        @Override
-        public void write(PacketByteBuf buffer, FluidAwareShapelessRecipe recipe) {
-            buffer.writeString(recipe.getGroup());
-            buffer.writeEnumConstant(recipe.getCategory());
-            buffer.writeItemStack(recipe.output);
-            buffer.writeCollection(recipe.ingredients, (b, c) -> c.write(b));
+        public IRecipe parse(JsonContext context, JsonObject json) {
+            NonNullList<Ingredient> ingredients = NonNullList.create();
+            for (JsonElement entry : JsonUtils.getJsonArray(json, "ingredients")) {
+                if (!entry.isJsonObject() || !entry.getAsJsonObject().has("fluid")) {
+                    ingredients.add(CraftingHelper.getIngredient(entry, context));
+                    continue;
+                }
+                JsonObject specification = entry.getAsJsonObject();
+                Ingredient vessel = specification.entrySet().size() > 1 ? CraftingHelper.getIngredient(entry, context) : null;
+                ingredients.add(FluidStackIngredient.parse(vessel, specification.get("fluid")));
+            }
+            if (ingredients.isEmpty() || ingredients.size() > 9) {
+                throw new JsonSyntaxException("Expected one to nine shapeless ingredients");
+            }
+            String group = JsonUtils.getString(json, "group", "");
+            ItemStack result = CraftingHelper.getItemStack(JsonUtils.getJsonObject(json, "result"), context);
+            return new FluidAwareShapelessRecipe(group.isEmpty() ? null : new ResourceLocation(group), ingredients, result);
         }
     }
 }

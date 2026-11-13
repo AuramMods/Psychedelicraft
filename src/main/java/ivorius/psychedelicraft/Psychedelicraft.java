@@ -1,93 +1,81 @@
 /*
- *  Copyright (c) 2014, Lukas Tenbrink.
- *  * http://lukas.axxim.net
+ * Copyright (c) 2014, Lukas Tenbrink.
  */
 
 package ivorius.psychedelicraft;
 
 import ivorius.psychedelicraft.advancement.PSCriteria;
-import ivorius.psychedelicraft.block.PSBlocks;
-import ivorius.psychedelicraft.command.*;
-import ivorius.psychedelicraft.config.JsonConfig;
-import ivorius.psychedelicraft.config.PSConfig;
-import ivorius.psychedelicraft.entity.PSEntities;
-import ivorius.psychedelicraft.entity.drug.DrugProperties;
+import ivorius.psychedelicraft.entity.drug.DrugCapability;
+import ivorius.psychedelicraft.command.VomitCommand;
+import ivorius.psychedelicraft.command.DrugCommand;
+import ivorius.psychedelicraft.command.HallucinateCommand;
+import ivorius.psychedelicraft.entity.FarmerTrades;
 import ivorius.psychedelicraft.fluid.PSFluids;
-import ivorius.psychedelicraft.item.PSItemGroups;
+import ivorius.psychedelicraft.fluid.physical.Waterlogging;
+import ivorius.psychedelicraft.item.FilledBucketItem;
 import ivorius.psychedelicraft.item.PSItems;
+import ivorius.psychedelicraft.item.PaperBagItem;
 import ivorius.psychedelicraft.network.Channel;
-import ivorius.psychedelicraft.particle.PSParticles;
-import ivorius.psychedelicraft.recipe.PSRecipes;
-import ivorius.psychedelicraft.screen.PSScreenHandlers;
-import ivorius.psychedelicraft.world.gen.PSWorldGen;
-import net.fabricmc.api.ModInitializer;
-import net.fabricmc.fabric.api.entity.event.v1.ServerEntityWorldChangeEvents;
-import net.fabricmc.fabric.api.entity.event.v1.ServerPlayerEvents;
-import net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents;
-import net.minecraft.util.Identifier;
-import net.minecraft.util.hit.HitResult;
+import ivorius.psychedelicraft.recipe.FurnaceRecipe;
+import ivorius.psychedelicraft.recipe.JuniperWoodRecipes;
+import ivorius.psychedelicraft.screen.PSGuiHandler;
+import ivorius.psychedelicraft.world.gen.ChestLoot;
+import ivorius.psychedelicraft.world.gen.CopperOreGenerator;
+import ivorius.psychedelicraft.world.gen.VillageGarden;
+import net.minecraft.item.ItemStack;
+import net.minecraft.util.ResourceLocation;
+import net.minecraftforge.fml.common.Mod;
+import net.minecraftforge.fml.common.event.FMLInitializationEvent;
+import net.minecraftforge.fml.common.event.FMLPreInitializationEvent;
+import net.minecraftforge.fml.common.event.FMLServerStartingEvent;
+import net.minecraftforge.fml.common.network.NetworkRegistry;
+import net.minecraftforge.fml.common.registry.GameRegistry;
+import net.minecraftforge.oredict.OreDictionary;
 
-import java.util.Optional;
-import java.util.function.Supplier;
+@Mod(modid = Psychedelicraft.MOD_ID, name = "Psychedelicraft", useMetadata = true,
+        acceptedMinecraftVersions = "[1.12.2]",
+        guiFactory = "ivorius.psychedelicraft.client.PSConfigGuiFactory")
+public class Psychedelicraft {
+    public static final String MOD_ID = "psychedelicraft";
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-
-public class Psychedelicraft implements ModInitializer {
-    public static final Logger LOGGER = LogManager.getLogger();
-
-    private static final Supplier<JsonConfig.Loader<PSConfig>> CONFIG_LOADER = JsonConfig.create("psychedelicraft.json", PSConfig::new);
-
-    public static Supplier<Optional<DrugProperties>> globalDrugProperties = Optional::empty;
-    public static Supplier<Optional<HitResult>> crossHairTarget = Optional::empty;
-
-    public static Optional<DrugProperties> getGlobalDrugProperties() {
-        return globalDrugProperties.get();
+    @Mod.EventHandler
+    public void preInit(FMLPreInitializationEvent event) {
+        PSFluids.register();
+        PSCriteria.register();
+        DrugCapability.register();
+        Channel.register();
+        ChestLoot.register();
+        VillageGarden.register();
+        NetworkRegistry.INSTANCE.registerGuiHandler(this, new PSGuiHandler());
     }
 
-    public static Optional<HitResult> getCrossHairTarget() {
-        return crossHairTarget.get();
+    @Mod.EventHandler
+    public void init(FMLInitializationEvent event) {
+        FurnaceRecipe.load();
+        GameRegistry.addSmelting(new ItemStack(PSItems.RAW_COPPER), new ItemStack(PSItems.COPPER_INGOT), 0.7F);
+        GameRegistry.addSmelting(new ItemStack(PSItems.COPPER_ORE), new ItemStack(PSItems.COPPER_INGOT), 0.7F);
+        OreDictionary.registerOre("oreCopper", PSItems.COPPER_ORE);
+        OreDictionary.registerOre("ingotCopper", PSItems.COPPER_INGOT);
+        OreDictionary.registerOre("beeCombHoney", PSItems.HONEYCOMB);
+        OreDictionary.registerOre("cropTomato", PSItems.TOMATO);
+        GameRegistry.registerWorldGenerator(new CopperOreGenerator(), 0);
+        JuniperWoodRecipes.register();
+        PSItems.JUNIPER_BOAT.registerDispenserBehavior();
+        PSItems.JUNIPER_CHEST_BOAT.registerDispenserBehavior();
+        FilledBucketItem.registerDispenserBehavior();
+        Waterlogging.registerDispenserBehavior();
+        PaperBagItem.registerDispenserBehavior();
+        FarmerTrades.register();
     }
 
-    public static JsonConfig.Loader<PSConfig> getConfigLoader() {
-        return CONFIG_LOADER.get();
+    @Mod.EventHandler
+    public void serverStarting(FMLServerStartingEvent event) {
+        event.registerServerCommand(new VomitCommand());
+        event.registerServerCommand(new DrugCommand());
+        event.registerServerCommand(new HallucinateCommand());
     }
 
-    public static PSConfig getConfig() {
-        return getConfigLoader().getData();
-    }
-
-    public static Identifier id(String name) {
-        return new Identifier("psychedelicraft", name);
-    }
-
-    @Override
-    public void onInitialize() {
-        ServerEntityWorldChangeEvents.AFTER_PLAYER_CHANGE_WORLD.register((player, origin, destination) -> {
-            DrugProperties.of(player).sendCapabilities();
-        });
-        ServerPlayerEvents.COPY_FROM.register((oldPlayer, newPlayer, alive) -> {
-            DrugProperties.of(newPlayer).copyFrom(DrugProperties.of(oldPlayer), alive);
-        });
-        ServerPlayConnectionEvents.JOIN.register((handler, sender, server) -> {
-            DrugProperties.of(handler.player).sendCapabilities();
-        });
-
-        PSBlocks.bootstrap();
-        PSItems.bootstrap();
-        PSTags.bootstrap();
-        PSItemGroups.bootstrap();
-        PSFluids.bootstrap();
-        PSRecipes.bootstrap();
-        PSEntities.bootstrap();
-        PSWorldGen.bootstrap();
-        PSGameRules.bootstrap();
-        PSCommands.bootstrap();
-        PSSounds.bootstrap();
-        PSScreenHandlers.bootstrap();
-        Channel.bootstrap();
-        PSCriteria.bootstrap();
-        PSParticles.bootstrap();
-        PSDamageTypes.bootstrap();
+    public static ResourceLocation id(String path) {
+        return new ResourceLocation(MOD_ID, path);
     }
 }

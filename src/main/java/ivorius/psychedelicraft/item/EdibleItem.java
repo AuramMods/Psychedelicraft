@@ -1,40 +1,53 @@
 /*
- *  Copyright (c) 2014, Lukas Tenbrink.
- *  * http://lukas.axxim.net
+ * Copyright (c) 2014, Lukas Tenbrink.
  */
 
 package ivorius.psychedelicraft.item;
 
+import java.util.function.Supplier;
+import javax.annotation.Nullable;
+
+import ivorius.psychedelicraft.entity.drug.DrugCapability;
 import ivorius.psychedelicraft.entity.drug.DrugProperties;
 import ivorius.psychedelicraft.entity.drug.influence.DrugInfluence;
-import net.minecraft.entity.LivingEntity;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.item.*;
+import net.minecraft.entity.EntityLivingBase;
+import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.item.ItemFood;
+import net.minecraft.item.ItemStack;
 import net.minecraft.world.World;
 
-public class EdibleItem extends Item {
-    public static final FoodComponent NON_FILLING_EDIBLE = new FoodComponent.Builder().hunger(0).saturationModifier(0.1F).alwaysEdible().build();
-    public static final FoodComponent HAS_MUFFIN = new FoodComponent.Builder().hunger(2).saturationModifier(0.1F).alwaysEdible().build();
-    public static final FoodComponent TOMATO = new FoodComponent.Builder().hunger(1).saturationModifier(1.9F).alwaysEdible().build();
+public class EdibleItem extends ItemFood {
+    @Nullable
+    private final Supplier<DrugInfluence> influence;
 
-    private final DrugInfluence influence;
+    public EdibleItem(int hunger, float saturation) {
+        this(hunger, saturation, null);
+    }
 
-    public EdibleItem(Settings settings, DrugInfluence influence) {
-        super(settings);
+    public EdibleItem(int hunger, float saturation, @Nullable Supplier<DrugInfluence> influence) {
+        super(hunger, saturation, false);
         this.influence = influence;
+        setAlwaysEdible();
     }
 
     @Override
-    public ItemStack finishUsing(ItemStack stack, World world, LivingEntity user) {
-        ItemStack remainder = super.finishUsing(stack, world, user);
-
-        if (!isFood() && (!(user instanceof PlayerEntity) || ((PlayerEntity)user).isCreative())) {
-            remainder.decrement(1);
+    public ItemStack onItemUseFinish(ItemStack stack, World world, EntityLivingBase user) {
+        // ItemFood shrinks even a creative player's stack in 1.12.
+        if (user instanceof EntityPlayer && ((EntityPlayer) user).isCreative()) {
+            super.onItemUseFinish(stack.copy(), world, user);
+            return stack;
         }
+        return super.onItemUseFinish(stack, world, user);
+    }
 
-        DrugProperties.of(user).ifPresent(drugProperties -> {
-            drugProperties.addToDrug(influence.clone());
-        });
-        return remainder;
+    @Override
+    protected void onFoodEaten(ItemStack stack, World world, EntityPlayer player) {
+        super.onFoodEaten(stack, world, player);
+        if (!world.isRemote && influence != null) {
+            DrugProperties properties = DrugCapability.get(player);
+            if (properties != null) {
+                properties.addInfluence(influence.get());
+            }
+        }
     }
 }

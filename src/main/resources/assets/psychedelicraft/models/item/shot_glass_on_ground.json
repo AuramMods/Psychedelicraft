@@ -1,7 +1,7 @@
 {
   "textures": {
-    "particle": "#texture",
-    "texture": "psychedelicraft:item/glass_chalice_on_ground"
+    "particle": "psychedelicraft:items/glass_chalice_on_ground",
+    "texture": "psychedelicraft:items/glass_chalice_on_ground"
   },
 	"elements": [
 		{
