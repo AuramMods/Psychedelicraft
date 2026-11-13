@@ -12,6 +12,8 @@ import ivorius.psychedelicraft.config.PSConfig;
 import ivorius.psychedelicraft.item.PSItems;
 import ivorius.psychedelicraft.network.Channel;
 import net.minecraft.advancements.CriteriaTriggers;
+import net.minecraft.entity.Entity;
+import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.ai.EntityAITasks;
 import net.minecraft.entity.item.EntityItem;
 import net.minecraft.entity.item.EntityXPOrb;
@@ -30,6 +32,7 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.village.MerchantRecipe;
 import net.minecraft.village.MerchantRecipeList;
+import net.minecraft.world.World;
 import net.minecraft.world.WorldServer;
 import net.minecraftforge.event.RegistryEvent;
 import net.minecraftforge.event.entity.EntityJoinWorldEvent;
@@ -46,11 +49,13 @@ import net.minecraftforge.fml.common.registry.VillagerRegistry.VillagerCareer;
 import net.minecraftforge.fml.common.registry.VillagerRegistry.VillagerProfession;
 import net.minecraftforge.fml.relauncher.ReflectionHelper;
 
+import javax.annotation.Nullable;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Random;
+import java.util.UUID;
 
 @Mod.EventBusSubscriber(modid = Psychedelicraft.MOD_ID)
 public final class VillagerCareers {
@@ -59,6 +64,7 @@ public final class VillagerCareers {
     public static final VillagerProfession ADDICT = profession("drug_addict");
     private static final DamageSource OVERDOSE = new DamageSource("psychedelicraft.overdose");
     private static final String CAREER = "psychedelicraftCareer";
+    private static final String INFECTED_TRADES = "psychedelicraftInfectedTrades";
 
     private VillagerCareers() {
     }
@@ -186,6 +192,44 @@ public final class VillagerCareers {
         return tag.getCompoundTag(CAREER);
     }
 
+    public static boolean spawnInfected(World world, Entity replacement, EntityLivingBase original) {
+        EntityVillager villager = (EntityVillager) original;
+        EntityZombieVillager infected = (EntityZombieVillager) replacement;
+        NBTTagCompound trades = new NBTTagCompound();
+        trades.setTag("Offers", storedOffers(villager).getRecipiesAsTags());
+        try {
+            trades.setInteger("Career", TradeStorage.CAREER_ID.getInt(villager));
+            trades.setInteger("CareerLevel", TradeStorage.CAREER_LEVEL.getInt(villager));
+        } catch (IllegalAccessException error) {
+            throw new IllegalStateException("Could not read the infected villager's career", error);
+        }
+        NBTTagCompound originalCareer = villager.getEntityData().getCompoundTag(CAREER);
+        if (originalCareer.hasKey("Experience", 99)) trades.setInteger("Experience", originalCareer.getInteger("Experience"));
+        if (originalCareer.hasKey("Demand", 10)) trades.setTag("Demand", originalCareer.getCompoundTag("Demand").copy());
+        infected.getEntityData().setTag(INFECTED_TRADES, trades);
+        VillagerReputation.copy(villager, infected);
+        return world.spawnEntity(infected);
+    }
+
+    public static boolean spawnCured(World world, Entity replacement, EntityZombieVillager infected, @Nullable UUID healer) {
+        EntityVillager villager = (EntityVillager) replacement;
+        NBTTagCompound trades = infected.getEntityData().getCompoundTag(INFECTED_TRADES);
+        if (trades.hasKey("Offers", 10)) {
+            try {
+                TradeStorage.OFFERS.set(villager, new MerchantRecipeList(trades.getCompoundTag("Offers")));
+                TradeStorage.CAREER_ID.setInt(villager, trades.getInteger("Career"));
+                TradeStorage.CAREER_LEVEL.setInt(villager, trades.getInteger("CareerLevel"));
+            } catch (IllegalAccessException error) {
+                throw new IllegalStateException("Could not restore the cured villager's trades", error);
+            }
+            if (trades.hasKey("Experience", 99)) data(villager).setInteger("Experience", trades.getInteger("Experience"));
+            if (trades.hasKey("Demand", 10)) data(villager).setTag("Demand", trades.getCompoundTag("Demand").copy());
+        }
+        VillagerReputation.copy(infected, villager);
+        VillagerReputation.cured(villager, healer);
+        return world.spawnEntity(villager);
+    }
+
     static void changeCareer(EntityVillager villager, VillagerProfession profession) {
         MerchantRecipeList recipes = storedOffers(villager);
         recipes.clear();
@@ -269,6 +313,8 @@ public final class VillagerCareers {
 
     private static final class TradeStorage {
         private static final Field OFFERS = ReflectionHelper.findField(EntityVillager.class, "buyingList", "field_70963_i");
+        private static final Field CAREER_ID = ReflectionHelper.findField(EntityVillager.class, "careerId", "field_175563_bv");
+        private static final Field CAREER_LEVEL = ReflectionHelper.findField(EntityVillager.class, "careerLevel", "field_175562_bw");
     }
 
     private static void appendOffers(VillagerProfession profession, int tier, MerchantRecipeList recipes, Random random) {

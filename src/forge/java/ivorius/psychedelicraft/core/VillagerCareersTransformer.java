@@ -22,6 +22,7 @@ import org.objectweb.asm.tree.VarInsnNode;
 public final class VillagerCareersTransformer implements IClassTransformer {
     private static final String VILLAGER = "net.minecraft.entity.passive.EntityVillager";
     private static final String ZOMBIE = "net.minecraft.entity.monster.EntityZombieVillager";
+    private static final String ZOMBIE_ATTACKER = "net.minecraft.entity.monster.EntityZombie";
     private static final String VILLAGE = "net.minecraft.world.gen.structure.StructureVillagePieces$Village";
     private static final String RENDERER = "net.minecraft.client.renderer.entity.RenderLivingBase";
     private static final String CONVERSATION = "net.minecraft.entity.ai.EntityAIVillagerInteract";
@@ -31,13 +32,17 @@ public final class VillagerCareersTransformer implements IClassTransformer {
     @Override
     public byte[] transform(String name, String transformedName, byte[] bytes) {
         if (bytes == null || !(VILLAGER.equals(transformedName) || ZOMBIE.equals(transformedName)
-                || VILLAGE.equals(transformedName) || RENDERER.equals(transformedName) || CONVERSATION.equals(transformedName))) return bytes;
+                || ZOMBIE_ATTACKER.equals(transformedName) || VILLAGE.equals(transformedName)
+                || RENDERER.equals(transformedName) || CONVERSATION.equals(transformedName))) return bytes;
         ClassNode type = new ClassNode(Opcodes.ASM5);
         new ClassReader(bytes).accept(type, 0);
         if (RENDERER.equals(transformedName)) {
             patchShake(type);
         } else if (CONVERSATION.equals(transformedName)) {
             patchConversation(type);
+        } else if (ZOMBIE_ATTACKER.equals(transformedName)) {
+            MethodNode kill = find(type, "onKillEntity", "func_70074_a", "(Lnet/minecraft/entity/EntityLivingBase;)V");
+            patchConversionSpawn(type, kill, 1, "spawnInfected", null);
         } else {
             patchRandomSpawns(type);
             if (VILLAGER.equals(transformedName)) {
@@ -45,7 +50,11 @@ public final class VillagerCareersTransformer implements IClassTransformer {
                 prependHandler(type, "updateEquipmentIfNeeded", "func_175445_a", "(Lnet/minecraft/entity/item/EntityItem;)V", "collectExtra");
                 patchCustomer(type);
             }
-            if (ZOMBIE.equals(transformedName)) patchCure(type);
+            if (ZOMBIE.equals(transformedName)) {
+                MethodNode cure = find(type, "finishConversion", "func_190738_dp", "()V");
+                FieldNode healer = ClientEffectsTransformer.field(type, "converstionStarter", "field_191992_by");
+                patchConversionSpawn(type, cure, 0, "spawnCured", healer);
+            }
         }
         ClassWriter writer = new ClassWriter(ClassWriter.COMPUTE_MAXS);
         type.accept(writer);
@@ -74,9 +83,8 @@ public final class VillagerCareersTransformer implements IClassTransformer {
         start.instructions.insert(hook);
     }
 
-    private static void patchCure(ClassNode type) {
-        MethodNode convert = find(type, "finishConversion", "func_190738_dp", "()V");
-        FieldNode healer = ClientEffectsTransformer.field(type, "converstionStarter", "field_191992_by");
+    private static void patchConversionSpawn(ClassNode type, MethodNode convert, int sourceSlot, String hook, FieldNode healer) {
+        Type source = sourceSlot == 0 ? Type.getObjectType(type.name) : Type.getArgumentTypes(convert.desc)[0];
         FMLDeobfuscatingRemapper remapper = FMLDeobfuscatingRemapper.INSTANCE;
         for (AbstractInsnNode insn : convert.instructions.toArray()) {
             if (!(insn instanceof MethodInsnNode)) continue;
@@ -84,17 +92,23 @@ public final class VillagerCareersTransformer implements IClassTransformer {
             String mapped = remapper.mapMethodName(call.owner, call.name, call.desc);
             if (!("spawnEntity".equals(mapped) || "func_72838_d".equals(mapped))
                     || !"(Lnet/minecraft/entity/Entity;)Z".equals(remapper.mapMethodDesc(call.desc))) continue;
-            InsnList owner = new InsnList();
-            owner.add(new VarInsnNode(Opcodes.ALOAD, 0));
-            owner.add(new FieldInsnNode(Opcodes.GETFIELD, type.name, healer.name, healer.desc));
-            convert.instructions.insertBefore(call, owner);
-            String descriptor = Type.getMethodDescriptor(Type.BOOLEAN_TYPE, Type.getObjectType(call.owner),
-                    Type.getArgumentTypes(call.desc)[0], Type.getType(healer.desc));
-            convert.instructions.set(call, new MethodInsnNode(Opcodes.INVOKESTATIC,
-                    "ivorius/psychedelicraft/entity/VillagerReputation", "spawnCured", descriptor, false));
+            InsnList arguments = new InsnList();
+            arguments.add(new VarInsnNode(Opcodes.ALOAD, sourceSlot));
+            Type world = Type.getObjectType(call.owner);
+            Type replacement = Type.getArgumentTypes(call.desc)[0];
+            String descriptor;
+            if (healer == null) {
+                descriptor = Type.getMethodDescriptor(Type.BOOLEAN_TYPE, world, replacement, source);
+            } else {
+                arguments.add(new VarInsnNode(Opcodes.ALOAD, sourceSlot));
+                arguments.add(new FieldInsnNode(Opcodes.GETFIELD, type.name, healer.name, healer.desc));
+                descriptor = Type.getMethodDescriptor(Type.BOOLEAN_TYPE, world, replacement, source, Type.getType(healer.desc));
+            }
+            convert.instructions.insertBefore(call, arguments);
+            convert.instructions.set(call, new MethodInsnNode(Opcodes.INVOKESTATIC, CAREERS, hook, descriptor, false));
             return;
         }
-        throw new IllegalStateException("Could not locate zombie villager conversion spawn");
+        throw new IllegalStateException("Could not locate the conversion spawn in " + type.name + "." + convert.name);
     }
 
     private static void patchRandomSpawns(ClassNode type) {

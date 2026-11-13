@@ -6,8 +6,8 @@ import net.minecraft.entity.ai.EntityAIVillagerInteract;
 import net.minecraft.entity.ai.EntityAIWatchClosest;
 import net.minecraft.entity.passive.EntityVillager;
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.nbt.NBTTagCompound;
-import net.minecraft.world.World;
 import net.minecraftforge.event.entity.living.LivingDamageEvent;
 import net.minecraftforge.event.entity.living.LivingDeathEvent;
 import net.minecraftforge.event.entity.living.LivingEvent;
@@ -66,13 +66,20 @@ public final class VillagerReputation {
         }
     }
 
-    public static boolean spawnCured(World world, Entity entity, @Nullable UUID healer) {
-        if (healer != null && entity instanceof EntityVillager && world.getPlayerEntityByUUID(healer) != null) {
-            EntityVillager villager = (EntityVillager) entity;
+    static void copy(Entity source, Entity replacement) {
+        NBTTagCompound data = source.getEntityData().getCompoundTag(DATA);
+        if (data.hasKey(PLAYERS, 10)) {
+            NBTTagCompound copy = data.copy();
+            copy.setLong(DECAY, replacement.world.getTotalWorldTime());
+            replacement.getEntityData().setTag(DATA, copy);
+        }
+    }
+
+    static void cured(EntityVillager villager, @Nullable UUID healer) {
+        if (healer != null && villager.world.getPlayerEntityByUUID(healer) instanceof EntityPlayerMP) {
             record(villager, healer, Topic.MAJOR_POSITIVE, 20);
             record(villager, healer, Topic.MINOR_POSITIVE, 25);
         }
-        return world.spawnEntity(entity);
     }
 
     @SubscribeEvent
