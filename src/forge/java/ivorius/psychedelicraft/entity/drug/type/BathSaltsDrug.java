@@ -21,6 +21,16 @@ public final class BathSaltsDrug extends SimpleDrug {
     }
 
     @Override
+    public float randomJumpChance() {
+        return activeRamp(0.6F) * 0.03F;
+    }
+
+    @Override
+    public float randomSwingChance() {
+        return activeRamp(0.5F) * 0.02F;
+    }
+
+    @Override
     public float inversionStrength() {
         float strength = (float) getActiveValue();
         return MathHelper.clamp(strength * strength * 5.3F, 0F, 1.5F);

@@ -7,6 +7,7 @@ package ivorius.psychedelicraft.client.render;
 import ivorius.psychedelicraft.PSSounds;
 import ivorius.psychedelicraft.Psychedelicraft;
 import ivorius.psychedelicraft.config.PSConfig;
+import ivorius.psychedelicraft.entity.drug.Drug;
 import ivorius.psychedelicraft.entity.drug.DrugProperties;
 import ivorius.psychedelicraft.entity.drug.DrugType;
 import net.minecraft.client.Minecraft;
@@ -58,8 +59,7 @@ final class ScreenOverlays {
     private float sunAlpha;
 
     void tick(Minecraft client, EntityPlayerSP player, DrugProperties drugs) {
-        float drowsiness = (float) (drugs.getActiveValue(DrugType.SLEEP_DEPRIVATION)
-                + drugs.getActiveValue(DrugType.KAVA) * 0.4);
+        float drowsiness = drugs.getModifier(Drug::drowsiness);
         float tiredness = Math.max(0F, drowsiness - 0.6F);
         previousEyelids = eyelids;
         float target = blinkTicks > 0 ? tiredness * 0.9F + MathHelper.sin(player.ticksExisted / 10F) : 0F;

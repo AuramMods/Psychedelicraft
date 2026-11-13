@@ -94,6 +94,18 @@ public interface Drug extends NbtSerialisable {
         return 0;
     }
 
+    default float drowsiness() {
+        return 0;
+    }
+
+    default float randomJumpChance() {
+        return 0;
+    }
+
+    default float randomSwingChance() {
+        return 0;
+    }
+
     default float heartbeatVolume() {
         return 0;
     }

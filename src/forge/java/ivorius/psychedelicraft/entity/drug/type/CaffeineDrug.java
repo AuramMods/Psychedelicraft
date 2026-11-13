@@ -41,6 +41,16 @@ public final class CaffeineDrug extends SimpleDrug {
     }
 
     @Override
+    public float randomJumpChance() {
+        return activeRamp(0.6F) * 0.07F;
+    }
+
+    @Override
+    public float randomSwingChance() {
+        return activeRamp(0.3F) * 0.05F;
+    }
+
+    @Override
     public float handTrembleStrength() {
         return activeRamp(0.6F);
     }

@@ -39,6 +39,16 @@ public final class CocaineDrug extends SimpleDrug {
     }
 
     @Override
+    public float randomJumpChance() {
+        return activeRamp(0.6F) * 0.03F;
+    }
+
+    @Override
+    public float randomSwingChance() {
+        return activeRamp(0.5F) * 0.02F;
+    }
+
+    @Override
     public float handTrembleStrength() {
         return activeRamp(0.6F);
     }

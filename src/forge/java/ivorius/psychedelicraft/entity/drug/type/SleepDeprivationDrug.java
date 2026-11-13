@@ -41,6 +41,11 @@ public final class SleepDeprivationDrug extends SimpleDrug {
     }
 
     @Override
+    public float drowsiness() {
+        return (float) getActiveValue();
+    }
+
+    @Override
     public float speedModifier() {
         return 1 - Math.max(0, (float) getActiveValue() * 0.9F - 0.4F);
     }

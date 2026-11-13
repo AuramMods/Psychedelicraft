@@ -8,6 +8,7 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Random;
 import javax.annotation.Nullable;
 
 import ivorius.psychedelicraft.entity.drug.influence.DrugInfluence;
@@ -17,6 +18,7 @@ import ivorius.psychedelicraft.util.NbtSerialisable;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTTagList;
+import net.minecraft.util.EnumHand;
 import net.minecraft.util.math.MathHelper;
 import net.minecraftforge.common.util.Constants;
 
@@ -83,10 +85,27 @@ public final class DrugProperties implements NbtSerialisable {
             stomach.tick(player, getModifier(Drug::hungerSuppression));
             dirty |= stomach.takeDirty();
             sounds.tick(this, player);
+            if (player.isEntityAlive()) applyInvoluntaryActions(player);
         }
         if (smokeTicks > 0) {
             smokeTicks--;
             if (smokeTicks > 10 && player != null && !player.world.isRemote) SmokeEffects.exhale(player, smokeColor);
+        }
+    }
+
+    private void applyInvoluntaryActions(EntityPlayer player) {
+        Random random = player.getRNG();
+        if (player.world.isRemote) {
+            float jumpChance = getModifier(Drug::randomJumpChance);
+            if (player.onGround && jumpChance > 0F && random.nextFloat() < jumpChance) player.jump();
+
+            float swingChance = getModifier(Drug::randomSwingChance);
+            if (!player.isSwingInProgress && swingChance > 0F && random.nextFloat() < swingChance) {
+                player.swingArm(EnumHand.MAIN_HAND);
+            }
+        } else {
+            float drowsiness = getModifier(Drug::drowsiness);
+            if (drowsiness > 0F && random.nextFloat() < drowsiness) player.addExhaustion(0.05F);
         }
     }
 

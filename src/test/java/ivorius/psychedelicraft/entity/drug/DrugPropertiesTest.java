@@ -18,6 +18,49 @@ public class DrugPropertiesTest {
     private static final double EPSILON = 1.0e-8;
 
     @Test
+    public void stimulantActionChancesUseTheirOwnThresholdsAndAddTogether() {
+        DrugProperties properties = new DrugProperties();
+        lockAt(properties, DrugType.CAFFEINE, 0.3);
+        lockAt(properties, DrugType.SUGAR, 0.6);
+        lockAt(properties, DrugType.BATH_SALTS, 0.5);
+        lockAt(properties, DrugType.COCAINE, 0.5);
+        tick(properties, 1, 120);
+
+        assertEquals(0F, properties.getModifier(Drug::randomJumpChance), 0F);
+        assertEquals(0.05F * (0.6F - 0.3F) / (1F - 0.3F),
+                properties.getModifier(Drug::randomSwingChance), 0.00001F);
+
+        for (DrugType type : new DrugType[]{DrugType.CAFFEINE, DrugType.SUGAR, DrugType.BATH_SALTS, DrugType.COCAINE}) {
+            properties.setDrugValue(type, 1);
+        }
+        tick(properties, 121, 240);
+
+        assertEquals(0.20F, properties.getModifier(Drug::randomJumpChance), 0.00001F);
+        assertEquals(0.14F, properties.getModifier(Drug::randomSwingChance), 0.00001F);
+    }
+
+    @Test
+    public void stimulantEnergySuppressesDrowsinessWithoutGivingKavaItsUnusedProfile() {
+        DrugProperties properties = new DrugProperties();
+        lockAt(properties, DrugType.KAVA, 1);
+        tick(properties, 1, 120);
+        assertEquals(0F, properties.getModifier(Drug::drowsiness), 0F);
+
+        lockAt(properties, DrugType.SLEEP_DEPRIVATION, 0.8);
+        tick(properties, 121, 240);
+        assertEquals(0.8F, properties.getModifier(Drug::drowsiness), 0.00001F);
+
+        lockAt(properties, DrugType.CAFFEINE, 0.05);
+        tick(properties, 241, 360);
+        assertEquals(0.3F, properties.getModifier(Drug::drowsiness), 0.00001F);
+    }
+
+    private static void lockAt(DrugProperties properties, DrugType type, double value) {
+        properties.setDrugValue(type, value);
+        properties.setDrugLocked(type, true);
+    }
+
+    @Test
     public void lockedRiftEffectsSurviveReloadAndOnlyAcceptExplicitSets() {
         DrugProperties drugs = new DrugProperties();
         drugs.setDrugValue(DrugType.POWER, 0.7);
