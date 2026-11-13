@@ -36,6 +36,7 @@ import javax.annotation.Nullable;
 
 final class VillagerWork extends EntityAIBase {
     private static final String WORKSITE = "Worksite";
+    private static final String WORKSITE_DIMENSION = "WorksiteDimension";
     private static final int SEARCH_RADIUS = 32;
     private static final int BONE_MEAL = EnumDyeColor.WHITE.getDyeDamage();
 
@@ -81,10 +82,11 @@ final class VillagerWork extends EntityAIBase {
 
         BlockPos site = worksite(villager);
         if (site != null) {
+            if (worksiteDimension(villager) != villager.world.provider.getDimension()) return false;
             if (!villager.world.isBlockLoaded(site)) return false;
             DryingTableBlockEntity table = table(villager.world, site);
             if (table == null || !table.availableTo(villager.getUniqueID())) {
-                VillagerCareers.data(villager).removeTag(WORKSITE);
+                forgetWorksite(villager);
                 if (VillagerCareers.data(villager).getInteger("Experience") == 0) {
                     VillagerCareers.changeCareer(villager, VillagerCareers.UNEMPLOYED);
                 }
@@ -162,7 +164,9 @@ final class VillagerWork extends EntityAIBase {
                 VillagerCareers.changeCareer(villager, VillagerCareers.DEALER);
                 villager.world.setEntityState(villager, (byte) 14);
             }
-            VillagerCareers.data(villager).setLong(WORKSITE, target.toLong());
+            NBTTagCompound data = VillagerCareers.data(villager);
+            data.setLong(WORKSITE, target.toLong());
+            data.setInteger(WORKSITE_DIMENSION, villager.world.provider.getDimension());
         }
     }
 
@@ -297,8 +301,27 @@ final class VillagerWork extends EntityAIBase {
 
     @Nullable
     static BlockPos worksite(EntityVillager villager) {
-        NBTTagCompound data = VillagerCareers.data(villager);
+        NBTTagCompound data = VillagerCareers.savedData(villager);
         return data.hasKey(WORKSITE, 4) ? BlockPos.fromLong(data.getLong(WORKSITE)) : null;
+    }
+
+    static int worksiteDimension(EntityVillager villager) {
+        NBTTagCompound data = VillagerCareers.savedData(villager);
+        return data.hasKey(WORKSITE_DIMENSION, 3) ? data.getInteger(WORKSITE_DIMENSION)
+                : villager.world.provider.getDimension();
+    }
+
+    static void rememberWorksiteDimension(EntityVillager villager) {
+        NBTTagCompound data = VillagerCareers.savedData(villager);
+        if (data.hasKey(WORKSITE, 4) && !data.hasKey(WORKSITE_DIMENSION, 3)) {
+            data.setInteger(WORKSITE_DIMENSION, villager.world.provider.getDimension());
+        }
+    }
+
+    static void forgetWorksite(EntityVillager villager) {
+        NBTTagCompound data = VillagerCareers.savedData(villager);
+        data.removeTag(WORKSITE);
+        data.removeTag(WORKSITE_DIMENSION);
     }
 
     @Nullable

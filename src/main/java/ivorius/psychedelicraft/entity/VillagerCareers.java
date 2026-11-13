@@ -7,7 +7,6 @@ package ivorius.psychedelicraft.entity;
 
 import ivorius.psychedelicraft.Psychedelicraft;
 import ivorius.psychedelicraft.advancement.PSCriteria;
-import ivorius.psychedelicraft.block.entity.DryingTableBlockEntity;
 import ivorius.psychedelicraft.config.PSConfig;
 import ivorius.psychedelicraft.item.PSItems;
 import ivorius.psychedelicraft.network.Channel;
@@ -40,6 +39,7 @@ import net.minecraftforge.event.entity.living.LivingDeathEvent;
 import net.minecraftforge.event.entity.living.LivingEvent;
 import net.minecraftforge.event.entity.player.PlayerEvent;
 import net.minecraftforge.event.entity.player.PlayerInteractEvent;
+import net.minecraftforge.event.world.ChunkEvent;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.common.eventhandler.EventPriority;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
@@ -110,6 +110,7 @@ public final class VillagerCareers {
     public static void addTasks(EntityJoinWorldEvent event) {
         if (!event.getWorld().isRemote && event.getEntity() instanceof EntityVillager) {
             EntityVillager villager = (EntityVillager) event.getEntity();
+            VillagerWork.rememberWorksiteDimension(villager);
             if (villager.tasks.taskEntries.stream().noneMatch(entry -> entry.action instanceof VillagerWork)) {
                 VillagerTradePreview preview = new VillagerTradePreview(villager);
                 villager.tasks.addTask(7, new VillagerWork(villager, preview));
@@ -147,12 +148,22 @@ public final class VillagerCareers {
     @SubscribeEvent(priority = EventPriority.LOWEST)
     public static void releaseWorksite(LivingDeathEvent event) {
         if (event.getEntity().world.isRemote || !(event.getEntity() instanceof EntityVillager)) return;
-        EntityVillager villager = (EntityVillager) event.getEntity();
-        if (villager.getProfessionForge() != DEALER) return;
+        releaseWorksite((EntityVillager) event.getEntity());
+    }
+
+    public static void releaseWorksite(EntityVillager villager) {
+        if (!(villager.world instanceof WorldServer) || villager.getProfessionForge() != DEALER) return;
         BlockPos pos = VillagerWork.worksite(villager);
-        if (pos != null && villager.world.isBlockLoaded(pos)) {
-            DryingTableBlockEntity table = VillagerWork.table(villager.world, pos);
-            if (table != null) table.release(villager.getUniqueID());
+        if (pos == null) return;
+        WorksiteReleases.release((WorldServer) villager.world, VillagerWork.worksiteDimension(villager),
+                pos, villager.getUniqueID());
+        VillagerWork.forgetWorksite(villager);
+    }
+
+    @SubscribeEvent
+    public static void releaseLoadedWorksites(ChunkEvent.Load event) {
+        if (event.getWorld() instanceof WorldServer) {
+            WorksiteReleases.onChunkLoad((WorldServer) event.getWorld(), event.getChunk());
         }
     }
 
@@ -190,6 +201,10 @@ public final class VillagerCareers {
         NBTTagCompound tag = villager.getEntityData();
         if (!tag.hasKey(CAREER, 10)) tag.setTag(CAREER, new NBTTagCompound());
         return tag.getCompoundTag(CAREER);
+    }
+
+    static NBTTagCompound savedData(EntityVillager villager) {
+        return villager.getEntityData().getCompoundTag(CAREER);
     }
 
     public static boolean spawnInfected(World world, Entity replacement, EntityLivingBase original) {

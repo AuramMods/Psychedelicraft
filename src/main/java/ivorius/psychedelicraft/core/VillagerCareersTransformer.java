@@ -53,6 +53,7 @@ public final class VillagerCareersTransformer implements IClassTransformer {
                 prependHandler(type, "useRecipe", "func_70933_a", "(Lnet/minecraft/village/MerchantRecipe;)V", "useRecipe");
                 prependHandler(type, "updateEquipmentIfNeeded", "func_175445_a", "(Lnet/minecraft/entity/item/EntityItem;)V", "collectExtra");
                 patchCustomer(type);
+                patchLightningConversion(type);
             }
             if (ZOMBIE.equals(transformedName)) {
                 MethodNode cure = find(type, "finishConversion", "func_190738_dp", "()V");
@@ -63,6 +64,25 @@ public final class VillagerCareersTransformer implements IClassTransformer {
         ClassWriter writer = new ClassWriter(ClassWriter.COMPUTE_MAXS);
         type.accept(writer);
         return writer.toByteArray();
+    }
+
+    private static void patchLightningConversion(ClassNode type) {
+        MethodNode lightning = find(type, "onStruckByLightning", "func_70077_a",
+                "(Lnet/minecraft/entity/effect/EntityLightningBolt;)V");
+        FMLDeobfuscatingRemapper remapper = FMLDeobfuscatingRemapper.INSTANCE;
+        for (AbstractInsnNode instruction : lightning.instructions.toArray()) {
+            if (!(instruction instanceof MethodInsnNode)) continue;
+            MethodInsnNode call = (MethodInsnNode) instruction;
+            String name = remapper.mapMethodName(call.owner, call.name, call.desc);
+            if (!("setDead".equals(name) || "func_70106_y".equals(name)) || !"()V".equals(call.desc)) continue;
+            InsnList release = new InsnList();
+            release.add(new VarInsnNode(Opcodes.ALOAD, 0));
+            release.add(new MethodInsnNode(Opcodes.INVOKESTATIC, CAREERS, "releaseWorksite",
+                    "(L" + type.name + ";)V", false));
+            lightning.instructions.insert(call, release);
+            return;
+        }
+        throw new IllegalStateException("Could not locate the villager removal after lightning conversion");
     }
 
     private static void patchSiege(ClassNode type) {
