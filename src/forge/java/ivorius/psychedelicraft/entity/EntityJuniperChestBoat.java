@@ -35,6 +35,7 @@ public final class EntityJuniperChestBoat extends EntityJuniperBoat implements I
     private final IItemHandler itemHandler = new InvWrapper(this);
     private ResourceLocation lootTable;
     private long lootSeed;
+    private boolean dropCargo = true;
     private boolean changingDimension;
 
     public EntityJuniperChestBoat(World world) {
@@ -83,11 +84,17 @@ public final class EntityJuniperChestBoat extends EntityJuniperBoat implements I
 
     @Override
     public void setDead() {
-        boolean drop = !isDead && !world.isRemote && !changingDimension;
+        boolean drop = !isDead && !world.isRemote && dropCargo && !changingDimension
+                && world.getGameRules().getBoolean("doEntityDrops");
         super.setDead();
         if (drop) {
             InventoryHelper.dropInventoryItems(world, this, this);
         }
+    }
+
+    @Override
+    public void setDropItemsWhenDead(boolean dropWhenDead) {
+        dropCargo = dropWhenDead;
     }
 
     @Override
@@ -177,6 +184,13 @@ public final class EntityJuniperChestBoat extends EntityJuniperBoat implements I
         if (stack.getCount() > getInventoryStackLimit()) {
             stack.setCount(getInventoryStackLimit());
         }
+    }
+
+    @Override
+    public boolean replaceItemInInventory(int slot, ItemStack stack) {
+        if (slot < 0 || slot >= cargo.size()) return false;
+        setInventorySlotContents(slot, stack);
+        return true;
     }
 
     @Override

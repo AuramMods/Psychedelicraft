@@ -68,4 +68,15 @@ public class JuniperChestBoatTest {
         assertEquals(5, handler.extractItem(0, 5, false).getCount());
         assertEquals(59, boat.getStackInSlot(0).getCount());
     }
+
+    @Test
+    public void entitySlotReplacementOnlyAcceptsCargoSlots() {
+        EntityJuniperChestBoat boat = new EntityJuniperChestBoat(null);
+        assertFalse(boat.replaceItemInInventory(-1, new ItemStack(Items.APPLE)));
+        assertFalse(boat.replaceItemInInventory(27, new ItemStack(Items.APPLE)));
+        assertTrue(boat.replaceItemInInventory(26, new ItemStack(Items.APPLE, 5)));
+        assertEquals(5, boat.getStackInSlot(26).getCount());
+        assertTrue(boat.replaceItemInInventory(26, ItemStack.EMPTY));
+        assertTrue(boat.isEmpty());
+    }
 }
