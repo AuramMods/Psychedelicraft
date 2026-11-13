@@ -20,16 +20,16 @@ import java.util.Random;
 public final class FarmerTrades {
     private static final int VANILLA_DONOR_OFFERS = 5;
     private static final Offer[] OFFERS = {
-            new Offer("wine_grapes", 2, 3, 8),
-            new Offer("hop_cones", 1, 1, 4),
-            new Offer("hop_seeds", 1, 1, 4),
-            new Offer("wooden_mug", 1, 1, 4),
-            new Offer("dried_tobacco", 4, 1, 4),
-            new Offer("cigarette", 2, 1, 4),
-            new Offer("cigar", 2, 1, 4),
-            new Offer("tobacco_seeds", 2, 1, 4),
-            new Offer("coffee_beans", 1, 1, 4),
-            new Offer("coffea_cherries", 1, 1, 4)
+            new Offer("wine_grapes", 2, 3, 8, 0.5F),
+            new Offer("hop_cones", 1, 1, 4, 0.6F),
+            new Offer("hop_seeds", 1, 1, 4, 0.4F),
+            new Offer("wooden_mug", 1, 1, 4, 0.5F),
+            new Offer("dried_tobacco", 4, 1, 4, 0.3F),
+            new Offer("cigarette", 2, 1, 4, 0.8F),
+            new Offer("cigar", 2, 1, 4, 0.8F),
+            new Offer("tobacco_seeds", 2, 1, 4, 0.3F),
+            new Offer("coffee_beans", 1, 1, 4, 0.8F),
+            new Offer("coffea_cherries", 1, 1, 4, 0.6F)
     };
 
     private FarmerTrades() {
@@ -65,17 +65,29 @@ public final class FarmerTrades {
         }
     }
 
+    static float priceMultiplier(MerchantRecipe recipe) {
+        if (recipe.getItemToBuy().getItem() != Items.EMERALD || recipe.hasSecondItemToBuy()) return -1;
+        ItemStack output = recipe.getItemToSell();
+        for (Offer offer : OFFERS) {
+            if (offer.item.equals(output.getItem().getRegistryName()) && offer.quantity == output.getCount()
+                    && offer.cost == recipe.getItemToBuy().getCount()) return offer.multiplier;
+        }
+        return -1;
+    }
+
     private static final class Offer {
         private final ResourceLocation item;
         private final int cost;
         private final int quantity;
         private final int maxUses;
+        private final float multiplier;
 
-        private Offer(String name, int cost, int quantity, int maxUses) {
+        private Offer(String name, int cost, int quantity, int maxUses, float multiplier) {
             item = Psychedelicraft.id(name);
             this.cost = cost;
             this.quantity = quantity;
             this.maxUses = maxUses;
+            this.multiplier = multiplier;
         }
     }
 }

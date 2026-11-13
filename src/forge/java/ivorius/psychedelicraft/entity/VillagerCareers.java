@@ -41,6 +41,7 @@ import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.common.eventhandler.EventPriority;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.registry.ForgeRegistries;
+import net.minecraftforge.fml.common.registry.VillagerRegistry;
 import net.minecraftforge.fml.common.registry.VillagerRegistry.VillagerCareer;
 import net.minecraftforge.fml.common.registry.VillagerRegistry.VillagerProfession;
 import net.minecraftforge.fml.relauncher.ReflectionHelper;
@@ -195,6 +196,7 @@ public final class VillagerCareers {
 
     public static boolean useRecipe(EntityVillager villager, MerchantRecipe recipe) {
         VillagerProfession profession = villager.getProfessionForge();
+        if (!villager.world.isRemote) VillagerReputation.traded(villager);
         if (profession != DEALER && profession != ADDICT) return false;
         if (villager.world.isRemote) return true;
 
@@ -242,8 +244,7 @@ public final class VillagerCareers {
             int value = demand.getInteger(id) + recipe.getToolUses() * 2 - recipe.getMaxTradeUses();
             demand.setInteger(id, value);
             ItemStack buy = recipe.getItemToBuy().copy();
-            buy.setCount(MathHelper.clamp(offer.inputCount() + Math.max(0, MathHelper.floor(offer.inputCount() * value * offer.priceMultiplier)),
-                    1, buy.getMaxStackSize()));
+            buy.setCount(MathHelper.clamp(demandPrice(offer, value), 1, buy.getMaxStackSize()));
             recipes.set(slot, new MerchantRecipe(buy, recipe.getSecondItemToBuy().copy(), recipe.getItemToSell().copy(), 0, recipe.getMaxTradeUses()));
         }
         data.setTag("Demand", demand);
@@ -281,13 +282,36 @@ public final class VillagerCareers {
 
     private static Offer findOffer(VillagerProfession profession, MerchantRecipe recipe) {
         if (profession == DEALER) {
-            Item item = recipe.getItemToSell().getItem();
-            if (item == PSItems.HARMONIUM) return Offers.HARMONIUM;
-            for (Offer[] tier : Offers.DEALER) for (Offer offer : tier) if (offer.item == item) return offer;
-        } else {
-            for (Offer offer : Offers.ADDICT) if (offer.item == recipe.getItemToBuy().getItem()) return offer;
+            if (Offers.HARMONIUM.matches(recipe)) return Offers.HARMONIUM;
+            for (Offer[] tier : Offers.DEALER) for (Offer offer : tier) if (offer.matches(recipe)) return offer;
+        } else if (profession == ADDICT) {
+            for (Offer offer : Offers.ADDICT) if (offer.matches(recipe)) return offer;
         }
         return null;
+    }
+
+    static int customerPrice(EntityVillager villager, MerchantRecipe recipe, int reputation, int hero) {
+        VillagerProfession profession = villager.getProfessionForge();
+        ItemStack buy = recipe.getItemToBuy();
+        int price = buy.getCount();
+        if (buy.isEmpty()) return price;
+        if (profession == VillagerRegistry.FARMER) {
+            float multiplier = FarmerTrades.priceMultiplier(recipe);
+            return multiplier < 0 ? price : VillagerPrices.adjustedCost(price, price, buy.getMaxStackSize(), multiplier, reputation, hero);
+        }
+        Offer offer = findOffer(profession, recipe);
+        if (offer == null) return price;
+        NBTTagCompound demand = data(villager).getCompoundTag("Demand");
+        String key = offer.item.getRegistryName().toString();
+        if (demand.hasKey(key)) {
+            int withDemand = demandPrice(offer, demand.getInteger(key));
+            if (price == MathHelper.clamp(withDemand, 1, buy.getMaxStackSize())) price = withDemand;
+        }
+        return VillagerPrices.adjustedCost(price, offer.inputCount(), buy.getMaxStackSize(), offer.priceMultiplier, reputation, hero);
+    }
+
+    private static int demandPrice(Offer offer, int demand) {
+        return offer.inputCount() + Math.max(0, MathHelper.floor(offer.inputCount() * demand * offer.priceMultiplier));
     }
 
     private static final class Offer {
@@ -313,6 +337,16 @@ public final class VillagerCareers {
 
         int inputCount() {
             return buying ? quantity : cost;
+        }
+
+        boolean matches(MerchantRecipe recipe) {
+            ItemStack buy = recipe.getItemToBuy();
+            ItemStack sell = recipe.getItemToSell();
+            ItemStack second = recipe.getSecondItemToBuy();
+            return buy.getItem() == (buying ? item : Items.EMERALD) && buy.getMetadata() == 0
+                    && sell.getItem() == (buying ? Items.EMERALD : item) && sell.getMetadata() == 0
+                    && sell.getCount() == (buying ? cost : quantity)
+                    && (papers == 0 ? second.isEmpty() : second.getItem() == Items.PAPER && second.getCount() == papers);
         }
 
         MerchantRecipe create() {

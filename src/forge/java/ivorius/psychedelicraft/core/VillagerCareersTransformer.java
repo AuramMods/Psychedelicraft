@@ -8,6 +8,8 @@ import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.Type;
 import org.objectweb.asm.tree.AbstractInsnNode;
 import org.objectweb.asm.tree.ClassNode;
+import org.objectweb.asm.tree.FieldInsnNode;
+import org.objectweb.asm.tree.FieldNode;
 import org.objectweb.asm.tree.FrameNode;
 import org.objectweb.asm.tree.InsnList;
 import org.objectweb.asm.tree.InsnNode;
@@ -22,27 +24,77 @@ public final class VillagerCareersTransformer implements IClassTransformer {
     private static final String ZOMBIE = "net.minecraft.entity.monster.EntityZombieVillager";
     private static final String VILLAGE = "net.minecraft.world.gen.structure.StructureVillagePieces$Village";
     private static final String RENDERER = "net.minecraft.client.renderer.entity.RenderLivingBase";
+    private static final String CONVERSATION = "net.minecraft.entity.ai.EntityAIVillagerInteract";
     private static final String FORGE_REGISTRY = "net/minecraftforge/fml/common/registry/VillagerRegistry";
     private static final String CAREERS = "ivorius/psychedelicraft/entity/VillagerCareers";
 
     @Override
     public byte[] transform(String name, String transformedName, byte[] bytes) {
         if (bytes == null || !(VILLAGER.equals(transformedName) || ZOMBIE.equals(transformedName)
-                || VILLAGE.equals(transformedName) || RENDERER.equals(transformedName))) return bytes;
+                || VILLAGE.equals(transformedName) || RENDERER.equals(transformedName) || CONVERSATION.equals(transformedName))) return bytes;
         ClassNode type = new ClassNode(Opcodes.ASM5);
         new ClassReader(bytes).accept(type, 0);
         if (RENDERER.equals(transformedName)) {
             patchShake(type);
+        } else if (CONVERSATION.equals(transformedName)) {
+            patchConversation(type);
         } else {
             patchRandomSpawns(type);
             if (VILLAGER.equals(transformedName)) {
                 prependHandler(type, "useRecipe", "func_70933_a", "(Lnet/minecraft/village/MerchantRecipe;)V", "useRecipe");
                 prependHandler(type, "updateEquipmentIfNeeded", "func_175445_a", "(Lnet/minecraft/entity/item/EntityItem;)V", "collectExtra");
+                patchCustomer(type);
             }
+            if (ZOMBIE.equals(transformedName)) patchCure(type);
         }
         ClassWriter writer = new ClassWriter(ClassWriter.COMPUTE_MAXS);
         type.accept(writer);
         return writer.toByteArray();
+    }
+
+    private static void patchCustomer(ClassNode type) {
+        MethodNode method = find(type, "setCustomer", "func_70932_a_", "(Lnet/minecraft/entity/player/EntityPlayer;)V");
+        InsnList hook = new InsnList();
+        hook.add(new VarInsnNode(Opcodes.ALOAD, 0));
+        hook.add(new VarInsnNode(Opcodes.ALOAD, 1));
+        hook.add(new MethodInsnNode(Opcodes.INVOKESTATIC, "ivorius/psychedelicraft/entity/VillagerPrices", "customerChanged",
+                "(L" + type.name + ";" + method.desc.substring(1), false));
+        method.instructions.insert(hook);
+    }
+
+    private static void patchConversation(ClassNode type) {
+        FieldNode villager = ClientEffectsTransformer.field(type, "villager", "field_179477_f");
+        MethodNode start = find(type, "startExecuting", "func_75249_e", "()V");
+        InsnList hook = new InsnList();
+        hook.add(new VarInsnNode(Opcodes.ALOAD, 0));
+        hook.add(new FieldInsnNode(Opcodes.GETFIELD, type.name, villager.name, villager.desc));
+        hook.add(new VarInsnNode(Opcodes.ALOAD, 0));
+        hook.add(new MethodInsnNode(Opcodes.INVOKESTATIC, "ivorius/psychedelicraft/entity/VillagerReputation", "talk",
+                "(" + villager.desc + "L" + type.name + ";)V", false));
+        start.instructions.insert(hook);
+    }
+
+    private static void patchCure(ClassNode type) {
+        MethodNode convert = find(type, "finishConversion", "func_190738_dp", "()V");
+        FieldNode healer = ClientEffectsTransformer.field(type, "converstionStarter", "field_191992_by");
+        FMLDeobfuscatingRemapper remapper = FMLDeobfuscatingRemapper.INSTANCE;
+        for (AbstractInsnNode insn : convert.instructions.toArray()) {
+            if (!(insn instanceof MethodInsnNode)) continue;
+            MethodInsnNode call = (MethodInsnNode) insn;
+            String mapped = remapper.mapMethodName(call.owner, call.name, call.desc);
+            if (!("spawnEntity".equals(mapped) || "func_72838_d".equals(mapped))
+                    || !"(Lnet/minecraft/entity/Entity;)Z".equals(remapper.mapMethodDesc(call.desc))) continue;
+            InsnList owner = new InsnList();
+            owner.add(new VarInsnNode(Opcodes.ALOAD, 0));
+            owner.add(new FieldInsnNode(Opcodes.GETFIELD, type.name, healer.name, healer.desc));
+            convert.instructions.insertBefore(call, owner);
+            String descriptor = Type.getMethodDescriptor(Type.BOOLEAN_TYPE, Type.getObjectType(call.owner),
+                    Type.getArgumentTypes(call.desc)[0], Type.getType(healer.desc));
+            convert.instructions.set(call, new MethodInsnNode(Opcodes.INVOKESTATIC,
+                    "ivorius/psychedelicraft/entity/VillagerReputation", "spawnCured", descriptor, false));
+            return;
+        }
+        throw new IllegalStateException("Could not locate zombie villager conversion spawn");
     }
 
     private static void patchRandomSpawns(ClassNode type) {
