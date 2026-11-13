@@ -40,15 +40,17 @@ final class VillagerWork extends EntityAIBase {
     private static final int BONE_MEAL = EnumDyeColor.WHITE.getDyeDamage();
 
     private final EntityVillager villager;
+    private final VillagerTradePreview preview;
     private long nextTask;
     private BlockPos target;
     private Vec3d wander;
     private Job job;
     private int remaining;
 
-    VillagerWork(EntityVillager villager) {
+    VillagerWork(EntityVillager villager, VillagerTradePreview preview) {
         this.villager = villager;
-        setMutexBits(3);
+        this.preview = preview;
+        setMutexBits(1);
     }
 
     @Override
@@ -129,7 +131,9 @@ final class VillagerWork extends EntityAIBase {
             remaining = 0;
             return;
         }
-        villager.getLookHelper().setLookPosition(target.getX() + 0.5D, target.getY() + 0.5D, target.getZ() + 0.5D, 20, 20);
+        if (preview.shown().isEmpty()) {
+            villager.getLookHelper().setLookPosition(target.getX() + 0.5D, target.getY() + 0.5D, target.getZ() + 0.5D, 20, 20);
+        }
         if (villager.getDistanceSqToCenter(target) > (job == Job.CROP ? 2.25D : 6.25D)) {
             if (remaining % 20 == 0 && !moveTowardTarget()) remaining = 0;
             return;

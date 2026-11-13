@@ -10,9 +10,11 @@ import ivorius.psychedelicraft.advancement.PSCriteria;
 import ivorius.psychedelicraft.block.entity.DryingTableBlockEntity;
 import ivorius.psychedelicraft.config.PSConfig;
 import ivorius.psychedelicraft.item.PSItems;
+import ivorius.psychedelicraft.network.Channel;
 import net.minecraft.advancements.CriteriaTriggers;
-import net.minecraft.entity.item.EntityXPOrb;
+import net.minecraft.entity.ai.EntityAITasks;
 import net.minecraft.entity.item.EntityItem;
+import net.minecraft.entity.item.EntityXPOrb;
 import net.minecraft.entity.monster.EntityZombieVillager;
 import net.minecraft.entity.passive.EntityVillager;
 import net.minecraft.entity.player.EntityPlayerMP;
@@ -24,17 +26,19 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.DamageSource;
 import net.minecraft.util.EnumActionResult;
-import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.MathHelper;
 import net.minecraft.village.MerchantRecipe;
 import net.minecraft.village.MerchantRecipeList;
 import net.minecraft.world.WorldServer;
 import net.minecraftforge.event.RegistryEvent;
 import net.minecraftforge.event.entity.EntityJoinWorldEvent;
 import net.minecraftforge.event.entity.living.LivingDeathEvent;
+import net.minecraftforge.event.entity.living.LivingEvent;
+import net.minecraftforge.event.entity.player.PlayerEvent;
 import net.minecraftforge.event.entity.player.PlayerInteractEvent;
-import net.minecraftforge.fml.common.eventhandler.EventPriority;
 import net.minecraftforge.fml.common.Mod;
+import net.minecraftforge.fml.common.eventhandler.EventPriority;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.registry.ForgeRegistries;
 import net.minecraftforge.fml.common.registry.VillagerRegistry.VillagerCareer;
@@ -100,7 +104,35 @@ public final class VillagerCareers {
         if (!event.getWorld().isRemote && event.getEntity() instanceof EntityVillager) {
             EntityVillager villager = (EntityVillager) event.getEntity();
             if (villager.tasks.taskEntries.stream().noneMatch(entry -> entry.action instanceof VillagerWork)) {
-                villager.tasks.addTask(7, new VillagerWork(villager));
+                VillagerTradePreview preview = new VillagerTradePreview(villager);
+                villager.tasks.addTask(7, new VillagerWork(villager, preview));
+                villager.tasks.addTask(8, preview);
+            }
+        }
+    }
+
+    @SubscribeEvent
+    public static void syncTradePreview(PlayerEvent.StartTracking event) {
+        if (!(event.getTarget() instanceof EntityVillager) || !(event.getEntityPlayer() instanceof EntityPlayerMP)) return;
+        EntityVillager villager = (EntityVillager) event.getTarget();
+        for (EntityAITasks.EntityAITaskEntry entry : villager.tasks.taskEntries) {
+            if (entry.action instanceof VillagerTradePreview) {
+                ItemStack shown = ((VillagerTradePreview) entry.action).shown();
+                if (!shown.isEmpty()) Channel.showVillagerOffer(villager, shown, (EntityPlayerMP) event.getEntityPlayer());
+                return;
+            }
+        }
+    }
+
+    @SubscribeEvent
+    public static void stopDisabledPreview(LivingEvent.LivingUpdateEvent event) {
+        if (!(event.getEntityLiving() instanceof EntityVillager) || event.getEntityLiving().world.isRemote) return;
+        EntityVillager villager = (EntityVillager) event.getEntityLiving();
+        if (!villager.isAIDisabled()) return;
+        for (EntityAITasks.EntityAITaskEntry entry : villager.tasks.taskEntries) {
+            if (entry.using && entry.action instanceof VillagerTradePreview) {
+                entry.action.resetTask();
+                return;
             }
         }
     }

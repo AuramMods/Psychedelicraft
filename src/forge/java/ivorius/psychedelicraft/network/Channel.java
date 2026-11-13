@@ -6,7 +6,9 @@ import ivorius.psychedelicraft.block.entity.JuniperSignText;
 import ivorius.psychedelicraft.entity.drug.DrugCapability;
 import ivorius.psychedelicraft.entity.drug.DrugProperties;
 import ivorius.psychedelicraft.entity.drug.HallucinationType;
+import net.minecraft.entity.passive.EntityVillager;
 import net.minecraft.entity.player.EntityPlayerMP;
+import net.minecraft.item.ItemStack;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
@@ -31,6 +33,7 @@ public final class Channel {
         network.registerMessage(MsgSmoke.Handler.class, MsgSmoke.class, 4, Side.CLIENT);
         network.registerMessage(MsgHallucinate.Handler.class, MsgHallucinate.class, 5, Side.CLIENT);
         network.registerMessage(MsgFluidBubbles.Handler.class, MsgFluidBubbles.class, 6, Side.CLIENT);
+        network.registerMessage(MsgVillagerOfferPreview.Handler.class, MsgVillagerOfferPreview.class, 7, Side.CLIENT);
     }
 
     public static void spawnSmoke(World world, Vec3d origin, Vec3d velocity, int color, float scale, int count) {
@@ -56,6 +59,14 @@ public final class Channel {
         if (properties != null) {
             network.sendTo(new MsgDrugProperties(subject, properties), recipient);
         }
+    }
+
+    public static void showVillagerOffer(EntityVillager villager, ItemStack item) {
+        network.sendToAllTracking(new MsgVillagerOfferPreview(villager, item), villager);
+    }
+
+    public static void showVillagerOffer(EntityVillager villager, ItemStack item, EntityPlayerMP recipient) {
+        network.sendTo(new MsgVillagerOfferPreview(villager, item), recipient);
     }
 
     public static void openSignEditor(EntityPlayerMP player, BlockPos pos, long token, boolean front,
