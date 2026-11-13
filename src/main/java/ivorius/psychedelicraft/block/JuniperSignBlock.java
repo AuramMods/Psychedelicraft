@@ -1,8 +1,11 @@
 package ivorius.psychedelicraft.block;
 
 import java.util.Random;
+import javax.annotation.Nullable;
 
+import ivorius.psychedelicraft.PSSounds;
 import ivorius.psychedelicraft.block.entity.JuniperSignBlockEntity;
+import ivorius.psychedelicraft.client.particle.SignWaxParticle;
 import ivorius.psychedelicraft.fluid.physical.Waterloggable;
 import ivorius.psychedelicraft.fluid.physical.Waterlogging;
 import ivorius.psychedelicraft.item.PSItems;
@@ -19,7 +22,6 @@ import net.minecraft.block.state.IBlockState;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.init.Items;
-import net.minecraft.init.SoundEvents;
 import net.minecraft.item.EnumDyeColor;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
@@ -31,6 +33,7 @@ import net.minecraft.util.EnumBlockRenderType;
 import net.minecraft.util.Mirror;
 import net.minecraft.util.Rotation;
 import net.minecraft.util.SoundCategory;
+import net.minecraft.util.SoundEvent;
 import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.MathHelper;
@@ -38,6 +41,7 @@ import net.minecraft.world.IBlockAccess;
 import net.minecraft.world.World;
 
 public abstract class JuniperSignBlock extends BlockSign implements Waterloggable {
+    private static final int WAX_PARTICLES = 1;
     public static final PropertyInteger ROTATION = BlockStandingSign.ROTATION;
     public static final PropertyDirection FACING = BlockHorizontal.FACING;
 
@@ -164,21 +168,30 @@ public abstract class JuniperSignBlock extends BlockSign implements Waterloggabl
         EntityPlayerMP serverPlayer = (EntityPlayerMP) player;
         boolean commandsExecuted = sign.executeClickCommands(serverPlayer, front);
         if (sign.isWaxed()) {
-            world.playSound(null, pos, SoundEvents.BLOCK_WOOD_HIT, SoundCategory.BLOCKS, 0.5F, 1F);
-            return commandsExecuted;
+            world.playSound(null, pos, PSSounds.WAXED_SIGN_INTERACT_FAIL, SoundCategory.BLOCKS, 1F, 1F);
+            return false;
         }
         if (!sign.canEdit(serverPlayer)) {
             return commandsExecuted;
         }
-        if (applyTreatment(sign, front, held)) {
+        SoundEvent treatment = applyTreatment(sign, front, held);
+        if (treatment != null) {
             player.addStat(StatList.getObjectUseStats(held.getItem()));
             if (!player.capabilities.isCreativeMode) {
                 held.shrink(1);
             }
-            world.playSound(null, pos, SoundEvents.BLOCK_WOOD_BUTTON_CLICK_ON, SoundCategory.BLOCKS, 0.6F, 1F);
+            world.playSound(null, pos, treatment, SoundCategory.BLOCKS, 1F, 1F);
+            if (treatment == PSSounds.SIGN_WAX) world.addBlockEvent(pos, this, WAX_PARTICLES, 0);
             return true;
         }
         return commandsExecuted || sign.openEditor(serverPlayer, front);
+    }
+
+    @Override
+    public boolean eventReceived(IBlockState state, World world, BlockPos pos, int id, int param) {
+        if (id != WAX_PARTICLES) return super.eventReceived(state, world, pos, id, param);
+        if (world.isRemote) SignWaxParticle.spawn(world, pos);
+        return true;
     }
 
     private boolean canChainFrom(IBlockState state, EnumFacing side) {
@@ -186,25 +199,25 @@ public abstract class JuniperSignBlock extends BlockSign implements Waterloggabl
                 || form == Form.HANGING_WALL && side.getAxis() != state.getValue(FACING).getAxis();
     }
 
-    private static boolean applyTreatment(JuniperSignBlockEntity sign, boolean front, ItemStack held) {
+    @Nullable
+    private static SoundEvent applyTreatment(JuniperSignBlockEntity sign, boolean front, ItemStack held) {
         Item item = held.getItem();
-        if (item == PSItems.SIGN_WAX) {
-            return sign.wax();
+        if (item == PSItems.SIGN_WAX || item == PSItems.HONEYCOMB) {
+            return sign.wax() ? PSSounds.SIGN_WAX : null;
         }
-        if (!sign.text(front).hasText()) {
-            return false;
-        }
+        if (!sign.text(front).hasText()) return null;
         if (item == PSItems.GLOWING_INK) {
-            return sign.setGlowing(front, true);
+            return sign.setGlowing(front, true) ? PSSounds.SIGN_GLOW_INK : null;
         }
         if (item == PSItems.SIGN_BLACK_DYE) {
-            return sign.setColor(front, EnumDyeColor.BLACK);
+            return sign.setColor(front, EnumDyeColor.BLACK) ? PSSounds.SIGN_DYE : null;
         }
-        if (item == Items.DYE && !held.isEmpty()) {
+        if (item == Items.DYE) {
             EnumDyeColor color = EnumDyeColor.byDyeDamage(held.getMetadata());
-            return color == EnumDyeColor.BLACK ? sign.setGlowing(front, false) : sign.setColor(front, color);
+            if (color == EnumDyeColor.BLACK) return sign.setGlowing(front, false) ? PSSounds.SIGN_INK : null;
+            return sign.setColor(front, color) ? PSSounds.SIGN_DYE : null;
         }
-        return false;
+        return null;
     }
 
     static abstract class Rotating extends JuniperSignBlock {

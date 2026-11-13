@@ -17,6 +17,11 @@ public final class PSSounds {
     public static final SoundEvent PLACED_DRINK_SET_DOWN = sound("block.placed_drink.set_down");
     public static final SoundEvent PAPER_BAG_INSERT = sound("item.paper_bag.insert");
     public static final SoundEvent PAPER_BAG_REMOVE = sound("item.paper_bag.remove");
+    public static final SoundEvent SIGN_DYE = sound("block.sign.dye");
+    public static final SoundEvent SIGN_INK = sound("block.sign.ink");
+    public static final SoundEvent SIGN_GLOW_INK = sound("block.sign.glow_ink");
+    public static final SoundEvent SIGN_WAX = sound("block.sign.wax");
+    public static final SoundEvent WAXED_SIGN_INTERACT_FAIL = sound("block.sign.waxed_interact_fail");
     public static final SoundEvent DRUG_GENERIC = sound("drug.generic");
 
     private PSSounds() {
@@ -30,6 +35,7 @@ public final class PSSounds {
     @SubscribeEvent
     public static void registerSounds(RegistryEvent.Register<SoundEvent> event) {
         event.getRegistry().registerAll(BREATH, HEARTBEAT, RIFT_JAR_TOGGLE, RIFT_JAR_OPEN, RIFT_JAR_CLOSE,
-                BOTTLE_RACK_USE, PLACED_DRINK_SET_DOWN, PAPER_BAG_INSERT, PAPER_BAG_REMOVE, DRUG_GENERIC);
+                BOTTLE_RACK_USE, PLACED_DRINK_SET_DOWN, PAPER_BAG_INSERT, PAPER_BAG_REMOVE,
+                SIGN_DYE, SIGN_INK, SIGN_GLOW_INK, SIGN_WAX, WAXED_SIGN_INTERACT_FAIL, DRUG_GENERIC);
     }
 }
