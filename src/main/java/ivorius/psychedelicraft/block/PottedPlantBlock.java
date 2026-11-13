@@ -4,6 +4,7 @@ import java.util.function.Supplier;
 
 import ivorius.psychedelicraft.Psychedelicraft;
 import net.minecraft.block.Block;
+import net.minecraft.block.BlockTallGrass;
 import net.minecraft.block.SoundType;
 import net.minecraft.block.material.Material;
 import net.minecraft.block.state.BlockFaceShape;
@@ -51,39 +52,55 @@ public final class PottedPlantBlock extends Block {
         World world = event.getWorld();
         BlockPos pos = event.getPos();
         ItemStack held = event.getItemStack();
-        if (held.isEmpty() || player.isSneaking() || player.isSpectator()
+        if (held.isEmpty() || player.isSpectator()
                 || event.getUseBlock() == Event.Result.DENY
                 || !world.isBlockModifiable(player, pos) || world.getBlockState(pos).getBlock() != Blocks.FLOWER_POT) {
             return;
         }
+        if (player.isSneaking() && event.getUseBlock() != Event.Result.ALLOW
+                && !(player.getHeldItemMainhand().doesSneakBypassUse(world, pos, player)
+                && player.getHeldItemOffhand().doesSneakBypassUse(world, pos, player))) {
+            return;
+        }
+        PottedPlantBlock filled = forItem(held.getItem());
+        if (filled == null) return;
+
         TileEntity tile = world.getTileEntity(pos);
         if (!(tile instanceof TileEntityFlowerPot) || !((TileEntityFlowerPot) tile).getFlowerItemStack().isEmpty()) {
             return;
         }
-        for (PottedPlantBlock filled : PSBlocks.POTTED_PLANTS) {
-            if (held.getItem() == filled.plant.get()) {
-                if (!world.isRemote) {
-                    if (!world.setBlockState(pos, filled.getDefaultState(), 3)) {
-                        return;
-                    }
-                    if (!player.capabilities.isCreativeMode) {
-                        held.shrink(1);
-                    }
-                    player.addStat(StatList.FLOWER_POTTED);
-                }
-                event.setCancellationResult(EnumActionResult.SUCCESS);
-                event.setCanceled(true);
-                return;
-            }
+        if (!world.isRemote) {
+            if (!world.setBlockState(pos, filled.getDefaultState(), 3)) return;
+            if (!player.capabilities.isCreativeMode) held.shrink(1);
+            player.addStat(StatList.FLOWER_POTTED);
         }
+        event.setCancellationResult(EnumActionResult.SUCCESS);
+        event.setCanceled(true);
+    }
+
+    private static PottedPlantBlock forItem(Item item) {
+        for (PottedPlantBlock filled : PSBlocks.POTTED_PLANTS) {
+            if (item == filled.plant.get()) return filled;
+        }
+        return null;
+    }
+
+    private static boolean isVanillaPottable(ItemStack stack) {
+        Block block = Block.getBlockFromItem(stack.getItem());
+        return block == Blocks.YELLOW_FLOWER || block == Blocks.RED_FLOWER || block == Blocks.CACTUS
+                || block == Blocks.BROWN_MUSHROOM || block == Blocks.RED_MUSHROOM || block == Blocks.SAPLING
+                || block == Blocks.DEADBUSH || (block == Blocks.TALLGRASS
+                && stack.getMetadata() == BlockTallGrass.EnumType.FERN.getMeta());
     }
 
     @Override
     public boolean onBlockActivated(World world, BlockPos pos, IBlockState state, EntityPlayer player,
                                     EnumHand hand, EnumFacing face, float x, float y, float z) {
-        if (!world.isRemote && world.setBlockState(pos, Blocks.FLOWER_POT.getDefaultState(), 3)) {
+        ItemStack held = player.getHeldItem(hand);
+        if (forItem(held.getItem()) == null && !isVanillaPottable(held)
+                && !world.isRemote && world.setBlockState(pos, Blocks.FLOWER_POT.getDefaultState(), 3)) {
             ItemStack contents = new ItemStack(plant.get());
-            if (player.getHeldItem(hand).isEmpty()) {
+            if (held.isEmpty()) {
                 player.setHeldItem(hand, contents);
             } else if (!player.addItemStackToInventory(contents)) {
                 player.dropItem(contents, false);
@@ -127,16 +144,5 @@ public final class PottedPlantBlock extends Block {
     public void getDrops(NonNullList<ItemStack> drops, IBlockAccess world, BlockPos pos, IBlockState state, int fortune) {
         drops.add(new ItemStack(Items.FLOWER_POT));
         drops.add(new ItemStack(plant.get()));
-    }
-
-    @Override
-    public void neighborChanged(IBlockState state, World world, BlockPos pos, Block block, BlockPos from) {
-        BlockPos below = pos.down();
-        IBlockState support = world.getBlockState(below);
-        if (!world.isRemote && !support.isTopSolid()
-                && support.getBlockFaceShape(world, below, EnumFacing.UP) != BlockFaceShape.SOLID) {
-            dropBlockAsItem(world, pos, state, 0);
-            world.setBlockToAir(pos);
-        }
     }
 }
