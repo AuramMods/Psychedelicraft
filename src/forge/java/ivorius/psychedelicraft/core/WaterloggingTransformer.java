@@ -86,6 +86,7 @@ public final class WaterloggingTransformer implements IClassTransformer {
             case FLOWING:
                 keepSourceInBlock(type);
                 guardWaterOutlets(type);
+                allowVatInflow(type);
                 substituteFluidStates(method(type, "checkAdjacentBlock", "func_176371_a", "(" + WORLD + POS + "I)I"), 1);
                 substituteFluidStates(method(type, "updateTick", "func_180650_b",
                         "(" + WORLD + POS + STATE + "Ljava/util/Random;)V"), 1);
@@ -305,6 +306,33 @@ public final class WaterloggingTransformer implements IClassTransformer {
 
     private static String appendSource(String descriptor) {
         return descriptor.substring(0, descriptor.indexOf(')')) + Type.getArgumentTypes(descriptor)[1] + ")V";
+    }
+
+    private static void allowVatInflow(ClassNode type) {
+        String destination = "(" + WORLD + POS + STATE;
+        MethodNode blocked = method(type, "isBlocked", "func_176372_g", destination + ")Z");
+        MethodNode spread = method(type, "tryFlowInto", "func_176375_a", destination + "I)V");
+        InsnList open = new InsnList();
+        open.add(new InsnNode(Opcodes.ICONST_0));
+        open.add(new InsnNode(Opcodes.IRETURN));
+        hookVatDestination(type, blocked, "canAcceptVanilla", open);
+        InsnList filled = new InsnList();
+        filled.add(new InsnNode(Opcodes.RETURN));
+        hookVatDestination(type, spread, "fillIfVanillaVat", filled);
+    }
+
+    private static void hookVatDestination(ClassNode type, MethodNode method, String hookName, InsnList accepted) {
+        Type[] args = Type.getArgumentTypes(method.desc);
+        LabelNode vanilla = new LabelNode();
+        InsnList hook = new InsnList();
+        for (int local = 0; local <= 3; local++) hook.add(new VarInsnNode(Opcodes.ALOAD, local));
+        hook.add(new MethodInsnNode(Opcodes.INVOKESTATIC, "ivorius/psychedelicraft/fluid/physical/VatInflow", hookName,
+                Type.getMethodDescriptor(Type.BOOLEAN_TYPE, Type.getObjectType(type.name), args[0], args[1], args[2]), false));
+        hook.add(new JumpInsnNode(Opcodes.IFEQ, vanilla));
+        hook.add(accepted);
+        hook.add(vanilla);
+        hook.add(new FrameNode(Opcodes.F_SAME, 0, null, 0, null));
+        method.instructions.insert(hook);
     }
 
     private static boolean matches(AbstractInsnNode instruction, String name, String srg, String descriptor) {

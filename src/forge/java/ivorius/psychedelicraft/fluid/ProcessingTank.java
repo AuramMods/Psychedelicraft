@@ -19,6 +19,11 @@ public final class ProcessingTank extends FluidTank {
         return super.fill(FluidContents.normalize(resource), doFill);
     }
 
+    public boolean fillExactly(FluidStack resource, boolean doFill) {
+        if (resource.amount <= 0 || fill(resource, false) != resource.amount) return false;
+        return !doFill || fill(resource, true) == resource.amount;
+    }
+
     @Override
     public FluidStack drain(@Nullable FluidStack resource, boolean doDrain) {
         return super.drain(FluidContents.normalize(resource), doDrain);

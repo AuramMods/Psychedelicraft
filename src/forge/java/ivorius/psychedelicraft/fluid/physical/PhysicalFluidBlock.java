@@ -48,6 +48,7 @@ public final class PhysicalFluidBlock extends BlockFluidClassic {
         @Override public String valueToString(FluidStack value) { return value.toString(); }
     };
     private static final int MAX_LEVEL = 7;
+    private static final int NO_DROP = 1000;
     private final Fluid fluid;
     private final int spreadLoss;
     private final boolean waterLike;
@@ -202,17 +203,54 @@ public final class PhysicalFluidBlock extends BlockFluidClassic {
             setFluid(world, pos, refreshed, attributes);
             level = refreshed;
         }
-        if (canDisplace(world, pos.down())) {
-            spread(world, pos.down(), 1, attributes);
+        FluidStack bucket = new FluidStack(fluid, Fluid.BUCKET_VOLUME, attributes);
+        BlockPos below = pos.down();
+        if (canDisplace(world, below) || canFillVat(world, below, bucket)) {
+            spread(world, below, 1, bucket);
             return;
         }
         if (level != 0 && isFlowingVertically(world, pos)) return;
         int horizontal = world.getBlockState(pos.up()).getBlock() == this ? spreadLoss : level + spreadLoss;
         if (horizontal > MAX_LEVEL) return;
-        boolean[] directions = getOptimalFlowDirections(world, pos);
-        for (int index = 0; index < directions.length; index++) {
-            if (directions[index]) spread(world, pos.offset(SIDES.get(index)), horizontal, attributes);
+        spreadHorizontally(world, pos, horizontal, bucket);
+    }
+
+    private void spreadHorizontally(World world, BlockPos pos, int level, FluidStack bucket) {
+        // Keep Forge's slope search while using the incoming batch to evaluate each vat.
+        int[] costs = new int[SIDES.size()];
+        int min = NO_DROP;
+        for (int index = 0; index < costs.length; index++) {
+            EnumFacing side = SIDES.get(index);
+            BlockPos next = pos.offset(side);
+            costs[index] = NO_DROP;
+            if (canFlowInto(world, next, bucket) && !isSourceBlock(world, next)) {
+                costs[index] = canFlowInto(world, next.down(), bucket) ? 0 : flowCost(world, next, bucket, 1, side);
+                min = Math.min(min, costs[index]);
+            }
         }
+        for (int index = 0; index < costs.length; index++) {
+            if (costs[index] == min) spread(world, pos.offset(SIDES.get(index)), level, bucket);
+        }
+    }
+
+    private int flowCost(World world, BlockPos pos, FluidStack bucket, int depth, EnumFacing from) {
+        int cost = NO_DROP;
+        for (EnumFacing side : SIDES) {
+            if (side == from.getOpposite()) continue;
+            BlockPos next = pos.offset(side);
+            if (!canFlowInto(world, next, bucket) || isSourceBlock(world, next)) continue;
+            if (canFlowInto(world, next.down(), bucket)) return depth;
+            if (depth < quantaPerBlock / 2) cost = Math.min(cost, flowCost(world, next, bucket, depth + 1, side));
+        }
+        return cost;
+    }
+
+    private boolean canFlowInto(World world, BlockPos pos, FluidStack bucket) {
+        return canFlowInto(world, pos) || canFillVat(world, pos, bucket);
+    }
+
+    private boolean canFillVat(World world, BlockPos pos, FluidStack bucket) {
+        return world.isBlockLoaded(pos) && VatInflow.canAccept(world, pos, world.getBlockState(pos), bucket);
     }
 
     private boolean mixWithLava(World world, BlockPos pos) {
@@ -242,8 +280,9 @@ public final class PhysicalFluidBlock extends BlockFluidClassic {
         return true;
     }
 
-    private void spread(World world, BlockPos pos, int level, @Nullable NBTTagCompound attributes) {
-        if (displaceIfPossible(world, pos)) setFluid(world, pos, level, attributes);
+    private void spread(World world, BlockPos pos, int level, FluidStack bucket) {
+        if (!world.isBlockLoaded(pos) || VatInflow.fillIfVat(world, pos, world.getBlockState(pos), bucket)) return;
+        if (displaceIfPossible(world, pos)) setFluid(world, pos, level, bucket.tag);
     }
 
     @Override

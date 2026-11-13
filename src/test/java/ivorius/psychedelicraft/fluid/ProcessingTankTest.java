@@ -14,8 +14,10 @@ import org.junit.Test;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertSame;
+import static org.junit.Assert.assertTrue;
 
 public class ProcessingTankTest {
     @BeforeClass
@@ -66,6 +68,31 @@ public class ProcessingTankTest {
         assertNull(tank.drain(100, false));
         assertNull(tank.drain(water, true));
         assertEquals(1000, tank.getFluidAmount());
+    }
+
+    @Test
+    public void exactFillChecksSpaceAttributesAndLockBeforeChangingTheTank() {
+        AtomicInteger changes = new AtomicInteger();
+        ProcessingTank tank = new ProcessingTank(32000, changes::incrementAndGet);
+        NBTTagCompound tag = new NBTTagCompound();
+        tag.setInteger("batch", 17);
+        FluidStack bucket = new FluidStack(PSFluids.WHEAT_HOP, 1000, tag);
+        tank.replace(new FluidStack(bucket, 31001));
+        assertFalse(tank.fillExactly(bucket, true));
+        assertEquals(31001, tank.getFluidAmount());
+        tank.replace(new FluidStack(bucket, 31000));
+        assertFalse(tank.fillExactly(new FluidStack(PSFluids.WHEAT_HOP, 1000), true));
+        tank.setCanFill(false);
+        assertFalse(tank.fillExactly(bucket, true));
+        tank.setCanFill(true);
+        assertTrue(tank.fillExactly(bucket, false));
+        assertEquals(31000, tank.getFluidAmount());
+        assertEquals(2, changes.get());
+        assertTrue(tank.fillExactly(bucket, true));
+        assertFalse(tank.fillExactly(bucket, true));
+        assertEquals(32000, tank.getFluidAmount());
+        assertEquals(tag, tank.getFluid().tag);
+        assertEquals(3, changes.get());
     }
 
     @Test
