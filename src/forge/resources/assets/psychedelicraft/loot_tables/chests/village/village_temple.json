@@ -2,8 +2,97 @@
   "pools": [
     {
       "name": "psychedelicraft:village_profile",
-      "rolls": { "min": 3, "max": 8 },
-      "entries": []
+      "rolls": {
+        "min": 3,
+        "max": 8
+      },
+      "entries": [
+        {
+          "entryName": "psychedelicraft:wine_grapes#0",
+          "type": "item",
+          "name": "psychedelicraft:wine_grapes",
+          "weight": 8,
+          "functions": [
+            {
+              "function": "set_count",
+              "count": {
+                "min": 3,
+                "max": 10
+              }
+            }
+          ]
+        },
+        {
+          "entryName": "psychedelicraft:wooden_mug#1",
+          "type": "item",
+          "name": "psychedelicraft:wooden_mug",
+          "weight": 1,
+          "functions": [
+            {
+              "function": "set_count",
+              "count": {
+                "min": 1,
+                "max": 16
+              }
+            }
+          ]
+        },
+        {
+          "entryName": "psychedelicraft:cigarette#2",
+          "type": "item",
+          "name": "psychedelicraft:cigarette",
+          "weight": 2,
+          "functions": [
+            {
+              "function": "set_count",
+              "count": {
+                "min": 1,
+                "max": 16
+              }
+            }
+          ]
+        },
+        {
+          "entryName": "psychedelicraft:wooden_mug#3",
+          "type": "item",
+          "name": "psychedelicraft:wooden_mug",
+          "weight": 3,
+          "functions": [
+            {
+              "function": "set_count",
+              "count": {
+                "min": 1,
+                "max": 4
+              }
+            },
+            {
+              "function": "set_nbt",
+              "tag": "{ \"fluid\": { \"id\": \"psychedelicraft:coffee\", \"level\": 500 } }"
+            }
+          ]
+        },
+        {
+          "entryName": "psychedelicraft:stone_cup#4",
+          "type": "item",
+          "name": "psychedelicraft:stone_cup",
+          "weight": 1
+        },
+        {
+          "entryName": "psychedelicraft:hash_muffin#5",
+          "type": "item",
+          "name": "psychedelicraft:hash_muffin",
+          "weight": 1,
+          "functions": [
+            {
+              "function": "set_count",
+              "count": {
+                "min": 1,
+                "max": 8
+              }
+            }
+          ]
+        }
+      ]
     }
   ]
 }
