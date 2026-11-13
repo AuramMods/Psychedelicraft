@@ -10,6 +10,7 @@ import ivorius.psychedelicraft.command.DrugCommand;
 import ivorius.psychedelicraft.command.HallucinateCommand;
 import ivorius.psychedelicraft.entity.FarmerTrades;
 import ivorius.psychedelicraft.fluid.PSFluids;
+import ivorius.psychedelicraft.fluid.physical.Waterlogging;
 import ivorius.psychedelicraft.item.FilledBucketItem;
 import ivorius.psychedelicraft.item.PSItems;
 import ivorius.psychedelicraft.item.PaperBagItem;
@@ -64,6 +65,7 @@ public class Psychedelicraft {
         PSItems.JUNIPER_BOAT.registerDispenserBehavior();
         PSItems.JUNIPER_CHEST_BOAT.registerDispenserBehavior();
         FilledBucketItem.registerDispenserBehavior();
+        Waterlogging.registerDispenserBehavior();
         PaperBagItem.registerDispenserBehavior();
         FarmerTrades.register();
     }

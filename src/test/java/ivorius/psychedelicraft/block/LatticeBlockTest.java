@@ -1,8 +1,11 @@
 package ivorius.psychedelicraft.block;
 
+import ivorius.psychedelicraft.block.entity.LatticeCropBlockEntity;
+import ivorius.psychedelicraft.block.entity.WaterloggedBlockEntity;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.init.Bootstrap;
 import net.minecraft.init.Items;
+import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.util.Mirror;
 import net.minecraft.util.Rotation;
@@ -64,5 +67,31 @@ public class LatticeBlockTest {
             assertEquals(age, stem.getMetaFromState(LatticeBlock.withConnections(state, 15)));
             assertEquals(0, LatticeBlock.connections(state));
         }
+    }
+
+    @Test
+    public void storedWaterCoexistsWithCropAgeAndOlderCropsLoadDry() {
+        LatticeCropBlockEntity crop = new LatticeCropBlockEntity();
+        NBTTagCompound old = new NBTTagCompound();
+        old.setInteger("age", 3);
+        old.setBoolean("persistent", true);
+        crop.readFromNBT(old);
+        assertFalse(crop.isWaterlogged());
+        assertEquals(3, crop.getAge());
+        assertTrue(crop.isPersistent());
+
+        NBTTagCompound wet = new NBTTagCompound();
+        wet.setBoolean("waterlogged", true);
+        wet.merge(old);
+        crop.readFromNBT(wet);
+        assertTrue(crop.isWaterlogged());
+        assertEquals(3, crop.getAge());
+        assertTrue(crop.isPersistent());
+
+        WaterloggedBlockEntity plain = new WaterloggedBlockEntity();
+        plain.readFromNBT(wet);
+        assertTrue(plain.isWaterlogged());
+        plain.readFromNBT(new NBTTagCompound());
+        assertFalse(plain.isWaterlogged());
     }
 }

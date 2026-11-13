@@ -80,11 +80,6 @@ public final class LatticeCropBlock extends LatticeBlock implements IGrowable {
     }
 
     @Override
-    public boolean hasTileEntity(IBlockState state) {
-        return true;
-    }
-
-    @Override
     public TileEntity createTileEntity(World world, IBlockState state) {
         return new LatticeCropBlockEntity();
     }
@@ -131,7 +126,7 @@ public final class LatticeCropBlock extends LatticeBlock implements IGrowable {
     }
 
     @Override
-    public void updateTick(World world, BlockPos pos, IBlockState state, Random random) {
+    public void randomTick(World world, BlockPos pos, IBlockState state, Random random) {
         LatticeCropBlockEntity crop = getCrop(world, pos);
         if (crop == null || crop.isPersistent()) {
             return;

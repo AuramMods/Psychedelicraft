@@ -20,7 +20,8 @@ public final class PsychedelicraftCore implements IFMLLoadingPlugin {
                 "ivorius.psychedelicraft.core.EntityGeometryTransformer",
                 "ivorius.psychedelicraft.core.ItemGeometryTransformer",
                 "ivorius.psychedelicraft.core.TileGeometryTransformer",
-                "ivorius.psychedelicraft.core.VillagerCareersTransformer"};
+                "ivorius.psychedelicraft.core.VillagerCareersTransformer",
+                "ivorius.psychedelicraft.core.WaterloggingTransformer"};
     }
 
     @Override

@@ -17,6 +17,7 @@ import ivorius.psychedelicraft.block.entity.MashTubBlockEntity;
 import ivorius.psychedelicraft.block.entity.PeyoteBlockEntity;
 import ivorius.psychedelicraft.block.entity.PlacedDrinkBlockEntity;
 import ivorius.psychedelicraft.block.entity.RiftJarBlockEntity;
+import ivorius.psychedelicraft.block.entity.WaterloggedBlockEntity;
 import ivorius.psychedelicraft.fluid.PSFluids;
 import ivorius.psychedelicraft.fluid.physical.FluidAttributesTile;
 import ivorius.psychedelicraft.fluid.physical.PhysicalFluidBlock;
@@ -158,6 +159,7 @@ public final class PSBlocks {
         GameRegistry.registerTileEntity(PlacedDrinkBlockEntity.class, Psychedelicraft.id("placed_drink"));
         GameRegistry.registerTileEntity(BottleRackBlockEntity.class, Psychedelicraft.id("bottle_rack"));
         GameRegistry.registerTileEntity(LatticeCropBlockEntity.class, Psychedelicraft.id("lattice_crop"));
+        GameRegistry.registerTileEntity(WaterloggedBlockEntity.class, Psychedelicraft.id("waterlogged_block"));
         GameRegistry.registerTileEntity(PeyoteBlockEntity.class, Psychedelicraft.id("peyote"));
         GameRegistry.registerTileEntity(JuniperSignBlockEntity.class, Psychedelicraft.id("juniper_sign"));
         GameRegistry.registerTileEntity(RiftJarBlockEntity.class, Psychedelicraft.id("rift_jar"));

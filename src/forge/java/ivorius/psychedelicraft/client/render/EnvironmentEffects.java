@@ -6,6 +6,7 @@ package ivorius.psychedelicraft.client.render;
 
 import ivorius.psychedelicraft.config.PSConfig;
 import ivorius.psychedelicraft.fluid.physical.PhysicalFluidBlock;
+import ivorius.psychedelicraft.fluid.physical.Waterlogging;
 import net.minecraft.block.Block;
 import net.minecraft.block.material.Material;
 import net.minecraft.block.state.IBlockState;
@@ -27,7 +28,7 @@ public final class EnvironmentEffects {
         World world = player.world;
         BlockPos pos = new BlockPos(player.posX, player.posY, player.posZ);
         BlockPos eyes = new BlockPos(player.getPositionEyes(1F));
-        IBlockState eyeBlock = world.getBlockState(eyes);
+        IBlockState eyeBlock = Waterlogging.fluidState(world, eyes);
         Block block = eyeBlock.getBlock();
         boolean inWater = eyeBlock.getMaterial() == Material.WATER
                 || (block instanceof PhysicalFluidBlock && ((PhysicalFluidBlock) block).isWaterLike());

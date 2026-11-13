@@ -118,7 +118,7 @@ public final class PSItems {
     public static final Item TOMATO_SEEDS = named("tomato_seeds", new CropSeedItem(PSBlocks.TOMATOES, "tomato_seeds"));
     public static final Item TOMATO = named("tomato", new EdibleItem(1, 1.9F));
     public static final Item TOMATO_LEAF = named("tomato_leaf", new Item());
-    public static final Item LATTICE = named("lattice", new ItemBlock(PSBlocks.LATTICE));
+    public static final Item LATTICE = named("lattice", new WaterloggableBlockItem(PSBlocks.LATTICE));
     public static final Item MORNING_GLORY = named("morning_glory", new Item());
     public static final Item LSA_SQUARE = edible("lsd_square", 0, 0.1F,
             new DrugInfluence(DrugType.LSD, DrugInfluence.CONTACT_DELAY, 0.05, 0.003, 0.1));
