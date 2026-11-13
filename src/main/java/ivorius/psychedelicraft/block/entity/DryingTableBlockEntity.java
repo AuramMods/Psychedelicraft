@@ -72,8 +72,8 @@ public final class DryingTableBlockEntity extends TileEntity implements ITickabl
         float oldHeat = heat;
         float oldProgress = progress;
         if (++ticks % 30 == 0) {
-            heat = heatAt(server.getLightFromNeighbors(pos), server.getBiome(pos).getTemperature(pos));
-            if (server.isRaining() && server.getPrecipitationHeight(pos).getY() == pos.getY() + 1) {
+            heat = heatAt(server.getLight(pos, false), server.getBiome(pos).getDefaultTemperature());
+            if (server.getRainStrength(1F) > 0 && server.getPrecipitationHeight(pos).getY() == pos.getY() + 1) {
                 progress = 0;
             }
         }
