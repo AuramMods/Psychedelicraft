@@ -36,6 +36,10 @@ public final class VillagerPrices {
         event.getRegistry().register(HERO.setRegistryName(Psychedelicraft.id("hero_of_the_village")));
     }
 
+    static void rewardVillageDefender(EntityPlayer player) {
+        player.addPotionEffect(new PotionEffect(HERO, 48000, 0, false, true));
+    }
+
     public static void customerChanged(EntityVillager villager, @Nullable EntityPlayer player) {
         if (villager.world.isRemote || villager.getCustomer() == player) return;
         if (player == null) {

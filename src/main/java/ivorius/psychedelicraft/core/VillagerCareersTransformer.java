@@ -26,6 +26,7 @@ public final class VillagerCareersTransformer implements IClassTransformer {
     private static final String VILLAGE = "net.minecraft.world.gen.structure.StructureVillagePieces$Village";
     private static final String RENDERER = "net.minecraft.client.renderer.entity.RenderLivingBase";
     private static final String CONVERSATION = "net.minecraft.entity.ai.EntityAIVillagerInteract";
+    private static final String SIEGE = "net.minecraft.village.VillageSiege";
     private static final String FORGE_REGISTRY = "net/minecraftforge/fml/common/registry/VillagerRegistry";
     private static final String CAREERS = "ivorius/psychedelicraft/entity/VillagerCareers";
 
@@ -33,13 +34,16 @@ public final class VillagerCareersTransformer implements IClassTransformer {
     public byte[] transform(String name, String transformedName, byte[] bytes) {
         if (bytes == null || !(VILLAGER.equals(transformedName) || ZOMBIE.equals(transformedName)
                 || ZOMBIE_ATTACKER.equals(transformedName) || VILLAGE.equals(transformedName)
-                || RENDERER.equals(transformedName) || CONVERSATION.equals(transformedName))) return bytes;
+                || RENDERER.equals(transformedName) || CONVERSATION.equals(transformedName)
+                || SIEGE.equals(transformedName))) return bytes;
         ClassNode type = new ClassNode(Opcodes.ASM5);
         new ClassReader(bytes).accept(type, 0);
         if (RENDERER.equals(transformedName)) {
             patchShake(type);
         } else if (CONVERSATION.equals(transformedName)) {
             patchConversation(type);
+        } else if (SIEGE.equals(transformedName)) {
+            patchSiege(type);
         } else if (ZOMBIE_ATTACKER.equals(transformedName)) {
             MethodNode kill = find(type, "onKillEntity", "func_70074_a", "(Lnet/minecraft/entity/EntityLivingBase;)V");
             patchConversionSpawn(type, kill, 1, "spawnInfected", null);
@@ -59,6 +63,23 @@ public final class VillagerCareersTransformer implements IClassTransformer {
         ClassWriter writer = new ClassWriter(ClassWriter.COMPUTE_MAXS);
         type.accept(writer);
         return writer.toByteArray();
+    }
+
+    private static void patchSiege(ClassNode type) {
+        MethodNode method = find(type, "spawnZombie", "func_75530_c", "()Z");
+        FMLDeobfuscatingRemapper remapper = FMLDeobfuscatingRemapper.INSTANCE;
+        for (AbstractInsnNode instruction : method.instructions.toArray()) {
+            if (!(instruction instanceof MethodInsnNode)) continue;
+            MethodInsnNode call = (MethodInsnNode) instruction;
+            String name = remapper.mapMethodName(call.owner, call.name, call.desc);
+            if (!("spawnEntity".equals(name) || "func_72838_d".equals(name))
+                    || !"(Lnet/minecraft/entity/Entity;)Z".equals(remapper.mapMethodDesc(call.desc))) continue;
+            method.instructions.set(call, new MethodInsnNode(Opcodes.INVOKESTATIC,
+                    "ivorius/psychedelicraft/entity/VillageSiegeReward", "spawnAttacker",
+                    "(L" + call.owner + ";" + call.desc.substring(1), false));
+            return;
+        }
+        throw new IllegalStateException("Could not locate the village siege spawn");
     }
 
     private static void patchCustomer(ClassNode type) {
