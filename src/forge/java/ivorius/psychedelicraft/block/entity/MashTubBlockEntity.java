@@ -86,24 +86,25 @@ public final class MashTubBlockEntity extends FluidProcessingBlockEntity {
         ItemStack ingredient = held.copy();
         ingredient.setCount(1);
         supplied.add(ingredient);
-        boolean partial = false;
+        int matches = 0;
+        MashingRecipe complete = null;
         for (MashingRecipe recipe : recipes) {
             if (!recipe.matchesPartial(supplied)) continue;
-            partial = true;
-            if (recipe.getIngredients().size() == supplied.size()) {
-                activeRecipe = recipe.getRegistryName();
-                pulsesLeft = totalPulses = 2 + world.rand.nextInt(4) + recipe.getStewTime();
-                getTank().setCanFill(false);
-                getTank().setCanDrain(false);
-                break;
-            }
+            matches++;
+            if (recipe.getIngredients().size() == supplied.size()) complete = recipe;
         }
-        if (!partial) {
+        if (matches == 0) {
             supplied.clear();
             getTank().replace(new FluidStack(PSFluids.SLURRY, contents.amount));
             bubbles(90, 0.5F);
             world.playSound(null, pos, SoundEvents.BLOCK_GRAVEL_BREAK, SoundCategory.BLOCKS, 0.8F, 0.7F);
         } else {
+            if (matches == 1 && complete != null) {
+                activeRecipe = complete.getRegistryName();
+                pulsesLeft = totalPulses = 2 + world.rand.nextInt(4) + complete.getStewTime();
+                getTank().setCanFill(false);
+                getTank().setCanDrain(false);
+            }
             bubbles(20, 0);
             world.playSound(null, pos, SoundEvents.ENTITY_GENERIC_SPLASH, SoundCategory.BLOCKS, 0.5F, 1.15F);
         }

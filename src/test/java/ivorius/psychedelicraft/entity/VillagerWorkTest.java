@@ -1,5 +1,6 @@
 package ivorius.psychedelicraft.entity;
 
+import com.google.gson.JsonParser;
 import ivorius.psychedelicraft.block.entity.DryingTableBlockEntity;
 import ivorius.psychedelicraft.item.PSItems;
 import ivorius.psychedelicraft.recipe.DryingRecipe;
@@ -8,8 +9,11 @@ import net.minecraft.init.Blocks;
 import net.minecraft.init.Items;
 import net.minecraft.inventory.InventoryBasic;
 import net.minecraft.item.ItemStack;
+import net.minecraft.util.ResourceLocation;
 import net.minecraft.village.MerchantRecipe;
 import net.minecraft.village.MerchantRecipeList;
+import net.minecraftforge.common.crafting.JsonContext;
+import net.minecraftforge.fml.common.registry.ForgeRegistries;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
@@ -24,6 +28,12 @@ public class VillagerWorkTest {
     @BeforeClass
     public static void bootstrap() {
         Bootstrap.register();
+        ForgeRegistries.ITEMS.register(PSItems.TOBACCO_LEAVES);
+        ForgeRegistries.ITEMS.register(PSItems.DRIED_TOBACCO);
+        ForgeRegistries.RECIPES.register(new DryingRecipe.Factory().parse(new JsonContext("psychedelicraft"),
+                new JsonParser().parse("{\"ingredient\":{\"item\":\"psychedelicraft:tobacco\"},"
+                        + "\"result\":{\"item\":\"psychedelicraft:dried_tobacco\",\"count\":3}}").getAsJsonObject())
+                .setRegistryName(new ResourceLocation("psychedelicraft", "test_drying_tobacco")));
     }
 
     @Test

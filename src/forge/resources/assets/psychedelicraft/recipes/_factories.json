@@ -1,5 +1,6 @@
 {
   "recipes": {
+    "drying": "ivorius.psychedelicraft.recipe.DryingRecipe$Factory",
     "fill_receptical": "ivorius.psychedelicraft.recipe.FillReceptacleRecipe$Factory",
     "mashing": "ivorius.psychedelicraft.recipe.MashingRecipe$Factory"
   },
