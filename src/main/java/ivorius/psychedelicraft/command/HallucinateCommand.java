@@ -11,10 +11,10 @@ import net.minecraft.server.MinecraftServer;
 import net.minecraft.util.math.BlockPos;
 
 import javax.annotation.Nullable;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
-import java.util.stream.Collectors;
 
 public final class HallucinateCommand extends CommandBase {
     @Override
@@ -47,10 +47,20 @@ public final class HallucinateCommand extends CommandBase {
     @Override
     public List<String> getTabCompletions(MinecraftServer server, ICommandSender sender, String[] args, @Nullable BlockPos pos) {
         if (args.length == 1) {
-            List<String> ids = Arrays.stream(HallucinationType.values()).map(HallucinationType::id).collect(Collectors.toList());
+            List<String> ids = new ArrayList<>();
+            for (HallucinationType type : HallucinationType.values()) {
+                String id = type.id();
+                ids.add(id.substring(id.indexOf(':') + 1));
+                ids.add(id);
+            }
             return getListOfStringsMatchingLastWord(args, ids);
         }
-        if (args.length == 2) return getListOfStringsMatchingLastWord(args, server.getOnlinePlayerNames());
+        if (args.length == 2) {
+            List<String> choices = new ArrayList<>(Arrays.asList(server.getOnlinePlayerNames()));
+            choices.add("~");
+            if (pos != null) choices.add(Integer.toString(pos.getX()));
+            return getListOfStringsMatchingLastWord(args, choices);
+        }
         return args.length <= 4 ? getTabCompletionCoordinate(args, 1, pos) : Collections.emptyList();
     }
 

@@ -1,5 +1,6 @@
 package ivorius.psychedelicraft.command;
 
+import com.google.common.collect.ObjectArrays;
 import ivorius.psychedelicraft.Psychedelicraft;
 import ivorius.psychedelicraft.entity.drug.DrugCapability;
 import ivorius.psychedelicraft.entity.drug.DrugProperties;
@@ -49,16 +50,18 @@ public final class DrugCommand extends CommandBase {
             if (args.length == 2) sendActive(sender, player, drugs);
             else if (args.length == 3) {
                 DrugType type = resolve(args[2]);
-                sender.sendMessage(new TextComponentTranslation(KEY + "level", player.getDisplayName(), path(type),
-                        drugs.getActiveValue(type)));
+                double value = drugs.getActiveValue(type);
+                sender.sendMessage(sender.getCommandSenderEntity() == player
+                        ? new TextComponentTranslation(KEY + "level.self", path(type), value)
+                        : new TextComponentTranslation(KEY + "level", player.getDisplayName(), path(type), value));
             } else throw new WrongUsageException(getUsage(sender));
             return;
         }
 
         if (args.length != 4) throw new WrongUsageException(getUsage(sender));
         boolean all = "all".equals(args[2]);
-        Iterable<DrugType> types = all ? DrugType.values() : Collections.singleton(resolve(args[2]));
-        Object subject = all ? new TextComponentTranslation(KEY + "all") : path(types.iterator().next());
+        DrugType effect = all ? null : resolve(args[2]);
+        Iterable<DrugType> types = all ? DrugType.values() : Collections.singleton(effect);
         switch (action) {
             case "set":
             case "add":
@@ -67,12 +70,15 @@ public final class DrugCommand extends CommandBase {
                     if ("set".equals(action)) drugs.setDrugValue(type, amount);
                     else drugs.addToDrug(type, amount);
                 }
-                report(sender, player, action, player.getDisplayName(), subject, amount);
+                if (all) report(sender, player, action + ".all", amount);
+                else report(sender, player, action, path(effect), amount);
                 break;
             case "lock":
                 boolean locked = parseBoolean(args[3]);
                 for (DrugType type : types) drugs.setDrugLocked(type, locked);
-                report(sender, player, locked ? "lock" : "unlock", player.getDisplayName(), subject);
+                String change = locked ? "lock" : "unlock";
+                if (all) report(sender, player, change + ".all");
+                else report(sender, player, change, path(effect));
                 break;
             default:
                 throw new WrongUsageException(getUsage(sender));
@@ -81,9 +87,12 @@ public final class DrugCommand extends CommandBase {
 
     private void report(ICommandSender sender, EntityPlayerMP player, String action, Object... arguments) {
         String key = KEY + action;
-        notifyCommandListener(sender, this, key, arguments);
-        if (sender.getCommandSenderEntity() != player && player.world.getGameRules().getBoolean("sendCommandFeedback")) {
-            player.sendMessage(new TextComponentTranslation(key, arguments));
+        boolean self = sender.getCommandSenderEntity() == player;
+        // Keep the named message in operator broadcasts and the server log.
+        notifyCommandListener(sender, this, self ? 1 : 0, key, ObjectArrays.concat(player.getDisplayName(), arguments));
+        if (sender.getEntityWorld().getGameRules().getBoolean("sendCommandFeedback")) {
+            if (self) sender.sendMessage(new TextComponentTranslation(key + ".self", arguments));
+            else player.sendMessage(new TextComponentTranslation(key + ".changed", arguments));
         }
     }
 
@@ -119,7 +128,10 @@ public final class DrugCommand extends CommandBase {
         if (args.length == 3 && Arrays.asList("get", "set", "add", "lock").contains(args[1])) {
             List<String> names = new ArrayList<>();
             if (!"get".equals(args[1])) names.add("all");
-            for (DrugType type : DrugType.values()) names.add(type.id());
+            for (DrugType type : DrugType.values()) {
+                names.add(path(type));
+                names.add(type.id());
+            }
             return getListOfStringsMatchingLastWord(args, names);
         }
         if (args.length == 4 && "lock".equals(args[1])) return getListOfStringsMatchingLastWord(args, "true", "false");
