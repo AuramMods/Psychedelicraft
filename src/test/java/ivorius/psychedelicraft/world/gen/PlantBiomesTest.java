@@ -54,13 +54,28 @@ public class PlantBiomesTest {
     }
 
     @Test
-    public void juniperDefaultsRequireBothDryWeatherAndWoodlandOrHills() {
-        assertFalse(PlantBiomes.juniper(Biomes.FOREST));
-        assertFalse(PlantBiomes.juniper(Biomes.EXTREME_HILLS));
+    public void juniperDefaultsAllowWoodlandAndHillsWithPrecipitation() {
+        assertTrue(PlantBiomes.juniper(Biomes.FOREST));
+        assertTrue(PlantBiomes.juniper(Biomes.MUTATED_FOREST));
+        assertTrue(PlantBiomes.juniper(Biomes.BIRCH_FOREST));
+        assertTrue(PlantBiomes.juniper(Biomes.ROOFED_FOREST));
+        assertTrue(PlantBiomes.juniper(Biomes.EXTREME_HILLS));
+        assertTrue(PlantBiomes.juniper(Biomes.EXTREME_HILLS_WITH_TREES));
+        assertFalse(PlantBiomes.juniper(Biomes.PLAINS));
         assertFalse(PlantBiomes.juniper(Biomes.DESERT_HILLS));
         assertFalse(PlantBiomes.juniper(Biomes.SAVANNA));
+    }
+
+    @Test
+    public void juniperKeepsConfigurableOverrides() {
         PSConfig.Feature options = new PSConfig.Feature();
         options.included = new String[]{"minecraft:plains"};
         assertTrue(PlantBiomes.allows(options, PlantBiomes::juniper, Biomes.PLAINS));
+        options.excluded = new String[]{"#minecraft:is_forest"};
+        assertFalse(PlantBiomes.allows(options, PlantBiomes::juniper, Biomes.FOREST));
+        assertTrue(PlantBiomes.allows(options, PlantBiomes::juniper, Biomes.EXTREME_HILLS));
+        options.enabled = false;
+        assertFalse(PlantBiomes.allows(options, PlantBiomes::juniper, Biomes.EXTREME_HILLS));
+        assertFalse(PlantBiomes.allows(options, PlantBiomes::juniper, Biomes.PLAINS));
     }
 }

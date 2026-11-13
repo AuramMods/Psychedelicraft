@@ -90,7 +90,8 @@ final class PlantBiomes {
     }
 
     static boolean juniper(Biome biome) {
-        return !biome.canRain() && !biome.isSnowyBiome() && (hills(biome) || forest(biome));
+        // The later donor branches allow juniper in forest and hill biomes with precipitation.
+        return hills(biome) || forest(biome);
     }
 
     private static boolean forest(Biome biome) {
