@@ -1,8 +1,14 @@
 package ivorius.psychedelicraft.core;
 
 import com.google.common.io.ByteStreams;
+import net.minecraft.client.renderer.entity.Render;
+import net.minecraft.client.renderer.entity.RenderArrow;
 import net.minecraft.client.renderer.entity.RenderBoat;
+import net.minecraft.client.renderer.entity.RenderEnderCrystal;
+import net.minecraft.client.renderer.entity.RenderFish;
 import net.minecraft.client.renderer.entity.RenderLivingBase;
+import net.minecraft.client.renderer.entity.RenderMinecart;
+import net.minecraft.client.renderer.entity.RenderTNTPrimed;
 import net.minecraft.client.renderer.entity.layers.LayerArmorBase;
 import net.minecraft.client.renderer.entity.layers.LayerEndermanEyes;
 import org.junit.Test;
@@ -46,6 +52,38 @@ public class EntityGeometryTransformerTest {
         ClassWriter writer = new ClassWriter(0);
         productionNames.accept(writer);
         assertEquals(1, boatMasks(transform(RenderBoat.class, writer.toByteArray())));
+    }
+
+    @Test
+    public void worldRenderersKeepSeparateModelsBlockDrawsAndQuads() throws Exception {
+        assertEquals(2, modelDraws(RenderEnderCrystal.class));
+        assertEquals(1, modelDraws(RenderMinecart.class));
+        assertEquals(1, calls(transform(RenderMinecart.class), "renderCartContents", "drawWorldBlock"));
+        assertEquals(3, calls(transform(RenderTNTPrimed.class), "doRender", "drawWorldBlock"));
+        assertEquals(3, calls(transform(RenderArrow.class), "doRender", "drawWorldQuads"));
+        assertEquals(2, calls(transform(RenderFish.class), "doRender", "drawWorldQuads"));
+    }
+
+    @Test
+    public void shadowsAndFireLeaveTheDebugDrawAlone() throws Exception {
+        ClassNode renderer = transform(Render.class);
+        assertEquals(1, calls(renderer, "renderShadowSingle", "shadowSurface"));
+        assertEquals(1, calls(renderer, "renderShadow", "drawShadow"));
+        assertEquals(1, calls(renderer, "renderEntityOnFire", "drawWorldQuads"));
+        assertEquals(1, calls(renderer, "renderOffsetAABB", "draw"));
+    }
+
+    private static int calls(ClassNode renderer, String methodName, String callName) {
+        int count = 0;
+        for (MethodNode method : renderer.methods) {
+            if (!methodName.equals(method.name)) continue;
+            for (AbstractInsnNode instruction : method.instructions.toArray()) {
+                if (instruction instanceof MethodInsnNode && callName.equals(((MethodInsnNode) instruction).name)) {
+                    count++;
+                }
+            }
+        }
+        return count;
     }
 
     private static int boatMasks(ClassNode renderer) {

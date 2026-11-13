@@ -15,6 +15,7 @@ import ivorius.psychedelicraft.entity.drug.DrugCapability;
 import ivorius.psychedelicraft.entity.drug.DrugProperties;
 import ivorius.psychedelicraft.entity.drug.DrugType;
 import ivorius.psychedelicraft.entity.drug.type.HarmoniumDrug;
+import net.minecraft.block.state.IBlockState;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.entity.EntityPlayerSP;
 import net.minecraft.client.model.IMultipassModel;
@@ -22,6 +23,8 @@ import net.minecraft.client.model.ModelBase;
 import net.minecraft.client.model.ModelRenderer;
 import net.minecraft.client.multiplayer.WorldClient;
 import net.minecraft.client.renderer.ChunkRenderContainer;
+import net.minecraft.client.renderer.BlockRendererDispatcher;
+import net.minecraft.client.renderer.BufferBuilder;
 import net.minecraft.client.renderer.EntityRenderer;
 import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.client.renderer.ItemRenderer;
@@ -29,6 +32,7 @@ import net.minecraft.client.renderer.RenderItem;
 import net.minecraft.client.renderer.Tessellator;
 import net.minecraft.client.renderer.block.model.ItemCameraTransforms;
 import net.minecraft.client.renderer.tileentity.TileEntityItemStackRenderer;
+import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
 import net.minecraft.client.shader.ShaderManager;
 import net.minecraft.entity.Entity;
 import net.minecraft.item.ItemStack;
@@ -43,6 +47,7 @@ import net.minecraftforge.fml.common.eventhandler.EventPriority;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent;
 import net.minecraftforge.fml.relauncher.Side;
+import org.lwjgl.opengl.GL11;
 
 import javax.annotation.Nullable;
 
@@ -59,6 +64,8 @@ public final class DrugRenderer {
     private static boolean renderingBuiltInItem;
     @Nullable
     private static BlockPos blockItemAnchor;
+    @Nullable
+    private static BlockPos shadowSection;
 
     private DrugRenderer() {
     }
@@ -121,6 +128,7 @@ public final class DrugRenderer {
             renderer.renderWorld(partialTicks, finishTime);
         } finally {
             renderingWorld = false;
+            shadowSection = null;
             GEOMETRY.clearEntityView();
         }
     }
@@ -185,8 +193,48 @@ public final class DrugRenderer {
     }
 
     public static void drawHandPart(ModelRenderer model, float scale) {
+        drawWorldPart(model, scale);
+    }
+
+    public static void drawWorldPart(ModelRenderer model, float scale) {
         try (Scope scope = beginWorldModel(Material.ENTITY)) {
             model.render(scale);
+        }
+    }
+
+    public static void drawWorldBlock(BlockRendererDispatcher renderer, IBlockState state, float brightness) {
+        try (Scope scope = beginWorldModel()) {
+            renderer.renderBlockBrightness(state, brightness);
+        }
+    }
+
+    public static void shadowSurface(BlockPos surface) {
+        if (!renderingWorld || !PSConfig.visual.shader3DEnabled) return;
+        // Vanilla passes the air position above the receiving block.
+        int x = surface.getX() & ~15;
+        int y = (surface.getY() - 1) & ~15;
+        int z = surface.getZ() & ~15;
+        if (shadowSection != null) {
+            if (shadowSection.getX() == x && shadowSection.getY() == y && shadowSection.getZ() == z) return;
+            Tessellator tessellator = Tessellator.getInstance();
+            BufferBuilder buffer = tessellator.getBuffer();
+            if (buffer.getVertexCount() > 0) {
+                try (Scope scope = beginWorldModel(Material.ENTITY, shadowSection)) {
+                    if (scope != null) {
+                        tessellator.draw();
+                        buffer.begin(GL11.GL_QUADS, DefaultVertexFormats.POSITION_TEX_COLOR);
+                    }
+                }
+            }
+        }
+        shadowSection = new BlockPos(x, y, z);
+    }
+
+    public static void drawShadow(Tessellator tessellator) {
+        try {
+            drawWorldQuads(tessellator, shadowSection);
+        } finally {
+            shadowSection = null;
         }
     }
 
