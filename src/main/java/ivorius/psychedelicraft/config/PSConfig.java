@@ -5,7 +5,8 @@ import net.minecraftforge.common.config.Config;
 
 @Config(modid = Psychedelicraft.MOD_ID)
 public final class PSConfig {
-    private static final int MINUTE = 60 * 20;
+    @Config.Ignore
+    public static final int MINUTE = 60 * 20;
     public static final Balancing balancing = new Balancing();
     public static final Visual visual = new Visual();
 
@@ -13,27 +14,51 @@ public final class PSConfig {
     }
 
     public static final class Visual {
+        @Config.LangKey("gui.psychedelicraft.option.shaders_2d")
         public boolean shader2DEnabled = true;
         @Config.LangKey("gui.psychedelicraft.option.shaders_3d")
         public boolean shader3DEnabled = true;
+        @Config.LangKey("gui.psychedelicraft.option.heat_distortion")
         public boolean doHeatDistortion = true;
+        @Config.LangKey("gui.psychedelicraft.option.water_distortion")
         public boolean doWaterDistortion = true;
+        @Config.LangKey("gui.psychedelicraft.option.water_overlay")
         public boolean waterOverlayEnabled = true;
+        @Config.LangKey("gui.psychedelicraft.option.hurt_overlay")
         public boolean hurtOverlayEnabled = true;
+        @Config.LangKey("gui.psychedelicraft.option.motion_blur")
         public boolean doMotionBlur = true;
         @Config.LangKey("gui.psychedelicraft.option.sun_glare_intensity")
         @Config.RangeDouble(min = 0, max = 1)
+        @Config.SlidingOption
         public float sunFlareIntensity = 0.25F;
+        @Config.LangKey("gui.psychedelicraft.option.pause_menu_blur")
         @Config.Comment("Blur intensity while the singleplayer game is paused.")
+        @Config.RangeDouble(min = 0, max = 8)
+        @Config.SlidingOption
         public float pauseMenuBlur;
+        @Config.LangKey("gui.psychedelicraft.option.focal_point.distance")
         @Config.Comment("Near focus distance in blocks.")
+        @Config.RangeDouble(min = 0, max = 99)
+        @Config.SlidingOption
         public float dofFocalPointNear = 0.2F;
+        @Config.LangKey("gui.psychedelicraft.option.focal_point.distance")
         @Config.Comment("Far focus distance in blocks.")
+        @Config.RangeDouble(min = 100, max = 400)
+        @Config.SlidingOption
         public float dofFocalPointFar = 128F;
+        @Config.LangKey("gui.psychedelicraft.option.focal_point.blur")
+        @Config.RangeDouble(min = 0, max = 8)
+        @Config.SlidingOption
         public float dofFocalBlurNear;
+        @Config.LangKey("gui.psychedelicraft.option.focal_point.blur")
+        @Config.RangeDouble(min = 0, max = 8)
+        @Config.SlidingOption
         public float dofFocalBlurFar;
+        @Config.LangKey("gui.psychedelicraft.option.pixel_scale_x")
         @Config.RangeDouble(min = 0.01, max = 1)
         public float digitalEffectPixelRescaleX = 0.05F;
+        @Config.LangKey("gui.psychedelicraft.option.pixel_scale_y")
         @Config.RangeDouble(min = 0.01, max = 1)
         public float digitalEffectPixelRescaleY = 0.05F;
     }
@@ -43,32 +68,42 @@ public final class PSConfig {
         public int randomTicksUntilRiftSpawn = 180 * MINUTE;
 
         @Config.Comment("Show empty and filled Rift Jar variants in the creative inventory.")
+        @Config.LangKey("gui.psychedelicraft.option.gameplay.rift_jars")
         public boolean enableRiftJars;
 
         @Config.Comment("Hide the Molotov Cocktail variants in the creative inventory.")
         public boolean disableMolotovs;
 
         @Config.Comment("Show colored Harmonium variants in the creative inventory and enable dealer offers for them.")
+        @Config.LangKey("gui.psychedelicraft.option.gameplay.harmonium")
         public boolean enableHarmonium;
 
         @Config.Comment("Ticks at maximum heat to finish one wooden drying table batch.")
+        @Config.LangKey("gui.psychedelicraft.option.gameplay.wood_drying_time")
         @Config.RangeInt(min = 1)
         public int dryingTableTickDuration = 16 * 60 * 20;
 
         @Config.Comment("Ticks at maximum heat to finish one iron drying table batch.")
+        @Config.LangKey("gui.psychedelicraft.option.gameplay.iron_drying_time")
         @Config.RangeInt(min = 1)
         public int ironDryingTableTickDuration = 12 * 60 * 20;
 
+        @Config.LangKey("gui.psychedelicraft.option.gameplay.slurry_time")
         @Config.RangeInt(min = 1)
         public int slurryHardeningTime = 30 * MINUTE;
 
+        @Config.LangKey("gui.psychedelicraft.options.fluid_timings")
         public final FluidProperties fluidAttributes = new FluidProperties();
+        @Config.LangKey("gui.psychedelicraft.options.message_distortion")
         public final MessageDistortion messageDistortion = new MessageDistortion();
+        @Config.LangKey("gui.psychedelicraft.options.world_generation")
         public final Generation worldGeneration = new Generation();
     }
 
     public static final class MessageDistortion {
+        @Config.LangKey("gui.psychedelicraft.option.gameplay.distort_incoming_messages")
         public boolean incoming = true;
+        @Config.LangKey("gui.psychedelicraft.option.gameplay.distort_outgoing_messages")
         public boolean outgoing = true;
     }
 

@@ -22,7 +22,8 @@ final class ClientMusicConfig {
         CONFIG.getCategory(CATEGORY).setLanguageKey("gui.psychedelicraft.options.themes");
         for (DrugType type : DrugType.values()) {
             String path = type.id().substring(type.id().indexOf(':') + 1);
-            THEMES.put(type, CONFIG.get(CATEGORY, path, true));
+            THEMES.put(type, CONFIG.get(CATEGORY, path, true)
+                    .setLanguageKey("gui.psychedelicraft.theme." + path));
         }
         save();
     }
