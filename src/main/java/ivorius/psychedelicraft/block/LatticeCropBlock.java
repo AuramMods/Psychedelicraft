@@ -18,6 +18,7 @@ import javax.annotation.Nullable;
 
 import ivorius.psychedelicraft.block.entity.LatticeCropBlockEntity;
 import ivorius.psychedelicraft.item.PSItems;
+import ivorius.psychedelicraft.network.Channel;
 import net.minecraft.block.Block;
 import net.minecraft.block.IGrowable;
 import net.minecraft.block.SoundType;
@@ -37,7 +38,6 @@ import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.util.EnumHand;
 import net.minecraft.util.NonNullList;
-import net.minecraft.util.SoundCategory;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.IBlockAccess;
 import net.minecraft.world.World;
@@ -117,10 +117,10 @@ public final class LatticeCropBlock extends LatticeBlock implements IGrowable {
             return false;
         }
         if (!world.isRemote) {
+            Channel.playEntitySound(player, SoundEvents.ENTITY_SHEEP_SHEAR, 1F, 1F);
             spawnAsEntity(world, pos, new ItemStack(produce.get(), 3 + world.rand.nextInt(2)));
             crop.setGrowth(shearedAge, false);
             tool.damageItem(1, player);
-            world.playSound(null, pos, SoundEvents.ENTITY_SHEEP_SHEAR, SoundCategory.BLOCKS, 1F, 1F);
         }
         return true;
     }

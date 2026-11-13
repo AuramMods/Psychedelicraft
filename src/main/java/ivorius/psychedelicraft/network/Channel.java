@@ -6,12 +6,16 @@ import ivorius.psychedelicraft.block.entity.JuniperSignText;
 import ivorius.psychedelicraft.entity.drug.DrugCapability;
 import ivorius.psychedelicraft.entity.drug.DrugProperties;
 import ivorius.psychedelicraft.entity.drug.HallucinationType;
+import net.minecraft.entity.Entity;
 import net.minecraft.entity.passive.EntityVillager;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.item.ItemStack;
+import net.minecraft.util.SoundEvent;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
+import net.minecraftforge.event.ForgeEventFactory;
+import net.minecraftforge.event.entity.PlaySoundAtEntityEvent;
 import net.minecraftforge.fml.common.network.NetworkRegistry;
 import net.minecraftforge.fml.common.network.simpleimpl.SimpleNetworkWrapper;
 import net.minecraftforge.fml.relauncher.Side;
@@ -34,6 +38,7 @@ public final class Channel {
         network.registerMessage(MsgHallucinate.Handler.class, MsgHallucinate.class, 5, Side.CLIENT);
         network.registerMessage(MsgFluidBubbles.Handler.class, MsgFluidBubbles.class, 6, Side.CLIENT);
         network.registerMessage(MsgVillagerOfferPreview.Handler.class, MsgVillagerOfferPreview.class, 7, Side.CLIENT);
+        network.registerMessage(MsgEntitySound.Handler.class, MsgEntitySound.class, 8, Side.CLIENT);
     }
 
     public static void spawnSmoke(World world, Vec3d origin, Vec3d velocity, int color, float scale, int count) {
@@ -46,6 +51,16 @@ public final class Channel {
         int dimension = world.provider.getDimension();
         network.sendToAllAround(new MsgFluidBubbles(dimension, origin, count, spread, color),
                 new NetworkRegistry.TargetPoint(dimension, origin.x, origin.y, origin.z, 32));
+    }
+
+    public static void playEntitySound(Entity source, SoundEvent sound, float volume, float pitch) {
+        PlaySoundAtEntityEvent event = ForgeEventFactory.onPlaySoundAtEntity(source, sound, source.getSoundCategory(), volume, pitch);
+        if (event.isCanceled() || event.getSound() == null || event.getSound().getRegistryName() == null) return;
+        int dimension = source.world.provider.getDimension();
+        float range = 16F * Math.max(1F, event.getVolume());
+        network.sendToAllAround(new MsgEntitySound(source.getEntityId(), dimension, event.getSound().getRegistryName(),
+                        event.getCategory(), event.getVolume(), event.getPitch()),
+                new NetworkRegistry.TargetPoint(dimension, source.posX, source.posY, source.posZ, range));
     }
 
     public static void sync(EntityPlayerMP player, DrugProperties properties) {
