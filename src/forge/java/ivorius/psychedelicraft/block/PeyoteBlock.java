@@ -11,8 +11,11 @@ import ivorius.psychedelicraft.item.PSItems;
 import net.minecraft.block.properties.PropertyInteger;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.item.Item;
+import net.minecraft.item.ItemStack;
 import net.minecraft.tileentity.TileEntity;
+import net.minecraft.util.NonNullList;
 import net.minecraft.util.math.AxisAlignedBB;
+import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 
 public final class PeyoteBlock extends SucculentPlantBlock {
@@ -56,5 +59,19 @@ public final class PeyoteBlock extends SucculentPlantBlock {
     @Override
     public int quantityDropped(IBlockState state, int fortune, Random random) {
         return 1 + state.getValue(AGE);
+    }
+
+    @Override
+    public void dropBlockAsItemWithChance(World world, BlockPos pos, IBlockState state, float chance, int fortune) {
+        if (!PlantDrops.usesDecay(world, chance)) {
+            super.dropBlockAsItemWithChance(world, pos, state, chance, fortune);
+            return;
+        }
+        NonNullList<ItemStack> drops = NonNullList.create();
+        if (PlantDrops.survives(world.rand, chance)) {
+            getDrops(drops, world, pos, state, fortune);
+            for (ItemStack stack : drops) PlantDrops.decay(stack, world.rand, chance);
+        }
+        PlantDrops.spawn(drops, world, pos, state, fortune, harvesters.get());
     }
 }

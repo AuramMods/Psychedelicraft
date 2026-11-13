@@ -210,16 +210,32 @@ public final class JuniperLeavesBlock extends Block implements IShearable, Water
 
     @Override
     public void getDrops(NonNullList<ItemStack> drops, IBlockAccess world, BlockPos pos, IBlockState state, int fortune) {
-        Random random = world instanceof World ? ((World) world).rand : RANDOM;
+        collectDrops(drops, world instanceof World ? ((World) world).rand : RANDOM, fortune, 1F);
+    }
+
+    @Override
+    public void dropBlockAsItemWithChance(World world, BlockPos pos, IBlockState state, float chance, int fortune) {
+        if (!PlantDrops.usesDecay(world, chance)) {
+            super.dropBlockAsItemWithChance(world, pos, state, chance, fortune);
+            return;
+        }
+        NonNullList<ItemStack> drops = NonNullList.create();
+        collectDrops(drops, world.rand, fortune, chance);
+        PlantDrops.spawn(drops, world, pos, state, fortune, harvesters.get());
+    }
+
+    private void collectDrops(NonNullList<ItemStack> drops, Random random, int fortune, float chance) {
         if (fruiting) {
-            drops.add(new ItemStack(PSItems.JUNIPER_BERRIES));
-        } else if (roll(random, SAPLING, fortune)) {
+            if (PlantDrops.survives(random, chance)) drops.add(new ItemStack(PSItems.JUNIPER_BERRIES));
+        } else if (PlantDrops.survives(random, chance) && roll(random, SAPLING, fortune)) {
             drops.add(new ItemStack(PSItems.JUNIPER_SAPLING));
         }
         if (roll(random, STICKS_OR_BERRIES, fortune)) {
-            drops.add(new ItemStack(fruiting ? PSItems.JUNIPER_BERRIES : Items.STICK, 1 + random.nextInt(2)));
+            ItemStack bonus = new ItemStack(fruiting ? PSItems.JUNIPER_BERRIES : Items.STICK, 1 + random.nextInt(2));
+            PlantDrops.decay(bonus, random, chance);
+            if (!bonus.isEmpty()) drops.add(bonus);
         }
-        if (fruiting && roll(random, APPLE, fortune)) {
+        if (fruiting && PlantDrops.survives(random, chance) && roll(random, APPLE, fortune)) {
             drops.add(new ItemStack(Items.APPLE));
         }
     }

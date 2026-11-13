@@ -95,6 +95,18 @@ public final class VineStemBlock extends BlockBush {
     }
 
     @Override
+    public void dropBlockAsItemWithChance(World world, BlockPos pos, IBlockState state, float chance, int fortune) {
+        if (!PlantDrops.usesDecay(world, chance)) {
+            super.dropBlockAsItemWithChance(world, pos, state, chance, fortune);
+            return;
+        }
+        NonNullList<ItemStack> drops = NonNullList.create();
+        getDrops(drops, world, pos, state, fortune);
+        for (ItemStack stack : drops) PlantDrops.decay(stack, world.rand, chance);
+        PlantDrops.spawn(drops, world, pos, state, fortune, harvesters.get());
+    }
+
+    @Override
     public void getDrops(NonNullList<ItemStack> drops, IBlockAccess world, BlockPos pos, IBlockState state, int fortune) {
         drops.add(new ItemStack(PSItems.MORNING_GLORY));
         if (state.getValue(AGE) == MAX_AGE) {

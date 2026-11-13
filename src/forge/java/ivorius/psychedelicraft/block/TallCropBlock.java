@@ -218,6 +218,22 @@ public class TallCropBlock extends BlockBush implements IGrowable {
     }
 
     @Override
+    public void dropBlockAsItemWithChance(World world, BlockPos pos, IBlockState state, float chance, int fortune) {
+        if (!PlantDrops.usesDecay(world, chance)) {
+            super.dropBlockAsItemWithChance(world, pos, state, chance, fortune);
+            return;
+        }
+        NonNullList<ItemStack> drops = NonNullList.create();
+        getDrops(drops, world, pos, state, fortune);
+        // Coffea's two ordinary rolls apply decay in their entry as well as at table level.
+        if (crop == Crop.COFFEA && state.getValue(ageProperty()) > 0) {
+            PlantDrops.decay(drops.get(0), world.rand, chance);
+        }
+        for (ItemStack stack : drops) PlantDrops.decay(stack, world.rand, chance);
+        PlantDrops.spawn(drops, world, pos, state, fortune, harvesters.get());
+    }
+
+    @Override
     public void getDrops(NonNullList<ItemStack> drops, IBlockAccess world, BlockPos pos, IBlockState state, int fortune) {
         int age = state.getValue(ageProperty());
         Random random = world instanceof World ? ((World) world).rand : ThreadLocalRandom.current();
