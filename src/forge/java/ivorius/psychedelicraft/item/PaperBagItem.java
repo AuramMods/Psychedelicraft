@@ -211,7 +211,11 @@ public final class PaperBagItem extends Item {
         if (stack.isEmpty()) return false;
         Item item = stack.getItem();
         Block block = Block.getBlockFromItem(item);
-        return block instanceof BlockFlower || block instanceof BlockButton
+        if (block instanceof BlockFlower) {
+            BlockFlower flower = (BlockFlower) block;
+            return isVariant(stack, BlockFlower.EnumFlowerType.getTypes(flower.getBlockType()).length - 1);
+        }
+        return block instanceof BlockButton
                 || block == Blocks.RED_MUSHROOM || block == Blocks.BROWN_MUSHROOM
                 || item == Items.COOKIE || item == Items.NETHER_WART || item == Items.WHEAT_SEEDS
                 || item == Items.BEETROOT_SEEDS || item == Items.CARROT || item == Items.POTATO

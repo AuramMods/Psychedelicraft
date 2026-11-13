@@ -20,6 +20,7 @@ import net.minecraft.util.JsonUtils;
 import net.minecraft.util.NonNullList;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.world.World;
+import net.minecraftforge.common.ForgeHooks;
 import net.minecraftforge.common.crafting.CraftingHelper;
 import net.minecraftforge.common.crafting.IRecipeFactory;
 import net.minecraftforge.common.crafting.JsonContext;
@@ -58,12 +59,30 @@ public final class FillReceptacleRecipe extends ShapelessOreRecipe {
 
     @Override
     public ItemStack getCraftingResult(InventoryCrafting inventory) {
-        ItemStack result = ItemStack.EMPTY;
+        int slot = receptacleSlot(inventory);
+        return slot < 0 ? ItemStack.EMPTY : fill(inventory.getStackInSlot(slot));
+    }
+
+    @Override
+    public NonNullList<ItemStack> getRemainingItems(InventoryCrafting inventory) {
+        NonNullList<ItemStack> remaining = NonNullList.withSize(inventory.getSizeInventory(), ItemStack.EMPTY);
+        int vessel = receptacleSlot(inventory);
+        if (vessel >= 0) {
+            for (int slot = 0; slot < remaining.size(); slot++) {
+                // The result already contains the receptacle.
+                if (slot != vessel) remaining.set(slot, ForgeHooks.getContainerItem(inventory.getStackInSlot(slot)));
+            }
+        }
+        return remaining;
+    }
+
+    private int receptacleSlot(InventoryCrafting inventory) {
+        int result = -1;
         for (int slot = 0; slot < inventory.getSizeInventory(); slot++) {
             ItemStack stack = inventory.getStackInSlot(slot);
             if (!stack.isEmpty() && receptacle.apply(stack)) {
-                if (!result.isEmpty()) return ItemStack.EMPTY;
-                result = fill(stack);
+                if (result >= 0) return -1;
+                result = slot;
             }
         }
         return result;

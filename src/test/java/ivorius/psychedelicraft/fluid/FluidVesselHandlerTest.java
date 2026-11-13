@@ -123,4 +123,17 @@ public class FluidVesselHandlerTest {
         assertSame(PSItems.FILLED_GLASS_BOTTLE, saved.getContainer().getItem());
         assertEquals(brewed, saved.getFluid().tag);
     }
+
+    @Test
+    public void drugExtractTransfersRespectTheWoodenMugRestriction() {
+        FluidVesselHandler mug = FluidVesselHandler.forCrafting(new ItemStack(PSItems.WOODEN_MUG));
+        FluidVesselHandler cup = FluidVesselHandler.forCrafting(new ItemStack(PSItems.STONE_CUP));
+        for (FluidStack extract : new FluidStack[]{new FluidStack(PSFluids.BELLADONNA_EXTRACT, 15),
+                new FluidStack(PSFluids.JIMSONWEED_EXTRACT, 15)}) {
+            cup.fill(extract, true);
+            assertNull(FluidUtil.tryFluidTransfer(mug, cup, 15, true));
+            assertEquals(15, cup.drain(15, true).amount);
+            assertNull(mug.getFluid());
+        }
+    }
 }

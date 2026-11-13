@@ -1,6 +1,7 @@
 package ivorius.psychedelicraft.item;
 
 import net.minecraft.init.Bootstrap;
+import net.minecraft.init.Blocks;
 import net.minecraft.init.Items;
 import net.minecraft.item.ItemStack;
 import net.minecraftforge.oredict.OreDictionary;
@@ -62,6 +63,19 @@ public class PaperBagTest {
         assertFalse(emptyContents().insert(new ItemStack(Items.DYE, 1, 16)));
         assertTrue(emptyContents().insert(new ItemStack(Items.APPLE)));
         assertFalse(emptyContents().insert(new ItemStack(Items.GOLDEN_APPLE)));
+    }
+
+    @Test
+    public void legacyFlowerMetadataMatchesTheSmallFlowerTag() {
+        PaperBagItem.Contents flowers = emptyContents();
+        assertTrue(flowers.insert(new ItemStack(Blocks.RED_FLOWER, 1, 8)));
+        assertFalse(flowers.insert(new ItemStack(Blocks.RED_FLOWER, 1, 0)));
+        assertEquals(8, flowers.take(1).getMetadata());
+        assertTrue(emptyContents().insert(new ItemStack(Blocks.YELLOW_FLOWER)));
+        assertFalse(emptyContents().insert(new ItemStack(Blocks.YELLOW_FLOWER, 1, 1)));
+        assertFalse(emptyContents().insert(new ItemStack(Blocks.RED_FLOWER, 1, 9)));
+        assertFalse(emptyContents().insert(new ItemStack(Blocks.DOUBLE_PLANT)));
+        assertTrue(emptyContents().insert(new ItemStack(PSItems.JUNIPER_BUTTON)));
     }
 
     @Test
