@@ -31,7 +31,7 @@ public final class LsdDrug extends SimpleDrug {
                 player.attackEntityFrom(PSDamageTypes.STROKE, 1);
             }
         }
-        super.update();
+        super.update(properties, player);
     }
 
     @Override

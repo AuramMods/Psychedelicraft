@@ -33,7 +33,7 @@ public final class BathSaltsDrug extends SimpleDrug {
 
     @Override
     public void update(DrugProperties properties, @Nullable EntityPlayer player) {
-        super.update();
+        super.update(properties, player);
         if (player == null || player.world.isRemote || getActiveValue() <= 0.8 || player.ticksExisted % 20 != 0) return;
         Random random = player.getRNG();
         if (random.nextFloat() < (getActiveValue() - 0.8F) * 0.051) {

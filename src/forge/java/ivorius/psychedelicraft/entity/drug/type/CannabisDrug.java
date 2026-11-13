@@ -17,7 +17,7 @@ public final class CannabisDrug extends SimpleDrug {
 
     @Override
     public void update(DrugProperties properties, @Nullable EntityPlayer player) {
-        super.update();
+        super.update(properties, player);
         if (player != null && !player.world.isRemote && getActiveValue() > 0) {
             player.addExhaustion(0.03F * (float) getActiveValue());
         }

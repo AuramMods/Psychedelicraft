@@ -24,7 +24,7 @@ public final class SleepDeprivationDrug extends SimpleDrug {
 
     @Override
     public void update(DrugProperties properties, @Nullable EntityPlayer player) {
-        super.update();
+        super.update(properties, player);
         float stimulants = (float) (properties.getActiveValue(DrugType.CAFFEINE) + properties.getActiveValue(DrugType.COCAINE));
         float target = Math.min(1, stimulants * 10);
         storedEnergy += MathHelper.clamp(target - storedEnergy, -0.02F, 0.02F);

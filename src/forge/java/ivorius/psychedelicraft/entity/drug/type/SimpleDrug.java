@@ -4,9 +4,14 @@
 
 package ivorius.psychedelicraft.entity.drug.type;
 
+import ivorius.psychedelicraft.PSDamageTypes;
 import ivorius.psychedelicraft.entity.drug.Drug;
+import ivorius.psychedelicraft.entity.drug.DrugProperties;
+import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.math.MathHelper;
+
+import javax.annotation.Nullable;
 
 public class SimpleDrug implements Drug {
     private final double decreaseSpeed;
@@ -62,7 +67,23 @@ public class SimpleDrug implements Drug {
 
     @Override
     public void update() {
+        advance(null, null);
+    }
+
+    @Override
+    public void update(DrugProperties properties, @Nullable EntityPlayer player) {
+        advance(properties, player);
+    }
+
+    private void advance(@Nullable DrugProperties properties, @Nullable EntityPlayer player) {
         ticksActive = active > 0 ? ticksActive + 1 : 0;
+        if (ticksActive > 0 && player != null && !player.world.isRemote && player.isEntityAlive() && heartbeatSpeed() > 3F) {
+            player.attackEntityFrom(PSDamageTypes.HEART_ATTACK, Integer.MAX_VALUE);
+            if (!locked) {
+                reset();
+                properties.markDirty();
+            }
+        }
         if (!locked) {
             desired = desired * decreaseSpeed - decreaseSpeedPlus;
         }

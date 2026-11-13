@@ -172,6 +172,10 @@ public final class DrugProperties implements NbtSerialisable {
         return strength;
     }
 
+    public void markDirty() {
+        dirty = true;
+    }
+
     public boolean takeDirty() {
         boolean changed = dirty;
         dirty = false;

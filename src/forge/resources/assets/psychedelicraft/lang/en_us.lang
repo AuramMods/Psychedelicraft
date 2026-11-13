@@ -268,6 +268,7 @@ psychedelicraft.distillery.requires_fermentation=Ferment this brew before distil
 psychedelicraft.distillery.requires_unaged=Distill this brew before aging
 death.attack.psychedelicraft.alcohol_poisoning=%1$s died of alcohol poisoning
 death.attack.psychedelicraft.heart_failure=%1$s's heart stopped beating
+death.attack.psychedelicraft.heart_attack=%1$s's heart exploded
 death.attack.psychedelicraft.respiratory_failure=%1$s lungs collapsed
 death.attack.psychedelicraft.kidney_failure=%1$s's kidneys exploded
 death.attack.psychedelicraft.in_sleep=%1$s died in their sleep

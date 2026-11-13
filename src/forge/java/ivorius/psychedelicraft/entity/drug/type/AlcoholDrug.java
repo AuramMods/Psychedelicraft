@@ -36,7 +36,7 @@ public final class AlcoholDrug extends SimpleDrug {
 
     @Override
     public void update(DrugProperties properties, @Nullable EntityPlayer player) {
-        super.update();
+        super.update(properties, player);
         if (player == null || getActiveValue() <= 0) return;
         double active = getActiveValue();
         int age = player.ticksExisted;
