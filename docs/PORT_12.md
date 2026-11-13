@@ -871,7 +871,15 @@ sh run/production/background-qa/run.sh "$qa" game-background Overlay-QA \
 - The save fixture left one tagged attacker alive after spawning completed. A fresh process recovered the attacker and the original defender's credit. Defeating that attacker through a non-player damage source awarded the original defender the same effect and quote. The first reopen probe counted all join callbacks. The successful retry looked for the living tagged attacker in the loaded world.
 - The built jar SHA-256 is `4bd52b1c9482e55c5a334b2f8704660e7a023127bc4bbf2837a8524a8e117299`. Evidence is in `run/production/runtime-qa-cycle91` under `build-production-final.log`, `build-tests-final.log`, `runtime-baseline-final.log`, `runtime-fixed-final.log`, `runtime-abort.log`, `runtime-loss.log`, `runtime-save.log`, `runtime-reopen-retry.log` and `runtime-capture.log`. The HUD capture is `game-capture/screenshots/hero-of-the-village.png`.
 
-Next, audit the remaining gameplay and visual parity evidence. Dedicated Forge startup and multiplayer on that server remain open pending EULA acceptance.
+### Cycle 92 · Cocaine desaturation
+
+- The pinned `CocaineDrug` contributes desaturation at 0.75 times its active value, independently of the random color hallucinations. The later reference branches retain that modifier. Restored it through Forge's existing `DrugProperties.getDesaturation` and screen shader. The active donor registration still uses the alcohol profile for kava, so the unused `KavaDrug` desaturation is outside this port.
+- The clean Java 8 build and reobfuscation passed 151 tests. The added regression checks the zero baseline, a 0.4 active cocaine value, and blending with tobacco and a random hallucination through their remaining color fractions.
+- Muted Forge 14.23.5.2864 clients received the test values over the normal server-to-client packet. With bloom active, the same color sample was `(255, 105, 40)` at zero desaturation on the previous jar and `(243, 114, 63)` at 0.30 on the rebuilt jar. Adding tobacco produced 0.37 and `(230, 117, 70)`. The fixture models both bloom passes and the desaturation calculation. An early probe compared against the desaturation calculation alone and exposed the need to account for bloom.
+- Turning off 2D effects restored the input color. Reloading resources and switching to 1920 × 1080 fullscreen restored the stacked result. Clearing both effects and returning to 854 × 480 windowed restored the same input color. The fixture verified that the draw restored the active shader program and reported no OpenGL errors.
+- The same jar passed the 17-stage overlay regression for warmth, alcohol, eyelids, injury, Power, portal tint, pulses, F1, resource reload, fullscreen and sun occlusion. The tested jar SHA-256 is `49a9f1d44a4cce5a82dfbc734b4bcade7bbd916df1af606b43238325ce7baa4e`. The isolated clients used Xvfb and OpenAL's `No Output` device. Evidence is under `run/production/runtime-qa-cycle92` in `build-production.log`, `runtime-baseline-final.log`, `runtime-fixed-final.log` and `runtime-overlay.log`.
+
+Next, continue the gameplay and visual parity audit. Dedicated Forge startup and multiplayer on that server remain open pending EULA acceptance.
 
 ## Repository and branch survey
 

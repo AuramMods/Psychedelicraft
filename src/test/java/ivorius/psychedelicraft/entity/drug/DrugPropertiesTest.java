@@ -18,6 +18,20 @@ public class DrugPropertiesTest {
     private static final double EPSILON = 1.0e-8;
 
     @Test
+    public void cocaineDesaturationScalesWithStrengthAndBlendsWithTobacco() {
+        DrugProperties properties = new DrugProperties();
+        assertEquals(0F, properties.getDesaturation(0F), 0F);
+
+        lockAt(properties, DrugType.COCAINE, 0.4);
+        tick(properties, 1, 120);
+        assertEquals(0.3F, properties.getDesaturation(0F), 0.00001F);
+
+        lockAt(properties, DrugType.TOBACCO, 0.5);
+        tick(properties, 121, 240);
+        assertEquals(1F - 0.7F * 0.9F * 0.8F, properties.getDesaturation(0.2F), 0.00001F);
+    }
+
+    @Test
     public void stimulantActionChancesUseTheirOwnThresholdsAndAddTogether() {
         DrugProperties properties = new DrugProperties();
         lockAt(properties, DrugType.CAFFEINE, 0.3);

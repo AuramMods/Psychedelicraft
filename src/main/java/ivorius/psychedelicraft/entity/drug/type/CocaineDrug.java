@@ -64,6 +64,11 @@ public final class CocaineDrug extends SimpleDrug {
     }
 
     @Override
+    public float desaturationHallucinationStrength() {
+        return (float) getActiveValue() * 0.75F;
+    }
+
+    @Override
     public float bloomStrength() {
         return Math.min(1F, (float) getActiveValue() / 0.6F) * 1.5F;
     }
