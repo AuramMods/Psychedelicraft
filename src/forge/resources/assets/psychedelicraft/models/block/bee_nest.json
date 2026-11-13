@@ -1,0 +1,7 @@
+{
+  "parent": "block/cube_column",
+  "textures": {
+    "end": "psychedelicraft:blocks/bee_nest_end",
+    "side": "psychedelicraft:blocks/bee_nest_side"
+  }
+}

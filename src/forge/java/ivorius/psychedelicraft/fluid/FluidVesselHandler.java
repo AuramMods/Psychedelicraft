@@ -2,6 +2,7 @@ package ivorius.psychedelicraft.fluid;
 
 import ivorius.psychedelicraft.Psychedelicraft;
 import ivorius.psychedelicraft.item.PortableFluidItem;
+import ivorius.psychedelicraft.item.PSItems;
 import net.minecraft.init.Items;
 import net.minecraft.init.PotionTypes;
 import net.minecraft.item.Item;
@@ -86,6 +87,9 @@ public final class FluidVesselHandler extends FluidHandlerItemStack {
         if (item == Items.WATER_BUCKET || isWaterBottle(stack)) return new FluidStack(FluidRegistry.WATER, vessel.capacity);
         if (item == Items.LAVA_BUCKET) return new FluidStack(FluidRegistry.LAVA, vessel.capacity);
         if (item == Items.MILK_BUCKET) return new FluidStack(PSFluids.MILK, vessel.capacity);
+        if (vessel == FluidVessel.GLASS_BOTTLE && item == PSItems.HONEY_BOTTLE) {
+            return new FluidStack(PSFluids.HONEY, vessel.capacity);
+        }
         return null;
     }
 
@@ -157,10 +161,13 @@ public final class FluidVesselHandler extends FluidHandlerItemStack {
                 if (fluid == FluidRegistry.LAVA) { replace(Items.LAVA_BUCKET); return; }
                 if (fluid == PSFluids.MILK) { replace(Items.MILK_BUCKET); return; }
             }
-            if (vessel == FluidVessel.GLASS_BOTTLE && fluid == FluidRegistry.WATER) {
-                replace(Items.POTIONITEM);
-                PotionUtils.addPotionToItemStack(container, PotionTypes.WATER);
-                return;
+            if (vessel == FluidVessel.GLASS_BOTTLE) {
+                if (fluid == PSFluids.HONEY) { replace(PSItems.HONEY_BOTTLE); return; }
+                if (fluid == FluidRegistry.WATER) {
+                    replace(Items.POTIONITEM);
+                    PotionUtils.addPotionToItemStack(container, PotionTypes.WATER);
+                    return;
+                }
             }
         }
         replace(vessel.taggedItem(container));

@@ -41,6 +41,7 @@
   {
     "name": "mash_honey",
     "ingredient": [
+      {"item": "psychedelicraft:honey_bottle"},
       {"type": "forge:ore_dict", "ore": "foodHoney"},
       {"type": "forge:ore_dict", "ore": "dropHoney"},
       {"type": "forge:ore_dict", "ore": "beeCombHoney"}

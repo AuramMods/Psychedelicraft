@@ -39,6 +39,7 @@ public final class PlantWorldGenerator {
     private static final int LOW_XZ_SPREAD = 7;
     private static final int LOW_Y_SPREAD = 3;
     private static final long JUNIPER_SALT = 0x9e3779b97f4a7c15L * "juniper".hashCode();
+    private static final long BEE_NEST_SALT = 0x9e3779b97f4a7c15L * "bee_nest".hashCode();
     private static final PSConfig.Generation OPTIONS = PSConfig.balancing.worldGeneration;
     private static final Patch[] PATCHES = {
             tall("cannabis", PSBlocks.NATURAL_CANNABIS, OPTIONS.cannabis, false),
@@ -70,6 +71,10 @@ public final class PlantWorldGenerator {
         }
         long seed = world.getSeed() ^ (341873128712L * chunk.x + 132897987541L * chunk.z);
         Random random = new Random();
+        if (OPTIONS.beeNests.enabled) {
+            random.setSeed(seed ^ BEE_NEST_SALT);
+            BeeNestWorldGenerator.decorate(world, chunk, random, OPTIONS.beeNests);
+        }
         if (OPTIONS.juniper.enabled) {
             random.setSeed(seed ^ JUNIPER_SALT);
             int attempts = random.nextFloat() < 0.05F ? 3 : 1;

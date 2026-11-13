@@ -52,6 +52,7 @@ public class Psychedelicraft {
         GameRegistry.addSmelting(new ItemStack(PSItems.COPPER_ORE), new ItemStack(PSItems.COPPER_INGOT), 0.7F);
         OreDictionary.registerOre("oreCopper", PSItems.COPPER_ORE);
         OreDictionary.registerOre("ingotCopper", PSItems.COPPER_INGOT);
+        OreDictionary.registerOre("beeCombHoney", PSItems.HONEYCOMB);
         GameRegistry.registerWorldGenerator(new CopperOreGenerator(), 0);
         OreDictionary.registerOre("plankWood", PSItems.JUNIPER_PLANKS);
         OreDictionary.registerOre("stairWood", PSItems.JUNIPER_STAIRS);

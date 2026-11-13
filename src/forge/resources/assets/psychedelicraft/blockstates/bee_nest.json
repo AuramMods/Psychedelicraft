@@ -1,0 +1,10 @@
+{
+  "variants": {
+    "honey_level=0": { "model": "psychedelicraft:bee_nest" },
+    "honey_level=1": { "model": "psychedelicraft:bee_nest" },
+    "honey_level=2": { "model": "psychedelicraft:bee_nest" },
+    "honey_level=3": { "model": "psychedelicraft:bee_nest" },
+    "honey_level=4": { "model": "psychedelicraft:bee_nest" },
+    "honey_level=5": { "model": "psychedelicraft:bee_nest_full" }
+  }
+}

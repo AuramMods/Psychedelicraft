@@ -82,7 +82,7 @@ public final class PSItemModels {
                     return stack.hasTagCompound() && stack.getTagCompound().getCompoundTag("display").hasKey("color", 99)
                             ? stack.getTagCompound().getCompoundTag("display").getInteger("color") : 0xA06540;
                 }
-                int fluidLayer = vessel == PSItems.FILLED_GLASS_BOTTLE ? 0 : 1;
+                int fluidLayer = vessel == PSItems.FILLED_GLASS_BOTTLE || vessel == PSItems.HONEY_BOTTLE ? 0 : 1;
                 FluidStack fluid = layer == fluidLayer ? vessel.contents(stack) : null;
                 return fluid == null ? -1 : fluid.getFluid().getColor(fluid);
             }, vessel);

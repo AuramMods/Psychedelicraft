@@ -128,6 +128,7 @@ public final class PSConfig {
         public boolean villageChests = true;
 
         public final Feature juniper = new Feature();
+        public final Feature beeNests = new Feature();
         public final Feature cannabis = new Feature();
         public final Feature hop = new Feature();
         public final Feature tobacco = new Feature();

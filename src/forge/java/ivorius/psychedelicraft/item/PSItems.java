@@ -53,6 +53,9 @@ public final class PSItems {
     public static final PortableFluidItem SYRINGE = vessel("syringe", FluidVessel.SYRINGE);
     public static final PortableFluidItem FILLED_BOWL = vessel("filled_bowl", FluidVessel.BOWL);
     public static final PortableFluidItem FILLED_GLASS_BOTTLE = vessel("filled_glass_bottle", FluidVessel.GLASS_BOTTLE);
+    public static final HoneyBottleItem HONEY_BOTTLE = named("honey_bottle", new HoneyBottleItem());
+    public static final Item HONEYCOMB = named("honeycomb", new Item());
+    public static final Item BEE_NEST = named("bee_nest", new ItemBlock(PSBlocks.BEE_NEST));
     public static final FilledBucketItem FILLED_BUCKET = named("filled_bucket", new FilledBucketItem());
     public static final Item BROWN_MAGIC_MUSHROOMS = edible("brown_magic_mushrooms", 0, 0.1F, DrugType.BROWN_SHROOMS);
     public static final Item RED_MAGIC_MUSHROOMS = edible("red_magic_mushrooms", 0, 0.1F, DrugType.RED_SHROOMS);

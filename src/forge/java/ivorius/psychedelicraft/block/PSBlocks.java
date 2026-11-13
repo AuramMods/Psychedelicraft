@@ -116,6 +116,7 @@ public final class PSBlocks {
     public static final RiftJarBlock RIFT_JAR = named("rift_jar", new RiftJarBlock());
     public static final Block GLITCH = named("glitch", new GlitchedBlock());
     public static final Block COPPER_ORE = named("copper_ore", new CopperOreBlock());
+    public static final BeeNestBlock BEE_NEST = named("bee_nest", new BeeNestBlock());
 
     private PSBlocks() {
     }
@@ -139,7 +140,7 @@ public final class PSBlocks {
                 JUNIPER_LEAVES, FRUITING_JUNIPER_LEAVES, JUNIPER_SAPLING, JUNIPER_PLANKS,
                 JUNIPER_STAIRS, JUNIPER_SLAB, JUNIPER_DOUBLE_SLAB, JUNIPER_FENCE, JUNIPER_FENCE_GATE,
                 JUNIPER_DOOR, JUNIPER_TRAPDOOR, POWERED_JUNIPER_TRAPDOOR, JUNIPER_BUTTON, JUNIPER_PRESSURE_PLATE,
-                JUNIPER_SIGN, JUNIPER_WALL_SIGN, JUNIPER_HANGING_SIGN, JUNIPER_WALL_HANGING_SIGN);
+                JUNIPER_SIGN, JUNIPER_WALL_SIGN, JUNIPER_HANGING_SIGN, JUNIPER_WALL_HANGING_SIGN, BEE_NEST);
         for (PottedPlantBlock pot : POTTED_PLANTS) {
             event.getRegistry().register(pot);
         }
@@ -176,5 +177,6 @@ public final class PSBlocks {
         Blocks.FIRE.setFireInfo(JUNIPER_DOUBLE_SLAB, 5, 20);
         Blocks.FIRE.setFireInfo(JUNIPER_FENCE, 5, 20);
         Blocks.FIRE.setFireInfo(JUNIPER_FENCE_GATE, 5, 20);
+        Blocks.FIRE.setFireInfo(BEE_NEST, 5, 20);
     }
 }

@@ -101,4 +101,26 @@ public class FluidVesselHandlerTest {
         assertEquals(FluidVessel.BOTTLE.capacity, crafted.getFluid().amount);
         assertNull(crafted.getFluid().tag);
     }
+
+    @Test
+    public void plainFullHoneyUsesTheNativeEquivalentAndPartialHoneyPreservesVolume() {
+        FluidVesselHandler bottle = FluidVesselHandler.forCrafting(new ItemStack(Items.GLASS_BOTTLE));
+        int capacity = FluidVessel.GLASS_BOTTLE.capacity;
+        assertEquals(capacity, bottle.fill(new FluidStack(PSFluids.HONEY, capacity), true));
+        assertSame(PSItems.HONEY_BOTTLE, bottle.getContainer().getItem());
+        FluidVesselHandler saved = FluidVesselHandler.forCrafting(bottle.getContainer());
+
+        assertEquals(25, saved.drain(25, false).amount);
+        assertEquals(capacity, saved.getFluid().amount);
+        assertEquals(25, saved.drain(25, true).amount);
+        assertSame(PSItems.FILLED_GLASS_BOTTLE, saved.getContainer().getItem());
+        assertEquals(capacity - 25, saved.drain(capacity, true).amount);
+        assertSame(Items.GLASS_BOTTLE, saved.getContainer().getItem());
+
+        NBTTagCompound brewed = new NBTTagCompound();
+        brewed.setInteger(BrewFluid.FERMENTATION, 2);
+        assertEquals(capacity, saved.fill(new FluidStack(PSFluids.HONEY, capacity, brewed), true));
+        assertSame(PSItems.FILLED_GLASS_BOTTLE, saved.getContainer().getItem());
+        assertEquals(brewed, saved.getFluid().tag);
+    }
 }
