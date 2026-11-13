@@ -7,7 +7,6 @@ import ivorius.psychedelicraft.item.PSItems;
 import ivorius.psychedelicraft.recipe.DryingRecipe;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockCrops;
-import net.minecraft.block.IGrowable;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.entity.ai.EntityAIBase;
 import net.minecraft.entity.ai.RandomPositionGenerator;
@@ -17,10 +16,8 @@ import net.minecraft.init.Blocks;
 import net.minecraft.init.Items;
 import net.minecraft.init.SoundEvents;
 import net.minecraft.inventory.IInventory;
-import net.minecraft.item.EnumDyeColor;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemBlock;
-import net.minecraft.item.ItemDye;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.tileentity.TileEntity;
@@ -39,7 +36,6 @@ final class VillagerWork extends EntityAIBase {
     private static final String WORKSITE = "Worksite";
     private static final String WORKSITE_DIMENSION = "WorksiteDimension";
     private static final int SEARCH_RADIUS = 32;
-    private static final int BONE_MEAL = EnumDyeColor.WHITE.getDyeDamage();
     private static final double WORK_DISTANCE_SQ = 1.73D * 1.73D;
 
     private final EntityVillager villager;
@@ -236,11 +232,10 @@ final class VillagerWork extends EntityAIBase {
     private BlockPos findCrop() {
         BlockPos origin = villager.getPosition();
         int seed = seedSlot(villager.getVillagerInventory());
-        int meal = mealSlot(villager.getVillagerInventory());
         for (BlockPos pos : BlockPos.getAllInBoxMutable(origin.add(-2, -1, -2), origin.add(2, 1, 2))) {
             if (!villager.world.isBlockLoaded(pos)) continue;
             IBlockState state = villager.world.getBlockState(pos);
-            if (mature(state) || meal >= 0 && state.getBlock() instanceof IGrowable && canGrow(state, pos)
+            if (mature(state)
                     || seed >= 0 && villager.world.isAirBlock(pos) && villager.world.getBlockState(pos.down()).getBlock() == Blocks.FARMLAND) {
                 return pos.toImmutable();
             }
@@ -265,21 +260,10 @@ final class VillagerWork extends EntityAIBase {
                             SoundCategory.BLOCKS, 1F, 1F);
                 }
             }
-        } else if (state.getBlock() instanceof IGrowable && canGrow(state, target)) {
-            int meal = mealSlot(inventory);
-            if (meal >= 0 && ItemDye.applyBonemeal(inventory.getStackInSlot(meal), world, target)) {
-                inventory.markDirty();
-                world.playEvent(2005, target, 0);
-            }
         }
     }
 
-    private boolean canGrow(IBlockState state, BlockPos pos) {
-        return (state.getBlock() instanceof TallCropBlock || state.getBlock() instanceof BlockCrops)
-                && ((IGrowable) state.getBlock()).canGrow(villager.world, pos, state, false);
-    }
-
-    private static boolean mature(IBlockState state) {
+    static boolean mature(IBlockState state) {
         Block block = state.getBlock();
         if (block instanceof BlockCrops) return ((BlockCrops) block).isMaxAge(state);
         return block instanceof TallCropBlock && ((TallCropBlock) block).isMature(state);
@@ -293,14 +277,6 @@ final class VillagerWork extends EntityAIBase {
     private static int seedSlot(IInventory inventory) {
         for (int slot = 0; slot < inventory.getSizeInventory(); slot++) {
             if (isSeed(inventory.getStackInSlot(slot).getItem())) return slot;
-        }
-        return -1;
-    }
-
-    private static int mealSlot(IInventory inventory) {
-        for (int slot = 0; slot < inventory.getSizeInventory(); slot++) {
-            ItemStack stack = inventory.getStackInSlot(slot);
-            if (stack.getItem() == Items.DYE && stack.getMetadata() == BONE_MEAL) return slot;
         }
         return -1;
     }

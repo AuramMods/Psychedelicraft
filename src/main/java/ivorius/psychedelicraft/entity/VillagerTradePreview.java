@@ -28,6 +28,7 @@ final class VillagerTradePreview extends EntityAIBase {
     private EntityPlayer target;
     private ItemStack cost = ItemStack.EMPTY;
     private ItemStack shown = ItemStack.EMPTY;
+    private ItemStack workItem = ItemStack.EMPTY;
     private List<ItemStack> matches = Collections.emptyList();
     private long endTime;
     private int remaining;
@@ -122,12 +123,18 @@ final class VillagerTradePreview extends EntityAIBase {
     }
 
     ItemStack shown() {
-        return shown;
+        return workItem.isEmpty() ? shown : workItem;
+    }
+
+    void showWorkItem(ItemStack item) {
+        ItemStack previous = shown();
+        workItem = item;
+        if (!ItemStack.areItemStacksEqual(previous, shown())) Channel.showVillagerOffer(villager, shown());
     }
 
     private void display(ItemStack item) {
         if (ItemStack.areItemStacksEqual(shown, item)) return;
         shown = item;
-        Channel.showVillagerOffer(villager, item);
+        if (workItem.isEmpty()) Channel.showVillagerOffer(villager, item);
     }
 }

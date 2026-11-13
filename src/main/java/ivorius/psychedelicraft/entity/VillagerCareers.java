@@ -113,6 +113,7 @@ public final class VillagerCareers {
             VillagerWork.rememberWorksiteDimension(villager);
             if (villager.tasks.taskEntries.stream().noneMatch(entry -> entry.action instanceof VillagerWork)) {
                 VillagerTradePreview preview = new VillagerTradePreview(villager);
+                villager.tasks.addTask(7, new DealerBonemealTask(villager, preview));
                 villager.tasks.addTask(7, new VillagerWork(villager, preview));
                 villager.tasks.addTask(7, new AddictRestockTask(villager));
                 villager.tasks.addTask(8, preview);
@@ -134,14 +135,13 @@ public final class VillagerCareers {
     }
 
     @SubscribeEvent
-    public static void stopDisabledPreview(LivingEvent.LivingUpdateEvent event) {
+    public static void stopDisabledDisplayTasks(LivingEvent.LivingUpdateEvent event) {
         if (!(event.getEntityLiving() instanceof EntityVillager) || event.getEntityLiving().world.isRemote) return;
         EntityVillager villager = (EntityVillager) event.getEntityLiving();
         if (!villager.isAIDisabled()) return;
         for (EntityAITasks.EntityAITaskEntry entry : villager.tasks.taskEntries) {
-            if (entry.using && entry.action instanceof VillagerTradePreview) {
+            if (entry.using && (entry.action instanceof DealerBonemealTask || entry.action instanceof VillagerTradePreview)) {
                 entry.action.resetTask();
-                return;
             }
         }
     }
