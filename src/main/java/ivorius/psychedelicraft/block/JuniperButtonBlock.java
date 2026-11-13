@@ -1,8 +1,13 @@
 package ivorius.psychedelicraft.block;
 
+import java.util.Arrays;
+import java.util.Comparator;
+
+import net.minecraft.block.Block;
 import net.minecraft.block.BlockButtonWood;
 import net.minecraft.block.SoundType;
 import net.minecraft.block.properties.PropertyEnum;
+import net.minecraft.block.state.BlockFaceShape;
 import net.minecraft.block.state.BlockStateContainer;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.entity.EntityLivingBase;
@@ -10,6 +15,7 @@ import net.minecraft.util.EnumFacing;
 import net.minecraft.util.Rotation;
 import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.IBlockAccess;
 import net.minecraft.world.World;
 
@@ -30,13 +36,49 @@ final class JuniperButtonBlock extends BlockButtonWood {
     }
 
     @Override
+    public boolean canPlaceBlockAt(World world, BlockPos pos) {
+        for (EnumFacing face : EnumFacing.VALUES) {
+            if (hasSupport(world, pos, face)) return true;
+        }
+        return false;
+    }
+
+    @Override
+    public boolean canPlaceBlockOnSide(World world, BlockPos pos, EnumFacing side) {
+        return canPlaceBlockAt(world, pos);
+    }
+
+    @Override
     public IBlockState getStateForPlacement(World world, BlockPos pos, EnumFacing facing, float x, float y, float z,
                                            int meta, EntityLivingBase placer) {
-        IBlockState state = super.getStateForPlacement(world, pos, facing, x, y, z, meta, placer);
-        if (state.getValue(FACING).getAxis().isVertical()) {
-            return state.withProperty(AXIS, placer.getHorizontalFacing().getAxis());
+        EnumFacing attachment = facing;
+        if (!hasSupport(world, pos, facing)) {
+            Vec3d look = placer.getLookVec();
+            EnumFacing[] faces = EnumFacing.VALUES.clone();
+            Arrays.sort(faces, Comparator.comparingDouble(face -> look.x * face.getFrontOffsetX()
+                    + look.y * face.getFrontOffsetY() + look.z * face.getFrontOffsetZ()));
+            for (EnumFacing face : faces) {
+                if (hasSupport(world, pos, face)) {
+                    attachment = face;
+                    break;
+                }
+            }
         }
-        return state;
+        EnumFacing.Axis axis = attachment.getAxis().isVertical()
+                ? placer.getHorizontalFacing().getAxis() : EnumFacing.Axis.Z;
+        return getDefaultState().withProperty(FACING, attachment).withProperty(AXIS, axis);
+    }
+
+    @Override
+    public void neighborChanged(IBlockState state, World world, BlockPos pos, Block block, BlockPos from) {
+        EnumFacing face = state.getValue(FACING);
+        if (!world.isRemote && from.equals(pos.offset(face.getOpposite())) && !hasSupport(world, pos, face)) {
+            world.destroyBlock(pos, true);
+        }
+    }
+
+    private static boolean hasSupport(World world, BlockPos pos, EnumFacing face) {
+        return JuniperBuildingBlocks.supportFace(world, pos.offset(face.getOpposite()), face) == BlockFaceShape.SOLID;
     }
 
     @Override

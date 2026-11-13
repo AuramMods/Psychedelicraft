@@ -47,6 +47,7 @@ final class JuniperTrapDoorBlock extends BlockTrapDoor implements Waterloggable 
             if (receivesPower != powered && setPower(world, pos, state, receivesPower)
                     && state.getValue(OPEN) != receivesPower) {
                 playSound(null, world, pos, receivesPower);
+                world.notifyNeighborsOfStateChange(pos, world.getBlockState(pos).getBlock(), false);
             }
         }
     }
@@ -62,7 +63,10 @@ final class JuniperTrapDoorBlock extends BlockTrapDoor implements Waterloggable 
                                     EnumHand hand, EnumFacing face, float x, float y, float z) {
         if (Waterlogging.bucketItem(player.getHeldItem(hand))) return false;
         boolean changed = super.onBlockActivated(world, pos, state, player, hand, face, x, y, z);
-        if (changed) Waterlogging.scheduleIfWet(world, pos);
+        if (changed) {
+            Waterlogging.scheduleIfWet(world, pos);
+            if (!world.isRemote) world.notifyNeighborsOfStateChange(pos, this, false);
+        }
         return changed;
     }
 
