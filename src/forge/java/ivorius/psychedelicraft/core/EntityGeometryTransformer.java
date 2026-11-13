@@ -132,8 +132,8 @@ public final class EntityGeometryTransformer implements IClassTransformer {
         patchCalls(methods, TESSELLATOR, "draw", "func_78381_a", "()V", target);
     }
 
-    private static void patchCalls(Iterable<MethodNode> methods, String owner, String name, String srg,
-                                   String descriptor, String target) {
+    static void patchCalls(Iterable<MethodNode> methods, String owner, String name, String srg,
+                           String descriptor, String target) {
         FMLDeobfuscatingRemapper remapper = FMLDeobfuscatingRemapper.INSTANCE;
         boolean patched = false;
         for (MethodNode render : methods) {

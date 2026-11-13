@@ -18,9 +18,14 @@ import ivorius.psychedelicraft.entity.drug.type.HarmoniumDrug;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.entity.EntityPlayerSP;
+import net.minecraft.client.gui.FontRenderer;
 import net.minecraft.client.model.IMultipassModel;
+import net.minecraft.client.model.ModelBanner;
 import net.minecraft.client.model.ModelBase;
+import net.minecraft.client.model.ModelBed;
+import net.minecraft.client.model.ModelChest;
 import net.minecraft.client.model.ModelRenderer;
+import net.minecraft.client.model.ModelSign;
 import net.minecraft.client.multiplayer.WorldClient;
 import net.minecraft.client.renderer.ChunkRenderContainer;
 import net.minecraft.client.renderer.BlockRendererDispatcher;
@@ -37,6 +42,7 @@ import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
 import net.minecraft.client.shader.ShaderManager;
 import net.minecraft.entity.Entity;
 import net.minecraft.item.ItemStack;
+import net.minecraft.tileentity.TileEntityPiston;
 import net.minecraft.util.BlockRenderLayer;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.MathHelper;
@@ -228,6 +234,65 @@ public final class DrugRenderer {
         try (Scope scope = beginWorldModel(Material.ENTITY)) {
             model.render(scale);
         }
+    }
+
+    public static void drawBanner(ModelBanner model) {
+        try (Scope scope = beginTileModel()) {
+            model.renderBanner();
+        }
+    }
+
+    public static void drawBed(ModelBed model) {
+        try (Scope scope = beginTileModel()) {
+            model.render();
+        }
+    }
+
+    public static void drawChest(ModelChest model) {
+        try (Scope scope = beginTileModel()) {
+            model.renderAll();
+        }
+    }
+
+    public static void drawSign(ModelSign model) {
+        try (Scope scope = beginTileModel()) {
+            model.renderSign();
+        }
+    }
+
+    public static void drawTileModel(ModelBase model, Entity entity, float limbSwing, float swingAmount,
+                                     float age, float headYaw, float headPitch, float scale) {
+        try (Scope scope = beginTileModel()) {
+            model.render(entity, limbSwing, swingAmount, age, headYaw, headPitch, scale);
+        }
+    }
+
+    public static void drawTilePart(ModelRenderer model, float scale) {
+        try (Scope scope = beginTileModel()) {
+            model.render(scale);
+        }
+    }
+
+    public static int drawSignText(FontRenderer font, String text, int x, int y, int color) {
+        try (Scope scope = beginTileModel()) {
+            return font.drawString(text, x, y, color);
+        }
+    }
+
+    public static void drawPiston(Tessellator tessellator, TileEntityPiston piston) {
+        drawWorldQuads(tessellator, piston.getPos());
+    }
+
+    public static void drawPortalLayer(Tessellator tessellator) {
+        try (Scope scope = beginWorldModel(Material.END_PORTAL)) {
+            tessellator.draw();
+        }
+    }
+
+    @Nullable
+    private static Scope beginTileModel() {
+        // Built-in items already shade their display lists with the parent item's coordinates.
+        return renderingBuiltInItem ? null : beginWorldModel();
     }
 
     static void drawScreenQuads(Tessellator tessellator) {

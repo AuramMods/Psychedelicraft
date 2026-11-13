@@ -10,12 +10,13 @@ uniform float FogMode;
 uniform float RadialFog;
 uniform float EntityModel;
 uniform float SkyMode;
+uniform float PortalTexGen;
 uniform float EntityTextured;
 uniform vec4 EntityOverlay;
 uniform vec4 EntityOutline;
 uniform vec4 EntityTint;
 
-varying vec2 atlasUv;
+varying vec4 colorUv;
 varying vec2 lightmapUv;
 varying vec4 vertexColor;
 varying vec3 viewPosition;
@@ -28,7 +29,8 @@ void main() {
   } else if (LightmapMode == 2.0) {
     light = texture2D(LightmapSampler, vec2(0.5));
   }
-  vec4 base = SkyMode == 1.0 ? vec4(1.0) : texture2D(ColorSampler, atlasUv);
+  vec4 base = SkyMode == 1.0 ? vec4(1.0) : PortalTexGen > 0.0
+      ? texture2DProj(ColorSampler, colorUv) : texture2D(ColorSampler, colorUv.xy);
   vec4 color;
   if (EntityModel > 0.0) {
     if (EntityTextured == 0.0) base = vec4(1.0);

@@ -11,6 +11,7 @@ uniform vec4 SurfaceFractalCoords;
 uniform vec4 GeometryCoordinates;
 uniform float EntityModel;
 uniform float SkyMode;
+uniform float PortalTexGen;
 uniform mat4 EntityViewToWorld;
 uniform float EntityLighting;
 uniform float EntityColorMaterial;
@@ -22,7 +23,7 @@ uniform vec3 EntityLight1;
 uniform vec3 EntityDiffuse0;
 uniform vec3 EntityDiffuse1;
 
-varying vec2 atlasUv;
+varying vec4 colorUv;
 varying vec2 lightmapUv;
 varying vec4 vertexColor;
 varying vec3 viewPosition;
@@ -49,7 +50,13 @@ void main() {
   gl_Position = ftransform();
   screenProjection = vec4((gl_Position.xy + gl_Position.ww) * 0.5, gl_Position.zw);
   viewPosition = view.xyz;
-  atlasUv = (gl_TextureMatrix[0] * gl_MultiTexCoord0).xy;
+  if (PortalTexGen > 0.0) {
+    vec4 projected = vec4(dot(view, gl_EyePlaneS[0]), dot(view, gl_EyePlaneT[0]),
+                          dot(view, gl_EyePlaneR[0]), 1.0);
+    colorUv = gl_TextureMatrix[0] * projected;
+  } else {
+    colorUv = gl_TextureMatrix[0] * gl_MultiTexCoord0;
+  }
   lightmapUv = (gl_TextureMatrix[1] * gl_MultiTexCoord1).xy;
   vertexColor = gl_Color;
   if (EntityModel > 0.0 && EntityLighting > 0.0) {

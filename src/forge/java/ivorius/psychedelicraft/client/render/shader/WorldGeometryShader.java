@@ -70,7 +70,8 @@ public final class WorldGeometryShader implements IResourceManagerReloadListener
     private Scope begin(Minecraft client, @Nullable EntityPlayerSP player, HallucinationManager hallucinations,
                         @Nullable DrugProperties drugs, Material material, float cloudY,
                         @Nullable BlockPos anchor, @Nullable ShaderManager zeroMatter) {
-        boolean entity = material == Material.ENTITY || material == Material.ENTITY_GLINT;
+        boolean portal = material == Material.END_PORTAL;
+        boolean entity = material == Material.ENTITY || material == Material.ENTITY_GLINT || portal;
         boolean screen = material == Material.SCREEN;
         boolean sky = material == Material.SKY_GRADIENT || material == Material.END_SKY;
         boolean deform = player != null && drugs != null && (!entity || entityState.hasView());
@@ -79,8 +80,8 @@ public final class WorldGeometryShader implements IResourceManagerReloadListener
         float big = deform ? hallucinations.strength(Effect.BIG_WAVES) * 0.6F : 0F;
         float wiggle = deform ? hallucinations.strength(Effect.WIGGLE_WAVES) * 0.7F : 0F;
         float distant = deform ? hallucinations.strength(Effect.DISTANT_WORLD_DEFORMATION) : 0F;
-        // The donor's glint fragment shader reads its texture and modulation color directly.
-        float surface = (!deform && !screen && !sky) || material == Material.ENTITY_GLINT ? 0F
+        // The donor's glint and End portal shaders do not use vertex color.
+        float surface = (!deform && !screen && !sky) || material == Material.ENTITY_GLINT || portal ? 0F
                 : MathHelper.clamp(hallucinations.strength(Effect.SURFACE_FRACTALS), 0F, 1F);
         float fracture = deform ? (float) drugs.getActiveValue(DrugType.LSD) * 0.06F : 0F;
         float[] pulses = deform || screen ? hallucinations.pulseColor() : null;
@@ -105,6 +106,7 @@ public final class WorldGeometryShader implements IResourceManagerReloadListener
                 upload(program, "FogMode", screen || sky ? 0F : fogMode());
                 upload(program, "RadialFog", !screen && !sky && radialFog() ? 1F : 0F);
                 upload(program, "SkyMode", material == Material.SKY_GRADIENT ? 1F : sky ? 2F : 0F);
+                upload(program, "PortalTexGen", portal ? 1F : 0F);
                 if (entity) entityState.upload(program);
                 else {
                     upload(program, "LightmapMode", material.lightmapMode);
@@ -218,6 +220,7 @@ public final class WorldGeometryShader implements IResourceManagerReloadListener
         SCREEN(0F, 1F),
         SKY_GRADIENT(0F, 1F),
         END_SKY(0F, 1F),
+        END_PORTAL(1F, 1F),
         PARTICLES(1F, 1F),
         ENTITY(1F, 1F),
         ENTITY_GLINT(1F, 1F),
