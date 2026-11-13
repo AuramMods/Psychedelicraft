@@ -2,11 +2,14 @@ package ivorius.psychedelicraft.entity;
 
 import ivorius.psychedelicraft.fluid.PSFluids;
 import ivorius.psychedelicraft.fluid.physical.PhysicalFluidBlock;
+import net.minecraft.block.BlockSlab;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.entity.item.EntityBoat;
+import net.minecraft.entity.passive.EntityPig;
 import net.minecraft.init.Blocks;
 import net.minecraft.init.Bootstrap;
 import net.minecraft.profiler.Profiler;
+import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 import net.minecraft.world.WorldProviderSurface;
@@ -18,7 +21,9 @@ import java.util.HashMap;
 import java.util.Map;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 
 public class BoatFlotationTest {
     private static final BlockPos CELL = new BlockPos(5, 64, 5);
@@ -59,6 +64,44 @@ public class BoatFlotationTest {
         assertEquals(64 + 5 / 9D, BoatFlotation.waterLevel(boat), 0.00001);
     }
 
+    @Test
+    public void boardingRequiresTheCenterOfTheHullToBeClearAtEyeHeight() {
+        TestWorld world = new TestWorld();
+        EntityJuniperBoat boat = new EntityJuniperBoat(world);
+        EntityPig pig = new EntityPig(world);
+        place(boat, 0.2);
+        world.blocks.put(CELL, coffee.getStateFromMeta(0));
+        assertFalse(boat.canFitPassenger(pig));
+        world.blocks.put(CELL, coffee.getStateFromMeta(3));
+        assertTrue(boat.canFitPassenger(pig));
+        place(boat, 0.04);
+        assertFalse(boat.canFitPassenger(pig));
+        world.blocks.put(CELL, new PhysicalFluidBlock(PSFluids.AGAVE).getDefaultState());
+        assertTrue(boat.canFitPassenger(pig));
+    }
+
+    @Test
+    public void dismountUsesAbsoluteCollisionHeightsForFullBlocksAndSlabs() {
+        TestWorld world = new TestWorld();
+        EntityJuniperChestBoat boat = new EntityJuniperChestBoat(world);
+        place(boat, 0.2);
+        BlockPos bank = CELL.south();
+        EntityPig pig = new EntityPig(world);
+        world.blocks.put(bank.down(), Blocks.STONE.getDefaultState());
+        assertTrue(BoatDismount.placePassenger(pig, boat));
+        assertEquals(bank.getY(), pig.posY, 0);
+
+        world.blocks.put(bank, Blocks.STONE_SLAB.getDefaultState().withProperty(BlockSlab.HALF,
+                BlockSlab.EnumBlockHalf.BOTTOM));
+        assertTrue(BoatDismount.placePassenger(pig, boat));
+        assertEquals(bank.getY() + 0.5, pig.posY, 0);
+
+        world.blocks.put(bank.down(), Blocks.WATER.getDefaultState());
+        assertTrue(BoatDismount.placePassenger(pig, boat));
+        assertEquals(boat.posZ, pig.posZ, 0);
+        assertEquals(boat.getEntityBoundingBox().maxY, pig.posY, 0);
+    }
+
     private static void place(EntityBoat boat, double relativeY) {
         boat.setPosition(CELL.getX() + 0.5, CELL.getY() + relativeY, CELL.getZ() + 0.5);
     }
@@ -73,6 +116,11 @@ public class BoatFlotationTest {
         @Override
         public IBlockState getBlockState(BlockPos pos) {
             return blocks.getOrDefault(pos, Blocks.AIR.getDefaultState());
+        }
+
+        @Override
+        public boolean collidesWithAnyBlock(AxisAlignedBB bounds) {
+            return false;
         }
 
         @Override

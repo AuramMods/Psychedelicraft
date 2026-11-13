@@ -10,8 +10,11 @@ import org.objectweb.asm.tree.AbstractInsnNode;
 import org.objectweb.asm.tree.ClassNode;
 import org.objectweb.asm.tree.FieldInsnNode;
 import org.objectweb.asm.tree.FieldNode;
+import org.objectweb.asm.tree.FrameNode;
 import org.objectweb.asm.tree.InsnList;
 import org.objectweb.asm.tree.InsnNode;
+import org.objectweb.asm.tree.JumpInsnNode;
+import org.objectweb.asm.tree.LabelNode;
 import org.objectweb.asm.tree.MethodInsnNode;
 import org.objectweb.asm.tree.MethodNode;
 import org.objectweb.asm.tree.VarInsnNode;
@@ -21,6 +24,8 @@ import static ivorius.psychedelicraft.core.ClientEffectsTransformer.method;
 
 public final class BoatFlotationTransformer implements IClassTransformer {
     private static final String BOAT = "net.minecraft.entity.item.EntityBoat";
+    private static final String LIVING = "net.minecraft.entity.EntityLivingBase";
+    private static final String ENTITY = "Lnet/minecraft/entity/Entity;";
     private static final String STATUS = "()Lnet/minecraft/entity/item/EntityBoat$Status;";
     private static final String HOOKS = "ivorius/psychedelicraft/entity/BoatFlotation";
     private static final String WATERLOGGING = "ivorius/psychedelicraft/fluid/physical/Waterlogging";
@@ -29,9 +34,17 @@ public final class BoatFlotationTransformer implements IClassTransformer {
 
     @Override
     public byte[] transform(String name, String transformedName, byte[] bytes) {
-        if (bytes == null || !BOAT.equals(transformedName)) return bytes;
+        if (bytes == null || !(BOAT.equals(transformedName) || LIVING.equals(transformedName))) return bytes;
         ClassNode type = new ClassNode(Opcodes.ASM5);
         new ClassReader(bytes).accept(type, 0);
+        if (BOAT.equals(transformedName)) patchFlotation(type);
+        else patchDismount(type);
+        ClassWriter writer = new ClassWriter(ClassWriter.COMPUTE_MAXS);
+        type.accept(writer);
+        return writer.toByteArray();
+    }
+
+    private static void patchFlotation(ClassNode type) {
         String boat = Type.getObjectType(type.name).getDescriptor();
 
         MethodNode above = method(type, "getWaterLevelAbove", "func_184451_k", "()F");
@@ -66,9 +79,22 @@ public final class BoatFlotationTransformer implements IClassTransformer {
         replaceBody(contact, surface);
 
         patchFallState(method(type, "updateFallState", "func_184231_a", "(DZ" + STATE + POSITION + ")V"));
-        ClassWriter writer = new ClassWriter(ClassWriter.COMPUTE_MAXS);
-        type.accept(writer);
-        return writer.toByteArray();
+    }
+
+    private static void patchDismount(ClassNode type) {
+        MethodNode dismount = method(type, "dismountEntity", "func_110145_l", "(" + ENTITY + ")V");
+        LabelNode legacy = new LabelNode();
+        InsnList hook = new InsnList();
+        hook.add(new VarInsnNode(Opcodes.ALOAD, 0));
+        hook.add(new VarInsnNode(Opcodes.ALOAD, 1));
+        hook.add(new MethodInsnNode(Opcodes.INVOKESTATIC, "ivorius/psychedelicraft/entity/BoatDismount", "placePassenger",
+                Type.getMethodDescriptor(Type.BOOLEAN_TYPE, Type.getObjectType(type.name),
+                        Type.getArgumentTypes(dismount.desc)[0]), false));
+        hook.add(new JumpInsnNode(Opcodes.IFEQ, legacy));
+        hook.add(new InsnNode(Opcodes.RETURN));
+        hook.add(legacy);
+        hook.add(new FrameNode(Opcodes.F_SAME, 0, null, 0, null));
+        dismount.instructions.insert(hook);
     }
 
     private static void patchFallState(MethodNode method) {

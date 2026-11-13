@@ -54,8 +54,8 @@ public final class EntityJuniperChestBoat extends EntityJuniperBoat implements I
     }
 
     @Override
-    protected boolean canFitPassenger(Entity passenger) {
-        return getPassengers().isEmpty();
+    protected int passengerLimit() {
+        return 1;
     }
 
     @Override
