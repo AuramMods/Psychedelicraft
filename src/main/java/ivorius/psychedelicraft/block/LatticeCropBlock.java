@@ -84,11 +84,6 @@ public final class LatticeCropBlock extends LatticeBlock implements IGrowable {
         return new LatticeCropBlockEntity();
     }
 
-    @Override
-    public boolean canPistonMove() {
-        return false;
-    }
-
     @Nullable
     public static LatticeCropBlockEntity getCrop(IBlockAccess world, BlockPos pos) {
         TileEntity tile = world.getTileEntity(pos);
