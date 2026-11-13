@@ -1,8 +1,11 @@
 package ivorius.psychedelicraft.block;
 
+import java.util.ArrayList;
+import java.util.List;
 import javax.annotation.Nullable;
 
 import ivorius.psychedelicraft.block.JuniperSignBlock.Form;
+import net.minecraft.block.material.Material;
 import net.minecraft.block.state.BlockFaceShape;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.entity.player.EntityPlayer;
@@ -31,13 +34,20 @@ public final class JuniperHangingSigns {
         return new AxisAlignedBB(minX / 16.0, minY / 16.0, minZ / 16.0, maxX / 16.0, maxY / 16.0, maxZ / 16.0);
     }
 
-    private static boolean spansBottom(AxisAlignedBB box, double minimum, double maximum) {
-        return box != null && box.minY <= 0 && box.minX <= minimum && box.minZ <= minimum
-                && box.maxX >= maximum && box.maxZ >= maximum;
-    }
-
     private static boolean isHanging(IBlockState state) {
         return state.getBlock() instanceof JuniperSignBlock && ((JuniperSignBlock) state.getBlock()).form().isHanging();
+    }
+
+    private static boolean spansBottom(World world, BlockPos pos, IBlockState state, double min, double max) {
+        if (state.getMaterial() == Material.LEAVES) return false;
+        List<AxisAlignedBB> boxes = new ArrayList<>();
+        AxisAlignedBB slice = new AxisAlignedBB(min, 0, min, max, 1 / 16.0, max).offset(pos);
+        state.addCollisionBoxToList(world, pos, slice, boxes, null, false);
+        for (AxisAlignedBB box : boxes) {
+            if (box.minY <= slice.minY && box.minX <= slice.minX && box.maxX >= slice.maxX
+                    && box.minZ <= slice.minZ && box.maxZ >= slice.maxZ) return true;
+        }
+        return false;
     }
 
     public static boolean usesAttachedChains(World world, BlockPos pos, EntityPlayer placer) {
@@ -54,8 +64,8 @@ public final class JuniperHangingSigns {
             int rotation = support.getValue(JuniperSignBlock.ROTATION);
             return (rotation & 3) != 0 || EnumFacing.getHorizontal(rotation / 4).getAxis() != axis;
         }
-        return support.getBlockFaceShape(world, above, EnumFacing.DOWN) != BlockFaceShape.SOLID
-                && !spansBottom(support.getCollisionBoundingBox(world, above), 0, 1);
+        return JuniperBuildingBlocks.supportFace(world, above, EnumFacing.DOWN) != BlockFaceShape.SOLID
+                && !spansBottom(world, above, support, 0, 1);
     }
 
     public static int placementRotation(EntityPlayer placer, boolean attached) {
@@ -72,10 +82,9 @@ public final class JuniperHangingSigns {
         public boolean canStay(World world, BlockPos pos, IBlockState state) {
             BlockPos above = pos.up();
             IBlockState support = world.getBlockState(above);
-            BlockFaceShape face = support.getBlockFaceShape(world, above, EnumFacing.DOWN);
-            return isHanging(support) || face == BlockFaceShape.SOLID || face == BlockFaceShape.CENTER
-                    || face == BlockFaceShape.CENTER_BIG || face == BlockFaceShape.CENTER_SMALL
-                    || spansBottom(support.getCollisionBoundingBox(world, above), 7 / 16.0, 9 / 16.0);
+            BlockFaceShape face = JuniperBuildingBlocks.supportFace(world, above, EnumFacing.DOWN);
+            return isHanging(support) || face == BlockFaceShape.SOLID
+                    || spansBottom(world, above, support, 7 / 16.0, 9 / 16.0);
         }
 
         @Override
@@ -92,6 +101,11 @@ public final class JuniperHangingSigns {
 
         @Override
         public boolean canStay(World world, BlockPos pos, IBlockState state) {
+            return true;
+        }
+
+        @Override
+        public boolean canAttachForPlacement(World world, BlockPos pos, IBlockState state) {
             EnumFacing lateral = state.getValue(FACING).rotateY();
             return canAttachTo(world, pos, lateral) || canAttachTo(world, pos, lateral.getOpposite());
         }
@@ -102,7 +116,7 @@ public final class JuniperHangingSigns {
             if (support.getBlock() == this) {
                 return support.getValue(FACING).getAxis() != side.getAxis();
             }
-            return support.getBlockFaceShape(world, neighbor, side.getOpposite()) == BlockFaceShape.SOLID;
+            return JuniperBuildingBlocks.supportFace(world, neighbor, side.getOpposite()) == BlockFaceShape.SOLID;
         }
 
         private static boolean acrossX(IBlockState state) {

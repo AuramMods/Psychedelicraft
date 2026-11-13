@@ -39,21 +39,19 @@ final class JuniperSignItem extends Item {
     @Override
     public EnumActionResult onItemUse(EntityPlayer player, World world, BlockPos clicked, EnumHand hand,
                                      EnumFacing facing, float x, float y, float z) {
-        if (!hanging && facing == EnumFacing.DOWN) {
-            return EnumActionResult.FAIL;
-        }
         boolean replaceable = world.getBlockState(clicked).getBlock().isReplaceable(world, clicked);
         BlockPos pos = replaceable ? clicked : clicked.offset(facing);
         ItemStack held = player.getHeldItem(hand);
         boolean attached = hanging && JuniperHangingSigns.usesAttachedChains(world, pos, player);
-        IBlockState state = hanging ? hangingState(world, pos, player, facing, replaceable, attached)
-                : regularState(player, facing);
+        EnumFacing[] directions = placementDirections(player, facing, replaceable);
+        IBlockState state = hanging ? hangingState(world, pos, player, facing, attached, directions)
+                : regularState(world, pos, player, directions);
         if (state == null) {
             return EnumActionResult.FAIL;
         }
         JuniperSignBlock block = (JuniperSignBlock) state.getBlock();
         if (!player.canPlayerEdit(pos, facing, held) || !world.isBlockModifiable(player, pos)
-                || !world.mayPlace(block, pos, true, facing, player) || !block.canStay(world, pos, state)) {
+                || !world.mayPlace(block, pos, true, facing, player) || !block.canAttachForPlacement(world, pos, state)) {
             return EnumActionResult.FAIL;
         }
         AxisAlignedBB collision = state.getCollisionBoundingBox(world, pos);
@@ -90,28 +88,40 @@ final class JuniperSignItem extends Item {
         return EnumActionResult.SUCCESS;
     }
 
-    private static IBlockState regularState(EntityPlayer player, EnumFacing facing) {
-        if (facing == EnumFacing.UP) {
-            int rotation = MathHelper.floor((player.rotationYaw + 180F) * 16F / 360F + 0.5F) & 15;
-            return PSBlocks.JUNIPER_SIGN.getDefaultState().withProperty(JuniperSignBlock.ROTATION, rotation);
+    @Nullable
+    private static IBlockState regularState(World world, BlockPos pos, EntityPlayer player, EnumFacing[] directions) {
+        for (EnumFacing direction : directions) {
+            if (direction == EnumFacing.DOWN) {
+                int rotation = MathHelper.floor((player.rotationYaw + 180F) * 16F / 360F + 0.5F) & 15;
+                IBlockState standing = PSBlocks.JUNIPER_SIGN.getDefaultState().withProperty(JuniperSignBlock.ROTATION, rotation);
+                if (PSBlocks.JUNIPER_SIGN.canStay(world, pos, standing)) return standing;
+            } else if (direction.getAxis().isHorizontal()) {
+                IBlockState state = PSBlocks.JUNIPER_WALL_SIGN.getDefaultState()
+                        .withProperty(JuniperSignBlock.FACING, direction.getOpposite());
+                if (PSBlocks.JUNIPER_WALL_SIGN.canStay(world, pos, state)) return state;
+            }
         }
-        return PSBlocks.JUNIPER_WALL_SIGN.getDefaultState().withProperty(JuniperSignBlock.FACING, facing);
+        return null;
     }
 
-    @Nullable
-    private static IBlockState hangingState(World world, BlockPos pos, EntityPlayer player,
-                                            EnumFacing clickedFace, boolean replaceable, boolean attached) {
+    private static EnumFacing[] placementDirections(EntityPlayer player, EnumFacing clickedFace, boolean replaceable) {
         EnumFacing[] directions = EnumFacing.values();
         Vec3d look = player.getLookVec();
         Arrays.sort(directions, Comparator.comparingDouble(direction ->
                 !replaceable && direction == clickedFace.getOpposite() ? -2
                         : -look.dotProduct(new Vec3d(direction.getDirectionVec()))));
+        return directions;
+    }
+
+    @Nullable
+    private static IBlockState hangingState(World world, BlockPos pos, EntityPlayer player, EnumFacing clickedFace,
+                                            boolean attached, EnumFacing[] directions) {
         IBlockState wall = null;
         for (EnumFacing direction : directions) {
             if (direction.getAxis().isHorizontal() && direction.getAxis() != clickedFace.getAxis()) {
                 IBlockState state = PSBlocks.JUNIPER_WALL_HANGING_SIGN.getDefaultState()
                         .withProperty(JuniperSignBlock.FACING, direction.getOpposite());
-                if (PSBlocks.JUNIPER_WALL_HANGING_SIGN.canStay(world, pos, state)) {
+                if (PSBlocks.JUNIPER_WALL_HANGING_SIGN.canAttachForPlacement(world, pos, state)) {
                     wall = state;
                     break;
                 }

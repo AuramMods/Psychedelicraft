@@ -73,6 +73,10 @@ public abstract class JuniperSignBlock extends BlockSign implements Waterloggabl
 
     public abstract boolean canStay(World world, BlockPos pos, IBlockState state);
 
+    public boolean canAttachForPlacement(World world, BlockPos pos, IBlockState state) {
+        return canStay(world, pos, state);
+    }
+
     public boolean facesPlayer(World world, BlockPos pos, IBlockState state, EntityPlayer player) {
         AxisAlignedBB bounds = state.getBoundingBox(world, pos);
         double x = player.posX - (pos.getX() + (bounds.minX + bounds.maxX) * 0.5);
@@ -118,9 +122,12 @@ public abstract class JuniperSignBlock extends BlockSign implements Waterloggabl
 
     @Override
     public void neighborChanged(IBlockState state, World world, BlockPos pos, Block block, BlockPos from) {
-        if (!world.isRemote && !canStay(world, pos, state)) {
-            dropBlockAsItem(world, pos, state, 0);
-            world.setBlockToAir(pos);
+        if (world.isRemote || form == Form.HANGING_WALL) return;
+
+        BlockPos support = form == Form.STANDING ? pos.down() : form == Form.HANGING_CEILING ? pos.up()
+                : pos.offset(state.getValue(FACING).getOpposite());
+        if (from.equals(support) && !canStay(world, pos, state)) {
+            world.destroyBlock(pos, true);
         }
     }
 
