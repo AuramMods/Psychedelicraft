@@ -179,7 +179,7 @@ public final class VillagerCareers {
         VillagerProfession profession = villager.getProfessionForge();
         if (!event.getWorld().isRemote && (profession == UNEMPLOYED || isNitwit(profession))) {
             if (!event.getEntityPlayer().isCreative()) event.getItemStack().shrink(1);
-            villager.playSound(SoundEvents.ENTITY_GENERIC_EAT, 1F + villager.getRNG().nextFloat(),
+            Channel.playEntitySound(villager, SoundEvents.ENTITY_GENERIC_EAT, 1F + villager.getRNG().nextFloat(),
                     0.3F + villager.getRNG().nextFloat() * 0.7F);
             changeCareer(villager, ADDICT);
             PSCriteria.feedVillager(event.getEntityPlayer());

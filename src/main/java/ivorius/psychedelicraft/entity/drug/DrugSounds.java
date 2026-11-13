@@ -6,6 +6,8 @@
 package ivorius.psychedelicraft.entity.drug;
 
 import ivorius.psychedelicraft.PSSounds;
+import ivorius.psychedelicraft.client.EntitySound;
+import ivorius.psychedelicraft.network.Channel;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.util.SoundCategory;
 import net.minecraft.util.math.MathHelper;
@@ -28,8 +30,11 @@ final class DrugSounds {
                 float speed = 1F + properties.getModifier(Drug::breathSpeed);
                 breathDelay = MathHelper.floor(30F / speed);
                 float pitch = speed * 0.05F + 0.9F + (inhaling ? 0.15F : 0F);
-                player.world.playSound(player, player.posX, player.posY, player.posZ, PSSounds.BREATH,
-                        SoundCategory.PLAYERS, volume, pitch);
+                if (player.world.isRemote) {
+                    EntitySound.playLocal(player, PSSounds.BREATH, volume, pitch);
+                } else {
+                    Channel.playEntitySound(player, PSSounds.BREATH, volume, pitch, player);
+                }
             }
         }
     }

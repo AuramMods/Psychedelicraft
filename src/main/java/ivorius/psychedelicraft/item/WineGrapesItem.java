@@ -6,12 +6,12 @@ package ivorius.psychedelicraft.item;
 
 import ivorius.psychedelicraft.block.LatticeBlock;
 import ivorius.psychedelicraft.block.PSBlocks;
+import ivorius.psychedelicraft.network.Channel;
 import net.minecraft.block.SoundType;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.util.EnumActionResult;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.util.EnumHand;
-import net.minecraft.util.SoundCategory;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 
@@ -28,7 +28,7 @@ final class WineGrapesItem extends QuickFoodItem {
             return EnumActionResult.PASS;
         }
         if (!world.isRemote && LatticeBlock.growOnto(world, pos, PSBlocks.WINE_GRAPE_LATTICE)) {
-            world.playSound(null, pos, SoundType.PLANT.getHitSound(), SoundCategory.BLOCKS, 1F, 1F);
+            Channel.playEntitySound(player, SoundType.PLANT.getHitSound(), 1F, 1F);
         }
         return EnumActionResult.SUCCESS;
     }

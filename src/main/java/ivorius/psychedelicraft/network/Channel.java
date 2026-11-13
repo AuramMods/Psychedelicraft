@@ -8,6 +8,7 @@ import ivorius.psychedelicraft.entity.drug.DrugProperties;
 import ivorius.psychedelicraft.entity.drug.HallucinationType;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.passive.EntityVillager;
+import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.SoundEvent;
@@ -54,13 +55,21 @@ public final class Channel {
     }
 
     public static void playEntitySound(Entity source, SoundEvent sound, float volume, float pitch) {
+        playEntitySound(source, sound, volume, pitch, null);
+    }
+
+    public static void playEntitySound(Entity source, SoundEvent sound, float volume, float pitch,
+                                       @Nullable EntityPlayer excluded) {
         PlaySoundAtEntityEvent event = ForgeEventFactory.onPlaySoundAtEntity(source, sound, source.getSoundCategory(), volume, pitch);
         if (event.isCanceled() || event.getSound() == null || event.getSound().getRegistryName() == null) return;
         int dimension = source.world.provider.getDimension();
         float range = 16F * Math.max(1F, event.getVolume());
-        network.sendToAllAround(new MsgEntitySound(source.getEntityId(), dimension, event.getSound().getRegistryName(),
-                        event.getCategory(), event.getVolume(), event.getPitch()),
-                new NetworkRegistry.TargetPoint(dimension, source.posX, source.posY, source.posZ, range));
+        MsgEntitySound message = new MsgEntitySound(source.getEntityId(), dimension, event.getSound().getRegistryName(),
+                event.getCategory(), event.getVolume(), event.getPitch());
+        for (EntityPlayerMP recipient : source.world.getPlayers(EntityPlayerMP.class,
+                player -> player != excluded && player.getDistanceSq(source) < range * range)) {
+            network.sendTo(message, recipient);
+        }
     }
 
     public static void sync(EntityPlayerMP player, DrugProperties properties) {

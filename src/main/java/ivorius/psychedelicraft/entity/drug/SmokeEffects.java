@@ -9,7 +9,6 @@ import ivorius.psychedelicraft.item.SmokeableItem;
 import ivorius.psychedelicraft.network.Channel;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.tileentity.TileEntityFurnace;
-import net.minecraft.util.SoundCategory;
 import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Vec3d;
@@ -23,7 +22,7 @@ public final class SmokeEffects {
 
     public static void playBreath(EntityPlayer player) {
         if (!player.world.isRemote) {
-            player.world.playSound(null, player.posX, player.posY, player.posZ, PSSounds.BREATH, SoundCategory.PLAYERS, 0.02F, 1.5F);
+            Channel.playEntitySound(player, PSSounds.BREATH, 0.02F, 1.5F);
         }
     }
 

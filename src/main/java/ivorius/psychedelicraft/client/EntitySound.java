@@ -7,6 +7,8 @@ import net.minecraft.network.INetHandler;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.SoundCategory;
 import net.minecraft.util.SoundEvent;
+import net.minecraftforge.event.ForgeEventFactory;
+import net.minecraftforge.event.entity.PlaySoundAtEntityEvent;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 
@@ -29,8 +31,18 @@ public final class EntitySound extends MovingSound {
                 || client.world.provider.getDimension() != dimension) return;
         Entity source = client.world.getEntityByID(entityId);
         SoundEvent sound = SoundEvent.REGISTRY.getObject(soundId);
+        play(source, sound, category, volume, pitch);
+    }
+
+    public static void playLocal(Entity source, SoundEvent sound, float volume, float pitch) {
+        if (source != Minecraft.getMinecraft().player) return;
+        PlaySoundAtEntityEvent event = ForgeEventFactory.onPlaySoundAtEntity(source, sound, source.getSoundCategory(), volume, pitch);
+        if (!event.isCanceled()) play(source, event.getSound(), event.getCategory(), event.getVolume(), event.getPitch());
+    }
+
+    private static void play(Entity source, SoundEvent sound, SoundCategory category, float volume, float pitch) {
         if (source != null && !source.isDead && !source.isSilent() && sound != null) {
-            client.getSoundHandler().playSound(new EntitySound(source, sound, category, volume, pitch));
+            Minecraft.getMinecraft().getSoundHandler().playSound(new EntitySound(source, sound, category, volume, pitch));
         }
     }
 

@@ -3,6 +3,7 @@ package ivorius.psychedelicraft.entity.drug;
 import ivorius.psychedelicraft.PSDamageTypes;
 import ivorius.psychedelicraft.item.PSItems;
 import ivorius.psychedelicraft.item.PaperBagItem;
+import ivorius.psychedelicraft.network.Channel;
 import ivorius.psychedelicraft.util.NbtSerialisable;
 import net.minecraft.entity.item.EntityItem;
 import net.minecraft.entity.player.EntityPlayer;
@@ -127,8 +128,8 @@ public final class Stomach implements NbtSerialisable {
 
     private static void playVomitSound(EntityPlayer player) {
         Random random = player.getRNG();
-        player.world.playSound(null, player.posX, player.posY, player.posZ, SoundEvents.ENTITY_VILLAGER_DEATH,
-                player.getSoundCategory(), 1, 0.5F + (random.nextFloat() - random.nextFloat()) * 0.25F);
+        Channel.playEntitySound(player, SoundEvents.ENTITY_VILLAGER_DEATH,
+                1F, 0.5F + (random.nextFloat() - random.nextFloat()) * 0.25F);
     }
 
     boolean takeDirty() {
