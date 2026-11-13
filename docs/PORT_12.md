@@ -1095,6 +1095,14 @@ sh run/production/background-qa/run.sh "$qa" game-background Overlay-QA \
 - The tested production jar SHA-256 is `34900cccb97a712a1df74a5d64039cba2f0b99dce8ff459ffedb17c11e394801`. Evidence is under `run/production/runtime-qa-cycle119` in `build-production.log`, `build-fixture.log`, `runtime-baseline.log`, `runtime-fixed.log` and `runtime-careers.log`. Clients ran on Xvfb at zero master volume with OpenAL's `No Output` device.
 - Next, compare dealer navigation between its drying table and nearby farmland with the donor's secondary worksite stroll.
 
+### Cycle 120 · Dealer walks to farmland
+
+- The pinned dealer walks to a randomly selected secondary worksite while within six blocks of its drying table. Forge now samples farmland within four blocks horizontally and two vertically, approaches the space above it and waits 100 ticks before choosing another farmland walk. The dealer still returns to its primary table for drying and stock. Harvesting and replanting can start within the donor's nine-block Manhattan return radius, so the dealer can work plots it reaches on a stroll. [Pinned dealer work list](https://github.com/Sollace/Psychedelicraft/blob/319a4ea0160d6600cffcd5f5cc9e363ceaab44a1/src/main/java/ivorius/psychedelicraft/entity/DealerTaskListProvider.java)
+- Forge scans loaded positions when it chooses a walk and checks the plot again while approaching it. The port paths to the space above the farmland because the 1.12 navigator needs a standing position. The ordinary drying-table and crop work options share the same legacy movement goal.
+- The clean Java 8 build and reobfuscation passed all 166 tests. Both jars left the plot and seed stock alone at night. In muted Forge 14.23.5.2864, the previous dealer collected output and stayed at least four blocks from the plot for 480 work ticks. The rebuilt dealer collected the same output, walked to the plot and planted one seed. After the fixture removed the farmland, the dealer returned and collected the new output 378 ticks after planting.
+- The career regression passed worksite assignment, crop harvest, drying, trade tiers and restocks, addict conversion and overdose damage. The tested production jar SHA-256 is `a9b493679d94205534a3bd128e30c5eb1f982d26caa19429bf709dc42db6bc45`. Evidence is under `run/production/runtime-qa-cycle120` in `build-production-final.log`, `build-fixture.log`, `runtime-baseline.log`, `runtime-fixed.log` and `runtime-careers.log`. Clients ran on Xvfb at zero master volume with OpenAL's `No Output` device.
+- Next, compare the dealer's long-distance return and handling of an unreachable primary worksite.
+
 Dedicated Forge startup and multiplayer on that server remain open pending EULA acceptance.
 
 ## Repository and branch survey

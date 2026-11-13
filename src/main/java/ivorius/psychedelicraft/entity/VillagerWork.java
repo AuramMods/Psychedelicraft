@@ -42,6 +42,7 @@ final class VillagerWork extends EntityAIBase {
     private static final int CROP_SESSION_TICKS = 60;
     private static final int CROP_TARGET_DELAY = 20;
     private static final int CROP_SESSION_DELAY = 40;
+    private static final int FARMLAND_WALK_DELAY = 100;
 
     private final EntityVillager villager;
     private final VillagerTradePreview preview;
@@ -50,6 +51,7 @@ final class VillagerWork extends EntityAIBase {
     private long lastWorkCheck;
     private long nextCropAction;
     private long nextCropSession;
+    private long nextFarmlandWalk;
     private BlockPos target;
     private Vec3d wander;
     private Job job;
@@ -98,7 +100,7 @@ final class VillagerWork extends EntityAIBase {
             job = Job.CLAIM;
             return target != null;
         }
-        if (now >= nextCropSession && villager.getDistanceSqToCenter(site) <= 36 && villager.getRNG().nextInt(3) == 0
+        if (now >= nextCropSession && withinWorkArea(site) && villager.getRNG().nextInt(3) == 0
                 && ForgeEventFactory.getMobGriefingEvent(villager.world, villager)) {
             findCrops();
             if (!cropTargets.isEmpty()) {
@@ -107,9 +109,24 @@ final class VillagerWork extends EntityAIBase {
                 return true;
             }
         }
+        if (now >= nextFarmlandWalk && villager.getDistanceSqToCenter(site) < 36) {
+            BlockPos farmland = findFarmland();
+            if (farmland != null) {
+                nextFarmlandWalk = now + FARMLAND_WALK_DELAY;
+                target = farmland.up();
+                job = Job.VISIT_FARMLAND;
+                return true;
+            }
+        }
         target = site;
         job = Job.DRY;
         return true;
+    }
+
+    private boolean withinWorkArea(BlockPos site) {
+        BlockPos pos = villager.getPosition();
+        return Math.abs(pos.getX() - site.getX()) + Math.abs(pos.getY() - site.getY())
+                + Math.abs(pos.getZ() - site.getZ()) <= 9;
     }
 
     static boolean canWork(EntityVillager villager) {
@@ -146,16 +163,20 @@ final class VillagerWork extends EntityAIBase {
             remaining = 0;
             return;
         }
+        if (job == Job.VISIT_FARMLAND && villager.world.getBlockState(target.down()).getBlock() != Blocks.FARMLAND) {
+            remaining = 0;
+            return;
+        }
         if (preview.shown().isEmpty()) {
             villager.getLookHelper().setLookPosition(target.getX() + 0.5D, target.getY() + 0.5D, target.getZ() + 0.5D, 20, 20);
         }
-        double range = job == Job.CLAIM ? 6.25D : WORK_DISTANCE_SQ;
+        double range = job == Job.CLAIM ? 6.25D : job == Job.VISIT_FARMLAND ? 1D : WORK_DISTANCE_SQ;
         if (villager.getDistanceSqToCenter(target) > range) {
             if (remaining % 20 == 0 && !moveTowardTarget()) remaining = 0;
             return;
         }
         if (job == Job.CLAIM) claim();
-        else workTable();
+        else if (job == Job.DRY) workTable();
         remaining = 0;
     }
 
@@ -267,10 +288,28 @@ final class VillagerWork extends EntityAIBase {
 
     private boolean hasFarmland(BlockPos origin) {
         World world = villager.world;
-        for (BlockPos pos : BlockPos.getAllInBoxMutable(origin.add(-4, -2, -4), origin.add(4, 2, 4))) {
+        for (BlockPos pos : farmlandSearch(origin)) {
             if (world.isBlockLoaded(pos) && world.getBlockState(pos).getBlock() == Blocks.FARMLAND) return true;
         }
         return false;
+    }
+
+    @Nullable
+    private BlockPos findFarmland() {
+        World world = villager.world;
+        BlockPos chosen = null;
+        int candidates = 0;
+        for (BlockPos pos : farmlandSearch(villager.getPosition())) {
+            if (world.isBlockLoaded(pos) && world.getBlockState(pos).getBlock() == Blocks.FARMLAND
+                    && world.rand.nextInt(++candidates) == 0) {
+                chosen = pos.toImmutable();
+            }
+        }
+        return chosen;
+    }
+
+    private static Iterable<BlockPos.MutableBlockPos> farmlandSearch(BlockPos origin) {
+        return BlockPos.getAllInBoxMutable(origin.add(-4, -2, -4), origin.add(4, 2, 4));
     }
 
     private BlockPos chooseCrop() {
@@ -372,5 +411,5 @@ final class VillagerWork extends EntityAIBase {
         return tile instanceof DryingTableBlockEntity && !tile.isInvalid() ? (DryingTableBlockEntity) tile : null;
     }
 
-    private enum Job { CLAIM, DRY, CROP, WANDER }
+    private enum Job { CLAIM, DRY, CROP, VISIT_FARMLAND, WANDER }
 }
