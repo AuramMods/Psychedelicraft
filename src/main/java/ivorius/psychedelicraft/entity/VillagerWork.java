@@ -45,6 +45,9 @@ final class VillagerWork extends EntityAIBase {
     private static final int CROP_TARGET_DELAY = 20;
     private static final int CROP_SESSION_DELAY = 40;
     private static final int FARMLAND_WALK_DELAY = 100;
+    private static final int TABLE_APPROACH_DELAY = 80;
+    private static final int TABLE_STROLL_DELAY = 180;
+    private static final double TABLE_WALK_SPEED = 0.4D;
     private static final int DIRECT_RETURN_DISTANCE = 100;
     private static final int UNREACHABLE_WORKSITE_TICKS = 1200;
     private static final double WORKSITE_WAYPOINT_RANGE = 7D;
@@ -57,6 +60,8 @@ final class VillagerWork extends EntityAIBase {
     private long nextCropAction;
     private long nextCropSession;
     private long nextFarmlandWalk;
+    private long nextTableApproach;
+    private long nextTableStroll;
     private long unreachableSince = -1;
     private int nearestReturnDistance;
     private long retryReleasedSite;
@@ -118,12 +123,21 @@ final class VillagerWork extends EntityAIBase {
                 return true;
             }
         }
-        if (now >= nextFarmlandWalk && villager.getDistanceSqToCenter(site) < 36) {
+        double distanceSq = villager.getDistanceSqToCenter(site);
+        if (now >= nextFarmlandWalk && distanceSq < 36D) {
             BlockPos farmland = findFarmland();
             if (farmland != null) {
                 nextFarmlandWalk = now + FARMLAND_WALK_DELAY;
                 target = farmland.up();
                 job = Job.VISIT_FARMLAND;
+                return true;
+            }
+        }
+        if (now - lastWorkCheck < 300 && now >= nextTableStroll && distanceSq < 16D) {
+            nextTableStroll = now + TABLE_STROLL_DELAY;
+            wander = RandomPositionGenerator.getLandPos(villager, 8, 6);
+            if (wander != null && villager.world.isBlockLoaded(new BlockPos(wander))) {
+                job = Job.WANDER;
                 return true;
             }
         }
@@ -151,7 +165,7 @@ final class VillagerWork extends EntityAIBase {
         remaining = job == Job.CROP ? CROP_SESSION_TICKS : 160;
         nextCropAction = villager.world.getTotalWorldTime();
         if (job == Job.WANDER) {
-            villager.getNavigator().tryMoveToXYZ(wander.x, wander.y, wander.z, 0.4D);
+            villager.getNavigator().tryMoveToXYZ(wander.x, wander.y, wander.z, TABLE_WALK_SPEED);
         } else if (job == Job.DRY) {
             if (villager.getDistanceSqToCenter(target) > WORK_DISTANCE_SQ) returnToWorksite();
         } else {
@@ -184,6 +198,10 @@ final class VillagerWork extends EntityAIBase {
         }
         if (preview.shown().isEmpty()) {
             villager.getLookHelper().setLookPosition(target.getX() + 0.5D, target.getY() + 0.5D, target.getZ() + 0.5D, 20, 20);
+        }
+        if (job == Job.APPROACH_TABLE) {
+            if (manhattan(villager.getPosition(), target) <= 1 || villager.getNavigator().noPath()) remaining = 0;
+            return;
         }
         double range = job == Job.CLAIM ? 6.25D : job == Job.VISIT_FARMLAND ? 1D : WORK_DISTANCE_SQ;
         if (villager.getDistanceSqToCenter(target) > range) {
@@ -225,13 +243,19 @@ final class VillagerWork extends EntityAIBase {
         int distance = manhattan(origin, target);
         Path path = distance <= DIRECT_RETURN_DISTANCE ? villager.getNavigator().getPathToPos(target) : null;
         PathPoint end = path == null ? null : path.getFinalPathPoint();
-        if (end != null && target.distanceSqToCenter(end.x + 0.5D, end.y, end.z + 0.5D) <= WORK_DISTANCE_SQ
-                && villager.getNavigator().setPath(path, 0.5D)) {
-            unreachableSince = -1;
-            return;
+        long now = villager.world.getTotalWorldTime();
+        if (end != null && target.distanceSqToCenter(end.x + 0.5D, end.y, end.z + 0.5D) <= WORK_DISTANCE_SQ) {
+            boolean nearby = now >= nextTableApproach && villager.getDistanceSqToCenter(target) < 100D;
+            if (villager.getNavigator().setPath(path, nearby ? TABLE_WALK_SPEED : 0.5D)) {
+                unreachableSince = -1;
+                if (nearby) {
+                    nextTableApproach = now + TABLE_APPROACH_DELAY;
+                    job = Job.APPROACH_TABLE;
+                }
+                return;
+            }
         }
 
-        long now = villager.world.getTotalWorldTime();
         if (unreachableSince < 0 || distance < nearestReturnDistance) {
             unreachableSince = now;
             nearestReturnDistance = distance;
@@ -499,5 +523,5 @@ final class VillagerWork extends EntityAIBase {
         return tile instanceof DryingTableBlockEntity && !tile.isInvalid() ? (DryingTableBlockEntity) tile : null;
     }
 
-    private enum Job { CLAIM, DRY, CROP, VISIT_FARMLAND, WANDER }
+    private enum Job { CLAIM, DRY, CROP, VISIT_FARMLAND, APPROACH_TABLE, WANDER }
 }
