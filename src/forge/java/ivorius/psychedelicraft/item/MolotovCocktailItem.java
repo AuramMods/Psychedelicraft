@@ -9,8 +9,6 @@ import ivorius.psychedelicraft.config.PSConfig;
 import ivorius.psychedelicraft.entity.MolotovCocktailEntity;
 import ivorius.psychedelicraft.fluid.BrewFluid;
 import ivorius.psychedelicraft.fluid.FluidVessel;
-import ivorius.psychedelicraft.fluid.FluidVesselHandler;
-import ivorius.psychedelicraft.fluid.PSFluids;
 import net.minecraft.creativetab.CreativeTabs;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.player.EntityPlayer;
@@ -26,8 +24,9 @@ import net.minecraft.util.SoundCategory;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.text.translation.I18n;
 import net.minecraft.world.World;
-import net.minecraftforge.fluids.Fluid;
 import net.minecraftforge.fluids.FluidStack;
+import net.minecraftforge.fml.relauncher.Side;
+import net.minecraftforge.fml.relauncher.SideOnly;
 
 public final class MolotovCocktailItem extends PortableFluidItem {
     public static final String FLYING = "flying";
@@ -89,22 +88,8 @@ public final class MolotovCocktailItem extends PortableFluidItem {
     }
 
     @Override
+    @SideOnly(Side.CLIENT)
     public void getSubItems(CreativeTabs tab, NonNullList<ItemStack> stacks) {
-        if (!isInCreativeTab(tab) || PSConfig.balancing.disableMolotovs) return;
-        stacks.add(new ItemStack(this));
-        int amount = getVessel().capacity;
-        for (Fluid fluid : PSFluids.all()) {
-            if (PSFluids.isInjectable(fluid) || fluid == PSFluids.COFFEE) continue;
-            if (fluid instanceof BrewFluid) {
-                ((BrewFluid) fluid).addCreativeVariants(amount, false, contents -> stacks.add(filled(contents)));
-            } else {
-                stacks.add(filled(new FluidStack(fluid, amount)));
-            }
-        }
-    }
-
-    private ItemStack filled(FluidStack contents) {
-        return new FluidVesselHandler(new ItemStack(this), getVessel())
-                .craftContents(contents.getFluid(), contents.amount, contents.tag);
+        if (!PSConfig.balancing.disableMolotovs) super.getSubItems(tab, stacks);
     }
 }

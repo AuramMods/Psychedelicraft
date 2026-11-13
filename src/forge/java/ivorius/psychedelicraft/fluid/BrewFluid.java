@@ -143,22 +143,21 @@ public final class BrewFluid extends WorldFluid {
     private List<NBTTagCompound> findCreativeAttributes() {
         List<NBTTagCompound> result = new ArrayList<>();
         Set<String> seen = new HashSet<>();
-        for (int fermentation = 0; fermentation <= FERMENTATION_STEPS; fermentation++) {
-            for (int maturation = 0; maturation <= MATURATION_STEPS; maturation++) {
-                for (int distillation = 0; distillation <= 16; distillation++) {
-                    for (int vinegar = 0; vinegar <= 1; vinegar++) {
-                        State state = new State(fermentation, distillation, maturation, vinegar != 0);
-                        Style style = style(state);
-                        if (seen.add(style.name + "/" + style.variant)) {
-                            NBTTagCompound tag = new NBTTagCompound();
-                            if (fermentation != 0) tag.setInteger(FERMENTATION, fermentation);
-                            if (distillation != 0) tag.setInteger(DISTILLATION, distillation);
-                            if (maturation != 0) tag.setInteger(MATURATION, maturation);
-                            if (state.vinegar) tag.setBoolean(VINEGAR, true);
-                            result.add(tag);
-                        }
-                    }
-                }
+        // The donor advances its state index in steps of 16 while each stage has 17 values.
+        int stageStride = MATURATION_STEPS;
+        int period = 2 * stageStride * stageStride * (FERMENTATION_STEPS + 1) * (stageStride + 1);
+        for (int index = 0; index < period; index++) {
+            int stages = index / 2;
+            State state = new State(stages / (stageStride * stageStride) % (FERMENTATION_STEPS + 1),
+                    stages % (stageStride + 1), stages / stageStride % (stageStride + 1), index % 2 != 0);
+            Style style = style(state);
+            if (seen.add(style.name + "/" + style.variant)) {
+                NBTTagCompound tag = new NBTTagCompound();
+                if (state.fermentation != 0) tag.setInteger(FERMENTATION, state.fermentation);
+                if (state.distillation != 0) tag.setInteger(DISTILLATION, state.distillation);
+                if (state.maturation != 0) tag.setInteger(MATURATION, state.maturation);
+                if (state.vinegar) tag.setBoolean(VINEGAR, true);
+                result.add(tag);
             }
         }
         return result;

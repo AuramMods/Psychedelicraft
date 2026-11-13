@@ -13,6 +13,7 @@ import ivorius.psychedelicraft.fluid.PSFluids;
 import ivorius.psychedelicraft.recipe.CoffeeHeating;
 import net.minecraft.advancements.CriteriaTriggers;
 import net.minecraft.client.util.ITooltipFlag;
+import net.minecraft.creativetab.CreativeTabs;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
@@ -25,6 +26,7 @@ import net.minecraft.util.ActionResult;
 import net.minecraft.util.EnumActionResult;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.util.EnumHand;
+import net.minecraft.util.NonNullList;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.text.TextFormatting;
 import net.minecraft.util.text.translation.I18n;
@@ -49,6 +51,12 @@ public class PortableFluidItem extends Item {
 
     public FluidVessel getVessel() {
         return vessel;
+    }
+
+    @Override
+    @SideOnly(Side.CLIENT)
+    public void getSubItems(CreativeTabs tab, NonNullList<ItemStack> stacks) {
+        if (isInCreativeTab(tab)) PSItemGroups.addVesselStacks(this, tab, stacks);
     }
 
     @Nullable

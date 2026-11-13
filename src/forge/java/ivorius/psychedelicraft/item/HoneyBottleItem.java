@@ -2,6 +2,7 @@ package ivorius.psychedelicraft.item;
 
 import ivorius.psychedelicraft.fluid.FluidVessel;
 import net.minecraft.advancements.CriteriaTriggers;
+import net.minecraft.creativetab.CreativeTabs;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
@@ -12,15 +13,24 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.stats.StatList;
 import net.minecraft.util.ActionResult;
 import net.minecraft.util.EnumActionResult;
+import net.minecraft.util.NonNullList;
 import net.minecraft.util.EnumHand;
 import net.minecraft.util.text.translation.I18n;
 import net.minecraft.world.World;
 import net.minecraftforge.items.ItemHandlerHelper;
+import net.minecraftforge.fml.relauncher.Side;
+import net.minecraftforge.fml.relauncher.SideOnly;
 
 public final class HoneyBottleItem extends PortableFluidItem {
     HoneyBottleItem() {
         super(FluidVessel.GLASS_BOTTLE);
         setMaxStackSize(16);
+    }
+
+    @Override
+    @SideOnly(Side.CLIENT)
+    public void getSubItems(CreativeTabs tab, NonNullList<ItemStack> stacks) {
+        if (isInCreativeTab(tab)) stacks.add(new ItemStack(this));
     }
 
     @Override

@@ -11,6 +11,9 @@ import net.minecraftforge.fluids.FluidStack;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;
@@ -22,6 +25,25 @@ public class BrewProcessTest {
     public static void bootstrap() {
         Bootstrap.register();
         PSFluids.register();
+    }
+
+    @Test
+    public void creativeSamplesPreserveDonorStageOrderAndTequilaSplit() {
+        List<FluidStack> tequila = new ArrayList<>();
+        PSFluids.AGAVE.addCreativeVariants(40, true, tequila::add);
+        assertEquals(2, tequila.size());
+        assertTrue(PSFluids.AGAVE.isDrinkType(tequila.get(0), "tequila"));
+        assertTrue(PSFluids.AGAVE.isDrinkType(tequila.get(1), "tequila"));
+        assertEquals(16, BrewFluid.stage(tequila.get(0), BrewFluid.MATURATION, 16));
+        assertEquals(0, BrewFluid.stage(tequila.get(1), BrewFluid.MATURATION, 16));
+        assertEquals(2, BrewFluid.stage(tequila.get(0), BrewFluid.DISTILLATION, 16));
+        assertEquals(40, tequila.get(0).amount);
+
+        List<FluidStack> otherAgave = new ArrayList<>();
+        PSFluids.AGAVE.addCreativeVariants(200, false, otherAgave::add);
+        assertEquals(2, otherAgave.size());
+        assertTrue(PSFluids.AGAVE.isDrinkType(otherAgave.get(0), "juice"));
+        assertTrue(PSFluids.AGAVE.isDrinkType(otherAgave.get(1), "mezcal"));
     }
 
     @Test

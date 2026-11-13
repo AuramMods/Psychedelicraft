@@ -20,7 +20,6 @@ import net.minecraft.creativetab.CreativeTabs;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemBlock;
 import net.minecraft.item.ItemDoor;
-import net.minecraft.item.ItemStack;
 import net.minecraftforge.event.RegistryEvent;
 import net.minecraftforge.event.furnace.FurnaceFuelBurnTimeEvent;
 import net.minecraftforge.fml.common.Mod;
@@ -29,33 +28,20 @@ import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 @Mod.EventBusSubscriber(modid = Psychedelicraft.MOD_ID)
 public final class PSItems {
     private static final List<Item> ITEMS = new ArrayList<>();
-    private static final CreativeTabs GENERAL = new CreativeTabs("psychedelicraft.general") {
-        @Override
-        public ItemStack getTabIconItem() {
-            return new ItemStack(COFFEE_BEANS);
-        }
-    };
-    private static final CreativeTabs WEAPONS = new CreativeTabs("psychedelicraft.weapons") {
-        @Override
-        public ItemStack getTabIconItem() {
-            return new ItemStack(MOLOTOV_COCKTAIL);
-        }
-    };
-
     public static final Item COFFEE_BEANS = named("coffee_beans", new Item());
     public static final PortableFluidItem WOODEN_MUG = vessel("wooden_mug", FluidVessel.MUG);
     public static final PortableFluidItem STONE_CUP = vessel("stone_cup", FluidVessel.CUP);
     public static final PortableFluidItem GLASS_CHALICE = vessel("glass_chalice", FluidVessel.CHALICE);
     public static final PortableFluidItem SHOT_GLASS = vessel("shot_glass", FluidVessel.SHOT_GLASS);
     public static final PortableFluidItem BOTTLE = vessel("bottle", FluidVessel.BOTTLE);
-    public static final MolotovCocktailItem MOLOTOV_COCKTAIL = named("molotov_cocktail", new MolotovCocktailItem(), WEAPONS);
+    public static final MolotovCocktailItem MOLOTOV_COCKTAIL = named("molotov_cocktail", new MolotovCocktailItem(), PSItemGroups.WEAPONS);
     public static final PortableFluidItem SYRINGE = vessel("syringe", FluidVessel.SYRINGE);
     public static final PortableFluidItem FILLED_BOWL = vessel("filled_bowl", FluidVessel.BOWL);
     public static final PortableFluidItem FILLED_GLASS_BOTTLE = vessel("filled_glass_bottle", FluidVessel.GLASS_BOTTLE);
     public static final HoneyBottleItem HONEY_BOTTLE = named("honey_bottle", new HoneyBottleItem());
     public static final Item HONEYCOMB = named("honeycomb", new Item());
     public static final Item BEE_NEST = named("bee_nest", new ItemBlock(PSBlocks.BEE_NEST));
-    public static final FilledBucketItem FILLED_BUCKET = named("filled_bucket", new FilledBucketItem());
+    public static final FilledBucketItem FILLED_BUCKET = named("filled_bucket", new FilledBucketItem(), PSItemGroups.DRINKS);
     public static final Item BROWN_MAGIC_MUSHROOMS = edible("brown_magic_mushrooms", 0, 0.1F, DrugType.BROWN_SHROOMS);
     public static final Item RED_MAGIC_MUSHROOMS = edible("red_magic_mushrooms", 0, 0.1F, DrugType.RED_SHROOMS);
     public static final Item CANNABIS_SEEDS = named("cannabis_seeds", new CropSeedItem(PSBlocks.CANNABIS, "cannabis_seeds"));
@@ -126,9 +112,9 @@ public final class PSItems {
     public static final Item MORNING_GLORY_SEEDS = named("morning_glory_seeds",
             new CropSeedItem(PSBlocks.MORNING_GLORY, "morning_glory_seeds"));
     public static final Item MORNING_GLORY_LATTICE = named("morning_glory_lattice",
-            new LatticeCropItem(PSBlocks.MORNING_GLORY_LATTICE)).setCreativeTab(null);
+            new LatticeCropItem(PSBlocks.MORNING_GLORY_LATTICE), null);
     public static final Item WINE_GRAPE_LATTICE = named("wine_grape_lattice",
-            new LatticeCropItem(PSBlocks.WINE_GRAPE_LATTICE)).setCreativeTab(null);
+            new LatticeCropItem(PSBlocks.WINE_GRAPE_LATTICE), null);
     public static final Item WINE_GRAPES = named("wine_grapes", new WineGrapesItem());
     public static final Item JUNIPER_LOG = named("juniper_log", new ItemBlock(PSBlocks.JUNIPER_LOG));
     public static final Item JUNIPER_WOOD = named("juniper_wood", new ItemBlock(PSBlocks.JUNIPER_WOOD));
@@ -193,19 +179,19 @@ public final class PSItems {
     }
 
     private static PortableFluidItem vessel(String name, FluidVessel vessel) {
-        PortableFluidItem item = named(name, new PortableFluidItem(vessel));
-        if (vessel.emptyItem() != null) item.setCreativeTab(null);
-        return item;
+        return named(name, new PortableFluidItem(vessel),
+                vessel == FluidVessel.SYRINGE ? PSItemGroups.GENERAL : PSItemGroups.DRINKS);
     }
 
     private static <T extends Item> T named(String name, T item) {
-        return named(name, item, GENERAL);
+        return named(name, item, PSItemGroups.GENERAL);
     }
 
     private static <T extends Item> T named(String name, T item, CreativeTabs tab) {
         item.setRegistryName(Psychedelicraft.id(name))
                 .setUnlocalizedName(Psychedelicraft.MOD_ID + "." + name)
                 .setCreativeTab(tab);
+        if (item instanceof ItemBlock) ((ItemBlock) item).getBlock().setCreativeTab(tab);
         ITEMS.add(item);
         return item;
     }
