@@ -91,7 +91,7 @@ public abstract class JuniperSignBlock extends BlockSign implements Waterloggabl
 
     @Override
     public MapColor getMapColor(IBlockState state, IBlockAccess world, BlockPos pos) {
-        return form.isHanging() ? MapColor.CYAN : MapColor.SILVER;
+        return form.isHanging() ? MapColor.CYAN : MapColor.CLAY;
     }
 
     @Override

@@ -72,7 +72,7 @@ final class JuniperTrapDoorBlock extends BlockTrapDoor implements Waterloggable 
 
     @Override
     public MapColor getMapColor(IBlockState state, IBlockAccess world, BlockPos pos) {
-        return MapColor.SILVER;
+        return MapColor.CLAY;
     }
 
     @Override

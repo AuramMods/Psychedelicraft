@@ -48,13 +48,13 @@ final class JuniperBuildingBlocks {
 
         @Override
         public MapColor getMapColor(IBlockState state, IBlockAccess world, BlockPos pos) {
-            return MapColor.SILVER;
+            return MapColor.CLAY;
         }
     }
 
     static final class Fence extends BlockFence implements Waterloggable {
         Fence() {
-            super(Material.WOOD, MapColor.SILVER);
+            super(Material.WOOD, MapColor.CLAY);
             setHardness(2);
             setResistance(5);
             setSoundType(SoundType.WOOD);
@@ -71,7 +71,7 @@ final class JuniperBuildingBlocks {
 
         @Override
         public MapColor getMapColor(IBlockState state, IBlockAccess world, BlockPos pos) {
-            return MapColor.SILVER;
+            return MapColor.CLAY;
         }
 
         @Override
@@ -139,7 +139,7 @@ final class JuniperBuildingBlocks {
 
         @Override
         public MapColor getMapColor(IBlockState state, IBlockAccess world, BlockPos pos) {
-            return MapColor.SILVER;
+            return MapColor.CLAY;
         }
 
         @Override
@@ -183,7 +183,7 @@ final class JuniperBuildingBlocks {
 
         @Override
         public MapColor getMapColor(IBlockState state, IBlockAccess world, BlockPos pos) {
-            return MapColor.SILVER;
+            return MapColor.CLAY;
         }
     }
 }

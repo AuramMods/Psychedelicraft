@@ -7,21 +7,27 @@ package ivorius.psychedelicraft.block;
 import java.util.function.Supplier;
 import javax.annotation.Nullable;
 
+import ivorius.psychedelicraft.PSSounds;
+import ivorius.psychedelicraft.Psychedelicraft;
 import net.minecraft.block.BlockLog;
 import net.minecraft.block.material.MapColor;
 import net.minecraft.block.state.BlockStateContainer;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.init.SoundEvents;
 import net.minecraft.item.ItemAxe;
 import net.minecraft.item.ItemStack;
-import net.minecraft.util.EnumFacing;
-import net.minecraft.util.EnumHand;
+import net.minecraft.util.EnumActionResult;
 import net.minecraft.util.SoundCategory;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.IBlockAccess;
 import net.minecraft.world.World;
+import net.minecraftforge.event.entity.player.PlayerInteractEvent;
+import net.minecraftforge.fml.common.Mod;
+import net.minecraftforge.fml.common.eventhandler.Event;
+import net.minecraftforge.fml.common.eventhandler.EventPriority;
+import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 
+@Mod.EventBusSubscriber(modid = Psychedelicraft.MOD_ID)
 public final class JuniperLogBlock extends BlockLog {
     private static final EnumAxis[] AXES = EnumAxis.values();
     @Nullable
@@ -50,21 +56,33 @@ public final class JuniperLogBlock extends BlockLog {
 
     @Override
     public MapColor getMapColor(IBlockState state, IBlockAccess world, BlockPos pos) {
-        return state.getValue(LOG_AXIS) == EnumAxis.Y ? MapColor.CYAN : MapColor.SILVER;
+        return state.getValue(LOG_AXIS) == EnumAxis.Y ? MapColor.CYAN : MapColor.CLAY;
     }
 
-    @Override
-    public boolean onBlockActivated(World world, BlockPos pos, IBlockState state, EntityPlayer player,
-                                    EnumHand hand, EnumFacing face, float x, float y, float z) {
-        ItemStack tool = player.getHeldItem(hand);
-        if (stripped == null || !(tool.getItem() instanceof ItemAxe || tool.getItem().getToolClasses(tool).contains("axe"))) {
-            return false;
-        }
-        if (!world.isRemote && world.setBlockState(pos,
-                stripped.get().getDefaultState().withProperty(LOG_AXIS, state.getValue(LOG_AXIS)), 3)) {
+    @SubscribeEvent(priority = EventPriority.LOWEST)
+    public static void strip(PlayerInteractEvent.RightClickBlock event) {
+        if (event.getUseItem() == Event.Result.DENY) return;
+
+        World world = event.getWorld();
+        BlockPos pos = event.getPos();
+        IBlockState state = world.getBlockState(pos);
+        if (!(state.getBlock() instanceof JuniperLogBlock)) return;
+        JuniperLogBlock log = (JuniperLogBlock) state.getBlock();
+        if (log.stripped == null) return;
+
+        ItemStack tool = event.getItemStack();
+        if (tool.isEmpty() || !(tool.getItem() instanceof ItemAxe || tool.getItem().getToolClasses(tool).contains("axe"))) return;
+        EntityPlayer player = event.getEntityPlayer();
+        if (player.isSpectator() || !world.isBlockModifiable(player, pos)
+                || !(player.capabilities.allowEdit || tool.canPlaceOn(log))) return;
+
+        if (!world.isRemote) {
+            IBlockState replacement = log.stripped.get().getDefaultState().withProperty(LOG_AXIS, state.getValue(LOG_AXIS));
+            if (!world.setBlockState(pos, replacement, 11)) return;
             tool.damageItem(1, player);
-            world.playSound(null, pos, SoundEvents.BLOCK_WOOD_HIT, SoundCategory.BLOCKS, 1, 1);
+            world.playSound(null, pos, PSSounds.AXE_STRIP, SoundCategory.BLOCKS, 1F, 1F);
         }
-        return true;
+        event.setCancellationResult(EnumActionResult.SUCCESS);
+        event.setCanceled(true);
     }
 }

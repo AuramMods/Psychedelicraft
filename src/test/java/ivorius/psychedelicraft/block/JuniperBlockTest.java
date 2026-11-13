@@ -3,11 +3,14 @@ package ivorius.psychedelicraft.block;
 import java.util.HashSet;
 import java.util.Set;
 
+import net.minecraft.block.Block;
 import net.minecraft.block.BlockLog;
 import net.minecraft.block.BlockSapling;
+import net.minecraft.block.material.MapColor;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.init.Bootstrap;
 import net.minecraft.util.Rotation;
+import net.minecraft.util.math.BlockPos;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
@@ -46,6 +49,24 @@ public class JuniperBlockTest {
         IBlockState rotated = log.getDefaultState().withProperty(BlockLog.LOG_AXIS, BlockLog.EnumAxis.X)
                 .withRotation(Rotation.CLOCKWISE_90);
         assertEquals(BlockLog.EnumAxis.Z, rotated.getValue(BlockLog.LOG_AXIS));
+    }
+
+    @Test
+    public void juniperUsesDonorMapPalette() {
+        for (Block log : new Block[]{PSBlocks.JUNIPER_LOG, PSBlocks.JUNIPER_WOOD,
+                PSBlocks.STRIPPED_JUNIPER_LOG, PSBlocks.STRIPPED_JUNIPER_WOOD}) {
+            IBlockState vertical = log.getDefaultState();
+            assertSame(MapColor.CYAN, vertical.getMapColor(null, BlockPos.ORIGIN));
+            assertSame(MapColor.CLAY, vertical.withProperty(BlockLog.LOG_AXIS, BlockLog.EnumAxis.X)
+                    .getMapColor(null, BlockPos.ORIGIN));
+        }
+        for (Block block : new Block[]{PSBlocks.JUNIPER_PLANKS, PSBlocks.JUNIPER_STAIRS, PSBlocks.JUNIPER_SLAB,
+                PSBlocks.JUNIPER_DOUBLE_SLAB, PSBlocks.JUNIPER_FENCE, PSBlocks.JUNIPER_FENCE_GATE, PSBlocks.JUNIPER_DOOR,
+                PSBlocks.JUNIPER_TRAPDOOR, PSBlocks.POWERED_JUNIPER_TRAPDOOR, PSBlocks.JUNIPER_PRESSURE_PLATE,
+                PSBlocks.JUNIPER_SIGN, PSBlocks.JUNIPER_WALL_SIGN}) {
+            assertSame(MapColor.CLAY, block.getDefaultState().getMapColor(null, BlockPos.ORIGIN));
+        }
+        assertSame(MapColor.CYAN, PSBlocks.JUNIPER_HANGING_SIGN.getDefaultState().getMapColor(null, BlockPos.ORIGIN));
     }
 
     @Test

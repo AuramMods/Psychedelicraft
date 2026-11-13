@@ -88,6 +88,13 @@
       { "name": "minecraft:block.wood.hit", "type": "event", "volume": 0.65, "pitch": 0.85 }
     ]
   },
+  "item.axe.strip": {
+    "subtitle": "subtitle.psychedelicraft.axe_strip",
+    "sounds": [
+      { "name": "minecraft:block.wood.break", "type": "event", "volume": 0.9 },
+      { "name": "minecraft:block.wood.break", "type": "event", "volume": 0.9, "pitch": 0.85 }
+    ]
+  },
   "drug.generic": {
     "category": "ambient",
     "sounds": [

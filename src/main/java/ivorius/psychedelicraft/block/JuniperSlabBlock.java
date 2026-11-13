@@ -22,7 +22,7 @@ abstract class JuniperSlabBlock extends BlockSlab {
     private static final PropertyEnum<Wood> VARIANT = PropertyEnum.create("variant", Wood.class);
 
     JuniperSlabBlock() {
-        super(Material.WOOD, MapColor.SILVER);
+        super(Material.WOOD, MapColor.CLAY);
         setHardness(2);
         setResistance(5);
         setSoundType(SoundType.WOOD);
