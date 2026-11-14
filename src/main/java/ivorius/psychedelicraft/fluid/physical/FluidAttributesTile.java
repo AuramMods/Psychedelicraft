@@ -15,12 +15,13 @@ public final class FluidAttributesTile extends TileEntity {
         return attributes.copy();
     }
 
-    void setAttributes(NBTTagCompound tag) {
-        if (attributes.equals(tag)) return;
+    boolean setAttributes(NBTTagCompound tag) {
+        if (attributes.equals(tag)) return false;
         attributes = tag.copy();
         markDirty();
         IBlockState state = world.getBlockState(pos);
         world.notifyBlockUpdate(pos, state, state, 2);
+        return true;
     }
 
     @Override

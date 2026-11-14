@@ -134,12 +134,26 @@ public final class PhysicalFluidBlock extends BlockFluidClassic {
     private boolean setFluid(World world, BlockPos pos, int level, @Nullable NBTTagCompound attributes) {
         boolean tagged = attributes != null && !attributes.hasNoTags();
         IBlockState state = getDefaultState().withProperty(LEVEL, level).withProperty(ATTRIBUTED, tagged);
-        if (world.getBlockState(pos) != state && !world.setBlockState(pos, state, 3)) return false;
+        boolean stateChanged = world.getBlockState(pos) != state;
+        if (stateChanged && !world.setBlockState(pos, state, 3)) return false;
         if (tagged) {
             TileEntity tile = world.getTileEntity(pos);
-            if (tile instanceof FluidAttributesTile) ((FluidAttributesTile) tile).setAttributes(attributes);
+            if (tile instanceof FluidAttributesTile && ((FluidAttributesTile) tile).setAttributes(attributes) && !stateChanged) {
+                world.notifyNeighborsOfStateChange(pos, this, false);
+            }
         }
         return true;
+    }
+
+    @Nullable
+    NBTTagCompound neighborAttributes(IBlockAccess world, BlockPos pos) {
+        // The donor copies the first matching fluid in enum order, independently of its flow level.
+        for (EnumFacing side : EnumFacing.VALUES) {
+            BlockPos neighbor = pos.offset(side);
+            if (world instanceof World && !((World) world).isBlockLoaded(neighbor)) continue;
+            if (world.getBlockState(neighbor).getBlock() == this) return attributes(world, neighbor);
+        }
+        return null;
     }
 
     @Override
@@ -175,11 +189,10 @@ public final class PhysicalFluidBlock extends BlockFluidClassic {
     public void updateTick(World world, BlockPos pos, IBlockState state, Random random) {
         if (waterLike && mixWithLava(world, pos)) return;
         int level = state.getValue(LEVEL);
-        NBTTagCompound attributes = attributes(world, pos);
+        NBTTagCompound attributes;
         if (level != 0) {
-            BlockPos feed = pos.up();
             int refreshed = 1;
-            if (world.getBlockState(feed).getBlock() != this) {
+            if (world.getBlockState(pos.up()).getBlock() != this) {
                 refreshed = MAX_LEVEL + 1;
                 for (EnumFacing side : EnumFacing.Plane.HORIZONTAL) {
                     BlockPos neighbor = pos.offset(side);
@@ -188,20 +201,19 @@ public final class PhysicalFluidBlock extends BlockFluidClassic {
                     if (adjacent.getBlock() != this) continue;
                     int candidate = (world.getBlockState(neighbor.up()).getBlock() == this
                             ? 0 : adjacent.getValue(LEVEL)) + spreadLoss;
-                    if (candidate < refreshed) {
-                        refreshed = candidate;
-                        feed = neighbor;
-                    }
+                    refreshed = Math.min(refreshed, candidate);
                 }
             }
             if (refreshed > MAX_LEVEL) {
                 world.setBlockToAir(pos);
                 return;
             }
-            attributes = attributes(world, feed);
+            attributes = neighborAttributes(world, pos);
             if (refreshed != level) world.scheduleUpdate(pos, this, tickRate(world));
             setFluid(world, pos, refreshed, attributes);
             level = refreshed;
+        } else {
+            attributes = attributes(world, pos);
         }
         FluidStack bucket = new FluidStack(fluid, Fluid.BUCKET_VOLUME, attributes);
         BlockPos below = pos.down();
@@ -282,20 +294,19 @@ public final class PhysicalFluidBlock extends BlockFluidClassic {
 
     private void spread(World world, BlockPos pos, int level, FluidStack bucket) {
         if (!world.isBlockLoaded(pos) || VatInflow.fillIfVat(world, pos, world.getBlockState(pos), bucket)) return;
-        if (displaceIfPossible(world, pos)) setFluid(world, pos, level, bucket.tag);
+        if (displaceIfPossible(world, pos)) setFluid(world, pos, level, neighborAttributes(world, pos));
     }
 
     @Override
     public void randomTick(World world, BlockPos pos, IBlockState state, Random random) {
-        if (fluid == PSFluids.COFFEE && state.getValue(LEVEL) == 0) {
+        if (fluid == PSFluids.COFFEE) {
             NBTTagCompound tag = attributes(world, pos);
             if (tag == null) return;
             int warmth = PSFluids.warmth(new FluidStack(fluid, Fluid.BUCKET_VOLUME, tag));
             if (warmth == 0) return;
             if (warmth == 1) tag.removeTag("warmth");
             else tag.setInteger("warmth", warmth - 1);
-            setFluid(world, pos, 0, tag);
-            world.notifyNeighborsOfStateChange(pos, this, false);
+            setFluid(world, pos, state.getValue(LEVEL), tag);
         }
     }
 
