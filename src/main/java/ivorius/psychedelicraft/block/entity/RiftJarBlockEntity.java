@@ -18,16 +18,24 @@ import net.minecraft.util.EntitySelectors;
 import net.minecraft.util.ITickable;
 import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
 
 import java.util.Collection;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
 public final class RiftJarBlockEntity extends TileEntity implements ITickable {
+    // 1.20.1 scans X by coordinate, then the packed section key's unsigned Z and Y fields.
+    private static final Comparator<RealityRiftEntity> RIFT_SECTION_ORDER = Comparator
+            .comparingInt((RealityRiftEntity rift) -> section(rift.posX))
+            .thenComparing((first, second) -> Integer.compareUnsigned(section(first.posZ), section(second.posZ)))
+            .thenComparing((first, second) -> Integer.compareUnsigned(section(first.posY), section(second.posY)));
+
     private float amount;
     private boolean opening;
     private boolean sucking = true;
@@ -105,7 +113,7 @@ public final class RiftJarBlockEntity extends TileEntity implements ITickable {
     private void collect() {
         List<RealityRiftEntity> rifts = nearbyRifts();
         if (rifts.isEmpty()) return;
-        float rate = 0.001F * lid / rifts.size();
+        float rate = (1F / rifts.size()) * 0.001F * lid;
         for (RealityRiftEntity rift : rifts) amount += rift.takeFromRift(rate);
     }
 
@@ -140,9 +148,15 @@ public final class RiftJarBlockEntity extends TileEntity implements ITickable {
     }
 
     private List<RealityRiftEntity> nearbyRifts() {
-        return world.getEntitiesWithinAABB(RealityRiftEntity.class,
+        List<RealityRiftEntity> rifts = world.getEntitiesWithinAABB(RealityRiftEntity.class,
                 new AxisAlignedBB(pos.getX() - 2, pos.getY(), pos.getZ() - 2,
                         pos.getX() + 3, pos.getY() + 10, pos.getZ() + 3), EntitySelectors.IS_ALIVE);
+        rifts.sort(RIFT_SECTION_ORDER);
+        return rifts;
+    }
+
+    private static int section(double coordinate) {
+        return MathHelper.floor(coordinate) >> 4;
     }
 
     private void tickConnections() {
