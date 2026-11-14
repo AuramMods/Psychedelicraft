@@ -30,8 +30,11 @@ vec3 harmonize(vec3 color, float phase) {
     strength += (sin(phase * -0.12313) - 0.2) * 0.8;
     strength += sin(phase * -0.051233) * 0.2 * sin(Ticks * 0.1321334);
     strength = clamp(strength, 0.0, 3.0);
+    // The animated palette can exceed white. Reflect its complement at zero so
+    // a peak on all three channels cannot turn the contrast pass solid black.
+    vec3 complement = abs(vec3(1.0) - WorldColor.rgb);
     vec3 tint = strength < 1.0 ? mix(WorldColor.rgb, vec3(0.5), strength)
-            : mix(vec3(0.5), vec3(1.0) - WorldColor.rgb, (strength - 1.0) * 0.5);
+            : mix(vec3(0.5), complement, (strength - 1.0) * 0.5);
     return mix(color, tint, WorldColor.a);
 }
 
