@@ -1,6 +1,10 @@
 package ivorius.psychedelicraft.world.gen;
 
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.Iterator;
 import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.Random;
 import java.util.Set;
 
@@ -13,6 +17,7 @@ import net.minecraft.init.Blocks;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
+import net.minecraft.world.gen.structure.StructureBoundingBox;
 
 public final class JuniperTree {
     private JuniperTree() {
@@ -67,24 +72,61 @@ public final class JuniperTree {
         for (BlockPos pos : logs) {
             world.setBlockState(pos, log, 2);
         }
-        Set<BlockPos> frontier = logs;
-        for (int distance = 1; distance < JuniperLeavesBlock.UNSUPPORTED && !frontier.isEmpty(); distance++) {
-            Set<BlockPos> next = new LinkedHashSet<>();
-            for (BlockPos pos : frontier) {
-                for (EnumFacing face : EnumFacing.VALUES) {
-                    BlockPos adjacent = pos.offset(face);
-                    if (leaves.remove(adjacent)) {
-                        placeLeaf(world, adjacent, distance);
-                        next.add(adjacent);
-                    }
+        for (BlockPos pos : leaves) {
+            placeLeaf(world, pos);
+        }
+        updateLeafDistances(world, base.down(), logs, leaves);
+        return true;
+    }
+
+    private static void updateLeafDistances(World world, BlockPos roots, Set<BlockPos> logs, Set<BlockPos> leaves) {
+        StructureBoundingBox bounds = new StructureBoundingBox(roots, roots);
+        for (BlockPos pos : logs) bounds.expandTo(new StructureBoundingBox(pos, pos));
+        for (BlockPos pos : leaves) bounds.expandTo(new StructureBoundingBox(pos, pos));
+
+        List<Set<BlockPos>> pending = new ArrayList<>();
+        for (int i = 0; i < JuniperLeavesBlock.UNSUPPORTED; i++) pending.add(new HashSet<>());
+        pending.get(0).addAll(logs);
+        Set<BlockPos> visited = new HashSet<>();
+        visited.add(roots);
+        int distance = 0;
+        while (distance < pending.size()) {
+            Iterator<BlockPos> positions = pending.get(distance).iterator();
+            if (!positions.hasNext()) {
+                distance++;
+                continue;
+            }
+            BlockPos pos = positions.next();
+            positions.remove();
+            visited.add(pos);
+            IBlockState state = world.getBlockState(pos);
+            if (state.getBlock() instanceof JuniperLeavesBlock && state.getValue(JuniperLeavesBlock.DISTANCE) != distance) {
+                world.setBlockState(pos, state.withProperty(JuniperLeavesBlock.DISTANCE, distance), 2);
+            }
+            for (EnumFacing face : EnumFacing.VALUES) {
+                BlockPos neighbor = pos.offset(face);
+                if (!bounds.isVecInside(neighbor) || visited.contains(neighbor)) continue;
+                int next = nextLeafDistance(world, neighbor, distance + 1);
+                if (next < pending.size()) {
+                    pending.get(next).add(neighbor);
+                    // An existing support can lower the distance used for the rest of this step.
+                    distance = Math.min(distance, next);
                 }
             }
-            frontier = next;
         }
-        for (BlockPos pos : leaves) {
-            placeLeaf(world, pos, JuniperLeavesBlock.UNSUPPORTED);
+    }
+
+    private static int nextLeafDistance(World world, BlockPos pos, int fromTree) {
+        IBlockState state = world.getBlockState(pos);
+        if (state.getBlock().canSustainLeaves(state, world, pos)) return 0;
+        if (state.getBlock() instanceof JuniperLeavesBlock) {
+            return Math.min(fromTree, state.getValue(JuniperLeavesBlock.DISTANCE));
         }
-        return true;
+        if (state.getBlock().isLeaves(state, world, pos)) {
+            // Vanilla 1.12 foliage has decay flags in place of a saved support distance.
+            return Math.min(fromTree, JuniperLeavesBlock.supportDistance(world, pos));
+        }
+        return JuniperLeavesBlock.UNSUPPORTED;
     }
 
     private static BlockPos addBranch(World world, Set<BlockPos> logs, BlockPos base, EnumFacing direction,
@@ -127,11 +169,10 @@ public final class JuniperTree {
                 || PlantWorldGenerator.replaceableByTrees(world, pos);
     }
 
-    private static void placeLeaf(World world, BlockPos pos, int distance) {
+    private static void placeLeaf(World world, BlockPos pos) {
         IBlockState previous = world.getBlockState(pos);
         boolean waterlogged = Waterlogging.isWaterSource(previous) || Waterlogging.isWet(world, pos, previous);
-        IBlockState leaf = PSBlocks.JUNIPER_LEAVES.getDefaultState().withProperty(JuniperLeavesBlock.DISTANCE, distance);
-        world.setBlockState(pos, leaf, 2);
+        world.setBlockState(pos, PSBlocks.JUNIPER_LEAVES.getDefaultState(), 2);
         if (waterlogged) {
             Waterlogging.fillSource(world, pos);
         }

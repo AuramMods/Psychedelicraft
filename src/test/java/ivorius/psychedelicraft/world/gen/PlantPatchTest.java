@@ -1,6 +1,7 @@
 package ivorius.psychedelicraft.world.gen;
 
 import ivorius.psychedelicraft.block.PSBlocks;
+import ivorius.psychedelicraft.block.JuniperLeavesBlock;
 import ivorius.psychedelicraft.block.TallCropBlock;
 import net.minecraft.block.Block;
 import net.minecraft.block.material.Material;
@@ -128,6 +129,30 @@ public class PlantPatchTest {
 
         assertSame(grass, world.getBlockState(base.down()));
         assertSame(Blocks.AIR, world.getBlockState(base).getBlock());
+    }
+
+    @Test
+    public void generatedCanopyUsesNearbyLogsAndMixedFoliage() {
+        PatchWorld world = new PatchWorld();
+        BlockPos base = new BlockPos(20, 64, 0);
+        BlockPos edge = base.add(2, 2, 0);
+        IBlockState oldLeaf = PSBlocks.FRUITING_JUNIPER_LEAVES.getDefaultState()
+                .withProperty(JuniperLeavesBlock.PERSISTENT, true);
+        world.setBlockState(base.down(), Blocks.GRASS.getDefaultState(), 2);
+        world.setBlockState(base.add(-1, 2, -2), Blocks.LOG.getDefaultState(), 2);
+        world.setBlockState(edge.south(), Blocks.LEAVES.getDefaultState(), 2);
+        world.setBlockState(edge.south(2), oldLeaf.withProperty(JuniperLeavesBlock.DISTANCE, 6), 2);
+        world.setBlockState(edge.south(3), PSBlocks.JUNIPER_LOG.getDefaultState(), 2);
+        world.setBlockState(edge.south(4), oldLeaf, 2);
+
+        assertTrue(JuniperTree.generate(world, new Random(98), base));
+
+        assertSame(Blocks.LOG, world.getBlockState(base.add(-1, 2, -2)).getBlock());
+        assertEquals(2, (int) world.getBlockState(base.add(-1, 2, -3)).getValue(JuniperLeavesBlock.DISTANCE));
+        assertEquals(4, (int) world.getBlockState(edge).getValue(JuniperLeavesBlock.DISTANCE));
+        assertSame(Blocks.LEAVES, world.getBlockState(edge.south()).getBlock());
+        assertSame(oldLeaf.withProperty(JuniperLeavesBlock.DISTANCE, 3), world.getBlockState(edge.south(2)));
+        assertSame(oldLeaf, world.getBlockState(edge.south(4)));
     }
 
     private static final class PatchWorld extends World {

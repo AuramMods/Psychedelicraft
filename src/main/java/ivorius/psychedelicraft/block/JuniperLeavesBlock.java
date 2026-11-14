@@ -147,7 +147,7 @@ public final class JuniperLeavesBlock extends Block implements IShearable, Water
         return updated;
     }
 
-    private static int supportDistance(World world, BlockPos origin) {
+    public static int supportDistance(World world, BlockPos origin) {
         Set<BlockPos> visited = new HashSet<>();
         Queue<BlockPos> frontier = new ArrayDeque<>();
         visited.add(origin);
@@ -158,7 +158,7 @@ public final class JuniperLeavesBlock extends Block implements IShearable, Water
                 BlockPos pos = frontier.remove();
                 for (EnumFacing face : EnumFacing.VALUES) {
                     BlockPos next = pos.offset(face);
-                    if (!visited.add(next)) {
+                    if (!visited.add(next) || !world.isBlockLoaded(next)) {
                         continue;
                     }
                     IBlockState state = world.getBlockState(next);
