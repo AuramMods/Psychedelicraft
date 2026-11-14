@@ -31,6 +31,7 @@ public final class BeeNestBlockEntity extends TileEntity implements ITickable {
     private static final int NECTAR_TICKS = 2400;
     private final List<Occupant> occupants = new ArrayList<>(CAPACITY);
     private EnumFacing facing = EnumFacing.NORTH;
+    private BlockPos savedFlower;
     private boolean movingWithOccupants;
     private EntityPlayer breakingPlayer;
 
@@ -62,6 +63,7 @@ public final class BeeNestBlockEntity extends TileEntity implements ITickable {
         super.readFromNBT(tag);
         EnumFacing saved = EnumFacing.byName(tag.getString("Facing"));
         facing = saved != null && saved.getAxis().isHorizontal() ? saved : EnumFacing.NORTH;
+        savedFlower = tag.hasKey("FlowerPos", Constants.NBT.TAG_LONG) ? BlockPos.fromLong(tag.getLong("FlowerPos")) : null;
         occupants.clear();
         NBTTagList bees = tag.getTagList("Bees", Constants.NBT.TAG_COMPOUND);
         for (int i = 0; i < Math.min(CAPACITY, bees.tagCount()); i++) {
@@ -76,6 +78,8 @@ public final class BeeNestBlockEntity extends TileEntity implements ITickable {
     public NBTTagCompound writeToNBT(NBTTagCompound tag) {
         super.writeToNBT(tag);
         tag.setString("Facing", facing.getName());
+        if (savedFlower != null) tag.setLong("FlowerPos", savedFlower.toLong());
+        else tag.removeTag("FlowerPos");
         if (!occupants.isEmpty()) tag.setTag("Bees", writeOccupants());
         return tag;
     }
@@ -114,6 +118,8 @@ public final class BeeNestBlockEntity extends TileEntity implements ITickable {
         data.removeTag("UUIDMost");
         data.removeTag("UUIDLeast");
         occupants.add(new Occupant(data, 0));
+        BlockPos flower = bee.getSavedFlower();
+        if (flower != null && (savedFlower == null || world.rand.nextBoolean())) savedFlower = flower;
         bee.setDead();
         world.markChunkDirty(pos, this);
         world.playSound(null, pos.getX(), pos.getY(), pos.getZ(), PSSounds.BEE_NEST_ENTER, SoundCategory.BLOCKS, 1F, 1F);
@@ -160,6 +166,9 @@ public final class BeeNestBlockEntity extends TileEntity implements ITickable {
         if (blocked && !emergency) return false;
         BeeEntity bee = new BeeEntity(world);
         if (!occupant.data.hasNoTags()) bee.readFromNBT(occupant.data.copy());
+        if (savedFlower != null && bee.getSavedFlower() == null && world.rand.nextFloat() < 0.9F) {
+            bee.rememberFlower(savedFlower);
+        }
         bee.motionX = bee.motionY = bee.motionZ = 0D;
         double offset = blocked ? 0D : 0.55D + bee.width * 0.5D;
         bee.setLocationAndAngles(pos.getX() + 0.5D + offset * facing.getFrontOffsetX(),

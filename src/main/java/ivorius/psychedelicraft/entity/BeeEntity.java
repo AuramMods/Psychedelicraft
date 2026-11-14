@@ -56,6 +56,9 @@ public final class BeeEntity extends EntityAnimal {
     private static final DataParameter<Integer> CROPS_GROWN = EntityDataManager.createKey(BeeEntity.class, DataSerializers.VARINT);
     private static final DataParameter<Boolean> ROLLING = EntityDataManager.createKey(BeeEntity.class, DataSerializers.BOOLEAN);
     private static final int POLLINATION_TICKS = 400;
+    private static final int KNOWN_FLOWER_SEARCH_DELAY = 2400;
+    private static final int FLOWER_TRAVEL_LIMIT = 600;
+    private static final int KNOWN_FLOWER_RANGE = 32;
     private static final int WITHOUT_NECTAR_LIMIT = 3600;
     private static final int HOME_SEARCH_RANGE = 20;
     private static final int CROP_GROWTH_LIMIT = 10;
@@ -216,6 +219,15 @@ public final class BeeEntity extends EntityAnimal {
         if (nectar) ticksWithoutNectar = 0;
     }
 
+    @Nullable
+    public BlockPos getSavedFlower() {
+        return flower;
+    }
+
+    public void rememberFlower(BlockPos pos) {
+        flower = pos.toImmutable();
+    }
+
     public void leaveNest(BlockPos pos, boolean delivered, int ticksInside) {
         home = pos.toImmutable();
         stayOutside = 400;
@@ -367,7 +379,6 @@ public final class BeeEntity extends EntityAnimal {
 
     @Nullable
     private BlockPos findFlower() {
-        if (flower != null && getDistanceSqToCenter(flower) <= 25 && isFlower(flower)) return flower;
         BlockPos here = new BlockPos(this);
         BlockPos nearest = null;
         double distance = 26;
@@ -413,6 +424,8 @@ public final class BeeEntity extends EntityAnimal {
         private int flowerTime;
         private int lastPollinationSound;
         private int findFlowerDelay;
+        private int flowerTravelTicks;
+        private boolean pollinating;
         private int findHomeDelay;
 
         private Forage() {
@@ -450,33 +463,9 @@ public final class BeeEntity extends EntityAnimal {
                 }
             }
             if (!resting && !isAngry() && !hasStung() && !hasNectar()) {
-                if (flower == null && findFlowerDelay-- <= 0) {
-                    flower = findFlower();
-                    findFlowerDelay = 20 + rand.nextInt(41);
-                }
-                if (flower != null) {
-                    if (isFlower(flower)) {
-                        if (getDistanceSq(flower.getX() + 0.5D, flower.getY() + 0.6D, flower.getZ() + 0.5D) < 0.16D) {
-                            getNavigator().clearPath();
-                            getMoveHelper().setMoveTo(flower.getX() + 0.5D, flower.getY() + 0.6D, flower.getZ() + 0.5D, 0.35D);
-                            ++flowerTime;
-                            if (flowerTime > lastPollinationSound + 60 && rand.nextFloat() < 0.05F) {
-                                lastPollinationSound = flowerTime;
-                                playSound(PSSounds.BEE_POLLINATE, 1F, 1F);
-                            }
-                            if (flowerTime > POLLINATION_TICKS) {
-                                setNectar(true);
-                                resetPollination();
-                            }
-                        } else {
-                            flyTo(flower, 0.6D);
-                        }
-                        return;
-                    }
-                    flower = null;
-                    resetPollination();
-                    getNavigator().clearPath();
-                }
+                if (forageFlowers()) return;
+            } else {
+                resetPollination();
             }
             if (wanderTarget != null) {
                 if (--wanderTime > 0 && getDistanceSqToCenter(wanderTarget) > 1D) {
@@ -496,7 +485,66 @@ public final class BeeEntity extends EntityAnimal {
             }
         }
 
+        private boolean forageFlowers() {
+            if (flower != null && world.isBlockLoaded(flower) && !isFlower(flower)) forgetFlower();
+            if (!pollinating && findFlowerDelay-- <= 0) {
+                BlockPos nearby = findFlower();
+                if (nearby != null) {
+                    rememberFlower(nearby);
+                    flowerTravelTicks = 0;
+                    pollinating = true;
+                } else {
+                    findFlowerDelay = 20 + rand.nextInt(41);
+                }
+            }
+            if (pollinating) {
+                if (!isFlower(flower) || ++flowerTravelTicks > FLOWER_TRAVEL_LIMIT) {
+                    forgetFlower();
+                    return false;
+                }
+                pollinateFlower();
+                return true;
+            }
+            if (flower == null || ticksWithoutNectar <= KNOWN_FLOWER_SEARCH_DELAY || !isFlower(flower)) return false;
+            if (flower.distanceSq(new BlockPos(BeeEntity.this)) >= KNOWN_FLOWER_RANGE * KNOWN_FLOWER_RANGE
+                    || ++flowerTravelTicks > FLOWER_TRAVEL_LIMIT) {
+                forgetFlower();
+                return false;
+            }
+            flyTo(flower, 0.6D);
+            return true;
+        }
+
+        private void pollinateFlower() {
+            double x = flower.getX() + 0.5D;
+            double y = flower.getY() + 0.6D;
+            double z = flower.getZ() + 0.5D;
+            if (getDistanceSq(x, y, z) >= 0.16D) {
+                flyTo(flower, 0.6D);
+                return;
+            }
+            getNavigator().clearPath();
+            getMoveHelper().setMoveTo(x, y, z, 0.35D);
+            ++flowerTime;
+            if (flowerTime > lastPollinationSound + 60 && rand.nextFloat() < 0.05F) {
+                lastPollinationSound = flowerTime;
+                playSound(PSSounds.BEE_POLLINATE, 1F, 1F);
+            }
+            if (flowerTime > POLLINATION_TICKS) {
+                setNectar(true);
+                resetPollination();
+            }
+        }
+
+        private void forgetFlower() {
+            flower = null;
+            resetPollination();
+            getNavigator().clearPath();
+        }
+
         private void resetPollination() {
+            pollinating = false;
+            flowerTravelTicks = 0;
             flowerTime = 0;
             lastPollinationSound = 0;
         }
