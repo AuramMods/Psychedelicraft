@@ -2,8 +2,12 @@ package ivorius.psychedelicraft.entity;
 
 import ivorius.psychedelicraft.block.BeeNestBlock;
 import ivorius.psychedelicraft.block.entity.BeeNestBlockEntity;
+import ivorius.psychedelicraft.client.particle.NectarParticle;
 import net.minecraft.block.Block;
+import net.minecraft.block.BlockCrops;
 import net.minecraft.block.BlockFlower;
+import net.minecraft.block.BlockStem;
+import net.minecraft.block.state.IBlockState;
 import net.minecraft.enchantment.EnchantmentHelper;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityAgeable;
@@ -46,9 +50,11 @@ public final class BeeEntity extends EntityAnimal {
     private static final DataParameter<Boolean> NECTAR = EntityDataManager.createKey(BeeEntity.class, DataSerializers.BOOLEAN);
     private static final DataParameter<Boolean> ANGRY = EntityDataManager.createKey(BeeEntity.class, DataSerializers.BOOLEAN);
     private static final DataParameter<Boolean> STUNG = EntityDataManager.createKey(BeeEntity.class, DataSerializers.BOOLEAN);
+    private static final DataParameter<Integer> CROPS_GROWN = EntityDataManager.createKey(BeeEntity.class, DataSerializers.VARINT);
     private static final int POLLINATION_TICKS = 400;
     private static final int WITHOUT_NECTAR_LIMIT = 3600;
     private static final int HOME_SEARCH_RANGE = 20;
+    private static final int CROP_GROWTH_LIMIT = 10;
 
     private BlockPos home;
     private BlockPos flower;
@@ -74,6 +80,7 @@ public final class BeeEntity extends EntityAnimal {
         dataManager.register(NECTAR, false);
         dataManager.register(ANGRY, false);
         dataManager.register(STUNG, false);
+        dataManager.register(CROPS_GROWN, 0);
     }
 
     @Override
@@ -194,9 +201,20 @@ public final class BeeEntity extends EntityAnimal {
         home = pos.toImmutable();
         stayOutside = 400;
         ticksWithoutNectar = 0;
-        if (delivered) setNectar(false);
+        if (delivered) {
+            setNectar(false);
+            dataManager.set(CROPS_GROWN, 0);
+        }
         int age = getGrowingAge();
         if (age != 0) setGrowingAge(age < 0 ? Math.min(0, age + ticksInside) : Math.max(0, age - ticksInside));
+    }
+
+    @Override
+    public void onUpdate() {
+        super.onUpdate();
+        if (world.isRemote && isEntityAlive() && hasNectar() && dataManager.get(CROPS_GROWN) < CROP_GROWTH_LIMIT) {
+            NectarParticle.trySpawn(this);
+        }
     }
 
     @Override
@@ -218,6 +236,40 @@ public final class BeeEntity extends EntityAnimal {
         }
         if (stayOutside > 0) stayOutside--;
         if (!hasNectar() && ticksWithoutNectar < WITHOUT_NECTAR_LIMIT) ticksWithoutNectar++;
+        pollinateCrops();
+    }
+
+    private void pollinateCrops() {
+        int grown = dataManager.get(CROPS_GROWN);
+        if (!isEntityAlive() || isAngry() || grown >= CROP_GROWTH_LIMIT || !hasNectar() || home == null) return;
+        if (((world.getTotalWorldTime() + getEntityId()) & 1L) != 0L || rand.nextFloat() < 0.3F) return;
+        BlockPos here = new BlockPos(this);
+        if (home.distanceSq(here) >= 32 * 32 || !world.isBlockLoaded(home)
+                || !(world.getTileEntity(home) instanceof BeeNestBlockEntity) || rand.nextInt(15) != 0) return;
+
+        // One pass can grow both blocks even if the first reaches the limit.
+        for (int depth = 1; depth <= 2; depth++) {
+            BlockPos pos = here.down(depth);
+            IBlockState state = world.getBlockState(pos);
+            IBlockState advanced = nextCropAge(state);
+            if (advanced != state && world.setBlockState(pos, advanced, 3)) {
+                world.playEvent(2005, pos, 0);
+                grown++;
+            }
+        }
+        dataManager.set(CROPS_GROWN, grown);
+    }
+
+    static IBlockState nextCropAge(IBlockState state) {
+        Block block = state.getBlock();
+        if (block == Blocks.WHEAT || block == Blocks.CARROTS || block == Blocks.POTATOES || block == Blocks.BEETROOTS) {
+            BlockCrops crop = (BlockCrops) block;
+            if (!crop.isMaxAge(state)) return crop.withAge(crop.getMetaFromState(state) + 1);
+        } else if (block == Blocks.MELON_STEM || block == Blocks.PUMPKIN_STEM) {
+            int age = state.getValue(BlockStem.AGE);
+            if (age < 7) return state.withProperty(BlockStem.AGE, age + 1);
+        }
+        return state;
     }
 
     @Override
@@ -228,6 +280,7 @@ public final class BeeEntity extends EntityAnimal {
         tag.setBoolean("HasNectar", hasNectar());
         tag.setInteger("StayOutside", stayOutside);
         tag.setInteger("TicksWithoutNectar", ticksWithoutNectar);
+        tag.setInteger("CropsGrownSincePollination", dataManager.get(CROPS_GROWN));
         tag.setBoolean("HasStung", hasStung());
         tag.setInteger("TicksSinceSting", ticksSinceSting);
         tag.setInteger("AngerTime", angerTicks);
@@ -242,6 +295,7 @@ public final class BeeEntity extends EntityAnimal {
         setNectar(tag.getBoolean("HasNectar"));
         stayOutside = tag.getInteger("StayOutside");
         ticksWithoutNectar = tag.getInteger("TicksWithoutNectar");
+        dataManager.set(CROPS_GROWN, MathHelper.clamp(tag.getInteger("CropsGrownSincePollination"), 0, CROP_GROWTH_LIMIT + 1));
         dataManager.set(STUNG, tag.getBoolean("HasStung"));
         ticksSinceSting = MathHelper.clamp(tag.getInteger("TicksSinceSting"), 0, 1200);
         angerTicks = MathHelper.clamp(tag.getInteger("AngerTime"), 0, 780);
