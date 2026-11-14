@@ -17,6 +17,7 @@ public final class PsychedelicraftCore implements IFMLLoadingPlugin {
                 "ivorius.psychedelicraft.core.ClientEffectsTransformer",
                 "ivorius.psychedelicraft.core.CameraEffectsTransformer",
                 "ivorius.psychedelicraft.core.WorldGeometryTransformer",
+                "ivorius.psychedelicraft.core.GlitchLightingTransformer",
                 "ivorius.psychedelicraft.core.EntityGeometryTransformer",
                 "ivorius.psychedelicraft.core.ItemGeometryTransformer",
                 "ivorius.psychedelicraft.core.TileGeometryTransformer",
