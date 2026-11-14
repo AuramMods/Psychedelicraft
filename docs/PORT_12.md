@@ -2195,6 +2195,12 @@ sh run/production/background-qa/run.sh "$qa" game-background Overlay-QA \
 - The same jar started and saved in a disposable Divine Journey 2.23.4 dedicated world. The coca and peyote planting regressions passed with Chisel marble in the fixture. See `runtime-pack-peyote.log`.
 - Channeling lightning credit remains open. This cycle exercised low-ceiling recovery during play and did not reload a player saved under a low ceiling.
 
+### Peyote deployment check
+
+- The local Modrinth `Divine_Journey_2.23.4` profile contained the Cycle 206 jar, identified by SHA-256 `24ef0dc3a01bda94f52a612758f5c9419961771d1dd2a40f677a6146f520a2b7`. Its reobfuscated peyote class delegates the support check to the generic succulent rule, which accepts solid block faces. The published Forge branch was still at `71610968`, before the sand restriction in `17ff1350`. The remote server's installed jar remains unverified.
+- A byte-for-byte copy of the profile jar reproduced planting on stone, Chisel marble, sandstone and dirt in a fresh Divine Journey 2.23.4 dedicated world on Forge 2860. The fixture also reproduced coca seed stacking. The server saved and exited with status zero. See `run/production/peyote-profile-verification/runtime-pack-peyote.log`.
+- The tested replacement is `run/production/peyote-profile-verification/artifacts/psychedelicraft-1.12.2-forge-d5fc5c9a.jar`, a byte-for-byte copy of the reobfuscated Cycle 250 artifact. SHA-256 `88edaad65b96b7f4ffd69c60b47c0f4aef3e3aed127b03b7c3dc3d564c56682e`. In the disposable Divine Journey 2.23.4 dedicated test, normal and red sand supported planting and growth. Stone, Chisel marble, sandstone and dirt refused placement and left the held item intact. Replacing the sand underneath removed the plant. Use the replacement on both client and dedicated server.
+
 ## Repository and branch survey
 
 The checkout initially used `1.21.5`; its working tree was clean. `origin` is [AuramMods/Psychedelicraft](https://github.com/AuramMods/Psychedelicraft), and the upstream is [Sollace/Psychedelicraft](https://github.com/Sollace/Psychedelicraft). After fetching origin, all 16 origin branch heads matched upstream's advertised heads. There was no existing 1.12 branch in either branch listing. Searching the fetched commit subjects for `1.12` also returned no matches; this does not rule out work in other forks or unpublished history.
