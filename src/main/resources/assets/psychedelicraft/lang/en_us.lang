@@ -608,3 +608,5 @@ subtitle.psychedelicraft.entity.drowned.death=Drowned dies
 subtitle.psychedelicraft.entity.drowned.hurt=Drowned hurts
 subtitle.psychedelicraft.entity.drowned.step=Drowned steps
 subtitle.psychedelicraft.entity.drowned.swim=Drowned swims
+subtitle.psychedelicraft.entity.zombie.converted_to_drowned=Zombie converts to Drowned
+subtitle.psychedelicraft.entity.husk.converted_to_zombie=Husk converts to Zombie

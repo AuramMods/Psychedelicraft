@@ -83,6 +83,7 @@ public class Psychedelicraft {
         PaperBagItem.registerDispenserBehavior();
         BeeNestBlock.registerDispenserBehaviors();
         FarmerTrades.register();
+        DrownedEntity.registerSpawns();
     }
 
     @Mod.EventHandler

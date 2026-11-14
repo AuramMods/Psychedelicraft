@@ -842,5 +842,26 @@
       "psychedelicraft:liquid/swim5"
     ],
     "subtitle": "subtitle.psychedelicraft.entity.drowned.swim"
+  },
+  "entity.zombie.converted_to_drowned": {
+    "sounds": [
+      "psychedelicraft:mob/drowned/convert1",
+      "psychedelicraft:mob/drowned/convert2",
+      "psychedelicraft:mob/drowned/convert3"
+    ],
+    "subtitle": "subtitle.psychedelicraft.entity.zombie.converted_to_drowned"
+  },
+  "entity.husk.converted_to_zombie": {
+    "sounds": [
+      {
+        "name": "psychedelicraft:mob/husk/convert1",
+        "volume": 0.8
+      },
+      {
+        "name": "psychedelicraft:mob/husk/convert2",
+        "volume": 0.8
+      }
+    ],
+    "subtitle": "subtitle.psychedelicraft.entity.husk.converted_to_zombie"
   }
 }

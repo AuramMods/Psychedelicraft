@@ -4,6 +4,10 @@ import ivorius.psychedelicraft.PSSounds;
 import ivorius.psychedelicraft.Psychedelicraft;
 import ivorius.psychedelicraft.item.PSItems;
 import ivorius.psychedelicraft.fluid.physical.Waterlogging;
+import net.minecraft.block.material.Material;
+import net.minecraft.entity.EntityLiving;
+import net.minecraft.entity.EntitySpawnPlacementRegistry;
+import net.minecraft.entity.EnumCreatureType;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.IEntityLivingData;
 import net.minecraft.entity.MoverType;
@@ -21,6 +25,7 @@ import net.minecraft.entity.monster.EntityPigZombie;
 import net.minecraft.entity.monster.EntityZombie;
 import net.minecraft.entity.passive.EntityVillager;
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.init.Biomes;
 import net.minecraft.init.Items;
 import net.minecraft.inventory.EntityEquipmentSlot;
 import net.minecraft.item.ItemStack;
@@ -39,9 +44,14 @@ import net.minecraft.util.SoundEvent;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.Vec3d;
+import net.minecraft.world.EnumDifficulty;
+import net.minecraft.world.EnumSkyBlock;
 import net.minecraft.world.DifficultyInstance;
 import net.minecraft.world.World;
+import net.minecraft.world.biome.Biome;
 import net.minecraft.world.storage.loot.LootTableList;
+import net.minecraftforge.common.BiomeDictionary;
+import net.minecraftforge.fml.common.registry.ForgeRegistries;
 
 import javax.annotation.Nullable;
 
@@ -66,6 +76,50 @@ public final class DrownedEntity extends EntityZombie {
 
     public static void registerLoot() {
         LootTableList.register(LOOT);
+    }
+
+    public static void registerSpawns() {
+        EntitySpawnPlacementRegistry.setPlacementType(DrownedEntity.class, EntityLiving.SpawnPlacementType.IN_WATER);
+        for (Biome biome : ForgeRegistries.BIOMES) {
+            int weight = spawnWeight(biome);
+            if (weight != 0) {
+                biome.getSpawnableList(EnumCreatureType.MONSTER).add(new Biome.SpawnListEntry(DrownedEntity.class, weight, 1, 1));
+            }
+        }
+    }
+
+    private static int spawnWeight(Biome biome) {
+        if (biome == Biomes.FROZEN_RIVER) return 1;
+        if (isRiver(biome)) return biome.isSnowyBiome() ? 1 : 100;
+        return BiomeDictionary.hasType(biome, BiomeDictionary.Type.OCEAN) ? 5 : 0;
+    }
+
+    private static boolean isRiver(Biome biome) {
+        return biome == Biomes.RIVER || biome == Biomes.FROZEN_RIVER
+                || BiomeDictionary.hasType(biome, BiomeDictionary.Type.RIVER);
+    }
+
+    @Override
+    public boolean getCanSpawnHere() {
+        BlockPos pos = getPosition();
+        if (world.getDifficulty() == EnumDifficulty.PEACEFUL
+                || world.getBlockState(pos).getMaterial() != Material.WATER
+                || world.getBlockState(pos.down()).getMaterial() != Material.WATER
+                || world.getLightFor(EnumSkyBlock.BLOCK, pos) > 0) return false;
+        boolean river = isRiver(world.getBiome(pos));
+        return (river || pos.getY() < world.getSeaLevel() - 5)
+                && rand.nextInt(river ? 15 : 40) == 0 && isValidLightLevel();
+    }
+
+    @Override
+    public boolean isNotColliding() {
+        return world.getCollisionBoxes(this, getEntityBoundingBox()).isEmpty()
+                && world.checkNoEntityCollision(getEntityBoundingBox(), this);
+    }
+
+    @Override
+    public int getMaxSpawnedInChunk() {
+        return 1;
     }
 
     @Override

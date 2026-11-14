@@ -77,6 +77,9 @@ public final class PSSounds {
     public static final SoundEvent DROWNED_STEP = sound("entity.drowned.step");
     public static final SoundEvent DROWNED_SWIM = sound("entity.drowned.swim");
 
+    public static final SoundEvent ZOMBIE_CONVERT = sound("entity.zombie.converted_to_drowned");
+    public static final SoundEvent HUSK_CONVERT = sound("entity.husk.converted_to_zombie");
+
     private PSSounds() {
     }
 
@@ -99,6 +102,7 @@ public final class PSSounds {
                 SNIFFER_HURT, SNIFFER_IDLE, SNIFFER_SCENTING, SNIFFER_SEARCHING, SNIFFER_SNIFFING, SNIFFER_STEP,
                 CONDUIT_ACTIVATE, CONDUIT_DEACTIVATE, CONDUIT_AMBIENT, CONDUIT_AMBIENT_SHORT, CONDUIT_ATTACK,
                 DROWNED_AMBIENT, DROWNED_AMBIENT_WATER, DROWNED_DEATH, DROWNED_DEATH_WATER,
-                DROWNED_HURT, DROWNED_HURT_WATER, DROWNED_STEP, DROWNED_SWIM);
+                DROWNED_HURT, DROWNED_HURT_WATER, DROWNED_STEP, DROWNED_SWIM,
+                ZOMBIE_CONVERT, HUSK_CONVERT);
     }
 }

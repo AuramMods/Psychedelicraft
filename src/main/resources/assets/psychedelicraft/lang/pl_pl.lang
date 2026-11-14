@@ -608,3 +608,5 @@ subtitle.psychedelicraft.entity.drowned.death=Utopiec ginie
 subtitle.psychedelicraft.entity.drowned.hurt=Utopiec cierpi
 subtitle.psychedelicraft.entity.drowned.step=Utopiec chodzi
 subtitle.psychedelicraft.entity.drowned.swim=Utopiec pływa
+subtitle.psychedelicraft.entity.zombie.converted_to_drowned=Zombie staje się utopcem
+subtitle.psychedelicraft.entity.husk.converted_to_zombie=Posuch staje się zombie
