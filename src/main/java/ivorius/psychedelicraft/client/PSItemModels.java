@@ -110,9 +110,6 @@ public final class PSItemModels {
             event.getMap().registerSprite(BrewFluid.texture(texture, "_still"));
             event.getMap().registerSprite(BrewFluid.texture(texture, "_flow"));
         }
-        for (String symbol : new String[]{"beer", "gin", "mead", "rum", "vodka", "whiskey", "wine"}) {
-            event.getMap().registerSprite(Psychedelicraft.id("fluid/" + symbol));
-        }
     }
 
     @SubscribeEvent
@@ -155,7 +152,10 @@ public final class PSItemModels {
                 PSBlocks.JUNGLE_BARREL, PSBlocks.ACACIA_BARREL, PSBlocks.DARK_OAK_BARREL}) {
             ModelLoader.setCustomStateMapper(barrel, new StateMap.Builder().ignore(BarrelBlock.FACING, BarrelBlock.TAPPED).build());
         }
-        ClientRegistry.bindTileEntitySpecialRenderer(BarrelBlockEntity.class, new BarrelRenderer());
+        BarrelRenderer barrelRenderer = new BarrelRenderer();
+        ((net.minecraft.client.resources.IReloadableResourceManager) Minecraft.getMinecraft().getResourceManager())
+                .registerReloadListener(barrelRenderer);
+        ClientRegistry.bindTileEntitySpecialRenderer(BarrelBlockEntity.class, barrelRenderer);
         PlacedDrinksRenderer.registerModels();
         ClientRegistry.bindTileEntitySpecialRenderer(PlacedDrinkBlockEntity.class, new PlacedDrinksRenderer());
         ClientRegistry.bindTileEntitySpecialRenderer(BottleRackBlockEntity.class, new BottleRackRenderer());

@@ -11,23 +11,31 @@ import ivorius.psychedelicraft.block.entity.BarrelBlockEntity;
 import ivorius.psychedelicraft.client.render.DrugRenderer;
 import ivorius.psychedelicraft.client.render.shader.WorldGeometryShader.Scope;
 import ivorius.psychedelicraft.fluid.BrewFluid;
+import ivorius.psychedelicraft.fluid.PSFluids;
 import net.minecraft.block.state.IBlockState;
-import net.minecraft.client.Minecraft;
 import net.minecraft.client.model.ModelBase;
 import net.minecraft.client.model.ModelRenderer;
 import net.minecraft.client.renderer.BufferBuilder;
 import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.client.renderer.Tessellator;
-import net.minecraft.client.renderer.texture.TextureAtlasSprite;
-import net.minecraft.client.renderer.texture.TextureMap;
 import net.minecraft.client.renderer.tileentity.TileEntitySpecialRenderer;
 import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
+import net.minecraft.client.resources.IResource;
+import net.minecraft.client.resources.IResourceManager;
+import net.minecraft.client.resources.IResourceManagerReloadListener;
 import net.minecraft.util.EnumFacing;
+import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.fluids.FluidStack;
 import org.lwjgl.opengl.GL11;
 
-public final class BarrelRenderer extends TileEntitySpecialRenderer<BarrelBlockEntity> {
+import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
+
+public final class BarrelRenderer extends TileEntitySpecialRenderer<BarrelBlockEntity> implements IResourceManagerReloadListener {
     private static final float UNIT = 1F / 16F;
+    private final Map<ResourceLocation, Boolean> symbolTextures = new HashMap<>();
+    private IResourceManager resources;
     private final ModelBase model = new ModelBase() {};
     private final ModelRenderer[] barrel = {
             box(0, 30, -4, 5, -8, 1, 1, 16),
@@ -56,6 +64,12 @@ public final class BarrelRenderer extends TileEntitySpecialRenderer<BarrelBlockE
         tapHandle.setRotationPoint(0, 7.21F, -9);
     }
 
+    @Override
+    public void onResourceManagerReload(IResourceManager manager) {
+        resources = manager;
+        symbolTextures.clear();
+    }
+
     private ModelRenderer box(int u, int v, float x, float y, float z, int width, int height, int depth) {
         ModelRenderer part = new ModelRenderer(model, u, v);
         part.setTextureSize(128, 64);
@@ -82,52 +96,82 @@ public final class BarrelRenderer extends TileEntitySpecialRenderer<BarrelBlockE
         try {
             GlStateManager.translate(x + 0.5, y, z + 0.5);
             GlStateManager.color(1, 1, 1, 1);
-            if (upright) {
-                GlStateManager.translate(0, 0.5, 0);
-                GlStateManager.rotate(90, 1, 0, 0);
-                GlStateManager.translate(0, -9 * UNIT, 0);
-            } else {
-                GlStateManager.rotate(180 - facing.getHorizontalAngle(), 0, 1, 0);
-            }
-            try (Scope scope = DrugRenderer.beginWorldModel()) {
-                for (ModelRenderer part : barrel) part.render(UNIT);
-                if (!upright) {
-                    for (ModelRenderer part : rack) part.render(UNIT);
-                    if (state.getValue(BarrelBlock.TAPPED)) {
-                        tapHandle.rotateAngleY = (float) Math.toRadians(tile.getTapAngle(partialTicks));
-                        for (ModelRenderer part : tap) part.render(UNIT);
+            GlStateManager.rotate(upright ? -90 : 180 - facing.getHorizontalAngle(), 0, 1, 0);
+            GlStateManager.pushMatrix();
+            try {
+                if (upright) {
+                    GlStateManager.translate(0, 0.5, 0);
+                    GlStateManager.rotate(90, 1, 0, 0);
+                    GlStateManager.translate(0, -9 * UNIT, 0);
+                }
+                try (Scope scope = DrugRenderer.beginWorldModel()) {
+                    for (ModelRenderer part : barrel) part.render(UNIT);
+                    if (!upright) {
+                        for (ModelRenderer part : rack) part.render(UNIT);
+                        if (state.getValue(BarrelBlock.TAPPED)) {
+                            tapHandle.rotateAngleY = (float) Math.toRadians(tile.getTapAngle(partialTicks));
+                            for (ModelRenderer part : tap) part.render(UNIT);
+                        }
                     }
                 }
+            } finally {
+                GlStateManager.popMatrix();
             }
-            renderSymbol(tile.getTank().getFluid());
+            renderSymbol(tile.getTank().getFluid(), upright);
         } finally {
             GlStateManager.popMatrix();
         }
     }
 
-    private void renderSymbol(FluidStack fluid) {
-        if (fluid == null || !(fluid.getFluid() instanceof BrewFluid)) return;
-        TextureMap atlas = Minecraft.getMinecraft().getTextureMapBlocks();
-        TextureAtlasSprite sprite = atlas.getAtlasSprite(((BrewFluid) fluid.getFluid()).getSymbol(fluid).toString());
-        if (sprite == atlas.getMissingSprite()) return;
-        bindTexture(TextureMap.LOCATION_BLOCKS_TEXTURE);
+    private void renderSymbol(FluidStack fluid, boolean upright) {
+        if (fluid == null) return;
+        ResourceLocation texture = symbolTexture(fluid);
+        if (!symbolTextures.computeIfAbsent(texture, this::hasSymbolTexture)) return;
+
+        bindTexture(texture);
         GlStateManager.enableBlend();
         GlStateManager.tryBlendFuncSeparate(GlStateManager.SourceFactor.SRC_ALPHA, GlStateManager.DestFactor.ONE_MINUS_SRC_ALPHA,
                 GlStateManager.SourceFactor.ONE, GlStateManager.DestFactor.ZERO);
         GlStateManager.disableLighting();
-        Tessellator tessellator = Tessellator.getInstance();
-        BufferBuilder buffer = tessellator.getBuffer();
-        buffer.begin(GL11.GL_QUADS, DefaultVertexFormats.POSITION_TEX);
-        for (int side : new int[]{-1, 1}) {
-            double x = side * (0.375 + 0.001);
-            double z = -side * 0.5;
-            buffer.pos(x, 0.0625, z).tex(sprite.getMinU(), sprite.getMaxV()).endVertex();
-            buffer.pos(x, 1.0625, z).tex(sprite.getMinU(), sprite.getMinV()).endVertex();
-            buffer.pos(x, 1.0625, -z).tex(sprite.getMaxU(), sprite.getMinV()).endVertex();
-            buffer.pos(x, 0.0625, -z).tex(sprite.getMaxU(), sprite.getMaxV()).endVertex();
+        try {
+            GlStateManager.translate(0, 0.5, 0);
+            if (upright) {
+                GlStateManager.rotate(90, 1, 0, 0);
+                GlStateManager.translate(0, -0.1, 0);
+            }
+            Tessellator tessellator = Tessellator.getInstance();
+            BufferBuilder buffer = tessellator.getBuffer();
+            buffer.begin(GL11.GL_QUADS, DefaultVertexFormats.POSITION_TEX);
+            double side = 0.4376 - 0.06;
+            buffer.pos(-side, -0.5, 0.5).tex(1, 1).endVertex();
+            buffer.pos(-side, 0.5, 0.5).tex(1, 0).endVertex();
+            buffer.pos(-side, 0.5, -0.5).tex(0, 0).endVertex();
+            buffer.pos(-side, -0.5, -0.5).tex(0, 1).endVertex();
+            buffer.pos(side, -0.5, -0.5).tex(1, 1).endVertex();
+            buffer.pos(side, 0.5, -0.5).tex(1, 0).endVertex();
+            buffer.pos(side, 0.5, 0.5).tex(0, 0).endVertex();
+            buffer.pos(side, -0.5, 0.5).tex(0, 1).endVertex();
+            DrugRenderer.drawWorldQuads(tessellator);
+        } finally {
+            GlStateManager.enableLighting();
+            GlStateManager.disableBlend();
         }
-        DrugRenderer.drawWorldQuads(tessellator);
-        GlStateManager.enableLighting();
-        GlStateManager.disableBlend();
+    }
+
+    private static ResourceLocation symbolTexture(FluidStack stack) {
+        if (stack.getFluid() instanceof BrewFluid) {
+            ResourceLocation symbol = ((BrewFluid) stack.getFluid()).getSymbol(stack);
+            return new ResourceLocation(symbol.getResourceDomain(), "textures/" + symbol.getResourcePath() + ".png");
+        }
+        ResourceLocation fluid = new ResourceLocation(PSFluids.id(stack.getFluid()));
+        return new ResourceLocation(fluid.getResourceDomain(), "textures/fluid/" + fluid.getResourcePath() + ".png");
+    }
+
+    private boolean hasSymbolTexture(ResourceLocation texture) {
+        try (IResource ignored = resources.getResource(texture)) {
+            return true;
+        } catch (IOException missing) {
+            return false;
+        }
     }
 }
