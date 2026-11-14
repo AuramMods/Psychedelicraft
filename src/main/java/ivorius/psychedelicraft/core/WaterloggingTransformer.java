@@ -60,13 +60,14 @@ public final class WaterloggingTransformer implements IClassTransformer {
 
     @Override
     public byte[] transform(String name, String transformedName, byte[] bytes) {
-        if (bytes == null || !(DISPATCHER.equals(transformedName) || FLUID_RENDERER.equals(transformedName)
-                || LIQUID.equals(transformedName) || FLOWING.equals(transformedName)
-                || PISTON.equals(transformedName) || QUARK_PISTONS.equals(transformedName) || VIEWPOINT.equals(transformedName)
+        boolean client = FMLLaunchHandler.side() == Side.CLIENT;
+        boolean clientTarget = DISPATCHER.equals(transformedName) || FLUID_RENDERER.equals(transformedName)
+                || VIEWPOINT.equals(transformedName) || SUSPENDED.equals(transformedName) || WORLD_CLIENT.equals(transformedName);
+        if (bytes == null || !(client && clientTarget || LIQUID.equals(transformedName) || FLOWING.equals(transformedName)
+                || PISTON.equals(transformedName) || QUARK_PISTONS.equals(transformedName)
                 || BLOCK.equals(transformedName) || ENTITY_CLASS.equals(transformedName) || WORLD_SERVER.equals(transformedName)
                 || WORLD_CLASS.equals(transformedName) || SHEARS.equals(transformedName)
-                || FARMLAND.equals(transformedName) || SUSPENDED.equals(transformedName)
-                || WORLD_CLIENT.equals(transformedName))) return bytes;
+                || FARMLAND.equals(transformedName))) return bytes;
         ClassNode type = new ClassNode(Opcodes.ASM5);
         new ClassReader(bytes).accept(type, WORLD_CLASS.equals(transformedName) ? ClassReader.EXPAND_FRAMES : 0);
         switch (transformedName) {
@@ -81,7 +82,7 @@ public final class WaterloggingTransformer implements IClassTransformer {
                         "(" + WORLD + "Lnet/minecraft/entity/Entity;F)" + STATE), 2);
                 break;
             case LIQUID:
-                if (FMLLaunchHandler.side() == Side.CLIENT) {
+                if (client) {
                     substituteFluidStates(method(type, "shouldSideBeRendered", "func_176225_a",
                             "(" + STATE + ACCESS + POS + FACING + ")Z"), 1);
                 }
@@ -109,7 +110,7 @@ public final class WaterloggingTransformer implements IClassTransformer {
                 preservePistonSourceGrowth(type);
                 break;
             case BLOCK:
-                patchBlock(type);
+                patchBlock(type, client);
                 break;
             case ENTITY_CLASS:
                 patchPhysicalFluidEyes(type);
@@ -250,7 +251,7 @@ public final class WaterloggingTransformer implements IClassTransformer {
         throw new IllegalStateException("Could not locate Forge entity body contact in " + method.name);
     }
 
-    private static void patchBlock(ClassNode type) {
+    private static void patchBlock(ClassNode type, boolean client) {
         MethodNode hasTile = method(type, "hasTileEntity", "hasTileEntity", "(" + STATE + ")Z");
         returnWhenSupported(hasTile, new InsnNode(Opcodes.ICONST_1), Opcodes.IRETURN);
         MethodNode createTile = method(type, "createTileEntity", "createTileEntity",
@@ -262,16 +263,18 @@ public final class WaterloggingTransformer implements IClassTransformer {
         create.add(new MethodInsnNode(Opcodes.INVOKESPECIAL, tile, "<init>", "()V", false));
         create.add(new InsnNode(Opcodes.ARETURN));
         returnWhen(createTile, create, 2, "needsWaterTile");
-        MethodNode layer = method(type, "canRenderInLayer", "canRenderInLayer",
-                "(" + STATE + "Lnet/minecraft/util/BlockRenderLayer;)Z");
-        Type[] args = Type.getArgumentTypes(layer.desc);
-        InsnList render = new InsnList();
-        render.add(new VarInsnNode(Opcodes.ALOAD, 1));
-        render.add(new VarInsnNode(Opcodes.ALOAD, 2));
-        render.add(new MethodInsnNode(Opcodes.INVOKESTATIC, "ivorius/psychedelicraft/client/render/WaterloggedRenderer",
-                "renderLayer", Type.getMethodDescriptor(Type.BOOLEAN_TYPE, args), false));
-        render.add(new InsnNode(Opcodes.IRETURN));
-        returnWhen(layer, render, 1, "supports");
+        if (client) {
+            MethodNode layer = method(type, "canRenderInLayer", "canRenderInLayer",
+                    "(" + STATE + "Lnet/minecraft/util/BlockRenderLayer;)Z");
+            Type[] args = Type.getArgumentTypes(layer.desc);
+            InsnList render = new InsnList();
+            render.add(new VarInsnNode(Opcodes.ALOAD, 1));
+            render.add(new VarInsnNode(Opcodes.ALOAD, 2));
+            render.add(new MethodInsnNode(Opcodes.INVOKESTATIC, "ivorius/psychedelicraft/client/render/WaterloggedRenderer",
+                    "renderLayer", Type.getMethodDescriptor(Type.BOOLEAN_TYPE, args), false));
+            render.add(new InsnNode(Opcodes.IRETURN));
+            returnWhen(layer, render, 1, "supports");
+        }
 
         delegateBlock(method(type, "isEntityInsideMaterial", "isEntityInsideMaterial",
                 "(" + ACCESS + POS + STATE + ENTITY + "D" + MATERIAL + "Z)Ljava/lang/Boolean;"),

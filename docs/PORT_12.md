@@ -1845,6 +1845,15 @@ sh run/production/background-qa/run.sh "$qa" game-background Overlay-QA \
 - The tested jar SHA-256 is `6ce022b655f52bc9de6fad8c8b56fd8ae906397f93b71e942b2327026cda51ff`. Evidence is under `run/production/runtime-qa-cycle204` in `build-production.log`, `runtime-baseline-reply.log`, `runtime-final-reply.log`, their screenshots and `runtime-dedicated.log`.
 - Next, compare Reggie's message queue and apparent knockback against the pinned chatbot.
 
+### Cycle 205 · Divine Journey 2 dedicated server startup
+
+- The [official Divine Journey 2.23.4 server pack](https://github.com/Divine-Journey-2/Divine-Journey-2/releases/tag/2.23.4) reproduced the reported crash on Forge 14.23.5.2860 with the Cycle 204 jar. During preinitialization, Bewitchment 0.0.22.65 loads `ModelRenderer` for a statue. Forge has removed the client-only `render(float)` method on that physical side, so Psychedelicraft's item geometry transformer aborts class loading.
+- Psychedelicraft now registers its rendering and integrated-server-only transformers on physical clients. Bubble columns, villager careers and waterlogging keep their common patches on both sides and apply their rendering patches on clients. Client transformer order is preserved.
+- A clean Java 8 build ran `reobfJar` and passed all 227 tests. A fresh copy of the dedicated pack with the rebuilt jar loaded all 236 mods, generated a new world and reached `Done`. The test used local macOS Java 8u472 with a loopback server and a new save. The reported crash came from Linux Java 8u275.
+- A muted copy of the Modrinth profile loaded 256 mods including the local test probe, joined the dedicated server, received a Coffee Beans stack, and respawned after drowning at the river spawn. A command-set LSD effect reached the client and changed the scene. Clearing it restored the usual rendering. The underwater sample at active intensity 0.95 included a black frame with the HUD still visible. Above water, the same intensity produced strong posterization. The 0.4 sample kept recognizable terrain. This was a local join and effect check on a fresh world.
+- The tested jar SHA-256 is `d189a2ac0b82eec15ecfa7b70538e4515a0456453674c68fb699b76961bea619`. Evidence is under `run/production/runtime-qa-cycle205` in `build-production.log`, `runtime-pack-with-port.log`, `runtime-pack-fixed.log`, `runtime-client.log` and the `client-lsd*.png` and `client-cleared-day.png` captures.
+- Next, resume the comparison of Reggie's message queue and apparent knockback.
+
 ## Repository and branch survey
 
 The checkout initially used `1.21.5`; its working tree was clean. `origin` is [AuramMods/Psychedelicraft](https://github.com/AuramMods/Psychedelicraft), and the upstream is [Sollace/Psychedelicraft](https://github.com/Sollace/Psychedelicraft). After fetching origin, all 16 origin branch heads matched upstream's advertised heads. There was no existing 1.12 branch in either branch listing. Searching the fetched commit subjects for `1.12` also returned no matches; this does not rule out work in other forks or unpublished history.

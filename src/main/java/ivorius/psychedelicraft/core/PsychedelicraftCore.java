@@ -1,7 +1,12 @@
 package ivorius.psychedelicraft.core;
 
+import net.minecraftforge.fml.relauncher.FMLLaunchHandler;
 import net.minecraftforge.fml.relauncher.IFMLLoadingPlugin;
+import net.minecraftforge.fml.relauncher.Side;
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 import java.util.Map;
 
 @IFMLLoadingPlugin.Name("Psychedelicraft")
@@ -11,16 +16,21 @@ import java.util.Map;
 public final class PsychedelicraftCore implements IFMLLoadingPlugin {
     @Override
     public String[] getASMTransformerClass() {
-        return new String[]{"ivorius.psychedelicraft.core.FurnaceRecipeTransformer",
-                "ivorius.psychedelicraft.core.PlayerMechanicsTransformer",
-                "ivorius.psychedelicraft.core.SmokingPoseTransformer",
-                "ivorius.psychedelicraft.core.ClientEffectsTransformer",
-                "ivorius.psychedelicraft.core.CameraEffectsTransformer",
-                "ivorius.psychedelicraft.core.WorldGeometryTransformer",
-                "ivorius.psychedelicraft.core.GlitchLightingTransformer",
-                "ivorius.psychedelicraft.core.EntityGeometryTransformer",
-                "ivorius.psychedelicraft.core.ItemGeometryTransformer",
-                "ivorius.psychedelicraft.core.TileGeometryTransformer",
+        boolean client = FMLLaunchHandler.side() == Side.CLIENT;
+        List<String> transformers = new ArrayList<>();
+        Collections.addAll(transformers, "ivorius.psychedelicraft.core.FurnaceRecipeTransformer",
+                "ivorius.psychedelicraft.core.PlayerMechanicsTransformer");
+        if (client) {
+            Collections.addAll(transformers, "ivorius.psychedelicraft.core.SmokingPoseTransformer",
+                    "ivorius.psychedelicraft.core.ClientEffectsTransformer",
+                    "ivorius.psychedelicraft.core.CameraEffectsTransformer",
+                    "ivorius.psychedelicraft.core.WorldGeometryTransformer",
+                    "ivorius.psychedelicraft.core.GlitchLightingTransformer",
+                    "ivorius.psychedelicraft.core.EntityGeometryTransformer",
+                    "ivorius.psychedelicraft.core.ItemGeometryTransformer",
+                    "ivorius.psychedelicraft.core.TileGeometryTransformer");
+        }
+        Collections.addAll(transformers,
                 "ivorius.psychedelicraft.core.VillagerCareersTransformer",
                 "ivorius.psychedelicraft.core.WaterloggingTransformer",
                 "ivorius.psychedelicraft.core.BoatFlotationTransformer",
@@ -34,8 +44,9 @@ public final class PsychedelicraftCore implements IFMLLoadingPlugin {
                 "ivorius.psychedelicraft.core.ProjectileGatewayTransformer",
                 "ivorius.psychedelicraft.core.CampfireProjectileTransformer",
                 "ivorius.psychedelicraft.core.SoulFireTransformer",
-                "ivorius.psychedelicraft.core.NetherSurfaceTransformer",
-                "ivorius.psychedelicraft.core.IntegratedShutdownTransformer"};
+                "ivorius.psychedelicraft.core.NetherSurfaceTransformer");
+        if (client) transformers.add("ivorius.psychedelicraft.core.IntegratedShutdownTransformer");
+        return transformers.toArray(new String[0]);
     }
 
     @Override
