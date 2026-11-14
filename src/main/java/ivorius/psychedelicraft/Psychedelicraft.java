@@ -21,6 +21,7 @@ import ivorius.psychedelicraft.network.Channel;
 import ivorius.psychedelicraft.recipe.FurnaceRecipe;
 import ivorius.psychedelicraft.recipe.JuniperWoodRecipes;
 import ivorius.psychedelicraft.screen.PSGuiHandler;
+import ivorius.psychedelicraft.world.gen.BuriedTreasure;
 import ivorius.psychedelicraft.world.gen.ChestLoot;
 import ivorius.psychedelicraft.world.gen.CopperOreGenerator;
 import ivorius.psychedelicraft.world.gen.MossCaveWorldGenerator;
@@ -55,6 +56,7 @@ public class Psychedelicraft {
         VillageGarden.register();
         WarmOceanRuin.register();
         Shipwreck.register();
+        BuriedTreasure.register();
         NetworkRegistry.INSTANCE.registerGuiHandler(this, new PSGuiHandler());
     }
 

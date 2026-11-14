@@ -7,7 +7,12 @@
         {
           "type": "item",
           "name": "minecraft:map",
-          "weight": 1
+          "weight": 1,
+          "functions": [
+            {
+              "function": "psychedelicraft:buried_treasure_map"
+            }
+          ]
         }
       ]
     },

@@ -111,7 +111,7 @@ public final class Shipwreck extends MapGenStructure {
         return new BlockPos((x << 4) + 8, 0, (z << 4) + 8);
     }
 
-    private static boolean isBeach(Biome biome) {
+    static boolean isBeach(Biome biome) {
         return biome == Biomes.BEACH || biome == Biomes.COLD_BEACH || BiomeDictionary.hasType(biome, BiomeDictionary.Type.BEACH)
                 && biome != Biomes.STONE_BEACH;
     }
