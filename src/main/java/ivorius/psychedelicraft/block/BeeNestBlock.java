@@ -1,5 +1,6 @@
 package ivorius.psychedelicraft.block;
 
+import ivorius.psychedelicraft.client.particle.HoneyDripParticle;
 import ivorius.psychedelicraft.item.PSItems;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockDispenser;
@@ -28,6 +29,8 @@ import net.minecraft.util.SoundCategory;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 import net.minecraftforge.common.util.Constants;
+import net.minecraftforge.fml.relauncher.Side;
+import net.minecraftforge.fml.relauncher.SideOnly;
 import net.minecraftforge.items.ItemHandlerHelper;
 
 import java.util.Random;
@@ -114,6 +117,12 @@ public final class BeeNestBlock extends Block {
         if (!savedState.hasKey(key, Constants.NBT.TAG_INT)) return 0;
         int level = savedState.getInteger(key);
         return level >= 0 && level <= FULL_HONEY ? level : 0;
+    }
+
+    @Override
+    @SideOnly(Side.CLIENT)
+    public void randomDisplayTick(IBlockState state, World world, BlockPos pos, Random random) {
+        if (state.getValue(HONEY_LEVEL) == FULL_HONEY) HoneyDripParticle.trySpawn(world, pos);
     }
 
     @Override
