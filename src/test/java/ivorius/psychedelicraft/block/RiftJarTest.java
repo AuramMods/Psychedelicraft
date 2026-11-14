@@ -10,11 +10,15 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.util.Rotation;
+import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.RayTraceResult;
+import net.minecraft.util.math.Vec3d;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertSame;
 
 public class RiftJarTest {
@@ -46,5 +50,21 @@ public class RiftJarTest {
         RiftJarBlockEntity jar = new RiftJarBlockEntity();
         jar.setAmount(RiftJarItem.getRiftFraction(filled));
         assertEquals(0, jar.getAmount(), 0);
+    }
+
+    @Test
+    public void multipartRayUsesTheDonorEntryAndInsideHitRules() {
+        RiftJarBlock jar = new RiftJarBlock();
+        IBlockState state = jar.getDefaultState();
+        BlockPos pos = BlockPos.ORIGIN;
+        RayTraceResult inside = jar.collisionRayTrace(state, null, pos,
+                new Vec3d(.5, .375, .5), new Vec3d(2, .375, .5));
+        assertEquals(EnumFacing.WEST, inside.sideHit);
+        assertEquals(.5015, inside.hitVec.x, 1e-9);
+        assertNull(jar.collisionRayTrace(state, null, pos, new Vec3d(.5, .125, -1), new Vec3d(.5, .125, .25)));
+        assertNull(jar.collisionRayTrace(state, null, pos, new Vec3d(.27, .375, -1), new Vec3d(.27, .375, 2)));
+        RayTraceResult top = jar.collisionRayTrace(state, null, pos, new Vec3d(.5, 2, .5), new Vec3d(.5, 0, .5));
+        assertEquals(EnumFacing.UP, top.sideHit);
+        assertEquals(.875, top.hitVec.y, 0);
     }
 }

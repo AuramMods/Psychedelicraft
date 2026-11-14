@@ -4,6 +4,7 @@
 
 package ivorius.psychedelicraft.block;
 
+import com.google.common.collect.ImmutableList;
 import ivorius.psychedelicraft.PSSounds;
 import ivorius.psychedelicraft.block.entity.RiftJarBlockEntity;
 import ivorius.psychedelicraft.item.PSItems;
@@ -43,9 +44,9 @@ import java.util.List;
 public final class RiftJarBlock extends BlockContainer {
     public static final PropertyDirection FACING = BlockHorizontal.FACING;
     private static final AxisAlignedBB BOUNDS = box(4, 0, 12, 14);
-    private static final AxisAlignedBB[] PARTS = {
-            box(4, 0, 12, 5), box(4.5, 5, 11.5, 7), box(4, 7, 12, 12), box(5, 12, 11, 14)
-    };
+    public static final List<AxisAlignedBB> SHAPE = ImmutableList.of(
+            box(4, 0, 12, 5), box(4.5, 5, 11.5, 7), box(4, 7, 12, 12), box(5, 12, 11, 14));
+    private static final double RAY_EPSILON = 1.0E-7;
 
     RiftJarBlock() {
         super(Material.GLASS);
@@ -123,22 +124,55 @@ public final class RiftJarBlock extends BlockContainer {
     @Override
     public void addCollisionBoxToList(IBlockState state, World world, BlockPos pos, AxisAlignedBB box,
                                       List<AxisAlignedBB> collisions, @Nullable Entity entity, boolean actualState) {
-        for (AxisAlignedBB part : PARTS) addCollisionBoxToList(pos, box, collisions, part);
+        for (AxisAlignedBB part : SHAPE) addCollisionBoxToList(pos, box, collisions, part);
     }
 
     @Nullable
     @Override
     public RayTraceResult collisionRayTrace(IBlockState state, World world, BlockPos pos, Vec3d start, Vec3d end) {
-        RayTraceResult nearest = null;
-        double distance = Double.POSITIVE_INFINITY;
-        for (AxisAlignedBB part : PARTS) {
-            RayTraceResult hit = rayTrace(pos, start, end, part);
-            if (hit != null && start.squareDistanceTo(hit.hitVec) < distance) {
-                nearest = hit;
-                distance = start.squareDistanceTo(hit.hitVec);
+        Vec3d direction = end.subtract(start);
+        if (direction.lengthSquared() < RAY_EPSILON) return null;
+
+        Vec3d local = start.subtract(new Vec3d(pos));
+        Vec3d probe = local.add(direction.scale(0.001));
+        double nearest = 1;
+        EnumFacing face = null;
+        for (AxisAlignedBB part : SHAPE) {
+            if (probe.y >= part.minY && probe.y < part.maxY
+                    && probe.x >= part.minX && probe.x < part.maxX && probe.z >= part.minZ && probe.z < part.maxZ) {
+                EnumFacing entry = EnumFacing.getFacingFromVector((float) direction.x, (float) direction.y,
+                        (float) direction.z).getOpposite();
+                return new RayTraceResult(start.add(direction.scale(0.001)), entry, pos);
+            }
+            double x = entryTime(local.x, direction.x, part.minX, part.maxX);
+            double y = entryTime(local.y, direction.y, part.minY, part.maxY);
+            double z = entryTime(local.z, direction.z, part.minZ, part.maxZ);
+            if (x > 0 && x < nearest && within(local.y + x * direction.y, part.minY, part.maxY)
+                    && within(local.z + x * direction.z, part.minZ, part.maxZ)) {
+                nearest = x;
+                face = direction.x > 0 ? EnumFacing.WEST : EnumFacing.EAST;
+            }
+            if (y > 0 && y < nearest && within(local.x + y * direction.x, part.minX, part.maxX)
+                    && within(local.z + y * direction.z, part.minZ, part.maxZ)) {
+                nearest = y;
+                face = direction.y > 0 ? EnumFacing.DOWN : EnumFacing.UP;
+            }
+            if (z > 0 && z < nearest && within(local.x + z * direction.x, part.minX, part.maxX)
+                    && within(local.y + z * direction.y, part.minY, part.maxY)) {
+                nearest = z;
+                face = direction.z > 0 ? EnumFacing.NORTH : EnumFacing.SOUTH;
             }
         }
-        return nearest;
+        return face == null ? null : new RayTraceResult(start.add(direction.scale(nearest)), face, pos);
+    }
+
+    private static double entryTime(double start, double direction, double min, double max) {
+        if (Math.abs(direction) <= RAY_EPSILON) return -1;
+        return ((direction > 0 ? min : max) - start) / direction;
+    }
+
+    private static boolean within(double value, double min, double max) {
+        return min - RAY_EPSILON < value && value < max + RAY_EPSILON;
     }
 
     @Override

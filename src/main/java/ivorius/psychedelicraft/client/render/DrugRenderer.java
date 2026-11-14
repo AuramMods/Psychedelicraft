@@ -5,6 +5,8 @@
 package ivorius.psychedelicraft.client.render;
 
 import ivorius.psychedelicraft.Psychedelicraft;
+import ivorius.psychedelicraft.block.PSBlocks;
+import ivorius.psychedelicraft.block.RiftJarBlock;
 import ivorius.psychedelicraft.client.render.HallucinationManager.Effect;
 import ivorius.psychedelicraft.client.render.shader.ColorPostEffect;
 import ivorius.psychedelicraft.client.render.shader.WorldGeometryShader;
@@ -49,6 +51,7 @@ import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.RayTraceResult;
+import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.IBlockAccess;
 import net.minecraftforge.client.event.EntityViewRenderEvent;
 import net.minecraftforge.client.event.RenderGameOverlayEvent;
@@ -146,8 +149,19 @@ public final class DrugRenderer {
 
     public static void drawBlockOutline(AxisAlignedBB box, float red, float green, float blue, float alpha,
                                         RayTraceResult target) {
-        try (Scope scope = beginGeometry(Minecraft.getMinecraft(), Material.BLOCK_OUTLINE, 0F, target.getBlockPos())) {
-            RenderGlobal.drawSelectionBoundingBox(box, red, green, blue, alpha);
+        Minecraft client = Minecraft.getMinecraft();
+        BlockPos pos = target.getBlockPos();
+        try (Scope scope = beginGeometry(client, Material.BLOCK_OUTLINE, 0F, pos)) {
+            if (client.world != null && client.world.getBlockState(pos).getBlock() == PSBlocks.RIFT_JAR) {
+                // Vanilla passes the camera-relative enclosing box, padded equally on all sides.
+                Vec3d origin = box.getCenter().subtract(PSBlocks.RIFT_JAR.getDefaultState()
+                        .getBoundingBox(client.world, pos).getCenter());
+                for (AxisAlignedBB part : RiftJarBlock.SHAPE) {
+                    RenderGlobal.drawSelectionBoundingBox(part.offset(origin.x, origin.y, origin.z), red, green, blue, alpha);
+                }
+            } else {
+                RenderGlobal.drawSelectionBoundingBox(box, red, green, blue, alpha);
+            }
         }
     }
 
