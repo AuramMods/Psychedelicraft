@@ -71,6 +71,11 @@ public final class CaffeineDrug extends SimpleDrug {
     }
 
     @Override
+    public float saturationExhaustionModifier() {
+        return 1F - 0.4F * (float) getActiveValue();
+    }
+
+    @Override
     @Nullable
     public String sleepWarning() {
         return getActiveValue() > 0.1 ? "psychedelicraft.sleep.fail.caffiene" : null;

@@ -27,6 +27,7 @@ public final class DrugProperties implements NbtSerialisable {
     private final List<DrugInfluence> influences = new ArrayList<>();
     private final Stomach stomach = new Stomach();
     private final DrugSounds sounds = new DrugSounds();
+    private final PeyoteFlight peyoteFlight = new PeyoteFlight();
     private boolean dirty;
     private boolean wakePending;
     private int smokeTicks;
@@ -62,6 +63,11 @@ public final class DrugProperties implements NbtSerialisable {
         dirty = true;
     }
 
+    public void inhale(DrugInfluence influence, EntityPlayer player, float nicotineSaturation) {
+        addInfluence(influence);
+        if (influence.drugType() == DrugType.TOBACCO) StomachFoodStats.restoreSaturation(player, nicotineSaturation);
+    }
+
     public void tick(int age) {
         tick(age, null);
     }
@@ -82,7 +88,11 @@ public final class DrugProperties implements NbtSerialisable {
             drug.update(this, player);
         }
         if (player != null) {
+            if (!player.world.isRemote) peyoteFlight.tick(player, getActiveValue(DrugType.PEYOTE));
             stomach.tick(player, getModifier(Drug::hungerSuppression));
+            if (player.getFoodStats() instanceof StomachFoodStats) {
+                ((StomachFoodStats) player.getFoodStats()).setSaturationExhaustion(getMultiplier(Drug::saturationExhaustionModifier));
+            }
             dirty |= stomach.takeDirty();
             sounds.tick(this, player);
             if (player.isEntityAlive()) applyInvoluntaryActions(player);
@@ -211,6 +221,7 @@ public final class DrugProperties implements NbtSerialisable {
         influences.forEach(influence -> pending.appendTag(influence.toNbt()));
         tag.setTag("drugInfluences", pending);
         tag.setTag("stomach", stomach.toNbt());
+        if (peyoteFlight.isGranted()) tag.setBoolean("peyoteFlightGranted", true);
         if (smokeTicks > 0) {
             tag.setInteger("smokeTicks", smokeTicks);
             tag.setInteger("smokeColor", smokeColor);
@@ -235,6 +246,7 @@ public final class DrugProperties implements NbtSerialisable {
             DrugInfluence.loadFromNbt(pending.getCompoundTagAt(i)).ifPresent(influences::add);
         }
         stomach.fromNbt(tag.getCompoundTag("stomach"));
+        peyoteFlight.restoreGrant(tag.getBoolean("peyoteFlightGranted"));
         smokeTicks = MathHelper.clamp(tag.getInteger("smokeTicks"), 0, 29);
         smokeColor = tag.getInteger("smokeColor") & 0xFFFFFF;
         dirty = false;

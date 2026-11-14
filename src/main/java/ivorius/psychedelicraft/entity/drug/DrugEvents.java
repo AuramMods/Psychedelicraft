@@ -1,6 +1,7 @@
 package ivorius.psychedelicraft.entity.drug;
 
 import ivorius.psychedelicraft.Psychedelicraft;
+import ivorius.psychedelicraft.PSDamageTypes;
 import ivorius.psychedelicraft.advancement.PSCriteria;
 import ivorius.psychedelicraft.config.PSConfig;
 import ivorius.psychedelicraft.entity.RealityRiftEntity;
@@ -12,9 +13,11 @@ import net.minecraft.entity.ai.attributes.AttributeModifier;
 import net.minecraft.entity.ai.attributes.IAttributeInstance;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
+import net.minecraft.util.DamageSource;
 import net.minecraft.util.text.TextComponentTranslation;
 import net.minecraft.world.GameRules;
 import net.minecraftforge.event.AttachCapabilitiesEvent;
+import net.minecraftforge.event.entity.living.LivingHurtEvent;
 import net.minecraftforge.event.entity.player.PlayerEvent;
 import net.minecraftforge.event.entity.player.PlayerWakeUpEvent;
 import net.minecraftforge.event.entity.player.PlayerSleepInBedEvent;
@@ -27,7 +30,7 @@ import java.util.UUID;
 
 @Mod.EventBusSubscriber(modid = Psychedelicraft.MOD_ID)
 public final class DrugEvents {
-    private static final UUID SPEED_MODIFIER = UUID.fromString("624dc5e6-4166-4931-8ed3-f6ab68ae76ef");
+    private static final UUID ATTRIBUTE_MODIFIER = UUID.fromString("624dc5e6-4166-4931-8ed3-f6ab68ae76ef");
     private DrugEvents() {
     }
 
@@ -49,8 +52,12 @@ public final class DrugEvents {
             if (!event.player.world.isRemote) {
                 PSCriteria.drugsChanged(event.player, properties);
                 float speed = properties.getMultiplier(Drug::speedModifier);
-                updateSpeed(event.player.getEntityAttribute(SharedMonsterAttributes.MOVEMENT_SPEED), speed);
-                updateSpeed(event.player.getEntityAttribute(SharedMonsterAttributes.ATTACK_SPEED), speed);
+                updateModifier(event.player.getEntityAttribute(SharedMonsterAttributes.MOVEMENT_SPEED), speed - 1.0, 2);
+                updateModifier(event.player.getEntityAttribute(SharedMonsterAttributes.ATTACK_SPEED), speed - 1.0, 2);
+                updateModifier(event.player.getEntityAttribute(SharedMonsterAttributes.ATTACK_DAMAGE),
+                        properties.getMultiplier(Drug::attackDamageModifier) - 1.0, 2);
+                updateModifier(event.player.getEntityAttribute(EntityPlayer.REACH_DISTANCE),
+                        properties.getModifier(Drug::extraBlockReach), 0);
                 int riftSpawnInterval = PSConfig.balancing.randomTicksUntilRiftSpawn;
                 if (riftSpawnInterval > 0 && event.player.getRNG().nextInt(riftSpawnInterval) == 0) {
                     RealityRiftEntity.spawnNear(event.player);
@@ -62,13 +69,12 @@ public final class DrugEvents {
         }
     }
 
-    private static void updateSpeed(IAttributeInstance attribute, float speed) {
-        AttributeModifier previous = attribute.getModifier(SPEED_MODIFIER);
-        double amount = speed - 1.0;
+    private static void updateModifier(IAttributeInstance attribute, double amount, int operation) {
+        AttributeModifier previous = attribute.getModifier(ATTRIBUTE_MODIFIER);
         if (previous != null && Math.abs(previous.getAmount() - amount) < 0.0001) return;
         if (previous != null) attribute.removeModifier(previous);
         if (Math.abs(amount) >= 0.0001) {
-            attribute.applyModifier(new AttributeModifier(SPEED_MODIFIER, "Psychedelicraft effects", amount, 2).setSaved(false));
+            attribute.applyModifier(new AttributeModifier(ATTRIBUTE_MODIFIER, "Psychedelicraft effects", amount, operation).setSaved(false));
         }
     }
 
@@ -76,6 +82,15 @@ public final class DrugEvents {
     public static void breakSpeed(PlayerEvent.BreakSpeed event) {
         DrugProperties properties = DrugCapability.get(event.getEntityPlayer());
         if (properties != null) event.setNewSpeed(event.getNewSpeed() * properties.getMultiplier(Drug::digSpeedModifier));
+    }
+
+    @SubscribeEvent
+    public static void incomingDamage(LivingHurtEvent event) {
+        DamageSource source = event.getSource();
+        if (!(event.getEntityLiving() instanceof EntityPlayer) || event.getEntityLiving().world.isRemote
+                || source.isDamageAbsolute() || source == DamageSource.OUT_OF_WORLD || source == PSDamageTypes.ALCOHOL_POISONING) return;
+        DrugProperties properties = DrugCapability.get((EntityPlayer) event.getEntityLiving());
+        if (properties != null) event.setAmount(event.getAmount() * properties.getMultiplier(Drug::incomingDamageModifier));
     }
 
     @SubscribeEvent

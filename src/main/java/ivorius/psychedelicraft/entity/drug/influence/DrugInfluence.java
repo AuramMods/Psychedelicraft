@@ -42,6 +42,10 @@ public final class DrugInfluence {
         return new DrugInfluence(DrugType.HARMONIUM, delay, 0.04, 0.01, remaining, color & 0xffffff);
     }
 
+    public DrugType drugType() {
+        return drugType;
+    }
+
     public boolean update(DrugProperties properties) {
         if (delay > 0) {
             delay--;

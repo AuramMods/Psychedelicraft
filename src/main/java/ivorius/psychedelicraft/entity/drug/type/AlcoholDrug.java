@@ -35,6 +35,16 @@ public final class AlcoholDrug extends SimpleDrug {
     }
 
     @Override
+    public float incomingDamageModifier() {
+        return 1F - 0.2F * (float) getActiveValue();
+    }
+
+    @Override
+    public float saturationExhaustionModifier() {
+        return 1F - 0.5F * (float) getActiveValue();
+    }
+
+    @Override
     public void update(DrugProperties properties, @Nullable EntityPlayer player) {
         super.update(properties, player);
         if (player == null || getActiveValue() <= 0) return;

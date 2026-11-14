@@ -81,7 +81,7 @@ public final class BongItem extends SmokingItem {
             return stack;
         }
         ItemStack used = player.inventory.decrStackSize(slot, 1);
-        properties.addInfluence(ingredients.get(used.getItem()).apply(used));
+        properties.inhale(ingredients.get(used.getItem()).apply(used), player, 2F);
         if (player instanceof EntityPlayerMP) CriteriaTriggers.CONSUME_ITEM.trigger((EntityPlayerMP) player, used);
         properties.startBreathingSmoke(player, 0xffffff);
         recordDraw(player, stack);

@@ -71,7 +71,7 @@ public final class PSItems {
     public static final Item DRIED_TOBACCO = named("dried_tobacco", new Item());
     public static final SmokeableItem CIGARETTE = named("cigarette", new SmokeableItem(1, 50, 0xffffff,
             new DrugInfluence(DrugType.TOBACCO, DrugInfluence.IMMEDIATE, 0.1, 0.02, 0.7)));
-    public static final SmokeableItem CIGAR = named("cigar", new SmokeableItem(3, 80, 0x999980,
+    public static final SmokeableItem CIGAR = named("cigar", new SmokeableItem(3, 80, 0x999980, 4F,
             new DrugInfluence(DrugType.TOBACCO, DrugInfluence.IMMEDIATE, 0.1, 0.02, 0.7)));
     public static final Item COFFEA_CHERRIES = named("coffea_cherries", new CropSeedItem(PSBlocks.COFFEA, "coffea_cherries"));
     public static final Item PEYOTE = named("peyote", new ItemBlock(PSBlocks.PEYOTE));

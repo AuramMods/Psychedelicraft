@@ -8,7 +8,7 @@ package ivorius.psychedelicraft.entity.drug.type;
 /**
  * Created by lukas on 01.11.14.
  */
-public class BrownShroomsDrug extends SimpleDrug {
+public class BrownShroomsDrug extends MushroomDrug {
     public BrownShroomsDrug(double decSpeed, double decSpeedPlus) {
         super(decSpeed, decSpeedPlus);
     }

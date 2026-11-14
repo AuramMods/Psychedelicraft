@@ -14,11 +14,17 @@ import net.minecraft.world.World;
 
 public final class SmokeableItem extends SmokingItem {
     private final int color;
+    private final float nicotineSaturation;
     private final DrugInfluence[] influences;
 
     public SmokeableItem(int uses, int burnTime, int color, DrugInfluence... influences) {
+        this(uses, burnTime, color, 2F, influences);
+    }
+
+    public SmokeableItem(int uses, int burnTime, int color, float nicotineSaturation, DrugInfluence... influences) {
         super(uses, 25, burnTime);
         this.color = color;
+        this.nicotineSaturation = nicotineSaturation;
         this.influences = influences.clone();
     }
 
@@ -29,7 +35,7 @@ public final class SmokeableItem extends SmokingItem {
             DrugProperties properties = DrugCapability.get(player);
             if (properties != null) properties.startBreathingSmoke(player, color);
             if (!world.isRemote) {
-                if (properties != null) applyInfluences(properties);
+                if (properties != null) applyInfluences(player, properties);
                 recordDraw(player, stack);
             }
         }
@@ -40,7 +46,7 @@ public final class SmokeableItem extends SmokingItem {
         return color;
     }
 
-    public void applyInfluences(DrugProperties properties) {
-        for (DrugInfluence influence : influences) properties.addInfluence(influence.copy());
+    public void applyInfluences(EntityPlayer player, DrugProperties properties) {
+        for (DrugInfluence influence : influences) properties.inhale(influence.copy(), player, nicotineSaturation);
     }
 }

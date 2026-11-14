@@ -77,6 +77,12 @@ public final class LsdDrug extends SimpleDrug {
     }
 
     @Override
+    public float extraBlockReach() {
+        double intensity = getActiveValue();
+        return (float) (Math.min(1, intensity / 0.01) + 6 * Math.pow(intensity, 1.75));
+    }
+
+    @Override
     public float bloomStrength() {
         return (float) getActiveValue() * 0.12F;
     }

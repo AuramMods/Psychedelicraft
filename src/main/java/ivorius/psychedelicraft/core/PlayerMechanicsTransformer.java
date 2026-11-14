@@ -23,23 +23,63 @@ public final class PlayerMechanicsTransformer implements IClassTransformer {
     private static final String PLAYER = "net.minecraft.entity.player.EntityPlayer";
     private static final String SERVER_PLAYER = "net.minecraft.entity.player.EntityPlayerMP";
     private static final String CONTAINER = "net.minecraft.inventory.Container";
+    private static final String MOB = "net.minecraft.entity.EntityLiving";
+    private static final String ENDERMAN = "net.minecraft.entity.monster.EntityEnderman";
+    private static final String WOLF = "net.minecraft.entity.passive.EntityWolf";
     private static final String FOOD_STATS = "net/minecraft/util/FoodStats";
     private static final String STOMACH_STATS = "ivorius/psychedelicraft/entity/drug/StomachFoodStats";
+    private static final String MOB_TARGETING = "ivorius/psychedelicraft/entity/drug/MobTargeting";
     private static final String PAPER_BAG = "ivorius/psychedelicraft/item/PaperBagItem";
     private static final FMLDeobfuscatingRemapper REMAPPER = FMLDeobfuscatingRemapper.INSTANCE;
 
     @Override
     public byte[] transform(String name, String transformedName, byte[] bytes) {
         if (bytes == null || !(PLAYER.equals(transformedName) || SERVER_PLAYER.equals(transformedName)
-                || CONTAINER.equals(transformedName))) return bytes;
+                || CONTAINER.equals(transformedName) || MOB.equals(transformedName)
+                || ENDERMAN.equals(transformedName) || WOLF.equals(transformedName))) return bytes;
         ClassNode type = new ClassNode(Opcodes.ASM5);
         new ClassReader(bytes).accept(type, 0);
         if (PLAYER.equals(transformedName)) replaceFoodStats(type);
         else if (SERVER_PLAYER.equals(transformedName)) syncRawFoodStats(type);
-        else addPaperBagClicks(type);
+        else if (CONTAINER.equals(transformedName)) addPaperBagClicks(type);
+        else filterAttackTarget(type, MOB.equals(transformedName));
         ClassWriter writer = new ClassWriter(ClassWriter.COMPUTE_MAXS);
         type.accept(writer);
         return writer.toByteArray();
+    }
+
+    private static void filterAttackTarget(ClassNode type, boolean base) {
+        String targetType = "Lnet/minecraft/entity/EntityLivingBase;";
+        for (MethodNode method : type.methods) {
+            if (!("(" + targetType + ")V").equals(REMAPPER.mapMethodDesc(method.desc))
+                    || !matchesMethod(type, method, "setAttackTarget", "func_70624_b")) continue;
+
+            InsnList filter = new InsnList();
+            filter.add(new VarInsnNode(Opcodes.ALOAD, 0));
+            String parameter = Type.getArgumentTypes(method.desc)[0].getDescriptor();
+            if (base) {
+                filter.add(new VarInsnNode(Opcodes.ALOAD, 1));
+                filter.add(new MethodInsnNode(Opcodes.INVOKESTATIC, MOB_TARGETING, "filterTarget",
+                        "(L" + type.name + ";" + parameter + ")" + parameter, false));
+                filter.add(new VarInsnNode(Opcodes.ASTORE, 1));
+                method.instructions.insert(filter);
+            } else {
+                // Their overrides update anger and speed from the target after calling super.
+                for (AbstractInsnNode instruction : method.instructions.toArray()) {
+                    if (!(instruction instanceof MethodInsnNode) || instruction.getOpcode() != Opcodes.INVOKESPECIAL) continue;
+                    MethodInsnNode call = (MethodInsnNode) instruction;
+                    if (!call.desc.equals(method.desc) || !call.name.equals(method.name)) continue;
+                    String mob = MOB.replace('.', '/');
+                    if (!targetType.equals(parameter)) mob = REMAPPER.unmap(mob);
+                    filter.add(new MethodInsnNode(Opcodes.INVOKESTATIC, MOB_TARGETING, "acceptedTarget",
+                            "(L" + mob + ";)" + parameter, false));
+                    filter.add(new VarInsnNode(Opcodes.ASTORE, 1));
+                    method.instructions.insert(call, filter);
+                    break;
+                }
+            }
+            return;
+        }
     }
 
     private static void replaceFoodStats(ClassNode type) {

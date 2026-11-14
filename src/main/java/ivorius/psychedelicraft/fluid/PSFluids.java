@@ -8,6 +8,7 @@ import ivorius.psychedelicraft.Psychedelicraft;
 import ivorius.psychedelicraft.entity.drug.DrugCapability;
 import ivorius.psychedelicraft.entity.drug.DrugProperties;
 import ivorius.psychedelicraft.entity.drug.DrugType;
+import ivorius.psychedelicraft.entity.drug.StomachFoodStats;
 import ivorius.psychedelicraft.entity.drug.influence.DrugInfluence;
 import ivorius.psychedelicraft.fluid.physical.WorldFluid;
 import net.minecraft.entity.player.EntityPlayer;
@@ -127,6 +128,9 @@ public final class PSFluids {
     public static void consume(EntityPlayer player, FluidStack portion) {
         DrugProperties properties = DrugCapability.get(player);
         if (properties != null) addServingInfluences(portion, properties);
+        if (portion.getFluid() == COFFEE) {
+            StomachFoodStats.restoreSaturation(player, portion.amount / (float) FluidVessel.CUP.serving);
+        }
     }
 
     public static void addServingInfluences(FluidStack portion, DrugProperties properties) {

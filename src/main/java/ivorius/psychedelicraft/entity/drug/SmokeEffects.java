@@ -48,7 +48,7 @@ public final class SmokeEffects {
         for (EntityPlayer player : world.getEntitiesWithinAABB(EntityPlayer.class, new AxisAlignedBB(pos).grow(3),
                 player -> !player.isSpectator())) {
             DrugProperties properties = DrugCapability.get(player);
-            if (properties != null) item.applyInfluences(properties);
+            if (properties != null) item.applyInfluences(player, properties);
         }
         Random random = world.rand;
         for (int puff = 0; puff < 30; puff++) {

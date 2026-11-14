@@ -6,6 +6,7 @@ package ivorius.psychedelicraft.entity.drug.type;
 
 import ivorius.psychedelicraft.PSDamageTypes;
 import ivorius.psychedelicraft.entity.drug.DrugProperties;
+import ivorius.psychedelicraft.entity.drug.StomachFoodStats;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.util.DamageSource;
 import net.minecraft.util.math.MathHelper;
@@ -76,7 +77,9 @@ public final class CocaineDrug extends SimpleDrug {
     @Override
     public void update(DrugProperties properties, @Nullable EntityPlayer player) {
         super.update(properties, player);
-        if (player == null || player.world.isRemote || getActiveValue() <= 0.8 || player.ticksExisted % 20 != 0) return;
+        if (player == null || player.world.isRemote || getActiveValue() <= 0 || player.ticksExisted % 20 != 0) return;
+        StomachFoodStats.restoreSaturation(player, 1F);
+        if (getActiveValue() <= 0.8) return;
         Random random = player.getRNG();
         if (random.nextFloat() < (getActiveValue() - 0.8F) * 0.1) {
             DamageSource cause;
@@ -94,7 +97,12 @@ public final class CocaineDrug extends SimpleDrug {
 
     @Override
     public float digSpeedModifier() {
-        return speedModifier();
+        return 1F + (float) getActiveValue();
+    }
+
+    @Override
+    public float attackDamageModifier() {
+        return 1F + 0.15F * (float) getActiveValue();
     }
 
     @Override

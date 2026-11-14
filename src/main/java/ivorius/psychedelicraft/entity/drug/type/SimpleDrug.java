@@ -32,6 +32,10 @@ public class SimpleDrug implements Drug {
         return active;
     }
 
+    protected double maximumActiveValue() {
+        return 1;
+    }
+
     protected final int ticksActive() {
         return ticksActive;
     }
@@ -87,7 +91,7 @@ public class SimpleDrug implements Drug {
         if (!locked) {
             desired = desired * decreaseSpeed - decreaseSpeedPlus;
         }
-        desired = MathHelper.clamp(desired, 0, 1);
+        desired = MathHelper.clamp(desired, 0, maximumActiveValue());
 
         double interpolated = active + (desired - active) * 0.05;
         if (interpolated > desired) {
@@ -119,7 +123,7 @@ public class SimpleDrug implements Drug {
             desired = 0;
         }
         double savedActive = tag.getDouble("effectActive");
-        active = Double.isFinite(savedActive) ? MathHelper.clamp(savedActive, 0, 1) : 0;
+        active = Double.isFinite(savedActive) ? MathHelper.clamp(savedActive, 0, maximumActiveValue()) : 0;
         locked = tag.getBoolean("locked");
         ticksActive = Math.max(0, tag.getInteger("ticksActive"));
     }

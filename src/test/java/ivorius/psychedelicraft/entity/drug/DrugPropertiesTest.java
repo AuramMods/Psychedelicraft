@@ -32,6 +32,53 @@ public class DrugPropertiesTest {
     }
 
     @Test
+    public void oneLsdPillPeaksNearThreeBlocksAndOverlappingPillsReachSeven() {
+        DrugProperties properties = new DrugProperties();
+        properties.addInfluence(new DrugInfluence(DrugType.LSD, DrugInfluence.INGESTED_DELAY, 0.05, 0.003, 0.6));
+        float singlePeak = peak(properties, Drug::extraBlockReach);
+        assertTrue(singlePeak > 2.6F && singlePeak < 3.4F);
+        properties.addInfluence(new DrugInfluence(DrugType.LSD, DrugInfluence.INGESTED_DELAY, 0.05, 0.003, 0.6));
+        properties.addInfluence(new DrugInfluence(DrugType.LSD, DrugInfluence.INGESTED_DELAY, 0.05, 0.003, 0.6));
+        assertEquals(7F, peak(properties, Drug::extraBlockReach), 0.00001F);
+        tick(properties, 901, 6000);
+        assertEquals(0F, properties.getModifier(Drug::extraBlockReach), 0F);
+    }
+
+    @Test
+    public void mushroomAvoidancePeaksScaleWithOverlappingRedAndBrownDoses() {
+        for (int doses = 1; doses <= 4; doses++) {
+            DrugProperties properties = new DrugProperties();
+            for (int dose = 0; dose < doses; dose++) {
+                properties.addInfluence(mushroom(DrugType.BROWN_SHROOMS));
+            }
+            assertEquals(doses / 4F, peak(properties, Drug::mobAvoidanceChance), 0.003F);
+            assertTrue(properties.getActiveValue(DrugType.BROWN_SHROOMS) <= 1);
+        }
+
+        DrugProperties mixed = withMushroom(DrugType.RED_SHROOMS);
+        mixed.addInfluence(mushroom(DrugType.BROWN_SHROOMS));
+        assertEquals(0.5F, peak(mixed, Drug::mobAvoidanceChance), 0.003F);
+        tick(mixed, 901, 6000);
+        assertEquals(0F, mixed.getModifier(Drug::mobAvoidanceChance), 0F);
+    }
+
+    @Test
+    public void peyoteFlightCostStaysBetweenOneAndTenSecondsPerPoint() {
+        assertEquals(20F, 1F / PeyoteFlight.saturationPerTick(0), 0.001F);
+        assertEquals(110F, 1F / PeyoteFlight.saturationPerTick(0.5), 0.001F);
+        assertEquals(200F, 1F / PeyoteFlight.saturationPerTick(1), 0.001F);
+    }
+
+    private static float peak(DrugProperties properties, Drug.Modifier modifier) {
+        float maximum = 0F;
+        for (int age = 1; age <= 900; age++) {
+            properties.tick(age);
+            maximum = Math.max(maximum, properties.getModifier(modifier));
+        }
+        return maximum;
+    }
+
+    @Test
     public void stimulantActionChancesUseTheirOwnThresholdsAndAddTogether() {
         DrugProperties properties = new DrugProperties();
         lockAt(properties, DrugType.CAFFEINE, 0.3);

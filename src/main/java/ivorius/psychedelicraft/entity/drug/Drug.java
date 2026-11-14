@@ -130,6 +130,26 @@ public interface Drug extends NbtSerialisable {
         return 1;
     }
 
+    default float attackDamageModifier() {
+        return 1;
+    }
+
+    default float incomingDamageModifier() {
+        return 1;
+    }
+
+    default float saturationExhaustionModifier() {
+        return 1;
+    }
+
+    default float extraBlockReach() {
+        return 0;
+    }
+
+    default float mobAvoidanceChance() {
+        return 0;
+    }
+
     @Nullable
     default String sleepWarning() {
         return null;
