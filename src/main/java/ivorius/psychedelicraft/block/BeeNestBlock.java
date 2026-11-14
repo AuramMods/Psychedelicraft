@@ -13,11 +13,13 @@ import net.minecraft.block.state.IBlockState;
 import net.minecraft.dispenser.BehaviorDefaultDispenseItem;
 import net.minecraft.dispenser.IBehaviorDispenseItem;
 import net.minecraft.dispenser.IBlockSource;
+import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.init.Items;
 import net.minecraft.init.SoundEvents;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
+import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.stats.StatList;
 import net.minecraft.tileentity.TileEntityDispenser;
 import net.minecraft.util.EnumFacing;
@@ -25,6 +27,7 @@ import net.minecraft.util.EnumHand;
 import net.minecraft.util.SoundCategory;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
+import net.minecraftforge.common.util.Constants;
 import net.minecraftforge.items.ItemHandlerHelper;
 
 import java.util.Random;
@@ -32,6 +35,7 @@ import java.util.Random;
 public final class BeeNestBlock extends Block {
     public static final int FULL_HONEY = 5;
     public static final PropertyInteger HONEY_LEVEL = PropertyInteger.create("honey_level", 0, FULL_HONEY);
+    private static final String STATE_TAG = "BlockStateTag";
 
     BeeNestBlock() {
         super(Material.WOOD);
@@ -69,6 +73,47 @@ public final class BeeNestBlock extends Block {
     @Override
     public Item getItemDropped(IBlockState state, Random random, int fortune) {
         return Items.AIR;
+    }
+
+    @Override
+    public boolean canSilkHarvest(World world, BlockPos pos, IBlockState state, EntityPlayer player) {
+        return true;
+    }
+
+    @Override
+    protected ItemStack getSilkTouchDrop(IBlockState state) {
+        ItemStack nest = new ItemStack(PSItems.BEE_NEST);
+        NBTTagCompound savedState = new NBTTagCompound();
+        savedState.setString(HONEY_LEVEL.getName(), HONEY_LEVEL.getName(state.getValue(HONEY_LEVEL)));
+        nest.setTagInfo(STATE_TAG, savedState);
+        return nest;
+    }
+
+    @Override
+    public boolean removedByPlayer(IBlockState state, World world, BlockPos pos, EntityPlayer player, boolean willHarvest) {
+        boolean removed = super.removedByPlayer(state, world, pos, player, willHarvest);
+        if (removed && !world.isRemote && player.isCreative() && state.getValue(HONEY_LEVEL) > 0) {
+            spawnAsEntity(world, pos, getSilkTouchDrop(state));
+        }
+        return removed;
+    }
+
+    @Override
+    public void onBlockPlacedBy(World world, BlockPos pos, IBlockState state, EntityLivingBase placer, ItemStack stack) {
+        int level = storedHoneyLevel(stack);
+        if (level != state.getValue(HONEY_LEVEL)) {
+            world.setBlockState(pos, state.withProperty(HONEY_LEVEL, level), 3);
+        }
+    }
+
+    static int storedHoneyLevel(ItemStack stack) {
+        NBTTagCompound savedState = stack.getSubCompound(STATE_TAG);
+        if (savedState == null) return 0;
+        String key = HONEY_LEVEL.getName();
+        if (savedState.hasKey(key, Constants.NBT.TAG_STRING)) return HONEY_LEVEL.parseValue(savedState.getString(key)).or(0);
+        if (!savedState.hasKey(key, Constants.NBT.TAG_INT)) return 0;
+        int level = savedState.getInteger(key);
+        return level >= 0 && level <= FULL_HONEY ? level : 0;
     }
 
     @Override

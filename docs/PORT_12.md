@@ -1599,6 +1599,14 @@ sh run/production/background-qa/run.sh "$qa" game-background Overlay-QA \
 - The previous packaged jar ejected an empty bottle and left the nest full. The rebuilt jar passed redstone-driven single, stacked and overflow bottle cases, ordinary and worn shears, a partially filled nest, unrelated dispenser output and a creative offhand exchange. Early fixture runs needed to set the dispenser facing after placement and move the player out of comb pickup range. Final evidence is in `runtime-baseline-verified.log` and `runtime-final-confirmed.log` in the same directory.
 - Next, audit Silk Touch nest relocation and preservation of the harvested nest's honey level against the donor loot table.
 
+### Cycle 176 · Preserve honey when moving a bee nest
+
+- The pinned donor relies on vanilla `loot_tables/blocks/bee_nest.json` to copy `honey_level` into the Silk Touch item. The Forge nest now writes the same `BlockStateTag` property and restores it on normal item placement. Generic and existing untagged nest items still place empty. The reader also accepts a bounded integer value for the donor's creative-break tag form.
+- Survival breaking with an ordinary tool still produces no nest. Creative breaking preserves a nest with honey when block drops are enabled. Forge's normal Silk Touch harvest event still fires, and the level remains available to comparators and the client model.
+- The clean Java 8 build ran `reobfJar` and passed all 210 tests. The two new tests cover item tags for all six levels, legacy untagged items, numeric tags and invalid levels. Muted Forge 2864 clients showed that the previous jar reduced a moved full nest to level zero. The rebuilt jar preserved both level two and level five through harvest, item NBT and normal placement. The client received and selected the distinct full model. The fixture also checked ordinary and creative breaking and the block-drop rule.
+- A fresh process reopened the world and recovered levels two, zero and five at the three placed nests. The dispenser harvest regression also passed. The reobfuscated jar SHA-256 is `8282d1931c64b158d4e1282852c6db7e27189dbb2b551945496d4677f23c494b`. Evidence is under `run/production/runtime-qa-cycle176` in `build.log`, `runtime-baseline.log`, `runtime-final.log`, `runtime-reopen.log` and `runtime-dispenser.log`.
+- Next, audit the donor's visible full-nest cue and where a drip can appear below a nest.
+
 Dedicated Forge startup and multiplayer on that server remain open pending EULA acceptance.
 
 ## Repository and branch survey
