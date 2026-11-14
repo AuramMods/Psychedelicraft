@@ -1,45 +1,24 @@
 package ivorius.psychedelicraft.client.render;
 
+import ivorius.psychedelicraft.Psychedelicraft;
 import ivorius.psychedelicraft.entity.BeeEntity;
-import net.minecraft.client.renderer.GlStateManager;
-import net.minecraft.client.renderer.entity.Render;
+import net.minecraft.client.renderer.entity.RenderLiving;
 import net.minecraft.client.renderer.entity.RenderManager;
 import net.minecraft.util.ResourceLocation;
 
-public final class BeeRenderer extends Render<BeeEntity> {
-    public BeeRenderer(RenderManager manager) {
-        super(manager);
-        shadowSize = 0.35F;
-    }
+public final class BeeRenderer extends RenderLiving<BeeEntity> {
+    private static final ResourceLocation BEE = Psychedelicraft.id("textures/entity/bee.png");
+    private static final ResourceLocation ANGRY = Psychedelicraft.id("textures/entity/bee_angry.png");
+    private static final ResourceLocation NECTAR = Psychedelicraft.id("textures/entity/bee_nectar.png");
+    private static final ResourceLocation ANGRY_NECTAR = Psychedelicraft.id("textures/entity/bee_angry_nectar.png");
 
-    @Override
-    public void doRender(BeeEntity bee, double x, double y, double z, float yaw, float partialTicks) {
-        GlStateManager.pushMatrix();
-        float scale = bee.isChild() ? 0.5F : 1F;
-        GlStateManager.translate(x, y - scale * 1.5D / 16D, z);
-        GlStateManager.rotate(180F - yaw, 0F, 1F, 0F);
-        GlStateManager.scale(scale, scale, scale);
-        GlStateManager.disableTexture2D();
-        if (renderOutlines) {
-            GlStateManager.enableColorMaterial();
-            GlStateManager.enableOutlineMode(getTeamColor(bee));
-        }
-        try {
-            ApparitionModels.drawBee(bee.ticksExisted + partialTicks, bee.hasNectar(), bee.isAngry(), bee.hasStung());
-        } finally {
-            if (renderOutlines) {
-                GlStateManager.disableOutlineMode();
-                GlStateManager.disableColorMaterial();
-            }
-            GlStateManager.enableTexture2D();
-            GlStateManager.color(1F, 1F, 1F, 1F);
-            GlStateManager.popMatrix();
-        }
-        super.doRender(bee, x, y, z, yaw, partialTicks);
+    public BeeRenderer(RenderManager manager) {
+        super(manager, new BeeModel(), 0.4F);
     }
 
     @Override
     protected ResourceLocation getEntityTexture(BeeEntity bee) {
-        return null;
+        if (bee.isAngry()) return bee.hasNectar() ? ANGRY_NECTAR : ANGRY;
+        return bee.hasNectar() ? NECTAR : BEE;
     }
 }

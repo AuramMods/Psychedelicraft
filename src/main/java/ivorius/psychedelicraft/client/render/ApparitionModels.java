@@ -15,7 +15,7 @@ import java.util.function.Supplier;
 // Render-only geometry for the donor's species that are absent from vanilla 1.12.
 enum ApparitionModels {
     ALLAY(0.35F, ApparitionModels::allay),
-    BEE(0.7F, () -> bee(false, false)),
+    BEE(0.7F, ApparitionModels::bee),
     AXOLOTL(0.75F, ApparitionModels::axolotl),
     CAMEL(1.7F, ApparitionModels::camel),
     DOLPHIN(0.9F, ApparitionModels::dolphin),
@@ -50,30 +50,6 @@ enum ApparitionModels {
         }
     }
 
-    static void drawBee(float age, boolean nectar, boolean angry, boolean stung) {
-        if (angry) {
-            if (angryBee == null) angryBee = bee(true, false);
-            for (Part part : angryBee.parts) part.draw(age, 1F, 1F, 1F, 1F);
-        } else if (stung) {
-            if (stungBee == null) stungBee = bee(false, true);
-            for (Part part : stungBee.parts) part.draw(age, 1F, 1F, 1F, 1F);
-        } else {
-            BEE.draw(age, 1F, 1F, 1F, 1F);
-        }
-        if (nectar) {
-            if (nectarModel == null) {
-                nectarModel = new VoxelModel();
-                nectarModel.box(0xf5c54d, -3.85F, 2.8F, -0.5F, 2, 2, 3);
-                nectarModel.box(0xf5c54d, 1.85F, 2.8F, -0.5F, 2, 2, 3);
-            }
-            for (Part part : nectarModel.parts) part.draw(age, 1F, 1F, 1F, 1F);
-        }
-    }
-
-    private static VoxelModel nectarModel;
-    private static VoxelModel angryBee;
-    private static VoxelModel stungBee;
-
     private static VoxelModel allay() {
         VoxelModel m = new VoxelModel();
         m.box(0x41cee9, -2.5F, 8, -2.5F, 5, 5, 5);
@@ -89,14 +65,14 @@ enum ApparitionModels {
         return m;
     }
 
-    private static VoxelModel bee(boolean angry, boolean stung) {
+    private static VoxelModel bee() {
         VoxelModel m = new VoxelModel();
         m.box(0xe5a22d, -3.5F, 3, -5, 7, 6, 10);
         m.box(0xffca54, -3.5F, 3.05F, -5.02F, 7, 6, 2);
         m.box(0x44301f, -3.6F, 3.1F, -1, 7, 6, 2);
         m.box(0x533627, -3.6F, 3.1F, 3, 7, 6, 2);
-        if (!stung) m.box(0x3b2a27, -0.5F, 5.5F, 4.8F, 1, 1, 2);
-        m.eyes(angry ? 0xd83c36 : 0x242940, 2, 5, -5.12F);
+        m.box(0x3b2a27, -0.5F, 5.5F, 4.8F, 1, 1, 2);
+        m.eyes(0x242940, 2, 5, -5.12F);
         for (int side : new int[]{-1, 1}) {
             m.box(0x3a2824, side * 2 - 0.5F, 8.5F, -4.8F, 1, 2, 1);
             m.joint(0xd6e5e6, side * 1.8F, 9, -1, side < 0 ? -7 : 0, 0, 0, 7, 1, 4)

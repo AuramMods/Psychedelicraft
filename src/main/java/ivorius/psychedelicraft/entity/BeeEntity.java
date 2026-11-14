@@ -54,6 +54,7 @@ public final class BeeEntity extends EntityAnimal {
     private static final DataParameter<Boolean> ANGRY = EntityDataManager.createKey(BeeEntity.class, DataSerializers.BOOLEAN);
     private static final DataParameter<Boolean> STUNG = EntityDataManager.createKey(BeeEntity.class, DataSerializers.BOOLEAN);
     private static final DataParameter<Integer> CROPS_GROWN = EntityDataManager.createKey(BeeEntity.class, DataSerializers.VARINT);
+    private static final DataParameter<Boolean> ROLLING = EntityDataManager.createKey(BeeEntity.class, DataSerializers.BOOLEAN);
     private static final int POLLINATION_TICKS = 400;
     private static final int WITHOUT_NECTAR_LIMIT = 3600;
     private static final int HOME_SEARCH_RANGE = 20;
@@ -66,6 +67,8 @@ public final class BeeEntity extends EntityAnimal {
     private UUID angerTarget;
     private int angerTicks;
     private int ticksSinceSting;
+    private float rollAmount;
+    private float previousRollAmount;
 
     public BeeEntity(World world) {
         super(world);
@@ -84,6 +87,7 @@ public final class BeeEntity extends EntityAnimal {
         dataManager.register(ANGRY, false);
         dataManager.register(STUNG, false);
         dataManager.register(CROPS_GROWN, 0);
+        dataManager.register(ROLLING, false);
     }
 
     @Override
@@ -159,6 +163,7 @@ public final class BeeEntity extends EntityAnimal {
         angerTicks = 0;
         angerTarget = null;
         dataManager.set(ANGRY, false);
+        dataManager.set(ROLLING, false);
         setAttackTarget(null);
     }
 
@@ -227,11 +232,17 @@ public final class BeeEntity extends EntityAnimal {
     public void onUpdate() {
         super.onUpdate();
         if (world.isRemote) {
+            previousRollAmount = rollAmount;
+            rollAmount = dataManager.get(ROLLING) ? Math.min(1F, rollAmount + 0.2F) : Math.max(0F, rollAmount - 0.24F);
             BeeFlightSound.tick(this);
             if (isEntityAlive() && hasNectar() && dataManager.get(CROPS_GROWN) < CROP_GROWTH_LIMIT) {
                 NectarParticle.trySpawn(this);
             }
         }
+    }
+
+    public float getRollAmount(float partialTicks) {
+        return previousRollAmount + (rollAmount - previousRollAmount) * partialTicks;
     }
 
     @Override
@@ -251,6 +262,8 @@ public final class BeeEntity extends EntityAnimal {
             }
             if (target != null && !canAttack(target) || (!(target instanceof EntityPlayer) && --angerTicks == 0)) clearAnger();
         }
+        EntityLivingBase target = getAttackTarget();
+        dataManager.set(ROLLING, isAngry() && !hasStung() && target != null && getDistanceSq(target) < 4D);
         if (stayOutside > 0) stayOutside--;
         if (!hasNectar() && ticksWithoutNectar < WITHOUT_NECTAR_LIMIT) ticksWithoutNectar++;
         pollinateCrops();

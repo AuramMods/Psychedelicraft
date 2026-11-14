@@ -1681,6 +1681,12 @@ sh run/production/background-qa/run.sh "$qa" game-background Overlay-QA \
 - A muted Forge 2864 client resolved all ten sounds and subtitles, observed volume and pitch change with motion, and checked position updates, calm-to-angry and angry-to-calm switches, and removal. Gameplay emitted pollination, entry, exit, work, shearing, hurt, sting and death cues. The live flower-to-nest and Silk Touch checks also passed. The initial volume assertion omitted the selected clip's gain. Evidence is in `build-final.log`, `donor-audio.javap` and `runtime-audio-verified.log` under `run/production/runtime-qa-cycle184`. Audible mixing was kept muted during QA.
 - Next, compare the donor's visible bee wing motion, body tilt and attack pose against the port's existing model.
 
+### Cycle 185 · Bee model and flight poses
+
+- Backported the pinned bee model geometry, mirrored wingbeats, resting wings, flying body bob and attack tilt. Forge's living-entity renderer handles movement orientation, lighting and shadows. The model omits the stinger after a sting and halves the model for baby bees. The apparition keeps its separate mesh.
+- Adult and baby bees use four original sprite atlases for the combinations of anger and nectar. The server starts the attack tilt when an angry, unstung bee comes within two blocks of its target. The client interpolates the tilt and returns the bee to its ordinary pose after a sting.
+- The clean Java 8 build ran `reobfJar` and passed 218 tests. The muted Forge 2864 probe compared the previous renderer and the new native render path. It received live pose changes over the network and verified the rest pose, half-sized baby, full attack tilt, retraction after a sting, state textures and balanced GL matrices. The tested jar SHA-256 is `885553c7ac04246d8e9983914d38b0224ffe00509e50a64e10f8c3ecfbb081ac`. See `build.log`, `runtime-baseline.log`, `runtime-model.log` and the screenshots under `run/production/runtime-qa-cycle185`.
+
 Dedicated Forge startup and multiplayer on that server remain open pending EULA acceptance.
 
 ## Repository and branch survey
