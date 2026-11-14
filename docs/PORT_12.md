@@ -1567,6 +1567,13 @@ sh run/production/background-qa/run.sh "$qa" game-background Overlay-QA \
 - The tested jar SHA-256 is `05d41b40472804f561f798818fd8ae1690b3f68757f82252ef44ea366a7c7be0`. Evidence is under `run/production/runtime-qa-cycle171` in `build-layout.log` for reobfuscation, `test-final.log` for the passing suite, `donor-final.log`, `initial-comparison.log`, `runtime-old.log`, `runtime-final.log` and `runtime-final-reopen.log`. One preliminary launch copied the jar during reobfuscation. The verified initial and reopen runs used the final artifact.
 - Next, compare natural fruiting and unsupported wet leaf decay with the pinned tick and fluid behavior.
 
+### Cycle 172 · Juniper fruiting and decay ticks
+
+- Placed leaves initialize their log support distance immediately. Random ticks use the saved distance until the scheduled support update, matching the pinned leaves tick order.
+- Bare leaves keep the donor's one-percent fruiting roll, including the roll after dry decay. Waterlogged leaves release a water source on decay. Fruiting leaves never repeat the fruiting roll.
+- The Java 8 suite passed all 207 tests. Two muted Forge 2864 clients checked the prior and updated reobfuscated jars. The updated client verified saved support distance, the dry fruiting roll after decay, water release for both leaf varieties, a single berry drop and the placement distance.
+- The cycle jar SHA-256 is `0609dca2a14b6d681f443df4c9b6d6527adf511e12ddf307731ad9876b673495`. Packaged evidence is in `run/production/runtime-qa-cycle172/runtime-old-verified.log` and `runtime-new-verified.log`. The final suite output is in `run/production/runtime-qa-cycle173/test.log`.
+
 Dedicated Forge startup and multiplayer on that server remain open pending EULA acceptance.
 
 ## Repository and branch survey

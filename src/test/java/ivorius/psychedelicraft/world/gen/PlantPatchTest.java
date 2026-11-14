@@ -9,6 +9,7 @@ import net.minecraft.block.state.IBlockState;
 import net.minecraft.init.Blocks;
 import net.minecraft.init.Bootstrap;
 import net.minecraft.profiler.Profiler;
+import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.IBlockAccess;
 import net.minecraft.world.World;
@@ -155,6 +156,32 @@ public class PlantPatchTest {
         assertSame(oldLeaf, world.getBlockState(edge.south(4)));
     }
 
+    @Test
+    public void juniperFruitingUsesTheStoredDistanceUntilTheScheduledUpdate() {
+        PatchWorld world = new PatchWorld();
+        BlockPos pos = new BlockPos(8, 64, 8);
+        IBlockState leaf = PSBlocks.JUNIPER_LEAVES.getDefaultState().withProperty(JuniperLeavesBlock.DISTANCE, 4);
+        world.setBlockState(pos, leaf, 2);
+        Random threshold = new Random() {
+            @Override
+            public float nextFloat() {
+                return 0.01F;
+            }
+        };
+        Random belowThreshold = new Random() {
+            @Override
+            public float nextFloat() {
+                return Math.nextDown(0.01F);
+            }
+        };
+
+        PSBlocks.JUNIPER_LEAVES.randomTick(world, pos, leaf, threshold);
+        assertSame(leaf, world.getBlockState(pos));
+        PSBlocks.JUNIPER_LEAVES.randomTick(world, pos, leaf, belowThreshold);
+        assertSame(PSBlocks.FRUITING_JUNIPER_LEAVES.getDefaultState().withProperty(JuniperLeavesBlock.DISTANCE, 4),
+                world.getBlockState(pos));
+    }
+
     private static final class PatchWorld extends World {
         private final Map<BlockPos, IBlockState> blocks = new HashMap<>();
 
@@ -165,6 +192,11 @@ public class PlantPatchTest {
         @Override
         public IBlockState getBlockState(BlockPos pos) {
             return blocks.getOrDefault(pos, Blocks.AIR.getDefaultState());
+        }
+
+        @Override
+        public TileEntity getTileEntity(BlockPos pos) {
+            return null;
         }
 
         @Override

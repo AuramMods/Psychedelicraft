@@ -102,7 +102,8 @@ public final class JuniperLeavesBlock extends Block implements IShearable, Water
 
     @Override
     public void onBlockPlacedBy(World world, BlockPos pos, IBlockState state, EntityLivingBase placer, ItemStack stack) {
-        world.setBlockState(pos, state.withProperty(PERSISTENT, true), 2);
+        world.setBlockState(pos, state.withProperty(PERSISTENT, true)
+                .withProperty(DISTANCE, supportDistance(world, pos)), 2);
     }
 
     @Override
@@ -126,25 +127,26 @@ public final class JuniperLeavesBlock extends Block implements IShearable, Water
 
     @Override
     public void randomTick(World world, BlockPos pos, IBlockState state, Random random) {
-        if (state.getValue(PERSISTENT) || !world.isAreaLoaded(pos, UNSUPPORTED - 1)) {
+        if (state.getValue(PERSISTENT)) {
             return;
         }
-        IBlockState updated = updateDistance(world, pos, state);
-        if (updated.getValue(DISTANCE) == UNSUPPORTED) {
-            dropBlockAsItem(world, pos, updated, 0);
+        boolean wet = Waterlogging.isWet(world, pos, state);
+        if (state.getValue(DISTANCE) == UNSUPPORTED) {
+            dropBlockAsItem(world, pos, state, 0);
             world.setBlockToAir(pos);
-        } else if (!fruiting && random.nextFloat() < 0.01F && !Waterlogging.isWet(world, pos, updated)) {
-            world.setBlockState(pos, PSBlocks.FRUITING_JUNIPER_LEAVES.copyGrowth(updated), 3);
+        }
+        // The donor rolls for fruit after decay, using the original state and water flag.
+        if (!fruiting && random.nextFloat() < 0.01F && !wet) {
+            world.setBlockState(pos, PSBlocks.FRUITING_JUNIPER_LEAVES.copyGrowth(state), 3);
         }
     }
 
-    private IBlockState updateDistance(World world, BlockPos pos, IBlockState state) {
+    private void updateDistance(World world, BlockPos pos, IBlockState state) {
         int distance = supportDistance(world, pos);
         IBlockState updated = state.withProperty(DISTANCE, distance);
         if (updated != state) {
             world.setBlockState(pos, updated, 3);
         }
-        return updated;
     }
 
     public static int supportDistance(World world, BlockPos origin) {
