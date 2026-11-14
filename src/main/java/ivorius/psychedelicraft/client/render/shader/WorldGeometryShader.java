@@ -68,7 +68,7 @@ public final class WorldGeometryShader implements IResourceManagerReloadListener
 
     @Nullable
     public Scope beginSky(Minecraft client, HallucinationManager hallucinations, boolean textured) {
-        return begin(client, null, hallucinations, null, textured ? Material.END_SKY : Material.SKY_GRADIENT,
+        return begin(client, client.player, hallucinations, null, textured ? Material.END_SKY : Material.SKY_GRADIENT,
                 0F, null, null);
     }
 
@@ -92,7 +92,8 @@ public final class WorldGeometryShader implements IResourceManagerReloadListener
                 || material == Material.WORLD_BORDER ? 0F
                 : MathHelper.clamp(hallucinations.strength(Effect.SURFACE_FRACTALS), 0F, 1F);
         float fracture = deform ? (float) drugs.getActiveValue(DrugType.LSD) * 0.06F : 0F;
-        float[] pulses = deform || screen ? hallucinations.pulseColor() : null;
+        boolean shaderPhase = player != null && (deform || screen || sky);
+        float[] pulses = shaderPhase ? hallucinations.pulseColor() : null;
 
         ShaderManager program = zeroMatter;
         if (program == null) {
@@ -114,8 +115,7 @@ public final class WorldGeometryShader implements IResourceManagerReloadListener
                 boolean fog = !screen && !sky && material != Material.BLOCK_DAMAGE && material != Material.WORLD_BORDER;
                 upload(program, "FogMode", fog ? fogMode() : 0F);
                 upload(program, "RadialFog", fog && radialFog() ? 1F : 0F);
-                upload(program, "TerrainPulseShape", material == Material.TERRAIN && pulses != null
-                        ? terrainPulseShape(client) : 0F);
+                upload(program, "PulseShape", pulses == null ? 0F : material.pulseShape.resolve(client));
                 upload(program, "RiftCenter", riftCenter ? 1F : 0F);
                 upload(program, "SkyMode", material == Material.SKY_GRADIENT ? 1F : sky ? 2F : 0F);
                 upload(program, "Untextured", material == Material.SKY_GRADIENT || material == Material.BLOCK_OUTLINE ? 1F : 0F);
@@ -131,7 +131,7 @@ public final class WorldGeometryShader implements IResourceManagerReloadListener
             }
             // Keep the inactive atlas sampler on the primary texture rather than an unused texture unit.
             setSampler(program, "PortalSampler", surface > 0F ? portalUnit : 0);
-            upload(program, "WorldTicks", deform || screen ? player.ticksExisted + client.getRenderPartialTicks() : 0F);
+            upload(program, "WorldTicks", shaderPhase ? player.ticksExisted + client.getRenderPartialTicks() : 0F);
             upload(program, "DistantDeformation", distant);
             upload(program, "SurfaceFractalStrength", surface);
             upload(program, "FractureStrength", fracture);
@@ -202,7 +202,7 @@ public final class WorldGeometryShader implements IResourceManagerReloadListener
                 && GL11.glGetInteger(NVFogDistance.GL_FOG_DISTANCE_MODE_NV) == NVFogDistance.GL_EYE_RADIAL_NV;
     }
 
-    private static float terrainPulseShape(Minecraft client) {
+    private static boolean usesSphericalFog(Minecraft client) {
         Entity camera = client.getRenderViewEntity();
         boolean blind = camera instanceof EntityLivingBase && ((EntityLivingBase) camera).isPotionActive(MobEffects.BLINDNESS);
         boolean thickFog = client.world.provider.doesXZShowFog((int) camera.posX, (int) camera.posZ)
@@ -212,7 +212,7 @@ public final class WorldGeometryShader implements IResourceManagerReloadListener
         BlockPos pos = new BlockPos(ActiveRenderInfo.projectViewFromEntity(camera, partialTicks));
         boolean submerged = state.getMaterial() == net.minecraft.block.material.Material.LAVA
                 || Waterlogging.isWater(client.world, pos, state);
-        return blind || thickFog || submerged ? 1F : 2F;
+        return blind || thickFog || submerged;
     }
 
     @Override
@@ -242,30 +242,42 @@ public final class WorldGeometryShader implements IResourceManagerReloadListener
         }
     }
 
+    private enum PulseShape {
+        UNIFORM, SPHERICAL, WORLD, MODEL;
+
+        float resolve(Minecraft client) {
+            if (this == UNIFORM) return 0F;
+            if (this == SPHERICAL || usesSphericalFog(client)) return 1F;
+            return this == WORLD ? 2F : 3F;
+        }
+    }
+
     public enum Material {
-        TERRAIN(1F, 1F),
-        BLOCK_DAMAGE(0F, 1F),
-        BLOCK_OUTLINE(0F, 1F),
-        WORLD_BORDER(0F, 1F),
-        SCREEN(0F, 1F),
-        SKY_GRADIENT(0F, 1F),
-        END_SKY(0F, 1F),
-        END_PORTAL(1F, 1F),
-        PARTICLES(1F, 1F),
-        ENTITY(1F, 1F),
-        ENTITY_GLINT(1F, 1F),
-        RIFT_CENTER(0F, 1F),
-        VANILLA_FAST_CLOUDS(0F, 1F / 8F),
-        VANILLA_FANCY_CLOUDS(0F, 1F),
-        FORGE_FAST_CLOUDS(2F, 1F / 8F),
-        FORGE_FANCY_CLOUDS(2F, 1F / 12F);
+        TERRAIN(1F, 1F, PulseShape.WORLD),
+        BLOCK_DAMAGE(0F, 1F, PulseShape.UNIFORM),
+        BLOCK_OUTLINE(0F, 1F, PulseShape.WORLD),
+        WORLD_BORDER(0F, 1F, PulseShape.UNIFORM),
+        SCREEN(0F, 1F, PulseShape.UNIFORM),
+        SKY_GRADIENT(0F, 1F, PulseShape.UNIFORM),
+        END_SKY(0F, 1F, PulseShape.UNIFORM),
+        END_PORTAL(1F, 1F, PulseShape.UNIFORM),
+        PARTICLES(1F, 1F, PulseShape.WORLD),
+        ENTITY(1F, 1F, PulseShape.MODEL),
+        ENTITY_GLINT(1F, 1F, PulseShape.MODEL),
+        RIFT_CENTER(0F, 1F, PulseShape.SPHERICAL),
+        VANILLA_FAST_CLOUDS(0F, 1F / 8F, PulseShape.WORLD),
+        VANILLA_FANCY_CLOUDS(0F, 1F, PulseShape.WORLD),
+        FORGE_FAST_CLOUDS(2F, 1F / 8F, PulseShape.WORLD),
+        FORGE_FANCY_CLOUDS(2F, 1F / 12F, PulseShape.WORLD);
 
         private final float lightmapMode;
         private final float horizontalScale;
+        private final PulseShape pulseShape;
 
-        Material(float lightmapMode, float horizontalScale) {
+        Material(float lightmapMode, float horizontalScale, PulseShape pulseShape) {
             this.lightmapMode = lightmapMode;
             this.horizontalScale = horizontalScale;
+            this.pulseShape = pulseShape;
         }
     }
 

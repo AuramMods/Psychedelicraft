@@ -10,7 +10,6 @@ uniform vec4 Pulses;
 varying vec4 screenProjection;
 varying vec4 vertexColor;
 varying vec3 surfaceColor;
-varying vec3 viewPosition;
 
 const mat4 SCALE_TRANSLATE = mat4(
     0.5, 0.0, 0.0, 0.25,
@@ -38,6 +37,7 @@ void main() {
         color += texture2DProj(EndPortalSampler, screenProjection * portalLayer(float(i)) * scale).rgb;
     }
     color *= mix(vertexColor.rgb, surfaceColor, SurfaceFractalStrength);
-    float pulse = max(0.0, sin((abs(viewPosition.z) - WorldTicks) / 5.0) - 0.4) * Pulses.a;
+    // The donor Zero matter vertex shader supplies no distance to the pulse.
+    float pulse = max(0.0, sin(-WorldTicks / 5.0) - 0.4) * Pulses.a;
     gl_FragColor = vec4(mix(color, (color + 1.0) * Pulses.rgb, pulse), vertexColor.a);
 }

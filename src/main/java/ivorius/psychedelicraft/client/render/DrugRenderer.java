@@ -179,7 +179,8 @@ public final class DrugRenderer {
 
     public static void renderSky(RenderGlobal renderer, float partialTicks, int pass) {
         Minecraft client = Minecraft.getMinecraft();
-        if (geometryDrugs(client) == null || hallucinations.strength(Effect.SURFACE_FRACTALS) <= 0F) {
+        if (geometryDrugs(client) == null || (hallucinations.strength(Effect.SURFACE_FRACTALS) <= 0F
+                && hallucinations.strength(Effect.PULSES) <= 0F)) {
             renderer.renderSky(partialTicks, pass);
             return;
         }
