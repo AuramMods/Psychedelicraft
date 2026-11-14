@@ -592,3 +592,11 @@ tile.psychedelicraft.mud.name=Błoto
 
 item.psychedelicraft.heart_of_the_sea.name=Serce oceanu
 item.psychedelicraft.buried_treasure_map.name=Mapa zakopanego skarbu
+
+tile.psychedelicraft.conduit.name=Przewodnia
+item.psychedelicraft.nautilus_shell.name=Muszla łodzika
+effect.psychedelicraft.conduit_power=Przewodnia potęga
+subtitle.psychedelicraft.block.conduit.activate=Przewodnia się włącza
+subtitle.psychedelicraft.block.conduit.ambient=Przewodnia pulsuje
+subtitle.psychedelicraft.block.conduit.attack.target=Przewodnia atakuje
+subtitle.psychedelicraft.block.conduit.deactivate=Przewodnia się wyłącza

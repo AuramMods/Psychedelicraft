@@ -2,6 +2,7 @@ package ivorius.psychedelicraft.client;
 
 import ivorius.psychedelicraft.Psychedelicraft;
 import ivorius.psychedelicraft.client.particle.CampfireSmoke;
+import ivorius.psychedelicraft.client.particle.ConduitParticles;
 import ivorius.psychedelicraft.item.HarmoniumItem;
 import ivorius.psychedelicraft.block.BarrelBlock;
 import ivorius.psychedelicraft.block.JuniperLeavesBlock;
@@ -16,6 +17,7 @@ import ivorius.psychedelicraft.block.entity.BarrelBlockEntity;
 import ivorius.psychedelicraft.block.entity.BottleRackBlockEntity;
 import ivorius.psychedelicraft.block.entity.BrushableBlockEntity;
 import ivorius.psychedelicraft.block.entity.CampfireBlockEntity;
+import ivorius.psychedelicraft.block.entity.ConduitBlockEntity;
 import ivorius.psychedelicraft.block.entity.DistilleryBlockEntity;
 import ivorius.psychedelicraft.block.entity.FlaskBlockEntity;
 import ivorius.psychedelicraft.block.entity.JuniperSignBlockEntity;
@@ -31,6 +33,7 @@ import ivorius.psychedelicraft.client.render.block.BarrelRenderer;
 import ivorius.psychedelicraft.client.render.block.BottleRackRenderer;
 import ivorius.psychedelicraft.client.render.block.BrushableBlockRenderer;
 import ivorius.psychedelicraft.client.render.block.CampfireRenderer;
+import ivorius.psychedelicraft.client.render.block.ConduitRenderer;
 import ivorius.psychedelicraft.client.render.block.FlaskRenderer;
 import ivorius.psychedelicraft.client.render.block.JuniperSignRenderer;
 import ivorius.psychedelicraft.client.render.block.MashTubRenderer;
@@ -116,6 +119,7 @@ public final class PSItemModels {
     public static void stitchFluids(TextureStitchEvent.Pre event) {
         TankFluidAppearance.stitch(event.getMap());
         CampfireSmoke.stitch(event.getMap());
+        ConduitParticles.stitch(event.getMap());
         for (Fluid fluid : FluidRegistry.getRegisteredFluids().values()) {
             if (fluid.getStill() != null && Psychedelicraft.MOD_ID.equals(fluid.getStill().getResourceDomain())) {
                 event.getMap().registerSprite(fluid.getStill());
@@ -195,6 +199,9 @@ public final class PSItemModels {
         ClientRegistry.bindTileEntitySpecialRenderer(JuniperSignBlockEntity.class, new JuniperSignRenderer());
         ClientRegistry.bindTileEntitySpecialRenderer(DryingTableBlockEntity.class, new DryingTableRenderer());
         ClientRegistry.bindTileEntitySpecialRenderer(CampfireBlockEntity.class, new CampfireRenderer());
+        ConduitRenderer conduit = new ConduitRenderer();
+        ClientRegistry.bindTileEntitySpecialRenderer(ConduitBlockEntity.class, conduit);
+        PSItems.CONDUIT.setTileEntityItemStackRenderer(conduit.itemRenderer());
         ClientRegistry.bindTileEntitySpecialRenderer(PeyoteBlockEntity.class, new PeyoteRenderer());
         ModelLoader.setCustomStateMapper(PSBlocks.RIFT_JAR, new StateMap.Builder().ignore(RiftJarBlock.FACING).build());
         RiftJarRenderer riftJar = new RiftJarRenderer();

@@ -592,3 +592,11 @@ tile.psychedelicraft.mud.name=Mud
 
 item.psychedelicraft.heart_of_the_sea.name=Heart of the Sea
 item.psychedelicraft.buried_treasure_map.name=Buried Treasure Map
+
+tile.psychedelicraft.conduit.name=Conduit
+item.psychedelicraft.nautilus_shell.name=Nautilus Shell
+effect.psychedelicraft.conduit_power=Conduit Power
+subtitle.psychedelicraft.block.conduit.activate=Conduit activates
+subtitle.psychedelicraft.block.conduit.ambient=Conduit pulses
+subtitle.psychedelicraft.block.conduit.attack.target=Conduit attacks
+subtitle.psychedelicraft.block.conduit.deactivate=Conduit deactivates

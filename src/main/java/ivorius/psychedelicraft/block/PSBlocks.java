@@ -10,6 +10,7 @@ import ivorius.psychedelicraft.block.entity.BarrelBlockEntity;
 import ivorius.psychedelicraft.block.entity.BeeNestBlockEntity;
 import ivorius.psychedelicraft.block.entity.BrushableBlockEntity;
 import ivorius.psychedelicraft.block.entity.CampfireBlockEntity;
+import ivorius.psychedelicraft.block.entity.ConduitBlockEntity;
 import ivorius.psychedelicraft.block.entity.BottleRackBlockEntity;
 import ivorius.psychedelicraft.block.entity.DistilleryBlockEntity;
 import ivorius.psychedelicraft.block.entity.FlaskBlockEntity;
@@ -126,6 +127,7 @@ public final class PSBlocks {
     public static final RiftJarBlock RIFT_JAR = named("rift_jar", new RiftJarBlock());
     public static final Block GLITCH = named("glitch", new GlitchedBlock());
     public static final Block COPPER_ORE = named("copper_ore", new CopperOreBlock());
+    public static final ConduitBlock CONDUIT = named("conduit", new ConduitBlock());
     public static final BeeNestBlock BEE_NEST = named("bee_nest", new BeeNestBlock());
     public static final CampfireBlock CAMPFIRE = named("campfire", new CampfireBlock(false));
     public static final CampfireBlock SOUL_CAMPFIRE = named("soul_campfire", new CampfireBlock(true));
@@ -181,7 +183,7 @@ public final class PSBlocks {
                 CAMPFIRE, SOUL_CAMPFIRE, SOUL_SOIL, SOUL_FIRE, KELP, KELP_STALK, DRIED_KELP_BLOCK, SWEET_BERRY_BUSH,
                 TORCHFLOWER, CORNFLOWER, LILY_OF_THE_VALLEY, WITHER_ROSE, TORCHFLOWER_CROP, PITCHER_CROP, PITCHER_PLANT,
                 SUSPICIOUS_SAND, SNIFFER_EGG, MOSS_BLOCK, MOSS_CARPET, AZALEA, FLOWERING_AZALEA,
-                AZALEA_LEAVES, FLOWERING_AZALEA_LEAVES, ROOTED_DIRT, HANGING_ROOTS, MUD);
+                AZALEA_LEAVES, FLOWERING_AZALEA_LEAVES, ROOTED_DIRT, HANGING_ROOTS, MUD, CONDUIT);
         for (PottedPlantBlock pot : POTTED_PLANTS) {
             event.getRegistry().register(pot);
         }
@@ -206,6 +208,7 @@ public final class PSBlocks {
         GameRegistry.registerTileEntity(RiftJarBlockEntity.class, Psychedelicraft.id("rift_jar"));
         GameRegistry.registerTileEntity(BeeNestBlockEntity.class, Psychedelicraft.id("bee_nest"));
         GameRegistry.registerTileEntity(CampfireBlockEntity.class, Psychedelicraft.id("campfire"));
+        GameRegistry.registerTileEntity(ConduitBlockEntity.class, Psychedelicraft.id("conduit"));
         Blocks.FIRE.setFireInfo(DRYING_TABLE, 5, 20);
         Blocks.FIRE.setFireInfo(BOTTLE_RACK, 5, 20);
         Blocks.FIRE.setFireInfo(LATTICE, 5, 20);

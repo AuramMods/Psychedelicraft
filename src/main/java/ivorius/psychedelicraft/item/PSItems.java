@@ -190,6 +190,8 @@ public final class PSItems {
     public static final Item RAW_COPPER = named("raw_copper", new Item());
     public static final Item COPPER_INGOT = named("copper_ingot", new Item());
     public static final Item HEART_OF_THE_SEA = named("heart_of_the_sea", new Item());
+    public static final Item NAUTILUS_SHELL = named("nautilus_shell", new Item());
+    public static final Item CONDUIT = named("conduit", new WaterloggableBlockItem(PSBlocks.CONDUIT));
     public static final Item VOMIT = named("vomit", new Item());
     public static final PaperBagItem PAPER_BAG = named("paper_bag", new PaperBagItem());
     public static final BagOfVomitItem BAG_O_VOMIT = named("bag_o_vomit", new BagOfVomitItem());

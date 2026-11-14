@@ -6,13 +6,16 @@ package ivorius.psychedelicraft.world.gen;
 
 import ivorius.psychedelicraft.Psychedelicraft;
 import ivorius.psychedelicraft.config.PSConfig;
+import ivorius.psychedelicraft.item.PSItems;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.world.storage.loot.LootEntry;
+import net.minecraft.world.storage.loot.LootEntryItem;
 import net.minecraft.world.storage.loot.LootEntryTable;
 import net.minecraft.world.storage.loot.LootPool;
 import net.minecraft.world.storage.loot.LootTableList;
 import net.minecraft.world.storage.loot.RandomValueRange;
 import net.minecraft.world.storage.loot.conditions.LootCondition;
+import net.minecraft.world.storage.loot.functions.LootFunction;
 import net.minecraftforge.event.LootTableLoadEvent;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
@@ -50,6 +53,10 @@ public final class ChestLoot {
             addSupplement(event, DUNGEON);
         } else if (id.equals(LootTableList.CHESTS_VILLAGE_BLACKSMITH) && config.villageChests) {
             addSupplement(event, VILLAGE_PROFILES);
+        } else if (id.equals(LootTableList.GAMEPLAY_FISHING_TREASURE)) {
+            LootPool treasure = event.getTable().getPool("main");
+            if (treasure != null) treasure.addEntry(new LootEntryItem(PSItems.NAUTILUS_SHELL, 1, 0,
+                    new LootFunction[0], NO_CONDITIONS, "psychedelicraft:nautilus_shell"));
         }
     }
 

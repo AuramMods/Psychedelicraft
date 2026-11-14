@@ -62,6 +62,11 @@ public final class PSSounds {
     public static final SoundEvent SNIFFER_SNIFFING = sound("entity.sniffer.sniffing");
     public static final SoundEvent SNIFFER_STEP = sound("entity.sniffer.step");
     public static final SoundEvent DRUG_GENERIC = sound("drug.generic");
+    public static final SoundEvent CONDUIT_ACTIVATE = sound("block.conduit.activate");
+    public static final SoundEvent CONDUIT_DEACTIVATE = sound("block.conduit.deactivate");
+    public static final SoundEvent CONDUIT_AMBIENT = sound("block.conduit.ambient");
+    public static final SoundEvent CONDUIT_AMBIENT_SHORT = sound("block.conduit.ambient.short");
+    public static final SoundEvent CONDUIT_ATTACK = sound("block.conduit.attack.target");
 
     private PSSounds() {
     }
@@ -82,6 +87,7 @@ public final class PSSounds {
                 MOOSHROOM_CONVERT, MOOSHROOM_EAT, MOOSHROOM_MILK, MOOSHROOM_SUSPICIOUS_MILK,
                 BRUSH_GENERIC, BRUSH_SAND, BRUSH_SAND_COMPLETE, SNIFFER_EGG_CRACK, SNIFFER_EGG_HATCH, SNIFFER_EGG_PLOP,
                 SNIFFER_DEATH, SNIFFER_DIGGING, SNIFFER_DIGGING_STOP, SNIFFER_DROP_SEED, SNIFFER_EAT, SNIFFER_HAPPY,
-                SNIFFER_HURT, SNIFFER_IDLE, SNIFFER_SCENTING, SNIFFER_SEARCHING, SNIFFER_SNIFFING, SNIFFER_STEP);
+                SNIFFER_HURT, SNIFFER_IDLE, SNIFFER_SCENTING, SNIFFER_SEARCHING, SNIFFER_SNIFFING, SNIFFER_STEP,
+                CONDUIT_ACTIVATE, CONDUIT_DEACTIVATE, CONDUIT_AMBIENT, CONDUIT_AMBIENT_SHORT, CONDUIT_ATTACK);
     }
 }
