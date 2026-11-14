@@ -5,8 +5,11 @@ import ivorius.psychedelicraft.client.render.HallucinationManager;
 import ivorius.psychedelicraft.client.render.HallucinationManager.Effect;
 import ivorius.psychedelicraft.entity.drug.DrugProperties;
 import ivorius.psychedelicraft.entity.drug.DrugType;
+import ivorius.psychedelicraft.fluid.physical.Waterlogging;
+import net.minecraft.block.state.IBlockState;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.entity.EntityPlayerSP;
+import net.minecraft.client.renderer.ActiveRenderInfo;
 import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.client.renderer.OpenGlHelper;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
@@ -17,7 +20,10 @@ import net.minecraft.client.resources.IResourceManager;
 import net.minecraft.client.resources.IResourceManagerReloadListener;
 import net.minecraft.client.shader.ShaderManager;
 import net.minecraft.client.shader.ShaderUniform;
+import net.minecraft.entity.Entity;
+import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.init.Blocks;
+import net.minecraft.init.MobEffects;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.BlockPos;
 import org.apache.logging.log4j.LogManager;
@@ -108,6 +114,8 @@ public final class WorldGeometryShader implements IResourceManagerReloadListener
                 boolean fog = !screen && !sky && material != Material.BLOCK_DAMAGE && material != Material.WORLD_BORDER;
                 upload(program, "FogMode", fog ? fogMode() : 0F);
                 upload(program, "RadialFog", fog && radialFog() ? 1F : 0F);
+                upload(program, "TerrainPulseShape", material == Material.TERRAIN && pulses != null
+                        ? terrainPulseShape(client) : 0F);
                 upload(program, "RiftCenter", riftCenter ? 1F : 0F);
                 upload(program, "SkyMode", material == Material.SKY_GRADIENT ? 1F : sky ? 2F : 0F);
                 upload(program, "Untextured", material == Material.SKY_GRADIENT || material == Material.BLOCK_OUTLINE ? 1F : 0F);
@@ -192,6 +200,19 @@ public final class WorldGeometryShader implements IResourceManagerReloadListener
     private static boolean radialFog() {
         return GLContext.getCapabilities().GL_NV_fog_distance
                 && GL11.glGetInteger(NVFogDistance.GL_FOG_DISTANCE_MODE_NV) == NVFogDistance.GL_EYE_RADIAL_NV;
+    }
+
+    private static float terrainPulseShape(Minecraft client) {
+        Entity camera = client.getRenderViewEntity();
+        boolean blind = camera instanceof EntityLivingBase && ((EntityLivingBase) camera).isPotionActive(MobEffects.BLINDNESS);
+        boolean thickFog = client.world.provider.doesXZShowFog((int) camera.posX, (int) camera.posZ)
+                || client.ingameGUI.getBossOverlay().shouldCreateFog();
+        float partialTicks = client.getRenderPartialTicks();
+        IBlockState state = ActiveRenderInfo.getBlockStateAtEntityViewpoint(client.world, camera, partialTicks);
+        BlockPos pos = new BlockPos(ActiveRenderInfo.projectViewFromEntity(camera, partialTicks));
+        boolean submerged = state.getMaterial() == net.minecraft.block.material.Material.LAVA
+                || Waterlogging.isWater(client.world, pos, state);
+        return blind || thickFog || submerged ? 1F : 2F;
     }
 
     @Override

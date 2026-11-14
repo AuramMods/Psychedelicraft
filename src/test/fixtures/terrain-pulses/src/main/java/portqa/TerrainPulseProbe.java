@@ -1,0 +1,214 @@
+package portqa;
+
+import java.nio.ByteBuffer;
+
+import ivorius.psychedelicraft.client.render.HallucinationManager;
+import ivorius.psychedelicraft.client.render.HallucinationManager.Effect;
+import ivorius.psychedelicraft.client.render.shader.WorldGeometryShader;
+import ivorius.psychedelicraft.client.render.shader.WorldGeometryShader.Material;
+import ivorius.psychedelicraft.client.render.shader.WorldGeometryShader.Scope;
+import ivorius.psychedelicraft.entity.drug.DrugCapability;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.GuiMainMenu;
+import net.minecraft.init.MobEffects;
+import net.minecraft.potion.PotionEffect;
+import net.minecraft.world.GameType;
+import net.minecraft.world.WorldSettings;
+import net.minecraft.world.WorldType;
+import net.minecraftforge.client.event.RenderWorldLastEvent;
+import net.minecraftforge.fml.common.Mod;
+import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
+import net.minecraftforge.fml.common.gameevent.TickEvent;
+import net.minecraftforge.fml.relauncher.ReflectionHelper;
+import org.apache.logging.log4j.LogManager;
+import org.lwjgl.BufferUtils;
+import org.lwjgl.opengl.GL11;
+import org.lwjgl.opengl.GL13;
+import org.lwjgl.opengl.GL20;
+import org.lwjgl.opengl.GLContext;
+import org.lwjgl.opengl.NVFogDistance;
+
+@Mod(modid = "portpulsetest", name = "Terrain pulse probe", version = "1", clientSideOnly = true)
+@Mod.EventBusSubscriber(modid = "portpulsetest")
+public final class TerrainPulseProbe {
+    private static final Minecraft CLIENT = Minecraft.getMinecraft();
+    private static final ByteBuffer PIXEL = BufferUtils.createByteBuffer(4);
+    private static boolean launched;
+    private static boolean done;
+    private static int frames;
+    private static int width;
+    private static int height;
+
+    @SubscribeEvent
+    public static void tick(TickEvent.ClientTickEvent event) {
+        if (event.phase != TickEvent.Phase.END) return;
+        if (done) {
+            CLIENT.shutdown();
+        } else if (!launched && CLIENT.currentScreen instanceof GuiMainMenu) {
+            launched = true;
+            CLIENT.gameSettings.renderDistanceChunks = 4;
+            String save = "TerrainPulse-" + System.currentTimeMillis();
+            CLIENT.launchIntegratedServer(save, save, new WorldSettings(123L, GameType.SURVIVAL,
+                    false, false, WorldType.FLAT));
+        }
+    }
+
+    @SubscribeEvent
+    public static void sample(RenderWorldLastEvent event) {
+        if (done || CLIENT.player == null || CLIENT.currentScreen != null || ++frames < 8) return;
+        WorldGeometryShader shader = new WorldGeometryShader();
+        HallucinationManager hallucinations = new HallucinationManager();
+        float[] strengths = ReflectionHelper.getPrivateValue(HallucinationManager.class, hallucinations, "strengths");
+        float[] categories = ReflectionHelper.getPrivateValue(HallucinationManager.class, hallucinations, "categoryStrengths");
+        java.util.Arrays.fill(categories, 1F);
+        strengths[Effect.PULSES.ordinal()] = 1F;
+
+        width = CLIENT.getFramebuffer().framebufferWidth;
+        height = CLIENT.getFramebuffer().framebufferHeight;
+        GL11.glPushAttrib(GL11.GL_ALL_ATTRIB_BITS);
+        GL11.glMatrixMode(GL11.GL_PROJECTION);
+        GL11.glPushMatrix();
+        GL11.glLoadIdentity();
+        GL11.glOrtho(-12, 12, -12, 12, 0, 20);
+        GL11.glMatrixMode(GL11.GL_MODELVIEW);
+        GL11.glPushMatrix();
+        GL11.glLoadIdentity();
+        int texture = GL11.glGenTextures();
+        try {
+            GL11.glViewport(0, 0, width, height);
+            GL11.glDisable(GL11.GL_ALPHA_TEST);
+            GL11.glDisable(GL11.GL_DEPTH_TEST);
+            GL11.glDisable(GL11.GL_BLEND);
+            GL11.glDisable(GL11.GL_CULL_FACE);
+            GL11.glDisable(GL11.GL_FOG);
+            if (GLContext.getCapabilities().GL_NV_fog_distance) {
+                GL11.glFogi(NVFogDistance.GL_FOG_DISTANCE_MODE_NV, NVFogDistance.GL_EYE_PLANE_ABSOLUTE_NV);
+            }
+            GL11.glDisable(GL11.GL_SCISSOR_TEST);
+            GL11.glColorMask(true, true, true, true);
+            GL13.glActiveTexture(GL13.GL_TEXTURE0);
+            GL11.glBindTexture(GL11.GL_TEXTURE_2D, texture);
+            GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MIN_FILTER, GL11.GL_NEAREST);
+            GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MAG_FILTER, GL11.GL_NEAREST);
+            ByteBuffer white = BufferUtils.createByteBuffer(4);
+            white.putInt(-1).flip();
+            GL11.glTexImage2D(GL11.GL_TEXTURE_2D, 0, GL11.GL_RGBA8, 1, 1, 0,
+                    GL11.GL_RGBA, GL11.GL_UNSIGNED_BYTE, white);
+            GL13.glActiveTexture(GL13.GL_TEXTURE1);
+            GL11.glBindTexture(GL11.GL_TEXTURE_2D, texture);
+            GL13.glActiveTexture(GL13.GL_TEXTURE0);
+            GL11.glClearColor(0, 0, 0, 1);
+
+            int flat;
+            int side;
+            int corner;
+            int interpolated;
+            try (Scope ignored = start(shader, hallucinations, true)) {
+                quad(-0.5, -0.5, 0.5, 0.5);
+                quad(7.5, -0.5, 8.5, 0.5);
+                quad(9.5, 9.5, 10.5, 10.5);
+                flat = red(0, 0);
+                side = red(8, 0);
+                corner = red(10, 10);
+                quad(-8, -3, 8, -2);
+                interpolated = red(0, -2.5);
+            }
+
+            int tilted;
+            GL11.glRotatef(90, 0, 0, 1);
+            try (Scope ignored = start(shader, hallucinations, true)) {
+                quad(9.5, 9.5, 10.5, 10.5);
+                tilted = red(-10, 10);
+            }
+            GL11.glLoadIdentity();
+
+            CLIENT.player.addPotionEffect(new PotionEffect(MobEffects.BLINDNESS, 100));
+            int blind;
+            int blindSlope;
+            try (Scope ignored = start(shader, hallucinations, true)) {
+                quad(9.5, 9.5, 10.5, 10.5);
+                blind = red(10, 10);
+                quad(2.5, 4.5, 3.5, 5.5);
+                blindSlope = red(3, 5);
+            } finally {
+                CLIENT.player.removePotionEffect(MobEffects.BLINDNESS);
+            }
+
+            GL11.glEnable(GL11.GL_FOG);
+            GL11.glFogi(GL11.GL_FOG_MODE, GL11.GL_LINEAR);
+            GL11.glFogf(GL11.GL_FOG_START, 0F);
+            GL11.glFogf(GL11.GL_FOG_END, 8F);
+            GL11.glFog(GL11.GL_FOG_COLOR, (java.nio.FloatBuffer) BufferUtils.createFloatBuffer(4)
+                    .put(new float[] {1, 1, 1, 1}).flip());
+            int fogCenter;
+            int fogSide;
+            try (Scope ignored = start(shader, hallucinations, false)) {
+                quad(-0.5, -0.5, 0.5, 0.5);
+                quad(7.5, -0.5, 8.5, 0.5);
+                fogCenter = red(0, 0);
+                fogSide = red(8, 0);
+            }
+            boolean baseline = "baseline".equals(System.getProperty("portqa.mode"));
+            LogManager.getLogger().info("PULSE_SAMPLES baseline={} center={} side={} corner={} tilted={} blind={} blindSlope={} interpolated={} fogCenter={} fogSide={}",
+                    baseline, flat, side, corner, tilted, blind, blindSlope, interpolated, fogCenter, fogSide);
+            near(flat, 64, 2, "center");
+            near(side, baseline ? 64 : shade(Math.hypot(8, 2)), 3, "side");
+            near(corner, baseline ? 64 : shade(Math.hypot(10, 2)), 4, "corner");
+            near(tilted, corner, 3, "rotated up axis");
+            near(blind, baseline ? 64 : shade(Math.sqrt(204)), 4, "blindness");
+            near(blindSlope, baseline ? 64 : shade(Math.sqrt(38)), 4, "spherical pulse at a shallower offset");
+            near(interpolated, baseline ? 64 : shade(Math.hypot(8, 2)), 4, "per-vertex interpolation");
+            near(fogCenter, 112, 2, "ambient fog");
+            near(fogSide, fogCenter, 2, "ambient fog at equal depth");
+            near(GL11.glGetError(), GL11.GL_NO_ERROR, 0, "OpenGL error");
+            LogManager.getLogger().info("TERRAIN_PULSE_PASS baseline={}", baseline);
+            done = true;
+        } finally {
+            GL11.glDeleteTextures(texture);
+            GL11.glMatrixMode(GL11.GL_MODELVIEW);
+            GL11.glPopMatrix();
+            GL11.glMatrixMode(GL11.GL_PROJECTION);
+            GL11.glPopMatrix();
+            GL11.glPopAttrib();
+            GL11.glMatrixMode(GL11.GL_MODELVIEW);
+        }
+    }
+
+    private static Scope start(WorldGeometryShader shader, HallucinationManager hallucinations, boolean pulse) {
+        GL11.glClear(GL11.GL_COLOR_BUFFER_BIT);
+        Scope scope = shader.begin(CLIENT, CLIENT.player, hallucinations, DrugCapability.get(CLIENT.player),
+                Material.TERRAIN, 0, null);
+        if (scope == null) throw new AssertionError("Terrain shader unavailable");
+        int program = GL11.glGetInteger(GL20.GL_CURRENT_PROGRAM);
+        GL20.glUniform1f(GL20.glGetUniformLocation(program, "WorldTicks"), 0F);
+        GL20.glUniform4f(GL20.glGetUniformLocation(program, "Pulses"), 1F, 0F, 0F, pulse ? 1F : 0F);
+        return scope;
+    }
+
+    private static void quad(double left, double bottom, double right, double top) {
+        GL11.glColor4f(0.25F, 0.25F, 0.25F, 1F);
+        GL11.glBegin(GL11.GL_QUADS);
+        GL11.glVertex3d(left, bottom, -2);
+        GL11.glVertex3d(right, bottom, -2);
+        GL11.glVertex3d(right, top, -2);
+        GL11.glVertex3d(left, top, -2);
+        GL11.glEnd();
+    }
+
+    private static int red(double x, double y) {
+        PIXEL.clear();
+        GL11.glReadPixels((int) ((x + 12) * width / 24), (int) ((y + 12) * height / 24), 1, 1,
+                GL11.GL_RGBA, GL11.GL_UNSIGNED_BYTE, PIXEL);
+        return PIXEL.get(0) & 255;
+    }
+
+    private static int shade(double distance) {
+        return (int) Math.round(255 * (0.25 + Math.max(0, Math.sin(distance / 5) - 0.4)));
+    }
+
+    private static void near(int actual, int expected, int tolerance, String name) {
+        if (Math.abs(actual - expected) > tolerance) {
+            throw new AssertionError(name + " actual=" + actual + " expected=" + expected);
+        }
+    }
+}

@@ -13,6 +13,7 @@
     { "name": "Pulses", "type": "float", "count": 4, "values": [0.0] },
     { "name": "FogMode", "type": "float", "count": 1, "values": [0.0] },
     { "name": "RadialFog", "type": "float", "count": 1, "values": [0.0] },
+    { "name": "TerrainPulseShape", "type": "float", "count": 1, "values": [0.0] },
     { "name": "RiftCenter", "type": "float", "count": 1, "values": [0.0] },
     { "name": "LightmapMode", "type": "float", "count": 1, "values": [0.0] },
     { "name": "GeometryCoordinates", "type": "float", "count": 4, "values": [0.0, 0.0, 0.0, 1.0] },

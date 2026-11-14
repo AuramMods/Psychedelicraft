@@ -12,6 +12,7 @@ uniform vec4 GeometryCoordinates;
 uniform float EntityModel;
 uniform float SkyMode;
 uniform float PortalTexGen;
+uniform float TerrainPulseShape;
 uniform mat4 EntityViewToWorld;
 uniform float EntityLighting;
 uniform float EntityColorMaterial;
@@ -27,6 +28,7 @@ varying vec4 colorUv;
 varying vec2 lightmapUv;
 varying vec4 vertexColor;
 varying vec3 viewPosition;
+varying float terrainPulseDistance;
 varying vec3 surfaceColor;
 varying vec4 screenProjection;
 
@@ -50,6 +52,15 @@ void main() {
   gl_Position = ftransform();
   screenProjection = vec4((gl_Position.xy + gl_Position.ww) * 0.5, gl_Position.zw);
   viewPosition = view.xyz;
+  terrainPulseDistance = 0.0;
+  if (TerrainPulseShape == 1.0) {
+    terrainPulseDistance = length(view.xyz);
+  } else if (TerrainPulseShape == 2.0) {
+    // Measure height along the terrain's up axis even when the camera is tilted.
+    vec3 up = normalize(gl_ModelViewMatrix[1].xyz);
+    float height = dot(view.xyz, up);
+    terrainPulseDistance = max(length(view.xyz - up * height), abs(height));
+  }
   if (PortalTexGen > 0.0) {
     vec4 projected = vec4(dot(view, gl_EyePlaneS[0]), dot(view, gl_EyePlaneT[0]),
                           dot(view, gl_EyePlaneR[0]), 1.0);

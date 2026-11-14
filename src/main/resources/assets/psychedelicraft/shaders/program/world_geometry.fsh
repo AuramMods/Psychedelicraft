@@ -8,6 +8,7 @@ uniform float SurfaceFractalStrength;
 uniform vec4 Pulses;
 uniform float FogMode;
 uniform float RadialFog;
+uniform float TerrainPulseShape;
 uniform float RiftCenter;
 uniform float EntityModel;
 uniform float Untextured;
@@ -21,6 +22,7 @@ varying vec4 colorUv;
 varying vec2 lightmapUv;
 varying vec4 vertexColor;
 varying vec3 viewPosition;
+varying float terrainPulseDistance;
 varying vec3 surfaceColor;
 
 void main() {
@@ -68,7 +70,8 @@ void main() {
     color.rgb = mix(gl_Fog.color.rgb, color.rgb, fog);
   }
 
-  float pulse = max(0.0, sin((distanceToEye - WorldTicks) / 5.0) - 0.4) * Pulses.a;
+  float pulseDistance = TerrainPulseShape > 0.0 ? terrainPulseDistance : distanceToEye;
+  float pulse = max(0.0, sin((pulseDistance - WorldTicks) / 5.0) - 0.4) * Pulses.a;
   color.rgb = mix(color.rgb, (color.rgb + 1.0) * Pulses.rgb, pulse);
   gl_FragColor = color;
 }

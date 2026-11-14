@@ -1,0 +1,12 @@
+buildscript {
+    repositories { maven { url = 'https://maven.minecraftforge.net/' }; mavenCentral() }
+    dependencies { classpath 'net.minecraftforge.gradle:ForgeGradle:3.0.197' }
+}
+apply plugin: 'net.minecraftforge.gradle'
+sourceCompatibility = targetCompatibility = '1.8'
+minecraft { mappings channel: 'snapshot', version: '20171003-1.12' }
+dependencies {
+    minecraft 'net.minecraftforge:forge:1.12.2-14.23.5.2864'
+    compileOnly files('../../../../build/sourceSets/main')
+}
+jar.finalizedBy('reobfJar')
