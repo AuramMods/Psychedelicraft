@@ -149,6 +149,26 @@ public class PhysicalFluidStateTest {
         assertFalse(Waterlogging.physicalFluidAtEyes(pig, Material.WATER));
     }
 
+    @Test
+    public void fallingFlowPullsAgainstWallsAndSourcesKeepTheirHorizontalCurrent() {
+        PhysicalFluidBlock coffee = new PhysicalFluidBlock(PSFluids.COFFEE);
+        FluidWorld world = new FluidWorld();
+        BlockPos cell = new BlockPos(0, 64, 0);
+        IBlockState source = coffee.getDefaultState();
+        IBlockState falling = coffee.getStateFromMeta(1);
+        world.put(cell, source, null);
+        world.put(cell.down(), falling, null);
+        world.put(cell.east(), coffee.getStateFromMeta(2), null);
+
+        assertEquals(1D, coffee.getFlowVector(world, cell).x, 0.000001D);
+        assertEquals(0D, coffee.getFlowVector(world, cell.down()).y, 0D);
+        world.put(cell.down().west(), Blocks.STONE.getDefaultState(), null);
+        assertEquals(-1D, coffee.getFlowVector(world, cell.down()).y, 0.000001D);
+        world.put(cell.down().west(), Blocks.ICE.getDefaultState(), null);
+        assertEquals(0D, coffee.getFlowVector(world, cell.down()).y, 0D);
+
+    }
+
     private static final class FluidWorld extends World {
         private final Map<BlockPos, IBlockState> blocks = new HashMap<>();
         private final Map<BlockPos, TileEntity> tiles = new HashMap<>();

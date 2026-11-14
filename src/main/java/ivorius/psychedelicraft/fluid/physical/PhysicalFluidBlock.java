@@ -11,6 +11,7 @@ import net.minecraft.block.material.MapColor;
 import net.minecraft.block.material.Material;
 import net.minecraft.block.material.MaterialLiquid;
 import net.minecraft.block.properties.PropertyBool;
+import net.minecraft.block.state.BlockFaceShape;
 import net.minecraft.block.state.BlockStateContainer;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.client.renderer.ActiveRenderInfo;
@@ -106,6 +107,52 @@ public final class PhysicalFluidBlock extends BlockFluidClassic {
 
     public float surfaceHeight(IBlockAccess world, BlockPos pos, IBlockState state) {
         return world.getBlockState(pos.up()).getBlock() == this ? 1F : (8 - state.getValue(LEVEL)) / 9F;
+    }
+
+    @Override
+    public Vec3d getFlowVector(IBlockAccess world, BlockPos pos) {
+        IBlockState state = world.getBlockState(pos);
+        if (state.getBlock() != this) return Vec3d.ZERO;
+        float height = flowHeight(world, pos, state);
+        Vec3d flow = Vec3d.ZERO;
+        for (EnumFacing side : EnumFacing.Plane.HORIZONTAL) {
+            BlockPos neighbor = pos.offset(side);
+            IBlockState adjacent = world.getBlockState(neighbor);
+            float difference = 0F;
+            if (adjacent.getBlock() == this) {
+                difference = height - flowHeight(world, neighbor, adjacent);
+            } else if (!adjacent.getMaterial().blocksMovement() && !adjacent.getMaterial().isLiquid()
+                    && !(adjacent.getBlock() instanceof IFluidBlock) && !Waterlogging.isWet(world, neighbor, adjacent)) {
+                BlockPos below = neighbor.down();
+                IBlockState lower = world.getBlockState(below);
+                if (lower.getBlock() == this) difference = height + (8F / 9F - flowHeight(world, below, lower));
+            }
+            flow = flow.addVector(side.getFrontOffsetX() * difference, 0, side.getFrontOffsetZ() * difference);
+        }
+
+        if (isFalling(world, pos, state)) {
+            for (EnumFacing side : EnumFacing.Plane.HORIZONTAL) {
+                BlockPos neighbor = pos.offset(side);
+                if (hasCurrentWall(world, neighbor, side) || hasCurrentWall(world, neighbor.up(), side)) {
+                    return flow.normalize().addVector(0, -6, 0).normalize();
+                }
+            }
+        }
+        return flow.normalize();
+    }
+
+    private float flowHeight(IBlockAccess world, BlockPos pos, IBlockState state) {
+        return (isFalling(world, pos, state) ? 8 : 8 - state.getValue(LEVEL)) / 9F;
+    }
+
+    private boolean isFalling(IBlockAccess world, BlockPos pos, IBlockState state) {
+        return state.getValue(LEVEL) != 0 && world.getBlockState(pos.up()).getBlock() == this;
+    }
+
+    private boolean hasCurrentWall(IBlockAccess world, BlockPos pos, EnumFacing side) {
+        IBlockState state = world.getBlockState(pos);
+        return state.getBlock() != this && state.getMaterial() != Material.ICE
+                && state.getBlockFaceShape(world, pos, side) == BlockFaceShape.SOLID;
     }
 
     @Override
@@ -328,7 +375,7 @@ public final class PhysicalFluidBlock extends BlockFluidClassic {
     @Override
     @SideOnly(Side.CLIENT)
     public void randomDisplayTick(IBlockState state, World world, BlockPos pos, Random random) {
-        boolean falling = world.getBlockState(pos.up()).getBlock() == this;
+        boolean falling = isFalling(world, pos, state);
         IBlockState display = Blocks.WATER.getDefaultState().withProperty(BlockLiquid.LEVEL,
                 falling ? 8 : state.getValue(LEVEL));
         Blocks.WATER.randomDisplayTick(display, world, pos, random);

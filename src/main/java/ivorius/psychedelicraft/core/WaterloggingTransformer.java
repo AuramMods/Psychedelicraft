@@ -50,6 +50,7 @@ public final class WaterloggingTransformer implements IClassTransformer {
     private static final String FACING = "Lnet/minecraft/util/EnumFacing;";
     private static final String RANDOM = "Ljava/util/Random;";
     private static final String HOOKS = "ivorius/psychedelicraft/fluid/physical/Waterlogging";
+    private static final String CURRENTS = "ivorius/psychedelicraft/fluid/physical/PhysicalFluidCurrents";
 
     @Override
     public byte[] transform(String name, String transformedName, byte[] bytes) {
@@ -106,6 +107,7 @@ public final class WaterloggingTransformer implements IClassTransformer {
                 break;
             case WORLD_CLASS:
                 scheduleOnNeighborUpdate(type);
+                patchPhysicalCurrents(type);
                 releaseWater(method(type, "setBlockToAir", "func_175698_g", "(" + POS + ")Z"));
                 releaseWater(method(type, "destroyBlock", "func_175655_b", "(" + POS + "Z)Z"));
                 break;
@@ -158,6 +160,28 @@ public final class WaterloggingTransformer implements IClassTransformer {
         hook.add(new FrameNode(Opcodes.F_SAME1, 0, null, 1, new Object[] {"java/lang/Boolean"}));
         hook.add(new InsnNode(Opcodes.POP));
         method.instructions.insert(hook);
+    }
+
+    private static void patchPhysicalCurrents(ClassNode type) {
+        MethodNode method = method(type, "handleMaterialAcceleration", "func_72918_a", "(" + AABB + MATERIAL + ENTITY + ")Z");
+        AbstractInsnNode result = null;
+        for (AbstractInsnNode instruction : method.instructions.toArray()) {
+            if (matches(instruction, "modifyAcceleration", "func_176197_a", "(" + WORLD + POS + ENTITY + VECTOR + ")" + VECTOR)) {
+                MethodInsnNode call = (MethodInsnNode) instruction;
+                method.instructions.set(call, new MethodInsnNode(Opcodes.INVOKESTATIC, CURRENTS, "accumulateLegacy",
+                        "(L" + call.owner + ";" + call.desc.substring(1), false));
+            }
+            if (instruction.getOpcode() == Opcodes.IRETURN) result = instruction;
+        }
+        if (result == null) throw new IllegalStateException("Could not locate Forge fluid contact result");
+        Type[] args = Type.getArgumentTypes(method.desc);
+        InsnList hook = new InsnList();
+        hook.add(new VarInsnNode(Opcodes.ALOAD, 0));
+        hook.add(new VarInsnNode(Opcodes.ALOAD, 2));
+        hook.add(new VarInsnNode(Opcodes.ALOAD, 3));
+        hook.add(new MethodInsnNode(Opcodes.INVOKESTATIC, CURRENTS, "apply", Type.getMethodDescriptor(
+                Type.BOOLEAN_TYPE, Type.BOOLEAN_TYPE, Type.getObjectType(type.name), args[1], args[2]), false));
+        method.instructions.insertBefore(result, hook);
     }
 
     private static void patchBlock(ClassNode type) {

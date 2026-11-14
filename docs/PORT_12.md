@@ -1181,6 +1181,15 @@ sh run/production/background-qa/run.sh "$qa" game-background Overlay-QA \
 - The tested production jar SHA-256 is `a513478e8ac372fde6ff170673230a7244a89108d555bc5065fa968dcaac5cd0`. Evidence is under `run/production/runtime-qa-cycle129` in `build-production.log`, `build-fixture-final.log`, `runtime-baseline-verified.log`, `runtime-verified.log`, `runtime-contact.log` and `runtime-column.log`. Clients ran on Xvfb with zero master volume and OpenAL's `No Output` device.
 - Next, compare how the donor scales the current when entities wade through water-tagged mod fluids and when a flowing cell becomes part of a falling column.
 
+### Cycle 130 · Shallow currents and falling fluid
+
+- World mod fluids use differences in their own heights to calculate flow vectors. A falling cell uses the donor's full flowing height and adds downward pull beside a solid face. Forge derives falling from a flowing cell fed from above, so a stacked source keeps its source current. The solid-face check excludes ice and reads both the adjacent face and the one above it. [Pinned physical fluid](https://github.com/Sollace/Psychedelicraft/blob/319a4ea0160d6600cffcd5f5cc9e363ceaab44a1/src/main/java/ivorius/psychedelicraft/fluid/physical/PlacedFluid.java)
+- The mod-fluid push uses the donor's depth scaling below 0.4 blocks, averages contributing cells, and normalizes the result for nonplayers. A player nearly at rest receives the donor's minimum push of `0.0045` when the flow produces a smaller nonzero push. The Forge hook combines water contact with the legacy result and applies the mod current separately from native water and other Forge fluids.
+- The clean Java 8 build and reobfuscation passed all 173 tests. The new regression checks a horizontal source above a falling cell, free fall without a wall, downward pull next to stone and the ice exception. The packaged jar also passed the immersion regression for shallow contact, stacked flow, breathing and client eye checks.
+- In Forge 14.23.5.2864, the previous jar applied a `0.014` push to the player in shallow coffee. The rebuilt jar applied about `0.001` while moving and `0.0045` from rest. Deep flow and the mob sample still measured `0.014`. Equal opposing currents canceled, still fluid reduced the average push, and the falling-flow checks passed for stone, ice and stacked sources. Native water, untagged kava and boat buoyancy checks also passed.
+- The tested production jar SHA-256 is `52f77c1b10b176bf6d93a6db32604c4e26bf6fa704d45e9472e9c644ee32567c`. Evidence is under `run/production/runtime-qa-cycle130` in `runtime-baseline-verified.log`, `runtime-verified.log`, `runtime-immersion.log` and `runtime-boat.log`. Clients ran on Xvfb with zero master volume and OpenAL's `No Output` device.
+- Next, audit mixed vanilla and mod currents at fluid boundaries and compare the legacy player's movement with both fluids touching the same body.
+
 Dedicated Forge startup and multiplayer on that server remain open pending EULA acceptance.
 
 ## Repository and branch survey
