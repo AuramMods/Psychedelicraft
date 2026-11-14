@@ -31,6 +31,7 @@ public final class ExplosionDropTransformer implements IClassTransformer {
         if (EXPLOSION.equals(transformedName)) {
             rememberSourceRule(type);
             applyDropRule(type);
+            applyDamageSource(type);
         } else {
             passFireballSource(type);
         }
@@ -75,6 +76,25 @@ public final class ExplosionDropTransformer implements IClassTransformer {
             return;
         }
         throw new IllegalStateException("Could not locate the explosion block drop call");
+    }
+
+    private static void applyDamageSource(ClassNode type) {
+        MethodNode damage = ClientEffectsTransformer.method(type, "doExplosionA", "func_77278_a", "()V");
+        for (AbstractInsnNode instruction : damage.instructions.toArray()) {
+            if (!isCall(instruction, "causeExplosionDamage", "func_94539_a",
+                    "(Lnet/minecraft/world/Explosion;)Lnet/minecraft/util/DamageSource;")) continue;
+            MethodInsnNode call = (MethodInsnNode) instruction;
+            FieldNode source = ClientEffectsTransformer.field(type, "exploder", "field_77283_e");
+            InsnList exploder = new InsnList();
+            exploder.add(new VarInsnNode(Opcodes.ALOAD, 0));
+            exploder.add(new FieldInsnNode(Opcodes.GETFIELD, type.name, source.name, source.desc));
+            damage.instructions.insertBefore(call, exploder);
+            damage.instructions.set(call, new MethodInsnNode(Opcodes.INVOKESTATIC,
+                    "ivorius/psychedelicraft/PSDamageTypes", "explosionDamage",
+                    call.desc.replace(")", source.desc + ")"), false));
+            return;
+        }
+        throw new IllegalStateException("Could not locate the explosion damage source call");
     }
 
     private static void passFireballSource(ClassNode type) {

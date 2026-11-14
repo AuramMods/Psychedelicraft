@@ -1,12 +1,15 @@
 package ivorius.psychedelicraft;
 
+import ivorius.psychedelicraft.entity.MolotovCocktailEntity;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityLivingBase;
+import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.DamageSource;
 import net.minecraft.util.EntityDamageSourceIndirect;
 import net.minecraft.util.text.ITextComponent;
 import net.minecraft.util.text.TextComponentTranslation;
+import net.minecraft.world.Explosion;
 
 import javax.annotation.Nullable;
 
@@ -32,6 +35,17 @@ public final class PSDamageTypes {
                         : new TextComponentTranslation(key, victim.getDisplayName(), attacker);
             }
         }.setDamageBypassesArmor();
+    }
+
+    public static DamageSource explosionDamage(Explosion explosion, @Nullable Entity exploder) {
+        if (!(exploder instanceof MolotovCocktailEntity)) return DamageSource.causeExplosionDamage(explosion);
+        EntityLivingBase owner = explosion.getExplosivePlacedBy();
+        return new EntityDamageSourceIndirect("thrown", exploder, owner) {
+            @Override
+            public boolean isDifficultyScaled() {
+                return owner != null && !(owner instanceof EntityPlayer);
+            }
+        }.setProjectile();
     }
 
     private PSDamageTypes() {

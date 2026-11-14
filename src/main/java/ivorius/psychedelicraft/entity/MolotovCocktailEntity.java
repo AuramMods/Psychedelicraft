@@ -112,7 +112,7 @@ public final class MolotovCocktailEntity extends EntityThrowable {
 
     private void explode(WorldServer level, float blast, boolean fire) {
         EntityLivingBase owner = getThrower();
-        boolean griefing = ForgeEventFactory.getMobGriefingEvent(level, owner == null ? this : owner);
+        boolean griefing = ForgeEventFactory.getMobGriefingEvent(level, this);
         Explosion explosion = new Explosion(level, this, posX, posY, posZ, blast, fire, griefing) {
             @Override
             public EntityLivingBase getExplosivePlacedBy() {
