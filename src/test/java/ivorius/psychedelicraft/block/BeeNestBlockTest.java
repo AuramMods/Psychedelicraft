@@ -6,6 +6,7 @@ import net.minecraft.block.state.IBlockState;
 import net.minecraft.init.Bootstrap;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.nbt.NBTTagList;
 import net.minecraft.util.EnumFacing;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -50,6 +51,31 @@ public class BeeNestBlockTest {
         }
         tile.readFromNBT(new NBTTagCompound());
         assertEquals(EnumFacing.NORTH, tile.getFacing());
+    }
+
+    @Test
+    public void storedOccupantsKeepNectarAndTimersWithinNestCapacity() {
+        BeeNestBlockEntity tile = new BeeNestBlockEntity();
+        NBTTagCompound tag = new NBTTagCompound();
+        NBTTagList records = new NBTTagList();
+        for (int i = 0; i < 4; i++) {
+            NBTTagCompound record = new NBTTagCompound();
+            NBTTagCompound data = new NBTTagCompound();
+            data.setBoolean("HasNectar", i == 1);
+            record.setTag("EntityData", data);
+            record.setInteger("TicksInHive", i * 700);
+            records.appendTag(record);
+        }
+        tag.setTag("Bees", records);
+        tile.readFromNBT(tag);
+
+        assertEquals(3, tile.getOccupantCount());
+        NBTTagList saved = tile.writeOccupants();
+        for (int i = 0; i < 3; i++) {
+            NBTTagCompound record = saved.getCompoundTagAt(i);
+            assertEquals(i * 700, record.getInteger("TicksInHive"));
+            assertEquals(i == 1, record.getCompoundTag("EntityData").getBoolean("HasNectar"));
+        }
     }
 
     @Test

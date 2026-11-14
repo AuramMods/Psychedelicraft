@@ -250,6 +250,7 @@ tile.psychedelicraft.distillery.name=Distillery
 tile.psychedelicraft.distillery.filled=Distillery (Filled with %s)
 tile.psychedelicraft.copper_ore.name=Copper Ore
 tile.psychedelicraft.bee_nest.name=Bee Nest
+entity.psychedelicraft.bee.name=Bee
 item.psychedelicraft.honeycomb.name=Honeycomb
 item.psychedelicraft.honey_bottle.name=Honey Bottle
 item.psychedelicraft.raw_copper.name=Raw Copper

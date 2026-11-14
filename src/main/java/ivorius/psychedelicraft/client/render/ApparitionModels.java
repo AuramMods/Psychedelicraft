@@ -50,6 +50,20 @@ enum ApparitionModels {
         }
     }
 
+    static void drawBee(float age, boolean nectar) {
+        BEE.draw(age, 1F, 1F, 1F, 1F);
+        if (nectar) {
+            if (nectarModel == null) {
+                nectarModel = new VoxelModel();
+                nectarModel.box(0xf5c54d, -3.85F, 2.8F, -0.5F, 2, 2, 3);
+                nectarModel.box(0xf5c54d, 1.85F, 2.8F, -0.5F, 2, 2, 3);
+            }
+            for (Part part : nectarModel.parts) part.draw(age, 1F, 1F, 1F, 1F);
+        }
+    }
+
+    private static VoxelModel nectarModel;
+
     private static VoxelModel allay() {
         VoxelModel m = new VoxelModel();
         m.box(0x41cee9, -2.5F, 8, -2.5F, 5, 5, 5);

@@ -28,6 +28,12 @@ public final class PSEntities {
                         .id(Psychedelicraft.id("molotov_cocktail"), 3)
                         .name(Psychedelicraft.MOD_ID + ".molotov_cocktail")
                         .tracker(64, 10, true)
+                        .build(),
+                EntityEntryBuilder.<BeeEntity>create()
+                        .entity(BeeEntity.class)
+                        .id(Psychedelicraft.id("bee"), 4)
+                        .name(Psychedelicraft.MOD_ID + ".bee")
+                        .tracker(128, 3, true)
                         .build());
     }
 

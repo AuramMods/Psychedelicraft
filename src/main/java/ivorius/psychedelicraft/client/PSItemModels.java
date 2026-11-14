@@ -20,6 +20,7 @@ import ivorius.psychedelicraft.block.entity.PeyoteBlockEntity;
 import ivorius.psychedelicraft.block.entity.PlacedDrinkBlockEntity;
 import ivorius.psychedelicraft.block.entity.RiftJarBlockEntity;
 import ivorius.psychedelicraft.client.render.TankFluidAppearance;
+import ivorius.psychedelicraft.client.render.BeeRenderer;
 import ivorius.psychedelicraft.client.render.block.DryingTableRenderer;
 import ivorius.psychedelicraft.client.render.block.BarrelRenderer;
 import ivorius.psychedelicraft.client.render.block.BottleRackRenderer;
@@ -32,6 +33,7 @@ import ivorius.psychedelicraft.client.render.block.RiftJarRenderer;
 import ivorius.psychedelicraft.client.render.entity.JuniperBoatRenderer;
 import ivorius.psychedelicraft.client.render.entity.RealityRiftRenderer;
 import ivorius.psychedelicraft.entity.EntityJuniperBoat;
+import ivorius.psychedelicraft.entity.BeeEntity;
 import ivorius.psychedelicraft.entity.EntityJuniperChestBoat;
 import ivorius.psychedelicraft.entity.MolotovCocktailEntity;
 import ivorius.psychedelicraft.entity.RealityRiftEntity;
@@ -175,6 +177,7 @@ public final class PSItemModels {
         ClientRegistry.bindTileEntitySpecialRenderer(RiftJarBlockEntity.class, riftJar);
         PSItems.RIFT_JAR.setTileEntityItemStackRenderer(riftJar.itemRenderer());
         RenderingRegistry.registerEntityRenderingHandler(RealityRiftEntity.class, RealityRiftRenderer::new);
+        RenderingRegistry.registerEntityRenderingHandler(BeeEntity.class, BeeRenderer::new);
         RenderingRegistry.registerEntityRenderingHandler(MolotovCocktailEntity.class, manager ->
                 new RenderSnowball<MolotovCocktailEntity>(manager, PSItems.MOLOTOV_COCKTAIL, Minecraft.getMinecraft().getRenderItem()) {
                     @Override

@@ -250,6 +250,7 @@ tile.psychedelicraft.distillery.name=Destylarnia
 tile.psychedelicraft.distillery.filled=Destylarnia (wypełniona %s)
 tile.psychedelicraft.copper_ore.name=Ruda miedzi
 tile.psychedelicraft.bee_nest.name=Gniazdo pszczół
+entity.psychedelicraft.bee.name=Pszczoła
 item.psychedelicraft.honeycomb.name=Plaster miodu
 item.psychedelicraft.honey_bottle.name=Butelka miodu
 item.psychedelicraft.raw_copper.name=Surowa miedź

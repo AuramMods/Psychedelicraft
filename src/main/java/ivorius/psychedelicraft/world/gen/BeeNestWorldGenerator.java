@@ -2,12 +2,14 @@ package ivorius.psychedelicraft.world.gen;
 
 import ivorius.psychedelicraft.block.BeeNestBlock;
 import ivorius.psychedelicraft.block.PSBlocks;
+import ivorius.psychedelicraft.block.entity.BeeNestBlockEntity;
 import ivorius.psychedelicraft.config.PSConfig;
 import net.minecraft.block.BlockOldLog;
 import net.minecraft.block.BlockPlanks;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.init.Biomes;
 import net.minecraft.init.Blocks;
+import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.DimensionType;
@@ -128,6 +130,8 @@ public final class BeeNestWorldGenerator {
                     && world.getBlockState(exit).getBlock() == Blocks.AIR
                     && world.setBlockState(nest, PSBlocks.BEE_NEST.getDefaultState(), 2 | 16)) {
                 PSBlocks.BEE_NEST.setFacing(world, nest, EnumFacing.SOUTH);
+                TileEntity tile = world.getTileEntity(nest);
+                if (tile instanceof BeeNestBlockEntity) ((BeeNestBlockEntity) tile).seed(random);
                 return;
             }
         }

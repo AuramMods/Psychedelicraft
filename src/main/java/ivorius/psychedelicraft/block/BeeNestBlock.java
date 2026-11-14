@@ -19,6 +19,8 @@ import net.minecraft.dispenser.IBehaviorDispenseItem;
 import net.minecraft.dispenser.IBlockSource;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.enchantment.EnchantmentHelper;
+import net.minecraft.init.Enchantments;
 import net.minecraft.init.Items;
 import net.minecraft.init.SoundEvents;
 import net.minecraft.item.Item;
@@ -36,10 +38,14 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.IBlockAccess;
 import net.minecraft.world.World;
 import net.minecraftforge.common.util.Constants;
+import net.minecraftforge.event.ForgeEventFactory;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 import net.minecraftforge.items.ItemHandlerHelper;
 
+import javax.annotation.Nullable;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Random;
 
 public final class BeeNestBlock extends Block {
@@ -53,7 +59,6 @@ public final class BeeNestBlock extends Block {
         setDefaultState(blockState.getBaseState().withProperty(HONEY_LEVEL, 0).withProperty(FACING, EnumFacing.NORTH));
         setHardness(0.3F);
         setSoundType(SoundType.WOOD);
-        setTickRandomly(true);
     }
 
     @Override
@@ -143,11 +148,47 @@ public final class BeeNestBlock extends Block {
 
     @Override
     public boolean removedByPlayer(IBlockState state, World world, BlockPos pos, EntityPlayer player, boolean willHarvest) {
+        TileEntity tile = world.getTileEntity(pos);
+        BeeNestBlockEntity nest = tile instanceof BeeNestBlockEntity ? (BeeNestBlockEntity) tile : null;
+        boolean silk = willHarvest && EnchantmentHelper.getEnchantmentLevel(Enchantments.SILK_TOUCH, player.getHeldItemMainhand()) > 0;
+        if (nest != null) nest.setMovingWithOccupants(player.isCreative() || silk);
         boolean removed = super.removedByPlayer(state, world, pos, player, willHarvest);
-        if (removed && !world.isRemote && player.isCreative() && state.getValue(HONEY_LEVEL) > 0) {
-            spawnAsEntity(world, pos, getSilkTouchDrop(state));
+        if (!removed && nest != null) nest.setMovingWithOccupants(false);
+        if (removed && !world.isRemote && player.isCreative() && (state.getValue(HONEY_LEVEL) > 0
+                || nest != null && nest.getOccupantCount() > 0)) {
+            spawnAsEntity(world, pos, nestItem(state, nest));
         }
         return removed;
+    }
+
+    @Override
+    public void breakBlock(World world, BlockPos pos, IBlockState state) {
+        TileEntity tile = world.getTileEntity(pos);
+        if (!world.isRemote && tile instanceof BeeNestBlockEntity) ((BeeNestBlockEntity) tile).releaseOnBreak();
+        super.breakBlock(world, pos, state);
+    }
+
+    @Override
+    public void harvestBlock(World world, EntityPlayer player, BlockPos pos, IBlockState state, @Nullable TileEntity tile, ItemStack tool) {
+        if (!(tile instanceof BeeNestBlockEntity) || ((BeeNestBlockEntity) tile).getOccupantCount() == 0
+                || EnchantmentHelper.getEnchantmentLevel(Enchantments.SILK_TOUCH, tool) == 0) {
+            super.harvestBlock(world, player, pos, state, tile, tool);
+            return;
+        }
+        player.addStat(StatList.getBlockStats(this));
+        player.addExhaustion(0.005F);
+        List<ItemStack> drops = new ArrayList<>();
+        drops.add(nestItem(state, (BeeNestBlockEntity) tile));
+        ForgeEventFactory.fireBlockHarvesting(drops, world, pos, state, 0, 1F, true, player);
+        for (ItemStack drop : drops) spawnAsEntity(world, pos, drop);
+    }
+
+    private ItemStack nestItem(IBlockState state, @Nullable BeeNestBlockEntity nest) {
+        ItemStack item = getSilkTouchDrop(state);
+        if (nest != null && nest.getOccupantCount() > 0) {
+            item.getOrCreateSubCompound("BlockEntityTag").setTag("Bees", nest.writeOccupants());
+        }
+        return item;
     }
 
     @Override
@@ -173,33 +214,6 @@ public final class BeeNestBlock extends Block {
     @SideOnly(Side.CLIENT)
     public void randomDisplayTick(IBlockState state, World world, BlockPos pos, Random random) {
         if (state.getValue(HONEY_LEVEL) == FULL_HONEY) HoneyDripParticle.trySpawn(world, pos);
-    }
-
-    @Override
-    public void randomTick(World world, BlockPos pos, IBlockState state, Random random) {
-        int level = state.getValue(HONEY_LEVEL);
-        if (level < FULL_HONEY && world.getWorldTime() % 24000L < 12000L
-                && !world.isRaining() && hasFlowers(world, pos)) {
-            world.setBlockState(pos, state.withProperty(HONEY_LEVEL, level + 1), 3);
-        }
-    }
-
-    private static boolean hasFlowers(World world, BlockPos pos) {
-        BlockPos.MutableBlockPos flower = new BlockPos.MutableBlockPos();
-        int bottom = Math.max(0, pos.getY() - 6);
-        int top = Math.min(world.getHeight() - 1, pos.getY() + 2);
-        for (int x = pos.getX() - 4; x <= pos.getX() + 4; x++) {
-            for (int z = pos.getZ() - 4; z <= pos.getZ() + 4; z++) {
-                if (!world.isBlockLoaded(flower.setPos(x, pos.getY(), z))) {
-                    continue;
-                }
-                for (int y = bottom; y <= top; y++) {
-                    IBlockState state = world.getBlockState(flower.setPos(x, y, z));
-                    if (isFlower(state)) return true;
-                }
-            }
-        }
-        return false;
     }
 
     public static boolean isFlower(IBlockState state) {
