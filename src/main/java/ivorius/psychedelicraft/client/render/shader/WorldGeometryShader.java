@@ -78,7 +78,8 @@ public final class WorldGeometryShader implements IResourceManagerReloadListener
                         @Nullable BlockPos anchor, @Nullable ShaderManager zeroMatter) {
         boolean portal = material == Material.END_PORTAL;
         boolean riftCenter = material == Material.RIFT_CENTER;
-        boolean entity = material == Material.ENTITY || material == Material.ENTITY_GLINT || portal || riftCenter;
+        boolean entity = material == Material.ENTITY || material == Material.ENTITY_GLINT
+                || material == Material.ENTITY_UNIFORM_PULSE || portal || riftCenter;
         boolean screen = material == Material.SCREEN;
         boolean sky = material == Material.SKY_GRADIENT || material == Material.END_SKY;
         boolean deform = player != null && drugs != null && (!entity || entityState.hasView());
@@ -264,6 +265,7 @@ public final class WorldGeometryShader implements IResourceManagerReloadListener
         PARTICLES(1F, 1F, PulseShape.WORLD),
         ENTITY(1F, 1F, PulseShape.MODEL),
         ENTITY_GLINT(1F, 1F, PulseShape.MODEL),
+        ENTITY_UNIFORM_PULSE(1F, 1F, PulseShape.UNIFORM),
         RIFT_CENTER(0F, 1F, PulseShape.SPHERICAL),
         VANILLA_FAST_CLOUDS(0F, 1F / 8F, PulseShape.WORLD),
         VANILLA_FANCY_CLOUDS(0F, 1F, PulseShape.WORLD),

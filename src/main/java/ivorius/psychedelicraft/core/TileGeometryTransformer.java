@@ -59,7 +59,7 @@ public final class TileGeometryTransformer implements IClassTransformer {
                         "(Ljava/lang/String;III)I", "drawSignText");
                 break;
             case "Beacon":
-                patchCalls(type.methods, TESSELLATOR, "draw", "func_78381_a", "()V", "drawWorldQuads");
+                patchCalls(type.methods, TESSELLATOR, "draw", "func_78381_a", "()V", "drawBeaconBeam");
                 break;
             case "EndPortal":
                 patchCalls(type.methods, TESSELLATOR, "draw", "func_78381_a", "()V", "drawPortalLayer");

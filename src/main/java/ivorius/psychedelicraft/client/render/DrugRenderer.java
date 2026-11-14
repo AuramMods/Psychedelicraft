@@ -267,7 +267,11 @@ public final class DrugRenderer {
     }
 
     public static void drawWorldQuads(Tessellator tessellator, @Nullable BlockPos anchor) {
-        try (Scope scope = beginWorldModel(Material.ENTITY, anchor)) {
+        drawWorldQuads(tessellator, Material.ENTITY, anchor);
+    }
+
+    private static void drawWorldQuads(Tessellator tessellator, Material material, @Nullable BlockPos anchor) {
+        try (Scope scope = beginWorldModel(material, anchor)) {
             tessellator.draw();
         }
     }
@@ -326,7 +330,14 @@ public final class DrugRenderer {
     }
 
     public static void drawPiston(Tessellator tessellator, TileEntityPiston piston) {
-        drawWorldQuads(tessellator, piston.getPos());
+        // The translucent moving-block shader has no vertex distance. Solid and cutout blocks use terrain programs.
+        boolean translucent = piston.getPistonState().getBlock().getBlockLayer() == BlockRenderLayer.TRANSLUCENT;
+        drawWorldQuads(tessellator, translucent ? Material.ENTITY_UNIFORM_PULSE : Material.ENTITY, piston.getPos());
+    }
+
+    public static void drawBeaconBeam(Tessellator tessellator) {
+        // End gateways use the same beacon renderer for their beams.
+        drawWorldQuads(tessellator, Material.ENTITY_UNIFORM_PULSE, null);
     }
 
     public static void drawPortalLayer(Tessellator tessellator) {
