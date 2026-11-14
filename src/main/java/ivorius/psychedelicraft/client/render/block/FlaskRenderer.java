@@ -7,7 +7,7 @@ package ivorius.psychedelicraft.client.render.block;
 import ivorius.psychedelicraft.block.entity.DistilleryBlockEntity;
 import ivorius.psychedelicraft.block.entity.FluidMachineBlockEntity;
 import ivorius.psychedelicraft.client.render.DrugRenderer;
-import net.minecraft.client.Minecraft;
+import ivorius.psychedelicraft.client.render.TankFluidAppearance;
 import net.minecraft.client.renderer.BufferBuilder;
 import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.client.renderer.Tessellator;
@@ -26,9 +26,7 @@ public final class FlaskRenderer extends TileEntitySpecialRenderer<FluidMachineB
                        int destroyStage, float alpha) {
         FluidStack contents = machine.getTank().getFluid();
         if (contents == null) return;
-        TextureAtlasSprite sprite = Minecraft.getMinecraft().getTextureMapBlocks()
-                .getAtlasSprite(contents.getFluid().getStill(contents).toString());
-        int color = contents.getFluid().getColor(contents);
+        TankFluidAppearance appearance = TankFluidAppearance.of(contents);
         bindTexture(TextureMap.LOCATION_BLOCKS_TEXTURE);
         GlStateManager.pushMatrix();
         GlStateManager.enableBlend();
@@ -42,10 +40,10 @@ public final class FlaskRenderer extends TileEntitySpecialRenderer<FluidMachineB
             BufferBuilder buffer = tessellator.getBuffer();
             buffer.begin(GL11.GL_QUADS, DefaultVertexFormats.POSITION_TEX_COLOR);
             float fill = (float) contents.amount / machine.getTank().getCapacity();
-            chamber(buffer, sprite, color, 0, fill * 2, 2);
+            chamber(buffer, appearance.sprite, appearance.color, 0, fill * 2, 2);
             if (fill > 0.5F) {
                 double neck = machine instanceof DistilleryBlockEntity ? 4.5 : 3.5;
-                chamber(buffer, sprite, color, neck, (fill - 0.5F) * 2, 1.5);
+                chamber(buffer, appearance.sprite, appearance.color, neck, (fill - 0.5F) * 2, 1.5);
             }
             DrugRenderer.drawWorldQuads(tessellator, machine.getPos());
         } finally {

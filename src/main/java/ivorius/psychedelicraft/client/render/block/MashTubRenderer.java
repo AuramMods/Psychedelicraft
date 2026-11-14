@@ -6,6 +6,7 @@ package ivorius.psychedelicraft.client.render.block;
 
 import ivorius.psychedelicraft.block.entity.MashTubBlockEntity;
 import ivorius.psychedelicraft.client.render.DrugRenderer;
+import ivorius.psychedelicraft.client.render.TankFluidAppearance;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.BufferBuilder;
 import net.minecraft.client.renderer.GlStateManager;
@@ -32,9 +33,8 @@ public final class MashTubRenderer extends TileEntitySpecialRenderer<MashTubBloc
         float height = 0.1F;
         if (fluid != null) {
             height = vat.getFluidSurface();
-            TextureAtlasSprite sprite = Minecraft.getMinecraft().getTextureMapBlocks()
-                    .getAtlasSprite(fluid.getFluid().getStill(fluid).toString());
-            drawSurface(sprite, fluid.getFluid().getColor(fluid), x, y + height, z, anchor);
+            TankFluidAppearance appearance = TankFluidAppearance.of(fluid);
+            drawSurface(appearance.sprite, appearance.color, x, y + height, z, anchor);
         } else if (!vat.getSolidOutput().isEmpty()) {
             TextureAtlasSprite sprite = Minecraft.getMinecraft().getBlockRendererDispatcher()
                     .getModelForState(Blocks.DIRT.getDefaultState()).getParticleTexture();

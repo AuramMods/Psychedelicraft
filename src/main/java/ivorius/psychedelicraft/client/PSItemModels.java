@@ -19,6 +19,7 @@ import ivorius.psychedelicraft.block.entity.MashTubBlockEntity;
 import ivorius.psychedelicraft.block.entity.PeyoteBlockEntity;
 import ivorius.psychedelicraft.block.entity.PlacedDrinkBlockEntity;
 import ivorius.psychedelicraft.block.entity.RiftJarBlockEntity;
+import ivorius.psychedelicraft.client.render.TankFluidAppearance;
 import ivorius.psychedelicraft.client.render.block.DryingTableRenderer;
 import ivorius.psychedelicraft.client.render.block.BarrelRenderer;
 import ivorius.psychedelicraft.client.render.block.BottleRackRenderer;
@@ -98,6 +99,7 @@ public final class PSItemModels {
 
     @SubscribeEvent
     public static void stitchFluids(TextureStitchEvent.Pre event) {
+        TankFluidAppearance.stitch(event.getMap());
         for (Fluid fluid : FluidRegistry.getRegisteredFluids().values()) {
             if (fluid.getStill() != null && Psychedelicraft.MOD_ID.equals(fluid.getStill().getResourceDomain())) {
                 event.getMap().registerSprite(fluid.getStill());

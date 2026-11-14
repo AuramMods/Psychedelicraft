@@ -9,6 +9,7 @@ import ivorius.psychedelicraft.block.entity.BarrelBlockEntity;
 import ivorius.psychedelicraft.block.entity.DistilleryBlockEntity;
 import ivorius.psychedelicraft.block.entity.FluidMachineBlockEntity;
 import ivorius.psychedelicraft.block.entity.FluidProcessingBlockEntity;
+import ivorius.psychedelicraft.client.render.TankFluidAppearance;
 import ivorius.psychedelicraft.fluid.BrewFluid;
 import ivorius.psychedelicraft.fluid.BrewProcess;
 import ivorius.psychedelicraft.fluid.PSFluids;
@@ -132,10 +133,12 @@ public final class FluidProcessingScreen extends GuiContainer {
         mc.getTextureManager().bindTexture(texture);
         drawTexturedModalRect(guiLeft + 30, guiTop + 20, 0, ySize, 110, 50);
 
+        GlStateManager.enableBlend();
+        GlStateManager.tryBlendFuncSeparate(GlStateManager.SourceFactor.SRC_ALPHA, GlStateManager.DestFactor.ONE_MINUS_SRC_ALPHA,
+                GlStateManager.SourceFactor.ONE, GlStateManager.DestFactor.ZERO);
         FluidStack fluid = machine.getTank().getFluid();
         if (fluid != null) drawFluid(fluid);
         GlStateManager.color(1, 1, 1, 1);
-        GlStateManager.enableBlend();
         mc.getTextureManager().bindTexture(texture);
         drawTexturedModalRect(guiLeft, guiTop, 0, 0, xSize, ySize);
         float progress = machine instanceof FluidProcessingBlockEntity
@@ -160,10 +163,11 @@ public final class FluidProcessingScreen extends GuiContainer {
 
     private void drawFluid(FluidStack fluid) {
         int height = MathHelper.ceil(27F * MathHelper.clamp((float) fluid.amount / machine.getTank().getCapacity(), 0F, 1F));
-        int color = fluid.getFluid().getColor(fluid);
+        TankFluidAppearance appearance = TankFluidAppearance.of(fluid);
+        int color = appearance.color;
         GlStateManager.color((color >> 16 & 255) / 255F, (color >> 8 & 255) / 255F, (color & 255) / 255F, 1);
         mc.getTextureManager().bindTexture(TextureMap.LOCATION_BLOCKS_TEXTURE);
-        TextureAtlasSprite sprite = mc.getTextureMapBlocks().getAtlasSprite(fluid.getFluid().getStill(fluid).toString());
+        TextureAtlasSprite sprite = appearance.sprite;
         Tessellator tessellator = Tessellator.getInstance();
         BufferBuilder vertices = tessellator.getBuffer();
         vertices.begin(GL11.GL_QUADS, DefaultVertexFormats.POSITION_TEX);
