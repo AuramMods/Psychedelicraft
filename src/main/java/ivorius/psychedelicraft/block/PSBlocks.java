@@ -143,6 +143,8 @@ public final class PSBlocks {
     public static final BlockBush PITCHER_CROP = named("pitcher_crop", new PitcherCropBlock());
     public static final Block PITCHER_PLANT = named("pitcher_plant", new PitcherPlantBlock());
     public static final SuspiciousSandBlock SUSPICIOUS_SAND = named("suspicious_sand", new SuspiciousSandBlock());
+    public static final SnifferEggBlock SNIFFER_EGG = named("sniffer_egg", new SnifferEggBlock());
+    public static final Block MOSS_BLOCK = named("moss_block", new MossSubstrateBlock());
     public static final BubbleColumnBlock BUBBLE_COLUMN = named("bubble_column", new BubbleColumnBlock());
 
     private PSBlocks() {
@@ -170,7 +172,7 @@ public final class PSBlocks {
                 JUNIPER_SIGN, JUNIPER_WALL_SIGN, JUNIPER_HANGING_SIGN, JUNIPER_WALL_HANGING_SIGN, BEE_NEST, BUBBLE_COLUMN,
                 CAMPFIRE, SOUL_CAMPFIRE, SOUL_SOIL, SOUL_FIRE, KELP, KELP_STALK, DRIED_KELP_BLOCK, SWEET_BERRY_BUSH,
                 TORCHFLOWER, CORNFLOWER, LILY_OF_THE_VALLEY, WITHER_ROSE, TORCHFLOWER_CROP, PITCHER_CROP, PITCHER_PLANT,
-                SUSPICIOUS_SAND);
+                SUSPICIOUS_SAND, SNIFFER_EGG, MOSS_BLOCK);
         for (PottedPlantBlock pot : POTTED_PLANTS) {
             event.getRegistry().register(pot);
         }

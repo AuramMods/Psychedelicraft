@@ -46,6 +46,21 @@ public final class PSSounds {
     public static final SoundEvent BRUSH_GENERIC = sound("item.brush.brushing.generic");
     public static final SoundEvent BRUSH_SAND = sound("item.brush.brushing.sand");
     public static final SoundEvent BRUSH_SAND_COMPLETE = sound("item.brush.brushing.sand.complete");
+    public static final SoundEvent SNIFFER_EGG_CRACK = sound("block.sniffer_egg.crack");
+    public static final SoundEvent SNIFFER_EGG_HATCH = sound("block.sniffer_egg.hatch");
+    public static final SoundEvent SNIFFER_EGG_PLOP = sound("block.sniffer_egg.plop");
+    public static final SoundEvent SNIFFER_DEATH = sound("entity.sniffer.death");
+    public static final SoundEvent SNIFFER_DIGGING = sound("entity.sniffer.digging");
+    public static final SoundEvent SNIFFER_DIGGING_STOP = sound("entity.sniffer.digging_stop");
+    public static final SoundEvent SNIFFER_DROP_SEED = sound("entity.sniffer.drop_seed");
+    public static final SoundEvent SNIFFER_EAT = sound("entity.sniffer.eat");
+    public static final SoundEvent SNIFFER_HAPPY = sound("entity.sniffer.happy");
+    public static final SoundEvent SNIFFER_HURT = sound("entity.sniffer.hurt");
+    public static final SoundEvent SNIFFER_IDLE = sound("entity.sniffer.idle");
+    public static final SoundEvent SNIFFER_SCENTING = sound("entity.sniffer.scenting");
+    public static final SoundEvent SNIFFER_SEARCHING = sound("entity.sniffer.searching");
+    public static final SoundEvent SNIFFER_SNIFFING = sound("entity.sniffer.sniffing");
+    public static final SoundEvent SNIFFER_STEP = sound("entity.sniffer.step");
     public static final SoundEvent DRUG_GENERIC = sound("drug.generic");
 
     private PSSounds() {
@@ -65,6 +80,8 @@ public final class PSSounds {
                 BEE_LOOP, BEE_LOOP_ANGRY, BEE_POLLINATE, BEE_STING, BEE_HURT, BEE_DEATH,
                 HONEY_DRINK, CROP_PLANT, DRUG_GENERIC, BERRY_BUSH_BREAK, BERRY_BUSH_PLACE, BERRY_BUSH_PICK,
                 MOOSHROOM_CONVERT, MOOSHROOM_EAT, MOOSHROOM_MILK, MOOSHROOM_SUSPICIOUS_MILK,
-                BRUSH_GENERIC, BRUSH_SAND, BRUSH_SAND_COMPLETE);
+                BRUSH_GENERIC, BRUSH_SAND, BRUSH_SAND_COMPLETE, SNIFFER_EGG_CRACK, SNIFFER_EGG_HATCH, SNIFFER_EGG_PLOP,
+                SNIFFER_DEATH, SNIFFER_DIGGING, SNIFFER_DIGGING_STOP, SNIFFER_DROP_SEED, SNIFFER_EAT, SNIFFER_HAPPY,
+                SNIFFER_HURT, SNIFFER_IDLE, SNIFFER_SCENTING, SNIFFER_SEARCHING, SNIFFER_SNIFFING, SNIFFER_STEP);
     }
 }

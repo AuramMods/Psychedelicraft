@@ -11,6 +11,7 @@ import ivorius.psychedelicraft.command.VomitCommand;
 import ivorius.psychedelicraft.command.DrugCommand;
 import ivorius.psychedelicraft.command.HallucinateCommand;
 import ivorius.psychedelicraft.entity.FarmerTrades;
+import ivorius.psychedelicraft.entity.SnifferEntity;
 import ivorius.psychedelicraft.fluid.PSFluids;
 import ivorius.psychedelicraft.fluid.physical.Waterlogging;
 import ivorius.psychedelicraft.item.FilledBucketItem;
@@ -48,6 +49,7 @@ public class Psychedelicraft {
         DrugCapability.register();
         Channel.register();
         ChestLoot.register();
+        SnifferEntity.registerLoot();
         VillageGarden.register();
         WarmOceanRuin.register();
         NetworkRegistry.INSTANCE.registerGuiHandler(this, new PSGuiHandler());

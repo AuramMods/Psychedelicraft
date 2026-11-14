@@ -1,0 +1,20 @@
+{
+  "pools": [
+    {
+      "name": "psychedelicraft:sniffer_digging",
+      "rolls": 1,
+      "entries": [
+        {
+          "type": "item",
+          "name": "psychedelicraft:torchflower_seeds",
+          "weight": 1
+        },
+        {
+          "type": "item",
+          "name": "psychedelicraft:pitcher_pod",
+          "weight": 1
+        }
+      ]
+    }
+  ]
+}

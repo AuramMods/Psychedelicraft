@@ -58,7 +58,8 @@ public final class PSItems {
     public static final Item PITCHER_PLANT = named("pitcher_plant", new ItemBlock(PSBlocks.PITCHER_PLANT));
     public static final Item BRUSH = named("brush", new BrushItem());
     public static final Item SUSPICIOUS_SAND = named("suspicious_sand", new ItemBlock(PSBlocks.SUSPICIOUS_SAND));
-    public static final Item SNIFFER_EGG = named("sniffer_egg", new Item());
+    public static final Item SNIFFER_EGG = named("sniffer_egg", new ItemBlock(PSBlocks.SNIFFER_EGG));
+    public static final Item MOSS_BLOCK = named("moss_block", new ItemBlock(PSBlocks.MOSS_BLOCK));
     public static final Item ANGLER_POTTERY_SHERD = named("angler_pottery_sherd", new Item());
     public static final Item SHELTER_POTTERY_SHERD = named("shelter_pottery_sherd", new Item());
     public static final Item SNORT_POTTERY_SHERD = named("snort_pottery_sherd", new Item());
