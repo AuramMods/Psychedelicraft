@@ -1325,6 +1325,15 @@ sh run/production/background-qa/run.sh "$qa" game-background Overlay-QA \
 - The tested jar SHA-256 is `21822d314142d7e448aee4c0d802fe728e72c9efb4a61030fd84a11576ba1f38`. Evidence is under `run/production/runtime-qa-cycle145` in `build-production.log`, `runtime-baseline-verified.log`, `runtime-fixed-verified.log`, `runtime-display-regression.log`, `runtime-motion.log`, `framebuffer-check.log` and the screenshots. Clients ran on Xvfb with zero master volume and OpenAL's `No Output` device.
 - Next, compare the drying tables' occupied-slot placement and output pose using the donor coordinate packing.
 
+### Cycle 146 · Drying table ingredient and output poses
+
+- Both tables now use the pinned renderer's X/Z/Y coordinate packing for their random seed. The slot traversal still skips empty slots, positions each ingredient on the table surface and draws the finished batch at the center with the donor's larger scale. The later branches preserve the same pose formulas. Both Forge table models match the pinned geometry and item models after the atlas path conversion, and all six table textures match byte-for-byte. [Pinned drying-table renderer](https://github.com/Sollace/Psychedelicraft/blob/319a4ea0160d6600cffcd5f5cc9e363ceaab44a1/src/main/java/ivorius/psychedelicraft/client/render/blocks/DryingTableBlockEntityRenderer.java)
+- The clean Java 8 build and reobfuscation passed 180 tests. The subsequent test run passed 181, including the new coordinate-packing regression for negative X, negative Z and coordinates near the world border.
+- In muted Forge 14.23.5.2864, the fixture captured modelview matrices at the item render call for a wooden table at `(-2, 61, 2)` and an iron table at `(0, 61, -1)`. The previous jar differed from the source-derived reference by a maximum matrix-entry error of 0.738 to 1.317 per occupied stage and table. The rebuilt jar stayed within `4.77e-7` for sparse inputs, full inputs and finished batches. Both empty tables submitted zero item draws. The screenshots show both batches on the table tops.
+- With shorter test durations, native integrated-server ticks turned nine brown mushrooms and nine peyote into their respective three-item outputs. Both batches synchronized to the client and rendered at the output pose. Simulated top-side extraction preserved the stacks. Actual extraction removed both stacks and cleared their client draws. The weather regression confirmed exposure resets through rain transitions and reported 0.7225 heat at both tested heights.
+- The tested jar SHA-256 is `2f9ac57406f0174c3d63e8a47cd1652343f18f3e5f7519b623491332fff33375`. Evidence is under `run/production/runtime-qa-cycle146` in `build-production.log`, `build-regression-test.log`, `runtime-baseline.log`, `runtime-fixed.log`, `runtime-weather.log` and the screenshots. Clients ran on Xvfb at zero master volume with OpenAL's `No Output` device.
+- Next, compare the Rift Jar's interior geometry, shell and crack layers, and item animation with the pinned renderer.
+
 Dedicated Forge startup and multiplayer on that server remain open pending EULA acceptance.
 
 ## Repository and branch survey

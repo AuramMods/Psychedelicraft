@@ -9,6 +9,7 @@ import java.util.Random;
 
 import ivorius.psychedelicraft.block.entity.DryingTableBlockEntity;
 import ivorius.psychedelicraft.client.render.DrugRenderer;
+import ivorius.psychedelicraft.recipe.DryingRecipe;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.client.renderer.tileentity.TileEntitySpecialRenderer;
@@ -18,14 +19,14 @@ public final class DryingTableRenderer extends TileEntitySpecialRenderer<DryingT
     @Override
     public void render(DryingTableBlockEntity table, double x, double y, double z, float partialTicks,
                        int destroyStage, float alpha) {
-        Random random = new Random(table.getPos().toLong() + 1);
+        Random random = new Random(BlockRenderSeed.pack(table.getPos()) + 1);
         for (int slot = 0; slot < table.getSizeInventory(); slot++) {
             ItemStack stack = table.getStackInSlot(slot);
             if (stack.isEmpty()) {
                 continue;
             }
 
-            boolean output = slot == 0;
+            boolean output = slot == DryingRecipe.OUTPUT;
             float dx = output ? 0.5F : 0.35F + random.nextFloat() * 0.3F;
             float dz = output ? 0.5F : 0.35F + random.nextFloat() * 0.3F;
             GlStateManager.pushMatrix();
