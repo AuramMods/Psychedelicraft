@@ -23,8 +23,12 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.text.ITextComponent;
 import net.minecraft.world.World;
+import net.minecraftforge.common.util.Constants;
 
 public final class RealityRiftEntity extends Entity {
+    private static final float CLOSING_DECAY = 1F / 20;
+    private static final float PASSIVE_DECAY = 1F / 24000;
+    private static final float COLLAPSE_THRESHOLD = 0.9F;
     private static final DataParameter<Float> SIZE = EntityDataManager.createKey(RealityRiftEntity.class, DataSerializers.FLOAT);
     private static final DataParameter<Float> INSTABILITY = EntityDataManager.createKey(RealityRiftEntity.class, DataSerializers.FLOAT);
     private static final DataParameter<Boolean> CLOSING = EntityDataManager.createKey(RealityRiftEntity.class, DataSerializers.BOOLEAN);
@@ -103,6 +107,11 @@ public final class RealityRiftEntity extends Entity {
         return !isRiftClosing() && (getInstability() > 0 || getRiftSize() > 3);
     }
 
+    @Override
+    public void onKillCommand() {
+        dataManager.set(CLOSING, true);
+    }
+
     public float getVisualSize(float partialTicks) {
         return previousVisualSize + (visualSize - previousVisualSize) * partialTicks;
     }
@@ -145,17 +154,18 @@ public final class RealityRiftEntity extends Entity {
             float instability = Math.min(previous + 0.001F, 1);
             dataManager.set(INSTABILITY, instability);
             replaceShell(previous * 50, instability * 50);
-            if (instability >= 0.9F) dataManager.set(CLOSING, true);
         } else {
-            setRiftSize(getRiftSize() - (isRiftClosing() ? 0.05F : 1F / 24000F));
+            setRiftSize(getRiftSize() - (isRiftClosing() ? CLOSING_DECAY : PASSIVE_DECAY));
         }
+        if (getInstability() >= COLLAPSE_THRESHOLD) dataManager.set(CLOSING, true);
     }
 
     private void replaceShell(float previousRadius, float radius) {
         BlockPos center = getPosition();
         BlockPos.MutableBlockPos cursor = new BlockPos.MutableBlockPos();
-        double outerSquared = radius * radius;
-        double innerSquared = previousRadius * previousRadius;
+        // The donor widens the radius to double before squaring it.
+        double outerSquared = (double) radius * radius;
+        double innerSquared = (double) previousRadius * previousRadius;
         int extent = MathHelper.ceil(radius) - 1;
         for (int x = -extent; x <= extent; x++) {
             for (int y = -extent; y <= extent; y++) {
@@ -186,10 +196,14 @@ public final class RealityRiftEntity extends Entity {
 
     @Override
     protected void readEntityFromNBT(NBTTagCompound tag) {
-        setRiftSize(tag.getFloat("riftSize"));
-        float instability = tag.getFloat("instability");
-        dataManager.set(INSTABILITY, Float.isFinite(instability) ? MathHelper.clamp(instability, 0, 1) : 0);
-        dataManager.set(CLOSING, tag.getBoolean("isRiftClosing"));
+        if (tag.hasKey("riftSize", Constants.NBT.TAG_ANY_NUMERIC)) setRiftSize(tag.getFloat("riftSize"));
+        if (tag.hasKey("instability", Constants.NBT.TAG_ANY_NUMERIC)) {
+            float instability = tag.getFloat("instability");
+            dataManager.set(INSTABILITY, Float.isFinite(instability) ? MathHelper.clamp(instability, 0, 1) : 0);
+        }
+        if (tag.hasKey("isRiftClosing", Constants.NBT.TAG_ANY_NUMERIC)) {
+            dataManager.set(CLOSING, tag.getBoolean("isRiftClosing"));
+        }
     }
 
     @Override
