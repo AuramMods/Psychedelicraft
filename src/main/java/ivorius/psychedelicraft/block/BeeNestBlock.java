@@ -2,6 +2,7 @@ package ivorius.psychedelicraft.block;
 
 import ivorius.psychedelicraft.block.entity.BeeNestBlockEntity;
 import ivorius.psychedelicraft.client.particle.HoneyDripParticle;
+import ivorius.psychedelicraft.entity.BeeEntity;
 import ivorius.psychedelicraft.item.PSItems;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockDispenser;
@@ -21,6 +22,7 @@ import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.enchantment.EnchantmentHelper;
 import net.minecraft.init.Enchantments;
+import net.minecraft.init.Blocks;
 import net.minecraft.init.Items;
 import net.minecraft.init.SoundEvents;
 import net.minecraft.item.Item;
@@ -34,6 +36,7 @@ import net.minecraft.util.EnumHand;
 import net.minecraft.util.Mirror;
 import net.minecraft.util.Rotation;
 import net.minecraft.util.SoundCategory;
+import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.IBlockAccess;
 import net.minecraft.world.World;
@@ -151,13 +154,17 @@ public final class BeeNestBlock extends Block {
         TileEntity tile = world.getTileEntity(pos);
         BeeNestBlockEntity nest = tile instanceof BeeNestBlockEntity ? (BeeNestBlockEntity) tile : null;
         boolean silk = willHarvest && EnchantmentHelper.getEnchantmentLevel(Enchantments.SILK_TOUCH, player.getHeldItemMainhand()) > 0;
-        if (nest != null) nest.setMovingWithOccupants(player.isCreative() || silk);
+        boolean moving = player.isCreative() || silk;
+        if (nest != null && !world.isRemote) {
+            nest.preparePlayerRemoval(moving, !moving && !CampfireBlock.hasSmokeAt(world, pos) ? player : null);
+        }
         boolean removed = super.removedByPlayer(state, world, pos, player, willHarvest);
-        if (!removed && nest != null) nest.setMovingWithOccupants(false);
+        if (!removed && nest != null && !world.isRemote) nest.preparePlayerRemoval(false, null);
         if (removed && !world.isRemote && player.isCreative() && (state.getValue(HONEY_LEVEL) > 0
                 || nest != null && nest.getOccupantCount() > 0)) {
             spawnAsEntity(world, pos, nestItem(state, nest));
         }
+        if (removed && !world.isRemote && !moving) angerNearbyBees(world, pos);
         return removed;
     }
 
@@ -166,6 +173,14 @@ public final class BeeNestBlock extends Block {
         TileEntity tile = world.getTileEntity(pos);
         if (!world.isRemote && tile instanceof BeeNestBlockEntity) ((BeeNestBlockEntity) tile).releaseOnBreak();
         super.breakBlock(world, pos, state);
+    }
+
+    @Override
+    public void neighborChanged(IBlockState state, World world, BlockPos pos, Block neighbor, BlockPos from) {
+        if (!world.isRemote && world.getBlockState(from).getBlock() == Blocks.FIRE) {
+            TileEntity tile = world.getTileEntity(pos);
+            if (tile instanceof BeeNestBlockEntity) ((BeeNestBlockEntity) tile).releaseEmergency(null);
+        }
     }
 
     @Override
@@ -252,7 +267,25 @@ public final class BeeNestBlock extends Block {
             world.playSound(null, pos, SoundEvents.ITEM_BOTTLE_FILL, SoundCategory.BLOCKS, 1, 1);
         }
         player.addStat(StatList.getObjectUseStats(item));
+        if (!CampfireBlock.hasSmokeAt(world, pos)) {
+            TileEntity tile = world.getTileEntity(pos);
+            if (tile instanceof BeeNestBlockEntity) {
+                BeeNestBlockEntity nest = (BeeNestBlockEntity) tile;
+                if (nest.getOccupantCount() > 0) angerNearbyBees(world, pos);
+                nest.releaseEmergency(player);
+            }
+        }
         return true;
+    }
+
+    private static void angerNearbyBees(World world, BlockPos pos) {
+        AxisAlignedBB area = new AxisAlignedBB(pos).grow(8, 6, 8);
+        List<EntityPlayer> players = world.getEntitiesWithinAABB(EntityPlayer.class, area,
+                player -> player.isEntityAlive() && !player.isCreative() && !player.isSpectator());
+        if (players.isEmpty()) return;
+        for (BeeEntity bee : world.getEntitiesWithinAABB(BeeEntity.class, area)) {
+            if (!bee.isAngry()) bee.angerAt(players.get(world.rand.nextInt(players.size())));
+        }
     }
 
     private static boolean fullNest(IBlockState state) {

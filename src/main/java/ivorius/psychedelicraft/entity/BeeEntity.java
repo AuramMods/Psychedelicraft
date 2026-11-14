@@ -4,15 +4,20 @@ import ivorius.psychedelicraft.block.BeeNestBlock;
 import ivorius.psychedelicraft.block.entity.BeeNestBlockEntity;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockFlower;
+import net.minecraft.enchantment.EnchantmentHelper;
+import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityAgeable;
+import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.SharedMonsterAttributes;
 import net.minecraft.entity.ai.EntityAIBase;
+import net.minecraft.entity.ai.EntityAIAttackMelee;
 import net.minecraft.entity.ai.EntityAIFollowParent;
 import net.minecraft.entity.ai.EntityAIMate;
 import net.minecraft.entity.ai.EntityMoveHelper;
 import net.minecraft.entity.passive.EntityAnimal;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.init.Blocks;
+import net.minecraft.init.MobEffects;
 import net.minecraft.item.ItemBlock;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
@@ -22,18 +27,25 @@ import net.minecraft.network.datasync.EntityDataManager;
 import net.minecraft.pathfinding.PathNavigate;
 import net.minecraft.pathfinding.PathNavigateFlying;
 import net.minecraft.pathfinding.PathNodeType;
+import net.minecraft.potion.PotionEffect;
 import net.minecraft.tileentity.TileEntity;
+import net.minecraft.util.DamageSource;
+import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
 import net.minecraft.world.WorldServer;
+import net.minecraft.world.EnumDifficulty;
 import net.minecraft.world.chunk.Chunk;
 
 import javax.annotation.Nullable;
+import java.util.UUID;
 
 public final class BeeEntity extends EntityAnimal {
     private static final DataParameter<Boolean> NECTAR = EntityDataManager.createKey(BeeEntity.class, DataSerializers.BOOLEAN);
+    private static final DataParameter<Boolean> ANGRY = EntityDataManager.createKey(BeeEntity.class, DataSerializers.BOOLEAN);
+    private static final DataParameter<Boolean> STUNG = EntityDataManager.createKey(BeeEntity.class, DataSerializers.BOOLEAN);
     private static final int POLLINATION_TICKS = 400;
     private static final int WITHOUT_NECTAR_LIMIT = 3600;
     private static final int HOME_SEARCH_RANGE = 20;
@@ -42,6 +54,9 @@ public final class BeeEntity extends EntityAnimal {
     private BlockPos flower;
     private int stayOutside;
     private int ticksWithoutNectar;
+    private UUID angerTarget;
+    private int angerTicks;
+    private int ticksSinceSting;
 
     public BeeEntity(World world) {
         super(world);
@@ -57,12 +72,15 @@ public final class BeeEntity extends EntityAnimal {
     protected void entityInit() {
         super.entityInit();
         dataManager.register(NECTAR, false);
+        dataManager.register(ANGRY, false);
+        dataManager.register(STUNG, false);
     }
 
     @Override
     protected void applyEntityAttributes() {
         super.applyEntityAttributes();
         getAttributeMap().registerAttribute(SharedMonsterAttributes.FLYING_SPEED).setBaseValue(0.6D);
+        getAttributeMap().registerAttribute(SharedMonsterAttributes.ATTACK_DAMAGE).setBaseValue(2D);
         getEntityAttribute(SharedMonsterAttributes.MAX_HEALTH).setBaseValue(10D);
         getEntityAttribute(SharedMonsterAttributes.MOVEMENT_SPEED).setBaseValue(0.3D);
         getEntityAttribute(SharedMonsterAttributes.FOLLOW_RANGE).setBaseValue(48D);
@@ -70,6 +88,7 @@ public final class BeeEntity extends EntityAnimal {
 
     @Override
     protected void initEntityAI() {
+        tasks.addTask(0, new EntityAIAttackMelee(this, 1.4D, true));
         tasks.addTask(2, new EntityAIMate(this, 1D));
         tasks.addTask(3, new FollowFlowers());
         tasks.addTask(5, new EntityAIFollowParent(this, 1.25D));
@@ -105,6 +124,67 @@ public final class BeeEntity extends EntityAnimal {
         return dataManager.get(NECTAR);
     }
 
+    public boolean isAngry() {
+        return dataManager.get(ANGRY);
+    }
+
+    public boolean hasStung() {
+        return dataManager.get(STUNG);
+    }
+
+    public void angerAt(EntityLivingBase target) {
+        if (!canAttack(target) || hasStung()) return;
+        angerTarget = target.getUniqueID();
+        angerTicks = (20 + rand.nextInt(20)) * 20;
+        dataManager.set(ANGRY, true);
+        setAttackTarget(target);
+    }
+
+    private boolean canAttack(@Nullable EntityLivingBase target) {
+        return target != null && target.isEntityAlive() && !isOnSameTeam(target)
+                && (!(target instanceof EntityPlayer) || !((EntityPlayer) target).isCreative() && !((EntityPlayer) target).isSpectator());
+    }
+
+    private void clearAnger() {
+        angerTicks = 0;
+        angerTarget = null;
+        dataManager.set(ANGRY, false);
+        setAttackTarget(null);
+    }
+
+    @Override
+    public boolean attackEntityFrom(DamageSource source, float amount) {
+        if (!super.attackEntityFrom(source, amount)) return false;
+        if (!world.isRemote && isEntityAlive() && !hasStung() && source.getTrueSource() instanceof EntityLivingBase) {
+            EntityLivingBase attacker = (EntityLivingBase) source.getTrueSource();
+            if (canAttack(attacker)) {
+                angerAt(attacker);
+                double range = getEntityAttribute(SharedMonsterAttributes.FOLLOW_RANGE).getAttributeValue();
+                for (BeeEntity bee : world.getEntitiesWithinAABB(BeeEntity.class, getEntityBoundingBox().grow(range, 10D, range))) {
+                    if (bee != this && bee.getAttackTarget() == null && bee.canEntityBeSeen(attacker)) bee.angerAt(attacker);
+                }
+            }
+        }
+        return true;
+    }
+
+    @Override
+    public boolean attackEntityAsMob(Entity target) {
+        if (world.isRemote || hasStung() || !target.attackEntityFrom(DamageSource.causeMobDamage(this),
+                (int) getEntityAttribute(SharedMonsterAttributes.ATTACK_DAMAGE).getAttributeValue())) return false;
+        if (target instanceof EntityLivingBase) {
+            EntityLivingBase victim = (EntityLivingBase) target;
+            EnchantmentHelper.applyThornEnchantments(victim, this);
+            EnumDifficulty difficulty = world.getDifficulty();
+            int seconds = difficulty == EnumDifficulty.HARD ? 18 : difficulty == EnumDifficulty.NORMAL ? 10 : 0;
+            if (seconds > 0) victim.addPotionEffect(new PotionEffect(MobEffects.POISON, seconds * 20));
+        }
+        EnchantmentHelper.applyArthropodEnchantments(this, target);
+        dataManager.set(STUNG, true);
+        clearAnger();
+        return true;
+    }
+
     private void setNectar(boolean nectar) {
         dataManager.set(NECTAR, nectar);
         if (nectar) ticksWithoutNectar = 0;
@@ -122,6 +202,20 @@ public final class BeeEntity extends EntityAnimal {
     @Override
     protected void updateAITasks() {
         super.updateAITasks();
+        if (hasStung() && ++ticksSinceSting % 5 == 0 && rand.nextInt(Math.max(1, 1200 - ticksSinceSting)) == 0) {
+            attackEntityFrom(DamageSource.GENERIC, getHealth());
+        }
+        if (angerTicks > 0) {
+            EntityLivingBase target = getAttackTarget();
+            if (target == null && angerTarget != null) {
+                Entity saved = ((WorldServer) world).getEntityFromUuid(angerTarget);
+                if (saved instanceof EntityLivingBase && canAttack((EntityLivingBase) saved)) {
+                    target = (EntityLivingBase) saved;
+                    setAttackTarget(target);
+                }
+            }
+            if (target != null && !canAttack(target) || (!(target instanceof EntityPlayer) && --angerTicks == 0)) clearAnger();
+        }
         if (stayOutside > 0) stayOutside--;
         if (!hasNectar() && ticksWithoutNectar < WITHOUT_NECTAR_LIMIT) ticksWithoutNectar++;
     }
@@ -134,6 +228,10 @@ public final class BeeEntity extends EntityAnimal {
         tag.setBoolean("HasNectar", hasNectar());
         tag.setInteger("StayOutside", stayOutside);
         tag.setInteger("TicksWithoutNectar", ticksWithoutNectar);
+        tag.setBoolean("HasStung", hasStung());
+        tag.setInteger("TicksSinceSting", ticksSinceSting);
+        tag.setInteger("AngerTime", angerTicks);
+        if (angerTarget != null) tag.setUniqueId("AngryAt", angerTarget);
     }
 
     @Override
@@ -144,6 +242,11 @@ public final class BeeEntity extends EntityAnimal {
         setNectar(tag.getBoolean("HasNectar"));
         stayOutside = tag.getInteger("StayOutside");
         ticksWithoutNectar = tag.getInteger("TicksWithoutNectar");
+        dataManager.set(STUNG, tag.getBoolean("HasStung"));
+        ticksSinceSting = MathHelper.clamp(tag.getInteger("TicksSinceSting"), 0, 1200);
+        angerTicks = MathHelper.clamp(tag.getInteger("AngerTime"), 0, 780);
+        angerTarget = tag.hasUniqueId("AngryAt") ? tag.getUniqueId("AngryAt") : null;
+        dataManager.set(ANGRY, angerTicks > 0 && !hasStung());
     }
 
     @Nullable
@@ -246,7 +349,7 @@ public final class BeeEntity extends EntityAnimal {
         @Override
         public void updateTask() {
             boolean resting = !world.isDaytime() || world.isRaining();
-            if (stayOutside == 0 && (resting || hasNectar() || ticksWithoutNectar == WITHOUT_NECTAR_LIMIT)) {
+            if (!isAngry() && !hasStung() && stayOutside == 0 && (resting || hasNectar() || ticksWithoutNectar == WITHOUT_NECTAR_LIMIT)) {
                 flowerTime = 0;
                 if (findHomeDelay-- <= 0) {
                     nest = findHome();
@@ -261,7 +364,7 @@ public final class BeeEntity extends EntityAnimal {
                     }
                 }
             }
-            if (!resting && !hasNectar()) {
+            if (!resting && !isAngry() && !hasStung() && !hasNectar()) {
                 if (flower == null && findFlowerDelay-- <= 0) {
                     flower = findFlower();
                     findFlowerDelay = 20 + rand.nextInt(41);

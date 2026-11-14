@@ -7,12 +7,14 @@ import net.minecraft.init.Bootstrap;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTTagList;
+import net.minecraft.init.Items;
 import net.minecraft.util.EnumFacing;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertSame;
+import static org.junit.Assert.assertTrue;
 
 public class BeeNestBlockTest {
     @BeforeClass
@@ -33,6 +35,22 @@ public class BeeNestBlockTest {
             }
         }
         assertEquals(nest.getDefaultState(), nest.getStateFromMeta(15));
+    }
+
+    @Test
+    public void campfireFacingAndLitStateRoundTrip() {
+        CampfireBlock campfire = new CampfireBlock();
+        for (int meta = 0; meta < 8; meta++) {
+            IBlockState state = campfire.getStateFromMeta(meta);
+            assertEquals(meta, campfire.getMetaFromState(state));
+            assertEquals(meta < 4, state.getValue(CampfireBlock.LIT));
+            assertEquals(meta < 4 ? 15 : 0, campfire.getLightValue(state, null, null));
+        }
+        IBlockState state = campfire.getDefaultState();
+        assertSame(Items.COAL, campfire.getItemDropped(state, null, 0));
+        assertEquals(1, campfire.damageDropped(state));
+        assertEquals(2, campfire.quantityDropped(null));
+        assertTrue(campfire.canSilkHarvest(null, null, state, null));
     }
 
     @Test

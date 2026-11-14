@@ -3,6 +3,7 @@ package ivorius.psychedelicraft.block.entity;
 import ivorius.psychedelicraft.block.BeeNestBlock;
 import ivorius.psychedelicraft.entity.BeeEntity;
 import net.minecraft.block.state.IBlockState;
+import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTTagList;
 import net.minecraft.network.NetworkManager;
@@ -20,6 +21,7 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Random;
+import javax.annotation.Nullable;
 
 public final class BeeNestBlockEntity extends TileEntity implements ITickable {
     private static final int CAPACITY = 3;
@@ -28,6 +30,7 @@ public final class BeeNestBlockEntity extends TileEntity implements ITickable {
     private final List<Occupant> occupants = new ArrayList<>(CAPACITY);
     private EnumFacing facing = EnumFacing.NORTH;
     private boolean movingWithOccupants;
+    private EntityPlayer breakingPlayer;
 
     public BeeNestBlockEntity() {
     }
@@ -102,7 +105,8 @@ public final class BeeNestBlockEntity extends TileEntity implements ITickable {
     }
 
     public boolean tryEnter(BeeEntity bee) {
-        if (world.isRemote || isFull() || !bee.isEntityAlive() || bee.world != world || bee.isRiding() || bee.isBeingRidden()) return false;
+        if (world.isRemote || isFull() || !bee.isEntityAlive() || bee.hasStung() || bee.isAngry()
+                || bee.world != world || bee.isRiding() || bee.isBeingRidden()) return false;
         NBTTagCompound data = bee.writeToNBT(new NBTTagCompound());
         data.removeTag("HivePos");
         data.removeTag("UUIDMost");
@@ -113,13 +117,17 @@ public final class BeeNestBlockEntity extends TileEntity implements ITickable {
         return true;
     }
 
-    public void setMovingWithOccupants(boolean movingWithOccupants) {
+    public void preparePlayerRemoval(boolean movingWithOccupants, @Nullable EntityPlayer breakingPlayer) {
         this.movingWithOccupants = movingWithOccupants;
+        this.breakingPlayer = breakingPlayer;
     }
 
     public void releaseOnBreak() {
-        if (movingWithOccupants) return;
-        occupants.removeIf(occupant -> release(occupant, true, false));
+        if (!movingWithOccupants) releaseEmergency(breakingPlayer);
+    }
+
+    public void releaseEmergency(@Nullable EntityPlayer player) {
+        if (occupants.removeIf(occupant -> release(occupant, true, false, player))) world.markChunkDirty(pos, this);
     }
 
     @Override
@@ -131,7 +139,7 @@ public final class BeeNestBlockEntity extends TileEntity implements ITickable {
             Occupant bee = bees.next();
             boolean nectar = bee.data.getBoolean("HasNectar");
             int minimum = nectar ? NECTAR_TICKS : REST_TICKS;
-            if (bee.ticks > minimum && day && release(bee, false, nectar)) {
+            if (bee.ticks > minimum && day && release(bee, false, nectar, null)) {
                 bees.remove();
             } else if (bee.ticks < Integer.MAX_VALUE) {
                 bee.ticks++;
@@ -140,7 +148,7 @@ public final class BeeNestBlockEntity extends TileEntity implements ITickable {
         world.markChunkDirty(pos, this);
     }
 
-    private boolean release(Occupant occupant, boolean emergency, boolean delivered) {
+    private boolean release(Occupant occupant, boolean emergency, boolean delivered, @Nullable EntityPlayer player) {
         BlockPos exit = pos.offset(facing);
         boolean blocked = !world.isBlockLoaded(exit) || world.getBlockState(exit).getCollisionBoundingBox(world, exit) != null;
         if (blocked && !emergency) return false;
@@ -152,6 +160,7 @@ public final class BeeNestBlockEntity extends TileEntity implements ITickable {
                 pos.getY() + 0.5D - bee.height * 0.5D, pos.getZ() + 0.5D + offset * facing.getFrontOffsetZ(),
                 facing.getHorizontalAngle(), 0F);
         bee.leaveNest(pos, delivered, occupant.ticks);
+        if (player != null && bee.getDistanceSq(player) <= 16D) bee.angerAt(player);
         if (!world.spawnEntity(bee)) return false;
         if (delivered) {
             IBlockState state = world.getBlockState(pos);

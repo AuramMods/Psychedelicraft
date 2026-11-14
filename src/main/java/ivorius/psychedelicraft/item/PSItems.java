@@ -41,6 +41,7 @@ public final class PSItems {
     public static final HoneyBottleItem HONEY_BOTTLE = named("honey_bottle", new HoneyBottleItem());
     public static final Item HONEYCOMB = named("honeycomb", new Item());
     public static final Item BEE_NEST = named("bee_nest", new ItemBlock(PSBlocks.BEE_NEST));
+    public static final Item CAMPFIRE = named("campfire", new ItemBlock(PSBlocks.CAMPFIRE));
     public static final FilledBucketItem FILLED_BUCKET = named("filled_bucket", new FilledBucketItem(), PSItemGroups.DRINKS);
     public static final Item BROWN_MAGIC_MUSHROOMS = edible("brown_magic_mushrooms", 0, 0.1F, DrugType.BROWN_SHROOMS);
     public static final Item RED_MAGIC_MUSHROOMS = edible("red_magic_mushrooms", 0, 0.1F, DrugType.RED_SHROOMS);

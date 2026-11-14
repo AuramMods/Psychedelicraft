@@ -25,7 +25,7 @@ public final class BeeRenderer extends Render<BeeEntity> {
             GlStateManager.enableOutlineMode(getTeamColor(bee));
         }
         try {
-            ApparitionModels.drawBee(bee.ticksExisted + partialTicks, bee.hasNectar());
+            ApparitionModels.drawBee(bee.ticksExisted + partialTicks, bee.hasNectar(), bee.isAngry(), bee.hasStung());
         } finally {
             if (renderOutlines) {
                 GlStateManager.disableOutlineMode();
