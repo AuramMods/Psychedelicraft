@@ -22,9 +22,15 @@ import net.minecraftforge.fml.relauncher.SideOnly;
 
 final class GlitchedBlock extends Block {
     GlitchedBlock() {
-        super(Material.AIR, MapColor.BLACK);
+        // The donor's air flag is independent of its solid collision and placement rules.
+        super(new Material(MapColor.BLACK));
         setHardness(0);
-        setLightOpacity(0);
+        setLightOpacity(1);
+    }
+
+    @Override
+    public boolean isAir(IBlockState state, IBlockAccess world, BlockPos pos) {
+        return true;
     }
 
     @Override
