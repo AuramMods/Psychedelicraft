@@ -292,18 +292,22 @@ public final class DryingTableBlockEntity extends TileEntity implements ITickabl
 
     @Override
     public int[] getSlotsForFace(@Nullable EnumFacing facing) {
-        return facing == null ? ALL_SLOTS : facing == EnumFacing.UP ? OUTPUT_SLOTS : INPUT_SLOTS;
+        return facing == null ? ALL_SLOTS : isOutputFace(facing) ? OUTPUT_SLOTS : INPUT_SLOTS;
     }
 
     @Override
     public boolean canInsertItem(int slot, ItemStack stack, @Nullable EnumFacing facing) {
         // The 1.12 hopper's merge path uses the item's stack limit instead of the inventory limit.
-        return facing != EnumFacing.UP && isItemValidForSlot(slot, stack) && items.get(slot).isEmpty();
+        return !isOutputFace(facing) && isItemValidForSlot(slot, stack) && items.get(slot).isEmpty();
     }
 
     @Override
-    public boolean canExtractItem(int slot, ItemStack stack, EnumFacing facing) {
-        return true;
+    public boolean canExtractItem(int slot, ItemStack stack, @Nullable EnumFacing facing) {
+        return !isOutputFace(facing) || slot == OUTPUT;
+    }
+
+    private static boolean isOutputFace(@Nullable EnumFacing facing) {
+        return facing == EnumFacing.UP || facing == EnumFacing.DOWN;
     }
 
     @Override

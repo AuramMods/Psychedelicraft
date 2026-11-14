@@ -10,7 +10,9 @@ import net.minecraftforge.items.wrapper.SidedInvWrapper;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
+import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 public class DryingTableBlockEntityTest {
@@ -39,6 +41,23 @@ public class DryingTableBlockEntityTest {
         assertTrue(remainder.isEmpty());
         assertEquals(1, table.getStackInSlot(1).getCount());
         assertEquals(1, table.getStackInSlot(2).getCount());
+    }
+
+    @Test
+    public void bottomAutomationTakesOnlyFinishedOutput() {
+        DryingTableBlockEntity table = new DryingTableBlockEntity();
+        ItemStack input = new ItemStack(Items.APPLE);
+        table.setInventorySlotContents(1, input);
+        IItemHandler bottom = new SidedInvWrapper(table, EnumFacing.DOWN);
+
+        assertArrayEquals(new int[]{0}, table.getSlotsForFace(EnumFacing.DOWN));
+        assertFalse(table.canExtractItem(1, input, EnumFacing.DOWN));
+        assertTrue(bottom.extractItem(0, 1, false).isEmpty());
+        assertEquals(1, bottom.insertItem(0, input, false).getCount());
+
+        table.setInventorySlotContents(0, new ItemStack(Items.CARROT, 3));
+        assertEquals(3, bottom.extractItem(0, 3, false).getCount());
+        assertEquals(1, table.getStackInSlot(1).getCount());
     }
 
     @Test

@@ -121,6 +121,15 @@ public final class FurnaceRecipe extends IForgeRegistryEntry.Impl<IRecipe> imple
         return null;
     }
 
+    public static ItemStack smeltingResult(FurnaceRecipes registry, ItemStack input) {
+        ItemStack result = registry.getSmeltingResult(input);
+        if (!result.isEmpty()) return result;
+
+        // Furnace optimization mods can replace the registry method and its custom lookup hook.
+        ItemStack custom = lookup(input);
+        return custom == null ? result : custom;
+    }
+
     public static int cookTime(int vanilla, ItemStack input) {
         FurnaceRecipe recipe = find(input);
         return recipe == null ? vanilla : recipe.duration;

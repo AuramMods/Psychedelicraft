@@ -22,6 +22,8 @@ import org.objectweb.asm.tree.VarInsnNode;
 public final class FurnaceRecipeTransformer implements IClassTransformer {
     private static final String FURNACE_RECIPES = "net.minecraft.item.crafting.FurnaceRecipes";
     private static final String FURNACE_TILE = "net.minecraft.tileentity.TileEntityFurnace";
+    private static final String FURNACE_CONTAINER = "net.minecraft.inventory.ContainerFurnace";
+    private static final String TRANSFER_DESCRIPTOR = "(Lnet/minecraft/entity/player/EntityPlayer;I)Lnet/minecraft/item/ItemStack;";
     private static final String RESULT_DESCRIPTOR = "(Lnet/minecraft/item/ItemStack;)Lnet/minecraft/item/ItemStack;";
     private static final String OUTPUT_SLOT = "net.minecraft.inventory.SlotFurnaceOutput";
     private static final String RECIPES = "ivorius/psychedelicraft/recipe/FurnaceRecipe";
@@ -29,7 +31,7 @@ public final class FurnaceRecipeTransformer implements IClassTransformer {
     @Override
     public byte[] transform(String name, String transformedName, byte[] bytes) {
         if (bytes == null || !(FURNACE_RECIPES.equals(transformedName) || FURNACE_TILE.equals(transformedName)
-                || OUTPUT_SLOT.equals(transformedName))) return bytes;
+                || FURNACE_CONTAINER.equals(transformedName) || OUTPUT_SLOT.equals(transformedName))) return bytes;
         ClassNode type = new ClassNode(Opcodes.ASM5);
         new ClassReader(bytes).accept(type, 0);
         if (FURNACE_RECIPES.equals(transformedName)) {
@@ -39,6 +41,8 @@ public final class FurnaceRecipeTransformer implements IClassTransformer {
         } else if (FURNACE_TILE.equals(transformedName)) {
             patchFuelConsumption(type);
             patchFurnace(type);
+        } else if (FURNACE_CONTAINER.equals(transformedName)) {
+            patchRecipeCall(ClientEffectsTransformer.method(type, "transferStackInSlot", "func_82846_b", TRANSFER_DESCRIPTOR));
         } else {
             patchOutputSlot(type);
         }
@@ -58,6 +62,7 @@ public final class FurnaceRecipeTransformer implements IClassTransformer {
         }
 
         MethodNode canSmelt = ClientEffectsTransformer.method(type, "canSmelt", "func_145948_k", "()Z");
+        patchRecipeCall(canSmelt);
         MethodInsnNode equal = findCall(canSmelt, "net/minecraft/item/ItemStack", "isItemEqual", "func_77969_a",
                 "(Lnet/minecraft/item/ItemStack;)Z");
         canSmelt.instructions.insertBefore(equal, new VarInsnNode(Opcodes.ALOAD, 0));
@@ -66,8 +71,17 @@ public final class FurnaceRecipeTransformer implements IClassTransformer {
                         Type.getArgumentTypes(equal.desc)[0], Type.getObjectType(type.name)), false));
 
         MethodNode smelt = ClientEffectsTransformer.method(type, "smeltItem", "func_145949_j", "()V");
+        patchRecipeCall(smelt);
         MethodInsnNode shrink = findCall(smelt, "net/minecraft/item/ItemStack", "shrink", "func_190918_g", "(I)V");
         smelt.instructions.insertBefore(shrink, furnaceHook(type, "recordOutput"));
+    }
+
+    private static void patchRecipeCall(MethodNode method) {
+        MethodInsnNode call = findCall(method, "net/minecraft/item/crafting/FurnaceRecipes", "getSmeltingResult", "func_151395_a",
+                RESULT_DESCRIPTOR);
+        String descriptor = Type.getMethodDescriptor(Type.getReturnType(call.desc), Type.getObjectType(call.owner),
+                Type.getArgumentTypes(call.desc)[0]);
+        method.instructions.set(call, new MethodInsnNode(Opcodes.INVOKESTATIC, RECIPES, "smeltingResult", descriptor, false));
     }
 
     private static void patchOutputSlot(ClassNode type) {
