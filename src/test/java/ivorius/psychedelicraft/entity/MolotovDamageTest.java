@@ -13,6 +13,7 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.profiler.Profiler;
 import net.minecraft.util.DamageSource;
 import net.minecraft.util.EnumFacing;
+import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.RayTraceResult;
@@ -98,6 +99,18 @@ public class MolotovDamageTest {
         assertEquals(BlockPos.ORIGIN.east(), inside.getBlockPos());
         assertEquals(EnumFacing.EAST, inside.sideHit);
         assertEquals(1.498, inside.hitVec.x, 1E-12);
+    }
+
+    @Test
+    public void projectileEntityRayAcceptsOnlyEntriesWithinTheSegment() {
+        AxisAlignedBB target = new AxisAlignedBB(0, 0, 0, 1, 1, 1);
+        Vec3d before = new Vec3d(-1, 0.5, 0.5);
+        Vec3d face = new Vec3d(0, 0.5, 0.5);
+        Vec3d after = new Vec3d(2, 0.5, 0.5);
+        assertNull(ProjectileBlockCollision.entry(target, new Vec3d(0.5, 0.5, 0.5), after));
+        assertNull(ProjectileBlockCollision.entry(target, before, face));
+        assertNull(ProjectileBlockCollision.entry(target, face, after));
+        assertEquals(face, ProjectileBlockCollision.entry(target, before, after).hitVec);
     }
 
     @Test

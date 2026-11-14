@@ -85,8 +85,8 @@ final class ProjectileBlockCollision {
                 EnumFacing face = EnumFacing.getFacingFromVector((float) motion.x, (float) motion.y, (float) motion.z);
                 return new RayTraceResult(probe, face.getOpposite(), pos.toImmutable());
             }
-            RayTraceResult hit = box.calculateIntercept(start, end);
-            if (hit == null || motion.dotProduct(new Vec3d(hit.sideHit.getDirectionVec())) >= 0) continue;
+            RayTraceResult hit = entry(box, start, end);
+            if (hit == null) continue;
             double distance = start.squareDistanceTo(hit.hitVec);
             if (distance < maxDistance) {
                 maxDistance = distance;
@@ -94,5 +94,13 @@ final class ProjectileBlockCollision {
             }
         }
         return closest;
+    }
+
+    @Nullable
+    static RayTraceResult entry(AxisAlignedBB box, Vec3d start, Vec3d end) {
+        RayTraceResult hit = box.calculateIntercept(start, end);
+        if (hit == null || hit.hitVec.equals(start) || hit.hitVec.equals(end)) return null;
+        Vec3d normal = new Vec3d(hit.sideHit.getDirectionVec());
+        return end.subtract(start).dotProduct(normal) < 0 ? hit : null;
     }
 }

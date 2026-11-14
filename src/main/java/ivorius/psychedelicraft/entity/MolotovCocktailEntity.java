@@ -172,7 +172,7 @@ public final class MolotovCocktailEntity extends EntityThrowable implements IEnt
         for (Entity entity : world.getEntitiesInAABBexcluding(this, flightBounds(), candidate ->
                 EntitySelectors.NOT_SPECTATING.apply(candidate) && candidate.isEntityAlive() && candidate.canBeCollidedWith()
                         && (leftOwner || owner == null || !candidate.isRidingSameEntity(owner)))) {
-            RayTraceResult hit = entity.getEntityBoundingBox().grow(0.3F).calculateIntercept(start, end);
+            RayTraceResult hit = ProjectileBlockCollision.entry(entity.getEntityBoundingBox().grow(0.3F), start, end);
             if (hit == null) continue;
             double hitDistance = start.squareDistanceTo(hit.hitVec);
             if (hitDistance < distance) {
