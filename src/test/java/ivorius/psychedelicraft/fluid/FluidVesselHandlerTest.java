@@ -5,6 +5,7 @@ import net.minecraft.init.Bootstrap;
 import net.minecraft.init.Items;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
+import net.minecraftforge.common.ForgeHooks;
 import net.minecraftforge.fluids.FluidRegistry;
 import net.minecraftforge.fluids.FluidStack;
 import net.minecraftforge.fluids.FluidUtil;
@@ -122,6 +123,15 @@ public class FluidVesselHandlerTest {
         assertEquals(capacity, saved.fill(new FluidStack(PSFluids.HONEY, capacity, brewed), true));
         assertSame(PSItems.FILLED_GLASS_BOTTLE, saved.getContainer().getItem());
         assertEquals(brewed, saved.getFluid().tag);
+    }
+
+    @Test
+    public void honeyBottleUsesTheNativeCraftingRemainder() {
+        ItemStack bottles = new ItemStack(PSItems.HONEY_BOTTLE, 4);
+        ItemStack remainder = ForgeHooks.getContainerItem(bottles);
+        assertSame(Items.GLASS_BOTTLE, remainder.getItem());
+        assertEquals(1, remainder.getCount());
+        assertEquals(4, bottles.getCount());
     }
 
     @Test

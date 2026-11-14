@@ -24,6 +24,7 @@ public final class PSSounds {
     public static final SoundEvent WAXED_SIGN_INTERACT_FAIL = sound("block.sign.waxed_interact_fail");
     public static final SoundEvent AXE_STRIP = sound("item.axe.strip");
     public static final SoundEvent BEE_NEST_DRIP = sound("block.bee_nest.drip");
+    public static final SoundEvent HONEY_DRINK = sound("item.honey_bottle.drink");
     public static final SoundEvent CROP_PLANT = sound("item.crop.plant");
     public static final SoundEvent DRUG_GENERIC = sound("drug.generic");
 
@@ -40,6 +41,6 @@ public final class PSSounds {
         event.getRegistry().registerAll(BREATH, HEARTBEAT, RIFT_JAR_TOGGLE, RIFT_JAR_OPEN, RIFT_JAR_CLOSE,
                 BOTTLE_RACK_USE, PLACED_DRINK_SET_DOWN, PAPER_BAG_INSERT, PAPER_BAG_REMOVE,
                 SIGN_DYE, SIGN_INK, SIGN_GLOW_INK, SIGN_WAX, WAXED_SIGN_INTERACT_FAIL, AXE_STRIP, BEE_NEST_DRIP,
-                CROP_PLANT, DRUG_GENERIC);
+                HONEY_DRINK, CROP_PLANT, DRUG_GENERIC);
     }
 }
