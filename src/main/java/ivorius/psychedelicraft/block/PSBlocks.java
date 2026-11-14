@@ -145,6 +145,14 @@ public final class PSBlocks {
     public static final SuspiciousSandBlock SUSPICIOUS_SAND = named("suspicious_sand", new SuspiciousSandBlock());
     public static final SnifferEggBlock SNIFFER_EGG = named("sniffer_egg", new SnifferEggBlock());
     public static final Block MOSS_BLOCK = named("moss_block", new MossSubstrateBlock());
+    public static final Block MOSS_CARPET = named("moss_carpet", new MossCarpetBlock());
+    public static final Block AZALEA = named("azalea", new AzaleaBlock());
+    public static final Block FLOWERING_AZALEA = named("flowering_azalea", new AzaleaBlock());
+    public static final Block AZALEA_LEAVES = named("azalea_leaves", new AzaleaLeavesBlock());
+    public static final Block FLOWERING_AZALEA_LEAVES = named("flowering_azalea_leaves", new AzaleaLeavesBlock());
+    public static final Block ROOTED_DIRT = named("rooted_dirt", new RootedDirtBlock());
+    public static final Block HANGING_ROOTS = named("hanging_roots", new HangingRootsBlock());
+    public static final Block MUD = named("mud", new MudBlock());
     public static final BubbleColumnBlock BUBBLE_COLUMN = named("bubble_column", new BubbleColumnBlock());
 
     private PSBlocks() {
@@ -172,7 +180,8 @@ public final class PSBlocks {
                 JUNIPER_SIGN, JUNIPER_WALL_SIGN, JUNIPER_HANGING_SIGN, JUNIPER_WALL_HANGING_SIGN, BEE_NEST, BUBBLE_COLUMN,
                 CAMPFIRE, SOUL_CAMPFIRE, SOUL_SOIL, SOUL_FIRE, KELP, KELP_STALK, DRIED_KELP_BLOCK, SWEET_BERRY_BUSH,
                 TORCHFLOWER, CORNFLOWER, LILY_OF_THE_VALLEY, WITHER_ROSE, TORCHFLOWER_CROP, PITCHER_CROP, PITCHER_PLANT,
-                SUSPICIOUS_SAND, SNIFFER_EGG, MOSS_BLOCK);
+                SUSPICIOUS_SAND, SNIFFER_EGG, MOSS_BLOCK, MOSS_CARPET, AZALEA, FLOWERING_AZALEA,
+                AZALEA_LEAVES, FLOWERING_AZALEA_LEAVES, ROOTED_DIRT, HANGING_ROOTS, MUD);
         for (PottedPlantBlock pot : POTTED_PLANTS) {
             event.getRegistry().register(pot);
         }

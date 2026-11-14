@@ -50,6 +50,7 @@ import ivorius.psychedelicraft.item.PSItems;
 import ivorius.psychedelicraft.item.PortableFluidItem;
 import ivorius.psychedelicraft.network.Channel;
 import net.minecraft.block.Block;
+import net.minecraft.block.BlockLeaves;
 import net.minecraft.block.BlockDoor;
 import net.minecraft.block.BlockFenceGate;
 import net.minecraft.block.state.IBlockState;
@@ -130,6 +131,10 @@ public final class PSItemModels {
     @SubscribeEvent
     public static void registerModels(ModelRegistryEvent event) {
         ModelLoader.setCustomStateMapper(PSBlocks.BUBBLE_COLUMN, block -> java.util.Collections.emptyMap());
+        ModelLoader.setCustomStateMapper(PSBlocks.AZALEA_LEAVES,
+                new StateMap.Builder().ignore(BlockLeaves.DECAYABLE, BlockLeaves.CHECK_DECAY).build());
+        ModelLoader.setCustomStateMapper(PSBlocks.FLOWERING_AZALEA_LEAVES,
+                new StateMap.Builder().ignore(BlockLeaves.DECAYABLE, BlockLeaves.CHECK_DECAY).build());
         ModelLoader.setCustomStateMapper(PSBlocks.KELP, new StateMap.Builder().ignore(KelpBlock.STAGE).build());
         ModelLoader.setCustomStateMapper(PSBlocks.KELP_STALK, block -> {
             java.util.Map<IBlockState, ModelResourceLocation> models = new java.util.HashMap<>();

@@ -148,7 +148,8 @@ public final class SnifferEntity extends EntityAnimal {
     }
 
     static boolean isDiggable(Block block) {
-        return block == Blocks.GRASS || block == Blocks.DIRT || block == PSBlocks.MOSS_BLOCK;
+        return block == Blocks.GRASS || block == Blocks.DIRT || block == PSBlocks.MOSS_BLOCK
+                || block == PSBlocks.ROOTED_DIRT || block == PSBlocks.MUD;
     }
 
     void recordDig(BlockPos soil) {

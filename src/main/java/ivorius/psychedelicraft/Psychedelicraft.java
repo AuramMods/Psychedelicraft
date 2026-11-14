@@ -23,6 +23,7 @@ import ivorius.psychedelicraft.recipe.JuniperWoodRecipes;
 import ivorius.psychedelicraft.screen.PSGuiHandler;
 import ivorius.psychedelicraft.world.gen.ChestLoot;
 import ivorius.psychedelicraft.world.gen.CopperOreGenerator;
+import ivorius.psychedelicraft.world.gen.MossCaveWorldGenerator;
 import ivorius.psychedelicraft.world.gen.SmallFlowerWorldGenerator;
 import ivorius.psychedelicraft.world.gen.VillageGarden;
 import ivorius.psychedelicraft.world.gen.WarmOceanRuin;
@@ -66,6 +67,7 @@ public class Psychedelicraft {
         OreDictionary.registerOre("beeCombHoney", PSItems.HONEYCOMB);
         OreDictionary.registerOre("cropTomato", PSItems.TOMATO);
         GameRegistry.registerWorldGenerator(new CopperOreGenerator(), 0);
+        GameRegistry.registerWorldGenerator(new MossCaveWorldGenerator(), 1);
         SmallFlowerWorldGenerator.registerGrassFlowers();
         JuniperWoodRecipes.register();
         PSItems.JUNIPER_BOAT.registerDispenserBehavior();

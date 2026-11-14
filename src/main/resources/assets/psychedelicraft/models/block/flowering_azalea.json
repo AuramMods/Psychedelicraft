@@ -1,0 +1,7 @@
+{
+  "parent": "psychedelicraft:block/template_azalea",
+  "textures": {
+    "side": "psychedelicraft:blocks/flowering_azalea_side",
+    "top": "psychedelicraft:blocks/flowering_azalea_top"
+  }
+}

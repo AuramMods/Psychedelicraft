@@ -60,6 +60,14 @@ public final class PSItems {
     public static final Item SUSPICIOUS_SAND = named("suspicious_sand", new ItemBlock(PSBlocks.SUSPICIOUS_SAND));
     public static final Item SNIFFER_EGG = named("sniffer_egg", new ItemBlock(PSBlocks.SNIFFER_EGG));
     public static final Item MOSS_BLOCK = named("moss_block", new ItemBlock(PSBlocks.MOSS_BLOCK));
+    public static final Item MOSS_CARPET = named("moss_carpet", new ItemBlock(PSBlocks.MOSS_CARPET));
+    public static final Item AZALEA = named("azalea", new ItemBlock(PSBlocks.AZALEA));
+    public static final Item FLOWERING_AZALEA = named("flowering_azalea", new ItemBlock(PSBlocks.FLOWERING_AZALEA));
+    public static final Item AZALEA_LEAVES = named("azalea_leaves", new ItemBlock(PSBlocks.AZALEA_LEAVES));
+    public static final Item FLOWERING_AZALEA_LEAVES = named("flowering_azalea_leaves", new ItemBlock(PSBlocks.FLOWERING_AZALEA_LEAVES));
+    public static final Item ROOTED_DIRT = named("rooted_dirt", new ItemBlock(PSBlocks.ROOTED_DIRT));
+    public static final Item HANGING_ROOTS = named("hanging_roots", new ItemBlock(PSBlocks.HANGING_ROOTS));
+    public static final Item MUD = named("mud", new ItemBlock(PSBlocks.MUD));
     public static final Item ANGLER_POTTERY_SHERD = named("angler_pottery_sherd", new Item());
     public static final Item SHELTER_POTTERY_SHERD = named("shelter_pottery_sherd", new Item());
     public static final Item SNORT_POTTERY_SHERD = named("snort_pottery_sherd", new Item());
