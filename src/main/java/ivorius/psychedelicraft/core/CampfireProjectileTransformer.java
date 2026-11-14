@@ -134,7 +134,12 @@ public final class CampfireProjectileTransformer implements IClassTransformer {
     private static void patchTrident(ClassNode type, MethodNode update) {
         String arrow = "L" + type.name + ";";
         boolean foundDrag = false;
+        boolean foundDespawn = false;
         for (AbstractInsnNode instruction : update.instructions.toArray()) {
+            if (instruction instanceof MethodInsnNode && matches((MethodInsnNode) instruction, "setDead", "func_70106_y", "()V")) {
+                update.instructions.set(instruction, new MethodInsnNode(Opcodes.INVOKESTATIC, TRIDENT, "despawnEmbedded", "(" + arrow + ")V", false));
+                foundDespawn = true;
+            }
             if (!(instruction instanceof LdcInsnNode) || !Float.valueOf(0.6F).equals(((LdcInsnNode) instruction).cst)) continue;
             InsnList hook = new InsnList();
             hook.add(new VarInsnNode(Opcodes.ALOAD, 0));
@@ -151,7 +156,9 @@ public final class CampfireProjectileTransformer implements IClassTransformer {
             String name = REMAPPER.mapFieldName(field.owner, field.name, field.desc);
             if ("ENTITY_ARROW_HIT".equals(name) || "field_187731_t".equals(name)) groundSound = field;
         }
-        if (!foundDrag || groundSound == null) throw new IllegalStateException("Could not locate arrow water drag or ground sound");
+        if (!foundDrag || !foundDespawn || groundSound == null) {
+            throw new IllegalStateException("Could not locate arrow water drag, embedded despawn or ground sound");
+        }
         InsnList hook = new InsnList();
         hook.add(new VarInsnNode(Opcodes.ALOAD, 0));
         hook.add(new MethodInsnNode(Opcodes.INVOKESTATIC, TRIDENT, "groundSound",

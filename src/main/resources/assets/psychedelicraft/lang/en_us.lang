@@ -618,3 +618,14 @@ subtitle.psychedelicraft.item.trident.hit=Trident stabs
 subtitle.psychedelicraft.item.trident.hit_ground=Trident vibrates
 death.attack.trident=%1$s was impaled by %2$s
 death.attack.trident.item=%1$s was impaled by %2$s with %3$s
+
+enchantment.psychedelicraft.loyalty=Loyalty
+enchantment.psychedelicraft.impaling=Impaling
+enchantment.psychedelicraft.riptide=Riptide
+enchantment.psychedelicraft.channeling=Channeling
+advancements.psychedelicraft.throw_trident.title=A Throwaway Joke
+advancements.psychedelicraft.throw_trident.description=Throw a Trident at something.
+Note: Throwing away your only weapon is not a good idea.
+subtitle.psychedelicraft.item.trident.return=Trident returns
+subtitle.psychedelicraft.item.trident.thunder=Trident thunder cracks
+subtitle.psychedelicraft.item.trident.riptide=Trident zooms

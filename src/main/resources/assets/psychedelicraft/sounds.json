@@ -906,5 +906,77 @@
       }
     ],
     "subtitle": "subtitle.psychedelicraft.item.trident.hit_ground"
+  },
+  "item.trident.return": {
+    "sounds": [
+      {
+        "name": "psychedelicraft:item/trident/return1",
+        "volume": 0.8
+      },
+      {
+        "name": "psychedelicraft:item/trident/return2",
+        "volume": 0.8
+      },
+      {
+        "name": "psychedelicraft:item/trident/return2",
+        "pitch": 0.8,
+        "volume": 0.8
+      },
+      {
+        "name": "psychedelicraft:item/trident/return2",
+        "pitch": 1.2,
+        "volume": 0.8
+      },
+      {
+        "name": "psychedelicraft:item/trident/return2",
+        "pitch": 1.2,
+        "volume": 0.8
+      },
+      {
+        "name": "psychedelicraft:item/trident/return3",
+        "volume": 0.8
+      },
+      {
+        "name": "psychedelicraft:item/trident/return3",
+        "pitch": 0.8,
+        "volume": 0.8
+      },
+      {
+        "name": "psychedelicraft:item/trident/return3",
+        "pitch": 0.8,
+        "volume": 0.8
+      },
+      {
+        "name": "psychedelicraft:item/trident/return3",
+        "pitch": 1.2,
+        "volume": 0.8
+      }
+    ],
+    "subtitle": "subtitle.psychedelicraft.item.trident.return"
+  },
+  "item.trident.thunder": {
+    "sounds": [
+      "psychedelicraft:item/trident/thunder1",
+      "psychedelicraft:item/trident/thunder2"
+    ],
+    "subtitle": "subtitle.psychedelicraft.item.trident.thunder"
+  },
+  "item.trident.riptide_1": {
+    "sounds": [
+      "psychedelicraft:item/trident/riptide1"
+    ],
+    "subtitle": "subtitle.psychedelicraft.item.trident.riptide"
+  },
+  "item.trident.riptide_2": {
+    "sounds": [
+      "psychedelicraft:item/trident/riptide2"
+    ],
+    "subtitle": "subtitle.psychedelicraft.item.trident.riptide"
+  },
+  "item.trident.riptide_3": {
+    "sounds": [
+      "psychedelicraft:item/trident/riptide3"
+    ],
+    "subtitle": "subtitle.psychedelicraft.item.trident.riptide"
   }
 }

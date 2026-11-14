@@ -22,6 +22,7 @@ import net.minecraft.entity.ai.EntityAIWander;
 import net.minecraft.entity.ai.EntityAIZombieAttack;
 import net.minecraft.entity.ai.EntityMoveHelper;
 import net.minecraft.entity.ai.RandomPositionGenerator;
+import net.minecraft.entity.item.EntityItem;
 import net.minecraft.entity.monster.EntityIronGolem;
 import net.minecraft.entity.monster.EntityPigZombie;
 import net.minecraft.entity.monster.EntityZombie;
@@ -243,6 +244,28 @@ public final class DrownedEntity extends EntityZombie implements IRangedAttackMo
         if (rand.nextFloat() > 0.9F) {
             setItemStackToSlot(EntityEquipmentSlot.MAINHAND, new ItemStack(rand.nextInt(16) < 10 ? PSItems.TRIDENT : Items.FISHING_ROD));
         }
+    }
+
+    @Override
+    protected void updateEquipmentIfNeeded(EntityItem entity) {
+        ItemStack offered = entity.getItem();
+        ItemStack held = getItemStackFromSlot(getSlotForItemStack(offered));
+        if (held.getItem() == PSItems.NAUTILUS_SHELL) return;
+        if (offered.getItem() != PSItems.TRIDENT && held.getItem() != PSItems.TRIDENT) {
+            super.updateEquipmentIfNeeded(entity);
+            return;
+        }
+        if (offered.getItem() != PSItems.TRIDENT || held.getItem() == PSItems.TRIDENT
+                && offered.getItemDamage() >= held.getItemDamage()) return;
+
+        if (!held.isEmpty() && rand.nextFloat() - 0.1F < inventoryHandsDropChances[EntityEquipmentSlot.MAINHAND.getIndex()]) {
+            entityDropItem(held, 0);
+        }
+        setItemStackToSlot(EntityEquipmentSlot.MAINHAND, offered);
+        setDropChance(EntityEquipmentSlot.MAINHAND, 2);
+        enablePersistence();
+        onItemPickup(entity, offered.getCount());
+        entity.setDead();
     }
 
     @Override

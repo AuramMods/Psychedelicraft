@@ -85,6 +85,12 @@ public final class PSSounds {
     public static final SoundEvent TRIDENT_HIT = sound("item.trident.hit");
     public static final SoundEvent TRIDENT_HIT_GROUND = sound("item.trident.hit_ground");
 
+    public static final SoundEvent TRIDENT_RETURN = sound("item.trident.return");
+    public static final SoundEvent TRIDENT_THUNDER = sound("item.trident.thunder");
+    public static final SoundEvent TRIDENT_RIPTIDE_1 = sound("item.trident.riptide_1");
+    public static final SoundEvent TRIDENT_RIPTIDE_2 = sound("item.trident.riptide_2");
+    public static final SoundEvent TRIDENT_RIPTIDE_3 = sound("item.trident.riptide_3");
+
     private PSSounds() {
     }
 
@@ -108,6 +114,7 @@ public final class PSSounds {
                 CONDUIT_ACTIVATE, CONDUIT_DEACTIVATE, CONDUIT_AMBIENT, CONDUIT_AMBIENT_SHORT, CONDUIT_ATTACK,
                 DROWNED_AMBIENT, DROWNED_AMBIENT_WATER, DROWNED_DEATH, DROWNED_DEATH_WATER,
                 DROWNED_HURT, DROWNED_HURT_WATER, DROWNED_STEP, DROWNED_SWIM,
-                ZOMBIE_CONVERT, HUSK_CONVERT, DROWNED_SHOOT, TRIDENT_THROW, TRIDENT_HIT, TRIDENT_HIT_GROUND);
+                ZOMBIE_CONVERT, HUSK_CONVERT, DROWNED_SHOOT, TRIDENT_THROW, TRIDENT_HIT, TRIDENT_HIT_GROUND,
+                TRIDENT_RETURN, TRIDENT_THUNDER, TRIDENT_RIPTIDE_1, TRIDENT_RIPTIDE_2, TRIDENT_RIPTIDE_3);
     }
 }
