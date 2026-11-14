@@ -21,6 +21,9 @@ import mezz.jei.api.IModRegistry;
 import mezz.jei.api.IJeiRuntime;
 import mezz.jei.api.ISubtypeRegistry;
 import mezz.jei.api.JEIPlugin;
+import mezz.jei.api.gui.ICraftingGridHelper;
+import mezz.jei.api.gui.IGuiItemStackGroup;
+import mezz.jei.api.gui.IRecipeLayout;
 import mezz.jei.api.ingredients.IIngredients;
 import mezz.jei.api.ingredients.IIngredientRegistry;
 import mezz.jei.api.ingredients.VanillaTypes;
@@ -28,8 +31,10 @@ import mezz.jei.api.recipe.IRecipeCategoryRegistration;
 import mezz.jei.api.recipe.IRecipeWrapper;
 import mezz.jei.api.recipe.IVanillaRecipeFactory;
 import mezz.jei.api.recipe.VanillaRecipeCategoryUid;
-import mezz.jei.api.recipe.wrapper.ICraftingRecipeWrapper;
+import mezz.jei.api.recipe.wrapper.ICustomCraftingRecipeWrapper;
 import mezz.jei.api.recipe.wrapper.IShapedCraftingRecipeWrapper;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.client.resources.I18n;
 import net.minecraft.init.Blocks;
 import net.minecraft.init.Items;
@@ -37,9 +42,12 @@ import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.EnumDyeColor;
 import net.minecraft.item.crafting.CraftingManager;
+import net.minecraft.item.crafting.IRecipe;
 import net.minecraft.item.crafting.Ingredient;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.ResourceLocation;
+import net.minecraft.util.text.TextFormatting;
+import net.minecraftforge.common.ForgeHooks;
 import net.minecraftforge.fluids.Fluid;
 import net.minecraftforge.fluids.FluidStack;
 
@@ -143,7 +151,10 @@ public final class PsychedelicraftJeiPlugin implements IModPlugin {
                 harvest(PSItems.FRUITING_JUNIPER_LEAVES, PSItems.JUNIPER_BERRIES)), ProcessCategory.uid(HARVEST));
         registerFluidRecipes(registry);
         registerSmelting(registry);
-        registry.handleRecipes(FillReceptacleRecipe.class, FilledCrafting::new, VanillaRecipeCategoryUid.CRAFTING);
+        ICraftingGridHelper grid = registry.getJeiHelpers().getGuiHelper().createCraftingGridHelper(1, 0);
+        registry.handleRecipes(FillReceptacleRecipe.class, recipe -> new FilledCrafting(recipe, grid), VanillaRecipeCategoryUid.CRAFTING);
+        registry.handleRecipes(FluidAwareShapelessRecipe.class, recipe -> new FluidCrafting(recipe, grid),
+                VanillaRecipeCategoryUid.CRAFTING);
         registry.handleRecipes(BottleRecipe.class, recipe -> new ColoredBottle(recipe, null), VanillaRecipeCategoryUid.CRAFTING);
         List<ColoredBottle> dyedBottles = new ArrayList<>();
         CraftingManager.REGISTRY.forEach(recipe -> {
@@ -323,16 +334,72 @@ public final class PsychedelicraftJeiPlugin implements IModPlugin {
         return Math.max(1, (ticks + 19) / 20);
     }
 
-    private static final class FilledCrafting implements ICraftingRecipeWrapper {
-        private final FillReceptacleRecipe recipe;
+    private abstract static class CraftingWithRemainders<T extends IRecipe> implements ICustomCraftingRecipeWrapper {
+        final T recipe;
+        private final ICraftingGridHelper grid;
 
-        private FilledCrafting(FillReceptacleRecipe recipe) {
+        private CraftingWithRemainders(T recipe, ICraftingGridHelper grid) {
             this.recipe = recipe;
+            this.grid = grid;
         }
 
         @Override
         public ResourceLocation getRegistryName() {
             return recipe.getRegistryName();
+        }
+
+        @Override
+        public void setRecipe(IRecipeLayout layout, IIngredients ingredients) {
+            IGuiItemStackGroup items = layout.getItemStacks();
+            List<List<ItemStack>> inputs = ingredients.getInputs(VanillaTypes.ITEM);
+            grid.setInputs(items, inputs, 3, 3);
+            grid.setOutput(items, ingredients.getOutputs(VanillaTypes.ITEM).get(0));
+            layout.setShapeless();
+            items.addTooltipCallback((slot, input, stack, tooltip) -> {
+                if (input) {
+                    int index = slot - 1;
+                    if (index < 0 || index >= inputs.size() || !recipe.getIngredients().get(index).apply(stack)) return;
+                    ItemStack remainder = getRemainder(index, stack);
+                    if (!remainder.isEmpty()) {
+                        tooltip.add(TextFormatting.GRAY + I18n.format("psychedelicraft.jei.crafting_returns", remainder.getDisplayName()));
+                        FluidVesselHandler vessel = FluidVesselHandler.forCrafting(remainder);
+                        FluidStack contents = vessel == null ? null : vessel.getFluid();
+                        if (contents != null) {
+                            tooltip.add(TextFormatting.GRAY + I18n.format("psychedelicraft.drink.levels", contents.amount,
+                                    vessel.getTankProperties()[0].getCapacity()));
+                        }
+                    }
+                } else if (Minecraft.getMinecraft().gameSettings.advancedItemTooltips || GuiScreen.isShiftKeyDown()) {
+                    tooltip.add(TextFormatting.DARK_GRAY + I18n.format("jei.tooltip.recipe.id", getRegistryName()));
+                }
+            });
+        }
+
+        abstract ItemStack getRemainder(int index, ItemStack stack);
+    }
+
+    private static final class FluidCrafting extends CraftingWithRemainders<FluidAwareShapelessRecipe> {
+        private FluidCrafting(FluidAwareShapelessRecipe recipe, ICraftingGridHelper grid) {
+            super(recipe, grid);
+        }
+
+        @Override
+        public void getIngredients(IIngredients ingredients) {
+            ingredients.setInputLists(VanillaTypes.ITEM, recipe.getIngredients().stream()
+                    .map(i -> Arrays.stream(i.getMatchingStacks()).filter(i::apply).collect(Collectors.toList()))
+                    .collect(Collectors.toList()));
+            ingredients.setOutput(VanillaTypes.ITEM, recipe.getRecipeOutput());
+        }
+
+        @Override
+        ItemStack getRemainder(int index, ItemStack stack) {
+            return recipe.getIngredientRemainder(index, stack);
+        }
+    }
+
+    private static final class FilledCrafting extends CraftingWithRemainders<FillReceptacleRecipe> {
+        private FilledCrafting(FillReceptacleRecipe recipe, ICraftingGridHelper grid) {
+            super(recipe, grid);
         }
 
         @Override
@@ -344,6 +411,11 @@ public final class PsychedelicraftJeiPlugin implements IModPlugin {
             ingredients.setOutputLists(VanillaTypes.FLUID, Collections.singletonList(outputs.stream()
                     .map(FluidVesselHandler::forCrafting).map(FluidVesselHandler::getFluid)
                     .collect(Collectors.toList())));
+        }
+
+        @Override
+        ItemStack getRemainder(int index, ItemStack stack) {
+            return index == 0 ? ItemStack.EMPTY : ForgeHooks.getContainerItem(stack);
         }
     }
 

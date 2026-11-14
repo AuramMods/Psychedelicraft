@@ -47,14 +47,18 @@ public final class FluidAwareShapelessRecipe extends ShapelessOreRecipe {
         for (int slot = 0; slot < inventory.getSizeInventory(); slot++) {
             ItemStack stack = inventory.getStackInSlot(slot);
             if (stack.isEmpty()) continue;
-            Ingredient ingredient = input.get(assignment[index++]);
-            if (ingredient instanceof FluidStackIngredient && ((FluidStackIngredient) ingredient).consumesFluid()) {
-                remaining.set(slot, ((FluidStackIngredient) ingredient).drainedVessel(stack));
-            } else {
-                remaining.set(slot, ForgeHooks.getContainerItem(stack));
-            }
+            remaining.set(slot, getIngredientRemainder(assignment[index++], stack));
         }
         return remaining;
+    }
+
+    /** Returns the crafting remainder for a stack that matches the ingredient at this index. */
+    public ItemStack getIngredientRemainder(int ingredientIndex, ItemStack stack) {
+        Ingredient ingredient = input.get(ingredientIndex);
+        if (ingredient instanceof FluidStackIngredient && ((FluidStackIngredient) ingredient).consumesFluid()) {
+            return ((FluidStackIngredient) ingredient).drainedVessel(stack);
+        }
+        return ForgeHooks.getContainerItem(stack);
     }
 
     private static List<ItemStack> occupiedStacks(InventoryCrafting inventory) {
