@@ -39,8 +39,11 @@ public final class RiftJarRenderer extends TileEntitySpecialRenderer<RiftJarBloc
         return new TileEntityItemStackRenderer() {
             @Override
             public void renderByItem(ItemStack stack, float partialTicks) {
-                float ticks = (System.currentTimeMillis() % 24000) / 50F;
-                renderJar(0.5, 0, 0.5, EnumFacing.NORTH, RiftJarItem.getRiftFraction(stack), 0, 0, ticks, ticks / 24000);
+                Minecraft client = Minecraft.getMinecraft();
+                int age = (int) (System.currentTimeMillis() % 500 / 100);
+                float time = client.world == null ? 0F
+                        : gameTime(client.world.getTotalWorldTime(), client.getRenderPartialTicks());
+                renderJar(0.5, 0, 0.5, EnumFacing.NORTH, RiftJarItem.getRiftFraction(stack), 0, 0, age, age, time);
             }
         };
     }
@@ -50,41 +53,69 @@ public final class RiftJarRenderer extends TileEntitySpecialRenderer<RiftJarBloc
                        int destroyStage, float alpha) {
         IBlockState state = jar.getWorld().getBlockState(jar.getPos());
         if (state.getBlock() != PSBlocks.RIFT_JAR) return;
-        float ticks = jar.getVisualAge() + partialTicks;
-        float time = ((jar.getWorld().getTotalWorldTime() % 24000) + partialTicks) / 24000F;
-        float lid = jar.getLid(partialTicks);
-        float handle = jar.getHandle(partialTicks);
-        renderJar(x + 0.5, y, z + 0.5, state.getValue(RiftJarBlock.FACING), jar.getAmount(), lid, handle, ticks, time);
+        int age = jar.getVisualAge();
+        float ticks = age + partialTicks;
+        float time = gameTime(jar.getWorld().getTotalWorldTime(), partialTicks);
+        float lid = jar.getLid(1F);
+        float handle = jar.getHandle(1F);
+        renderJar(x + 0.5, y, z + 0.5, state.getValue(RiftJarBlock.FACING), jar.getAmount(), lid, handle, age, ticks, time);
         glyphs.render(jar, x + 0.5, y + 0.6, z + 0.5, ticks, handle * lid);
     }
 
+    private static float gameTime(long tick, float partialTicks) {
+        return ((tick % 24000) + partialTicks) / 24000F;
+    }
+
     private void renderJar(double x, double y, double z, EnumFacing facing, float amount,
-                           float lid, float handle, float ticks, float time) {
+                           float lid, float handle, int age, float ticks, float time) {
+        int depthFunc = GL11.glGetInteger(GL11.GL_DEPTH_FUNC);
+        int alphaFunc = GL11.glGetInteger(GL11.GL_ALPHA_TEST_FUNC);
+        float alphaRef = GL11.glGetFloat(GL11.GL_ALPHA_TEST_REF);
         try (TranslucentRenderState ignored = new TranslucentRenderState()) {
             GlStateManager.translate(x, y, z);
             GlStateManager.rotate(90 - facing.getHorizontalAngle(), 0, 1, 0);
+            GlStateManager.disableCull();
+            GlStateManager.depthMask(true);
+            GlStateManager.depthFunc(GL11.GL_LEQUAL);
+            GlStateManager.tryBlendFuncSeparate(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA,
+                    GL11.GL_ONE, GL11.GL_ONE_MINUS_SRC_ALPHA);
+
+            GlStateManager.pushMatrix();
+            try {
+                GlStateManager.translate(0, 1.501, 0);
+                GlStateManager.rotate(180, 1, 0, 0);
+                model.cork.rotationPointX = lid * 2;
+                model.cork.rotateAngleY = lid * 0.1F;
+                model.knot.rotateAngleZ = 0.2602503F + handle * (1 + MathHelper.sin(age * 0.1F) * 0.1F) * 0.5F;
+
+                Minecraft.getMinecraft().getTextureManager().bindTexture(GLASS);
+                GlStateManager.enableAlpha();
+                GlStateManager.alphaFunc(GL11.GL_GEQUAL, 0.1F);
+                GlStateManager.color(1, 1, 1, 1);
+                try (Scope scope = DrugRenderer.beginWorldModel()) {
+                    model.render();
+                    if (amount > 0.5F) {
+                        float crackAlpha = Math.min((amount - 0.5F) * 2, 1);
+                        Minecraft.getMinecraft().getTextureManager().bindTexture(CRACKED);
+                        // The donor tests the texture alpha before applying the crack fade.
+                        GlStateManager.alphaFunc(GL11.GL_GEQUAL, 0.1F * crackAlpha);
+                        GlStateManager.color(1, 1, 1, crackAlpha);
+                        model.render();
+                    }
+                }
+            } finally {
+                GlStateManager.popMatrix();
+            }
+
             if (amount > 0) {
-                GlStateManager.disableCull();
+                GlStateManager.disableAlpha();
+                GlStateManager.translate(0, 0.001F, 0);
+                GlStateManager.scale(0.9F, 1, 0.9F);
                 ZeroMatterRenderer.INSTANCE.draw(ticks, time, () -> drawInterior(Math.min(amount * 2, 1)));
             }
-
-            GlStateManager.enableCull();
-            GlStateManager.translate(0, 1.501, 0);
-            GlStateManager.rotate(180, 1, 0, 0);
-            model.cork.rotationPointX = lid * 2;
-            model.cork.rotateAngleY = lid * 0.1F;
-            model.knot.rotateAngleZ = 0.2602503F + handle * (1 + MathHelper.sin(ticks * 0.1F) * 0.1F) * 0.5F;
-
-            Minecraft.getMinecraft().getTextureManager().bindTexture(GLASS);
-            GlStateManager.color(1, 1, 1, 1);
-            try (Scope scope = DrugRenderer.beginWorldModel()) {
-                model.render();
-                if (amount > 0.5F) {
-                    Minecraft.getMinecraft().getTextureManager().bindTexture(CRACKED);
-                    GlStateManager.color(1, 1, 1, Math.min((amount - 0.5F) * 2, 1));
-                    model.render();
-                }
-            }
+        } finally {
+            GlStateManager.alphaFunc(alphaFunc, alphaRef);
+            GlStateManager.depthFunc(depthFunc);
         }
     }
 
@@ -92,13 +123,16 @@ public final class RiftJarRenderer extends TileEntitySpecialRenderer<RiftJarBloc
         Tessellator tessellator = Tessellator.getInstance();
         BufferBuilder buffer = tessellator.getBuffer();
         buffer.begin(GL11.GL_QUADS, DefaultVertexFormats.POSITION_TEX_COLOR);
-        interiorSection(buffer, 3.6 / 16, 0.001, 5D / 16, alpha);
-        interiorSection(buffer, 2.7 / 16, 5D / 16, 7D / 16, alpha);
-        interiorSection(buffer, 3.6 / 16, 7D / 16, 9D / 16, alpha);
+        interiorSection(buffer, 4, 0, 5, 0.001F, alpha);
+        interiorSection(buffer, 3, 5, 7, -0.001F, alpha);
+        interiorSection(buffer, 4, 7, 9, 0.001F, alpha);
         tessellator.draw();
     }
 
-    private static void interiorSection(BufferBuilder buffer, double width, double bottom, double top, float alpha) {
+    private static void interiorSection(BufferBuilder buffer, int halfWidth, int minY, int maxY, float dilationY, float alpha) {
+        float width = (halfWidth + 0.001F) / 16;
+        float bottom = (minY - dilationY) / 16;
+        float top = (maxY + dilationY) / 16;
         double[][] corners = {
                 {-width, bottom, -width}, {width, bottom, -width}, {width, bottom, width}, {-width, bottom, width},
                 {-width, top, -width}, {width, top, -width}, {width, top, width}, {-width, top, width}
@@ -113,7 +147,7 @@ public final class RiftJarRenderer extends TileEntitySpecialRenderer<RiftJarBloc
     }
 
     private static final int[][] INTERIOR_FACES = {
-            {0, 1, 2, 3}, {0, 4, 5, 1}, {1, 5, 6, 2}, {2, 6, 7, 3}, {3, 7, 4, 0}, {4, 7, 6, 5}
+            {2, 3, 0, 1}, {5, 4, 7, 6}, {0, 3, 7, 4}, {1, 0, 4, 5}, {2, 1, 5, 6}, {3, 2, 6, 7}
     };
 
     private static final class JarModel extends ModelBase {
