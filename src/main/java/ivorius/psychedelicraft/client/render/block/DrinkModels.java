@@ -9,6 +9,7 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import ivorius.psychedelicraft.Psychedelicraft;
 import ivorius.psychedelicraft.client.render.DrugRenderer;
+import ivorius.psychedelicraft.client.render.TankFluidAppearance;
 import ivorius.psychedelicraft.item.PSItems;
 import ivorius.psychedelicraft.item.PortableFluidItem;
 import net.minecraft.client.Minecraft;
@@ -28,6 +29,7 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.BlockPos;
+import net.minecraftforge.fluids.FluidRegistry;
 import net.minecraftforge.fluids.FluidStack;
 import org.apache.logging.log4j.LogManager;
 import org.lwjgl.opengl.GL11;
@@ -94,15 +96,19 @@ final class DrinkModels {
         FluidStack contents = vessel.contents(stack);
         Minecraft client = Minecraft.getMinecraft();
         client.getTextureManager().bindTexture(TextureMap.LOCATION_BLOCKS_TEXTURE);
-        int tint = item == PSItems.BOTTLE ? client.getItemColors().colorMultiplier(stack, 0) : -1;
+        int tint = item == PSItems.BOTTLE || item == PSItems.MOLOTOV_COCKTAIL
+                ? client.getItemColors().colorMultiplier(stack, 0) : -1;
         draw(client, geometry.vessel, tint, stack, anchor);
-        if (contents != null) {
+        float fill = contents == null ? 0 : contents.amount / (float) vessel.getVessel().capacity;
+        if (fill > 0.01F) {
+            int fluidColor = contents.getFluid() == FluidRegistry.WATER ? TankFluidAppearance.of(contents).color
+                    : contents.getFluid().getColor(contents);
             GlStateManager.pushMatrix();
             try {
                 GlStateManager.translate(0, geometry.fluidOrigin, 0);
-                GlStateManager.scale(1, contents.amount / (float) vessel.getVessel().capacity, 1);
+                GlStateManager.scale(1, fill, 1);
                 GlStateManager.translate(0, -geometry.fluidOrigin, 0);
-                draw(client, geometry.fluid, contents.getFluid().getColor(contents), ItemStack.EMPTY, anchor);
+                draw(client, geometry.fluid, fluidColor, ItemStack.EMPTY, anchor);
             } finally {
                 GlStateManager.popMatrix();
             }

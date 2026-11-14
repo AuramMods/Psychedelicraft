@@ -49,7 +49,7 @@ public final class MashTubRenderer extends TileEntitySpecialRenderer<MashTubBloc
         if (vat.getSuppliedIngredients().isEmpty()) return;
         Minecraft client = Minecraft.getMinecraft();
         float ticks = (client.player == null ? 0 : client.player.ticksExisted) + partialTicks;
-        Random random = new Random(ingredientSeed(anchor));
+        Random random = new Random(BlockRenderSeed.pack(anchor) + 1);
         Map<Item, Integer> counts = new LinkedHashMap<>();
         for (ItemStack stack : vat.getSuppliedIngredients()) {
             counts.merge(stack.getItem(), stack.getCount(), Integer::sum);
@@ -75,14 +75,6 @@ public final class MashTubRenderer extends TileEntitySpecialRenderer<MashTubBloc
                 }
             }
         }
-    }
-
-    private static long ingredientSeed(BlockPos pos) {
-        // The donor packs Z between X and Y. Forge 1.12 packs Y between X and Z.
-        long packed = ((long) pos.getX() & 0x3ffffffL) << 38
-                | ((long) pos.getZ() & 0x3ffffffL) << 12
-                | ((long) pos.getY() & 0xfffL);
-        return packed + 1;
     }
 
     private void drawSurface(TextureAtlasSprite sprite, int color, double x, double y, double z, BlockPos anchor) {
