@@ -1299,6 +1299,13 @@ sh run/production/background-qa/run.sh "$qa" game-background Overlay-QA \
 - The tested jar SHA-256 is `61dd566723878fd39d176ffec96a9e20b836c49ba6f33f0006a67813a7bbcd16`. Evidence is under `run/production/runtime-qa-cycle142` in `build-production.log`, `runtime-baseline.log`, `runtime-fixed.log`, `runtime-motion.log`, `framebuffer-check.log` and the screenshots. All clients ran on Xvfb with zero master volume and OpenAL's `No Output` device.
 - Next, compare flask and distillery chamber UVs and the upper chamber threshold against the pinned renderer, including the 1.21.5 fix for the open centers.
 
+### Cycle 143 · Flask and distillery chamber faces
+
+- Matched the pinned north, south, east and west wall UVs and gave each top arm its own sprite. The center quad in each chamber follows the later fix for the open centers. Forge already covered the centers with merged strips. The lower chamber uses the clamped fill ratio, and the upper chamber starts above 4,000 mB at the donor's distinct flask and distillery heights. [Pinned chamber renderer](https://github.com/Sollace/Psychedelicraft/blob/319a4ea0160d6600cffcd5f5cc9e363ceaab44a1/src/main/java/ivorius/psychedelicraft/client/render/blocks/FlaskBlockEntityRenderer.java) [Center-face fix](https://github.com/Sollace/Psychedelicraft/commit/07edf26373d15375bb3f6d9af22e58143f978b66)
+- The clean Java 8 build and reobfuscation passed all 180 tests. In muted Forge 14.23.5.2864, the fixture captured submitted vertices and UVs for both in-world machines at 2,000, 4,000, 4,001, 6,000 and 8,000 mB. The previous jar submitted seven quads per chamber. The rebuilt jar matched all nine expected quads and cleared the upper and lower chambers as the tanks drained. Pixel samples confirmed that both upper windows visibly filled.
+- The machine GUI regression passed the live distillery countdown, receiver warnings, paused output and vessel swap. The tested jar SHA-256 is `06a3a7cb53bc78ac8d0ec1e3d5a93fe562bd925f5e4295057e235feeffb3f288`. Evidence is under `run/production/runtime-qa-cycle143` in `build-production.log`, `runtime-baseline.log`, `runtime-fixed.log`, `runtime-machine-regression.log`, `framebuffer-check.log` and the screenshots. All clients ran on Xvfb with zero master volume and OpenAL's `No Output` device.
+- Next, compare barrel symbols and their horizontal and upright transforms against the pinned assets and renderer.
+
 Dedicated Forge startup and multiplayer on that server remain open pending EULA acceptance.
 
 ## Repository and branch survey

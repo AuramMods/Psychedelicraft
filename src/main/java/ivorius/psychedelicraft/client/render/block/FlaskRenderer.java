@@ -15,6 +15,7 @@ import net.minecraft.client.renderer.texture.TextureAtlasSprite;
 import net.minecraft.client.renderer.texture.TextureMap;
 import net.minecraft.client.renderer.tileentity.TileEntitySpecialRenderer;
 import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
+import net.minecraft.util.math.MathHelper;
 import net.minecraftforge.fluids.FluidStack;
 import org.lwjgl.opengl.GL11;
 
@@ -39,7 +40,7 @@ public final class FlaskRenderer extends TileEntitySpecialRenderer<FluidMachineB
             Tessellator tessellator = Tessellator.getInstance();
             BufferBuilder buffer = tessellator.getBuffer();
             buffer.begin(GL11.GL_QUADS, DefaultVertexFormats.POSITION_TEX_COLOR);
-            float fill = (float) contents.amount / machine.getTank().getCapacity();
+            float fill = MathHelper.clamp((float) contents.amount / machine.getTank().getCapacity(), 0, 1);
             chamber(buffer, appearance.sprite, appearance.color, 0, fill * 2, 2);
             if (fill > 0.5F) {
                 double neck = machine instanceof DistilleryBlockEntity ? 4.5 : 3.5;
@@ -56,13 +57,30 @@ public final class FlaskRenderer extends TileEntitySpecialRenderer<FluidMachineB
     private static void chamber(BufferBuilder buffer, TextureAtlasSprite sprite, int color,
                                 double bottom, double height, double edge) {
         double top = bottom + height;
-        top(buffer, sprite, color, -1, 1, -edge, edge, top);
+        top(buffer, sprite, color, -1, 1, -1, 1, top);
+        top(buffer, sprite, color, -1, 1, -edge, -1, top);
+        top(buffer, sprite, color, -1, 1, 1, edge, top);
         top(buffer, sprite, color, -edge, -1, -1, 1, top);
         top(buffer, sprite, color, 1, edge, -1, 1, top);
-        wall(buffer, sprite, color, 1, -edge, -1, -edge, bottom, top);
-        wall(buffer, sprite, color, -1, edge, 1, edge, bottom, top);
-        wall(buffer, sprite, color, -edge, -1, -edge, 1, bottom, top);
-        wall(buffer, sprite, color, edge, 1, edge, -1, bottom, top);
+        vertex(buffer, sprite, color, -1, bottom, -edge, 0, 0);
+        vertex(buffer, sprite, color, -1, top, -edge, 0, 16);
+        vertex(buffer, sprite, color, 1, top, -edge, 16, 16);
+        vertex(buffer, sprite, color, 1, bottom, -edge, 16, 0);
+
+        vertex(buffer, sprite, color, -1, bottom, edge, 0, 0);
+        vertex(buffer, sprite, color, 1, bottom, edge, 16, 0);
+        vertex(buffer, sprite, color, 1, top, edge, 16, 16);
+        vertex(buffer, sprite, color, -1, top, edge, 0, 16);
+
+        vertex(buffer, sprite, color, -edge, bottom, -1, 0, 0);
+        vertex(buffer, sprite, color, -edge, bottom, 1, 16, 0);
+        vertex(buffer, sprite, color, -edge, top, 1, 16, 16);
+        vertex(buffer, sprite, color, -edge, top, -1, 0, 16);
+
+        vertex(buffer, sprite, color, edge, bottom, -1, 0, 0);
+        vertex(buffer, sprite, color, edge, top, -1, 16, 0);
+        vertex(buffer, sprite, color, edge, top, 1, 16, 16);
+        vertex(buffer, sprite, color, edge, bottom, 1, 0, 16);
     }
 
     private static void top(BufferBuilder buffer, TextureAtlasSprite sprite, int color, double left, double right,
@@ -71,14 +89,6 @@ public final class FlaskRenderer extends TileEntitySpecialRenderer<FluidMachineB
         vertex(buffer, sprite, color, left, y, back, 0, 16);
         vertex(buffer, sprite, color, right, y, back, 16, 16);
         vertex(buffer, sprite, color, right, y, front, 16, 0);
-    }
-
-    private static void wall(BufferBuilder buffer, TextureAtlasSprite sprite, int color, double x1, double z1,
-                             double x2, double z2, double bottom, double top) {
-        vertex(buffer, sprite, color, x1, bottom, z1, 0, 16);
-        vertex(buffer, sprite, color, x2, bottom, z2, 16, 16);
-        vertex(buffer, sprite, color, x2, top, z2, 16, 0);
-        vertex(buffer, sprite, color, x1, top, z1, 0, 0);
     }
 
     private static void vertex(BufferBuilder buffer, TextureAtlasSprite sprite, int color,
