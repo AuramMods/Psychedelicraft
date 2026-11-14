@@ -63,10 +63,11 @@ public class DrugPropertiesTest {
     }
 
     @Test
-    public void peyoteFlightCostStaysBetweenOneAndTenSecondsPerPoint() {
+    public void peyoteFlightCostsTwiceAsMuchUpToOnePointPerSecond() {
         assertEquals(20F, 1F / PeyoteFlight.saturationPerTick(0), 0.001F);
-        assertEquals(110F, 1F / PeyoteFlight.saturationPerTick(0.5), 0.001F);
-        assertEquals(200F, 1F / PeyoteFlight.saturationPerTick(1), 0.001F);
+        assertEquals(20F, 1F / PeyoteFlight.saturationPerTick(0.1), 0.001F);
+        assertEquals(55F, 1F / PeyoteFlight.saturationPerTick(0.5), 0.001F);
+        assertEquals(100F, 1F / PeyoteFlight.saturationPerTick(1), 0.001F);
     }
 
     private static float peak(DrugProperties properties, Drug.Modifier modifier) {

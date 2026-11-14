@@ -38,6 +38,7 @@ final class PeyoteFlight {
     }
 
     static float saturationPerTick(double intensity) {
-        return (float) (1 / (20 * (1 + 9 * intensity)));
+        double secondsPerPoint = Math.max(1, (1 + 9 * intensity) / 2);
+        return (float) (1 / (20 * secondsPerPoint));
     }
 }
