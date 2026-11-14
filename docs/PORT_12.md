@@ -1283,6 +1283,14 @@ sh run/production/background-qa/run.sh "$qa" game-background Overlay-QA \
 - The tested jar SHA-256 is `4529001442c4e27cb7feb63f95af9a1286af8c86b6701d1a5cc2e69f1f0af373`. Evidence is under `run/production/runtime-qa-cycle140` in `build-production.log`, `runtime-baseline-comparison.log`, `runtime-final-biomes.log`, `runtime-machine-regression.log`, `framebuffer-check.log` and the screenshots.
 - Next, compare the vat's floating ingredient placement, bob and spin against the pinned in-world renderer.
 
+### Cycle 141 · Floating vat ingredients
+
+- Restored the pinned vat renderer's position-seeded placement, height offset, model scale, bob, roll and reverse spin. The animation uses player age and partial ticks. The Forge renderer groups the existing saved stacks by item in first-insertion order and applies the duplicate phase within each item group. It packs the coordinates with the donor's bit layout for its random seed. The LTS and 1.21.5 renderers retain the same motion formulas. [Pinned vat renderer](https://github.com/Sollace/Psychedelicraft/blob/319a4ea0160d6600cffcd5f5cc9e363ceaab44a1/src/main/java/ivorius/psychedelicraft/client/render/blocks/MashTubBlockEntityRenderer.java)
+- The clean Java 8 build and reobfuscation passed all 180 tests. The muted Forge 14.23.5.2864 fixture compared the three ingredient modelview matrices immediately before their item draw calls at 8,000 mB and 24,000 mB and at two sampled player ages. The maximum absolute matrix error against the pinned transforms was about 1.12 for the previous jar and less than 0.0000005 for the rebuilt jar. The fixture verified that two wheat copies group together and the first hop uses the first-copy phase.
+- Both initial runs finished the matrix samples before the fixture supplied one extra wheat. The corrected five-wheat, two-hop batch completed in the packaged jar, leaving 24,000 mB of wheat-hop mash and no ingredient draws. Screenshots capture both fill levels, two phases and the completed stew.
+- The tested jar SHA-256 is `b8e856c33128149b451931fb6b37db81c06c43c0697b4ca7c84cd9f6e2ad560f`. Evidence is under `run/production/runtime-qa-cycle141` in `build-production.log`, `runtime-baseline.log`, `runtime-verified.log` and the screenshots. The clients ran on Xvfb with zero master volume and OpenAL's `No Output` device.
+- Next, compare the in-world footprint and sprite mapping of the vat's liquid surface and hardened output with the pinned rendering.
+
 Dedicated Forge startup and multiplayer on that server remain open pending EULA acceptance.
 
 ## Repository and branch survey

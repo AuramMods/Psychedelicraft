@@ -16,12 +16,15 @@ import net.minecraft.client.renderer.texture.TextureMap;
 import net.minecraft.client.renderer.tileentity.TileEntitySpecialRenderer;
 import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
 import net.minecraft.init.Blocks;
+import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.MathHelper;
 import net.minecraftforge.fluids.FluidStack;
 import org.lwjgl.opengl.GL11;
 
+import java.util.LinkedHashMap;
+import java.util.Map;
 import java.util.Random;
 
 public final class MashTubRenderer extends TileEntitySpecialRenderer<MashTubBlockEntity> {
@@ -40,25 +43,43 @@ public final class MashTubRenderer extends TileEntitySpecialRenderer<MashTubBloc
                     .getModelForState(Blocks.DIRT.getDefaultState()).getParticleTexture();
             drawSurface(sprite, 0xffffffff, x, y + 0.5, z, anchor);
         }
-        Random random = new Random(vat.getPos().toLong() + 1);
-        float ticks = vat.getWorld().getTotalWorldTime() % 3600 + partialTicks;
-        int index = 0;
+        if (vat.getSuppliedIngredients().isEmpty()) return;
+        Minecraft client = Minecraft.getMinecraft();
+        float ticks = (client.player == null ? 0 : client.player.ticksExisted) + partialTicks;
+        Random random = new Random(ingredientSeed(anchor));
+        Map<Item, Integer> counts = new LinkedHashMap<>();
         for (ItemStack stack : vat.getSuppliedIngredients()) {
-            float dx = 0.5F + (random.nextFloat() - 0.5F) * 1.5F;
-            float dz = 0.5F + (random.nextFloat() - 0.5F) * 1.5F;
-            float rotation = random.nextFloat() * 360F;
-            float phase = (ticks + index++ * 5) / 8;
-            GlStateManager.pushMatrix();
-            try {
-                GlStateManager.translate(x + dx, y + height + 0.12 + 0.06 * MathHelper.sin(phase), z + dz);
-                GlStateManager.rotate(rotation + ticks, 0, 1, 0);
-                GlStateManager.rotate(65 + 6 * MathHelper.cos(phase), 1, 0, 0);
-                GlStateManager.scale(0.3, 0.3, 0.3);
-                DrugRenderer.renderBlockItem(Minecraft.getMinecraft().getRenderItem(), stack, anchor);
-            } finally {
-                GlStateManager.popMatrix();
+            counts.merge(stack.getItem(), stack.getCount(), Integer::sum);
+        }
+        for (Map.Entry<Item, Integer> ingredient : counts.entrySet()) {
+            ItemStack stack = ingredient.getKey().getDefaultInstance();
+            for (int copy = 0; copy < ingredient.getValue(); copy++) {
+                float dx = 0.5F + (random.nextFloat() - 0.5F) * 1.5F;
+                float dz = 0.5F + (random.nextFloat() - 0.5F) * 1.5F;
+                float rotation = random.nextFloat() * 360F;
+                float phase = (ticks + copy * 5) / 8F;
+                GlStateManager.pushMatrix();
+                try {
+                    GlStateManager.translate(x + dx, y + 0.75F + height / 16F - 0.02F, z + dz);
+                    GlStateManager.rotate(rotation, 0, 1, 0);
+                    GlStateManager.scale(0.3F, 0.3F, 0.3F);
+                    GlStateManager.translate(0, 0.2F * MathHelper.sin(phase), -0.2F);
+                    GlStateManager.rotate(6F * MathHelper.cos(phase), 0, 0, 1);
+                    GlStateManager.rotate(-(ticks + copy) % 360F, 0, 1, 0);
+                    DrugRenderer.renderBlockItem(client.getRenderItem(), stack, anchor);
+                } finally {
+                    GlStateManager.popMatrix();
+                }
             }
         }
+    }
+
+    private static long ingredientSeed(BlockPos pos) {
+        // The donor packs Z between X and Y. Forge 1.12 packs Y between X and Z.
+        long packed = ((long) pos.getX() & 0x3ffffffL) << 38
+                | ((long) pos.getZ() & 0x3ffffffL) << 12
+                | ((long) pos.getY() & 0xfffL);
+        return packed + 1;
     }
 
     private void drawSurface(TextureAtlasSprite sprite, int color, double x, double y, double z, BlockPos anchor) {
