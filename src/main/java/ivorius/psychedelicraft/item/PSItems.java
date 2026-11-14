@@ -42,6 +42,8 @@ public final class PSItems {
     public static final Item HONEYCOMB = named("honeycomb", new Item());
     public static final Item BEE_NEST = named("bee_nest", new ItemBlock(PSBlocks.BEE_NEST));
     public static final Item CAMPFIRE = named("campfire", new WaterloggableBlockItem(PSBlocks.CAMPFIRE));
+    public static final Item SOUL_CAMPFIRE = named("soul_campfire", new WaterloggableBlockItem(PSBlocks.SOUL_CAMPFIRE));
+    public static final Item SOUL_SOIL = named("soul_soil", new ItemBlock(PSBlocks.SOUL_SOIL));
     public static final Item KELP = named("kelp", new ItemBlock(PSBlocks.KELP));
     public static final Item DRIED_KELP = named("dried_kelp", new QuickFoodItem(1, 0.3F, false, 16));
     public static final Item DRIED_KELP_BLOCK = named("dried_kelp_block", new ItemBlock(PSBlocks.DRIED_KELP_BLOCK));

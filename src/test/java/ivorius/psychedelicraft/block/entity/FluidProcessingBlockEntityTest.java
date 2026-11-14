@@ -1,5 +1,7 @@
 package ivorius.psychedelicraft.block.entity;
 
+import ivorius.psychedelicraft.block.CampfireBlock;
+import ivorius.psychedelicraft.block.PSBlocks;
 import ivorius.psychedelicraft.fluid.PSFluids;
 import ivorius.psychedelicraft.fluid.FluidVesselHandler;
 import ivorius.psychedelicraft.item.PSItems;
@@ -35,6 +37,19 @@ public class FluidProcessingBlockEntityTest {
         assertEquals(34, DistilleryBlockEntity.distillationTicks(101, 3));
         assertEquals(15, DistilleryBlockEntity.distillationTicks(101, 7));
         assertEquals(2, DistilleryBlockEntity.distillationTicks(3, 7));
+    }
+
+    @Test
+    public void bothCampfireTypesHeatTheDistilleryRegardlessOfFlameState() {
+        for (CampfireBlock fire : new CampfireBlock[]{PSBlocks.CAMPFIRE, PSBlocks.SOUL_CAMPFIRE}) {
+            IBlockState lit = fire.getDefaultState();
+            assertEquals(3, DistilleryBlockEntity.heatRate(lit));
+            assertEquals(3, DistilleryBlockEntity.heatRate(lit.withProperty(CampfireBlock.LIT, false)));
+        }
+        assertEquals(3, DistilleryBlockEntity.heatRate(Blocks.FIRE.getDefaultState()));
+        assertEquals(7, DistilleryBlockEntity.heatRate(Blocks.LAVA.getDefaultState()));
+        assertEquals(2, DistilleryBlockEntity.heatRate(Blocks.MAGMA.getDefaultState()));
+        assertEquals(1, DistilleryBlockEntity.heatRate(Blocks.SOUL_SAND.getDefaultState()));
     }
 
     @Test

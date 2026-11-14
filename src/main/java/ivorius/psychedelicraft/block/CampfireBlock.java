@@ -31,6 +31,7 @@ import net.minecraft.util.DamageSource;
 import net.minecraft.util.BlockRenderLayer;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.util.EnumHand;
+import net.minecraft.util.EnumParticleTypes;
 import net.minecraft.util.Mirror;
 import net.minecraft.util.Rotation;
 import net.minecraft.util.SoundCategory;
@@ -53,9 +54,11 @@ public final class CampfireBlock extends Block implements Waterloggable {
     private static final AxisAlignedBB SHAPE = new AxisAlignedBB(0, 0, 0, 1, 7D / 16D, 1);
     private static final AxisAlignedBB SMOKE_COLUMN = new AxisAlignedBB(6D / 16D, 0, 6D / 16D, 10D / 16D, 1, 10D / 16D);
     private static final int DOWSE_EVENT = 1;
+    private final boolean soul;
 
-    CampfireBlock() {
+    CampfireBlock(boolean soul) {
         super(Material.WOOD);
+        this.soul = soul;
         setDefaultState(blockState.getBaseState().withProperty(FACING, EnumFacing.NORTH).withProperty(LIT, true));
         setHardness(2F);
         setSoundType(SoundType.WOOD);
@@ -143,17 +146,17 @@ public final class CampfireBlock extends Block implements Waterloggable {
 
     @Override
     public Item getItemDropped(IBlockState state, Random random, int fortune) {
-        return Items.COAL;
+        return soul ? Item.getItemFromBlock(PSBlocks.SOUL_SOIL) : Items.COAL;
     }
 
     @Override
     public int damageDropped(IBlockState state) {
-        return 1;
+        return soul ? 0 : 1;
     }
 
     @Override
     public int quantityDropped(Random random) {
-        return 2;
+        return soul ? 1 : 2;
     }
 
     @Override
@@ -169,7 +172,7 @@ public final class CampfireBlock extends Block implements Waterloggable {
 
     @Override
     public int getLightValue(IBlockState state, IBlockAccess world, BlockPos pos) {
-        return state.getValue(LIT) ? 15 : 0;
+        return state.getValue(LIT) ? (soul ? 10 : 15) : 0;
     }
 
     @Override
@@ -220,7 +223,7 @@ public final class CampfireBlock extends Block implements Waterloggable {
     public void onEntityCollidedWithBlock(World world, BlockPos pos, IBlockState state, Entity entity) {
         if (!world.isRemote && state.getValue(LIT) && entity instanceof EntityLivingBase
                 && !EnchantmentHelper.hasFrostWalkerEnchantment((EntityLivingBase) entity)) {
-            entity.attackEntityFrom(DamageSource.IN_FIRE, 1F);
+            entity.attackEntityFrom(DamageSource.IN_FIRE, soul ? 2F : 1F);
         }
     }
 
@@ -254,7 +257,11 @@ public final class CampfireBlock extends Block implements Waterloggable {
         if (!state.getValue(LIT)) return;
         if (random.nextInt(10) == 0) {
             world.playSound(pos.getX() + 0.5, pos.getY() + 0.5, pos.getZ() + 0.5, SoundEvents.BLOCK_FIRE_AMBIENT,
-                    SoundCategory.BLOCKS, 0.5F, 1F, false);
+                    SoundCategory.BLOCKS, 0.5F + random.nextFloat(), 0.6F + 0.7F * random.nextFloat(), false);
+        }
+        if (!soul && random.nextInt(5) == 0) {
+            world.spawnParticle(EnumParticleTypes.LAVA, pos.getX() + 0.5, pos.getY() + 0.5, pos.getZ() + 0.5,
+                    random.nextFloat() / 2F, 0.00005D, random.nextFloat() / 2F);
         }
     }
 
@@ -271,6 +278,6 @@ public final class CampfireBlock extends Block implements Waterloggable {
     }
 
     private static boolean isLit(IBlockState state) {
-        return state.getBlock() == PSBlocks.CAMPFIRE && state.getValue(LIT);
+        return state.getBlock() instanceof CampfireBlock && state.getValue(LIT);
     }
 }

@@ -4,6 +4,7 @@
 
 package ivorius.psychedelicraft.block.entity;
 
+import ivorius.psychedelicraft.block.CampfireBlock;
 import ivorius.psychedelicraft.block.DistilleryBlock;
 import ivorius.psychedelicraft.block.MashTubBlock;
 import ivorius.psychedelicraft.fluid.BrewFluid;
@@ -12,6 +13,7 @@ import ivorius.psychedelicraft.fluid.PSFluids;
 import ivorius.psychedelicraft.fluid.ProcessingTank;
 import net.minecraft.block.Block;
 import net.minecraft.block.material.Material;
+import net.minecraft.block.state.IBlockState;
 import net.minecraft.init.Blocks;
 import net.minecraft.init.SoundEvents;
 import net.minecraft.nbt.NBTTagCompound;
@@ -63,7 +65,8 @@ public final class DistilleryBlockEntity extends FluidProcessingBlockEntity {
                 if (world.rand.nextInt(50) == 0) bubbleSound();
             }
         }
-        int duration = process == BrewProcess.IDLE ? 0 : distillationTicks(process.duration(contents), heatRate());
+        int duration = process == BrewProcess.IDLE ? 0
+                : distillationTicks(process.duration(contents), heatRate(world.getBlockState(pos.down())));
         if (legacyTiming) {
             rescaleProcessingProgress(duration);
             legacyTiming = false;
@@ -103,11 +106,11 @@ public final class DistilleryBlockEntity extends FluidProcessingBlockEntity {
         world.playSound(null, pos, SoundEvents.BLOCK_BREWING_STAND_BREW, SoundCategory.BLOCKS, 0.25F, 0.5F);
     }
 
-    private int heatRate() {
-        net.minecraft.block.state.IBlockState below = world.getBlockState(pos.down());
+    static int heatRate(IBlockState below) {
         Block block = below.getBlock();
         if (below.getMaterial() == Material.LAVA) return 7;
-        if (block == Blocks.FIRE) return 3;
+        // The donor's campfire tag includes unlit and waterlogged states.
+        if (block == Blocks.FIRE || block instanceof CampfireBlock) return 3;
         if (block == Blocks.MAGMA) return 2;
         return 1;
     }

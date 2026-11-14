@@ -39,7 +39,7 @@ public class BeeNestBlockTest {
 
     @Test
     public void campfireFacingAndLitStateRoundTrip() {
-        CampfireBlock campfire = new CampfireBlock();
+        CampfireBlock campfire = PSBlocks.CAMPFIRE;
         for (int meta = 0; meta < 8; meta++) {
             IBlockState state = campfire.getStateFromMeta(meta);
             assertEquals(meta, campfire.getMetaFromState(state));
