@@ -301,6 +301,12 @@ public class TallCropBlock extends BlockBush implements IGrowable {
         }
 
         @Override
+        public boolean canPlaceBlockAt(World world, BlockPos pos) {
+            IBlockState soil = world.getBlockState(pos.down());
+            return (soil.getBlock() == Blocks.FARMLAND || isWildSoil(soil)) && super.canPlaceBlockAt(world, pos);
+        }
+
+        @Override
         protected PropertyInteger ageProperty() {
             return COCA_AGE;
         }

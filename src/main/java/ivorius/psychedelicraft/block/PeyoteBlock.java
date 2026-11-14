@@ -10,6 +10,7 @@ import ivorius.psychedelicraft.block.entity.PeyoteBlockEntity;
 import ivorius.psychedelicraft.item.PSItems;
 import net.minecraft.block.properties.PropertyInteger;
 import net.minecraft.block.state.IBlockState;
+import net.minecraft.init.Blocks;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.tileentity.TileEntity;
@@ -39,6 +40,11 @@ public final class PeyoteBlock extends SucculentPlantBlock {
     @Override
     protected int growthInterval() {
         return 20;
+    }
+
+    @Override
+    public boolean canBlockStay(World world, BlockPos pos, IBlockState state) {
+        return world.getBlockState(pos.down()).getBlock() == Blocks.SAND;
     }
 
     @Override

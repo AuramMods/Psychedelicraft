@@ -1,8 +1,15 @@
 package ivorius.psychedelicraft.block;
 
+import net.minecraft.block.BlockSand;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.init.Bootstrap;
+import net.minecraft.init.Blocks;
 import net.minecraft.init.Items;
+import net.minecraft.profiler.Profiler;
+import net.minecraft.util.math.BlockPos;
+import net.minecraft.world.World;
+import net.minecraft.world.WorldProviderSurface;
+import net.minecraft.world.chunk.IChunkProvider;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
@@ -31,6 +38,38 @@ public class AgePlantBlockTest {
             assertEquals(age + 1, plant.quantityDropped(state, 0, null));
             assertEquals(age + 1, plant.quantityDropped(state, 3, null));
         }
+    }
+
+    @Test
+    public void peyoteRequiresSandForPlacementAndSurvival() {
+        PeyoteBlock plant = new PeyoteBlock();
+        BlockPos pos = new BlockPos(0, 64, 0);
+        for (BlockSand.EnumType type : BlockSand.EnumType.values()) {
+            World world = plantingWorld(pos, Blocks.SAND.getDefaultState().withProperty(BlockSand.VARIANT, type));
+            assertTrue(plant.canPlaceBlockAt(world, pos));
+            assertTrue(plant.canBlockStay(world, pos, plant.getDefaultState()));
+        }
+        for (IBlockState floor : new IBlockState[]{Blocks.STONE.getDefaultState(), Blocks.DIRT.getDefaultState(),
+                Blocks.HARDENED_CLAY.getDefaultState(), Blocks.SANDSTONE.getDefaultState()}) {
+            World world = plantingWorld(pos, floor);
+            assertFalse(plant.canPlaceBlockAt(world, pos));
+            assertFalse(plant.canBlockStay(world, pos, plant.getDefaultState()));
+        }
+    }
+
+    private static World plantingWorld(BlockPos pos, IBlockState support) {
+        return new World(null, null, new WorldProviderSurface(), new Profiler(), false) {
+            @Override
+            public IBlockState getBlockState(BlockPos query) {
+                return query.equals(pos.down()) ? support : Blocks.AIR.getDefaultState();
+            }
+
+            @Override
+            protected IChunkProvider createChunkProvider() { return null; }
+
+            @Override
+            protected boolean isChunkLoaded(int x, int z, boolean allowEmpty) { return true; }
+        };
     }
 
     private static void assertAges(AgePlantBlock plant, int maxAge) {
