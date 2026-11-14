@@ -2,6 +2,8 @@ package ivorius.psychedelicraft.core;
 
 import net.minecraft.launchwrapper.IClassTransformer;
 import net.minecraftforge.fml.common.asm.transformers.deobf.FMLDeobfuscatingRemapper;
+import net.minecraftforge.fml.relauncher.FMLLaunchHandler;
+import net.minecraftforge.fml.relauncher.Side;
 import org.objectweb.asm.ClassReader;
 import org.objectweb.asm.ClassWriter;
 import org.objectweb.asm.Opcodes;
@@ -79,8 +81,10 @@ public final class WaterloggingTransformer implements IClassTransformer {
                         "(" + WORLD + "Lnet/minecraft/entity/Entity;F)" + STATE), 2);
                 break;
             case LIQUID:
-                substituteFluidStates(method(type, "shouldSideBeRendered", "func_176225_a",
-                        "(" + STATE + ACCESS + POS + "Lnet/minecraft/util/EnumFacing;)Z"), 1);
+                if (FMLLaunchHandler.side() == Side.CLIENT) {
+                    substituteFluidStates(method(type, "shouldSideBeRendered", "func_176225_a",
+                            "(" + STATE + ACCESS + POS + FACING + ")Z"), 1);
+                }
                 substituteFluidStates(method(type, "getFlow", "func_189543_a",
                         "(" + ACCESS + POS + STATE + ")Lnet/minecraft/util/math/Vec3d;"), 3);
                 substituteFluidStates(method(type, "modifyAcceleration", "func_176197_a",
