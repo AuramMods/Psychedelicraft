@@ -73,9 +73,13 @@ public final class TridentPoses implements LayerRenderer<AbstractClientPlayer> {
     }
 
     public static void spinPlayer(EntityLivingBase entity, float age) {
-        if (!Riptide.isSpinning(entity)) return;
-        GlStateManager.rotate(-90 - entity.rotationPitch, 1, 0, 0);
-        GlStateManager.rotate(age * -75, 0, 1, 0);
+        if (Riptide.isSpinning(entity)) {
+            GlStateManager.rotate(-90 - entity.rotationPitch, 1, 0, 0);
+            GlStateManager.rotate(age * -75, 0, 1, 0);
+        } else if (Riptide.isCrawling(entity)) {
+            GlStateManager.rotate(-90, 1, 0, 0);
+            GlStateManager.translate(0, -1, 0.3F);
+        }
     }
 
     @Override

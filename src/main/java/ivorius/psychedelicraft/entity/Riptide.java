@@ -25,7 +25,10 @@ import java.util.WeakHashMap;
 @Mod.EventBusSubscriber(modid = Psychedelicraft.MOD_ID)
 public final class Riptide {
     private static final int SPIN_TICKS = 20;
+    private static final float COMPACT_HEIGHT = 0.6F;
+    private static final float RECOVERY_CROUCH_HEIGHT = 1.5F;
     private static final Map<EntityPlayer, Spin> active = new WeakHashMap<>();
+    private static final Map<EntityPlayer, Integer> predicted = new WeakHashMap<>();
     private static DataParameter<Boolean> spinning;
 
     private Riptide() {}
@@ -43,17 +46,61 @@ public final class Riptide {
         return entity instanceof EntityPlayer && entity.getDataManager().get(spinning);
     }
 
+    public static float eyeHeight(float vanilla, EntityPlayer player) {
+        if (player.isPlayerSleeping()) return vanilla;
+        if (player.height == COMPACT_HEIGHT) return 0.4F;
+        return player.height == RECOVERY_CROUCH_HEIGHT ? 1.27F : vanilla;
+    }
+
+    public static float desiredHeight(EntityPlayer player, float width, float vanilla) {
+        if (vanilla <= COMPACT_HEIGHT) return vanilla;
+        if (isSpinning(player) || hasPredictedLaunch(player)) return COMPACT_HEIGHT;
+        if (player.height == COMPACT_HEIGHT) {
+            AxisAlignedBB bounds = player.getEntityBoundingBox();
+            if (!blockedAtHeight(player.world, bounds, width, vanilla)) return vanilla;
+            if (!blockedAtHeight(player.world, bounds, width, RECOVERY_CROUCH_HEIGHT)) return RECOVERY_CROUCH_HEIGHT;
+            return COMPACT_HEIGHT;
+        }
+        return vanilla;
+    }
+
+    private static boolean blockedAtHeight(World world, AxisAlignedBB bounds, float width, float height) {
+        return world.collidesWithAnyBlock(new AxisAlignedBB(bounds.minX, bounds.minY, bounds.minZ,
+                bounds.minX + width, bounds.minY + height, bounds.minZ + width));
+    }
+
+    public static boolean isCrawling(Entity entity) {
+        return entity instanceof EntityPlayer && entity.height == COMPACT_HEIGHT
+                && !((EntityPlayer) entity).isElytraFlying() && !isSpinning(entity) && !hasPredictedLaunch((EntityPlayer) entity);
+    }
+
     public static void launch(EntityPlayer player, int level) {
+        if (player.height > COMPACT_HEIGHT) {
+            // The local release also shrinks the box before applying the predicted movement.
+            player.height = COMPACT_HEIGHT;
+            player.setPosition(player.posX, player.posY, player.posZ);
+        }
         Vec3d motion = player.getLookVec().scale(3 * (1 + level) / 4.0);
         player.addVelocity(motion.x, motion.y, motion.z);
         if (player.onGround) player.move(MoverType.SELF, 0, 1.2, 0);
 
-        if (!player.world.isRemote) {
+        if (player.world.isRemote) {
+            predicted.put(player, player.ticksExisted + 4);
+        } else {
             player.getDataManager().set(spinning, true);
             active.put(player, new Spin(player.world, player.getEntityBoundingBox()));
             SoundEvent sound = level >= 3 ? PSSounds.TRIDENT_RIPTIDE_3 : level == 2 ? PSSounds.TRIDENT_RIPTIDE_2 : PSSounds.TRIDENT_RIPTIDE_1;
             player.playSound(sound, 1, 1);
         }
+    }
+
+    private static boolean hasPredictedLaunch(EntityPlayer player) {
+        if (!player.world.isRemote) return false;
+        Integer expiry = predicted.get(player);
+        if (expiry == null) return false;
+        if (player.ticksExisted < expiry) return true;
+        predicted.remove(player);
+        return false;
     }
 
     @SubscribeEvent

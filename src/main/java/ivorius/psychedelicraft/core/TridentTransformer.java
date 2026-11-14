@@ -8,6 +8,7 @@ import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.Type;
 import org.objectweb.asm.tree.AbstractInsnNode;
 import org.objectweb.asm.tree.ClassNode;
+import org.objectweb.asm.tree.FieldInsnNode;
 import org.objectweb.asm.tree.InsnList;
 import org.objectweb.asm.tree.MethodInsnNode;
 import org.objectweb.asm.tree.MethodNode;
@@ -22,6 +23,7 @@ public final class TridentTransformer implements IClassTransformer {
     private static final String MODEL = "net.minecraft.client.model.ModelBiped";
     private static final String HAND_RENDERER = "net.minecraft.client.renderer.ItemRenderer";
     private static final String REPAIR = "net.minecraft.item.crafting.RecipeRepairItem";
+    private static final String RIPTIDE = "ivorius/psychedelicraft/entity/Riptide";
     private static final String POSES = "ivorius/psychedelicraft/client/render/TridentPoses";
     private static final String STACK = "Lnet/minecraft/item/ItemStack;";
     private static final FMLDeobfuscatingRemapper REMAPPER = FMLDeobfuscatingRemapper.INSTANCE;
@@ -36,7 +38,8 @@ public final class TridentTransformer implements IClassTransformer {
         switch (transformedName) {
             case PLAYER:
                 append(method(type, "<clinit>", "<clinit>", "()V"), () -> call(
-                        "ivorius/psychedelicraft/entity/Riptide", "reserveSyncedState", "()V"));
+                        RIPTIDE, "reserveSyncedState", "()V"));
+                patchSize(type);
                 break;
             case PLAYER_RENDERER:
                 MethodNode init = method(type, "<init>", "<init>", "(Lnet/minecraft/client/renderer/entity/RenderManager;Z)V");
@@ -71,6 +74,35 @@ public final class TridentTransformer implements IClassTransformer {
         ClassWriter writer = new ClassWriter(flags);
         type.accept(writer);
         return writer.toByteArray();
+    }
+
+    private static void patchSize(ClassNode type) {
+        String player = "L" + type.name + ";";
+        MethodNode eye = method(type, "getEyeHeight", "func_70047_e", "()F");
+        for (AbstractInsnNode instruction : eye.instructions.toArray()) {
+            if (instruction.getOpcode() == Opcodes.FRETURN) {
+                eye.instructions.insertBefore(instruction, call(RIPTIDE, "eyeHeight", "(F" + player + ")F", ref(0)));
+            }
+        }
+
+        MethodNode size = method(type, "updateSize", "func_184808_cD", "()V");
+        for (AbstractInsnNode instruction : size.instructions.toArray()) {
+            if (!(instruction instanceof FieldInsnNode) || instruction.getOpcode() != Opcodes.GETFIELD) continue;
+            FieldInsnNode field = (FieldInsnNode) instruction;
+            String name = REMAPPER.mapFieldName(field.owner, field.name, field.desc);
+            if (!"width".equals(name) && !"field_70130_N".equals(name)) continue;
+
+            // The first comparison follows the branches that select the vanilla width and height.
+            AbstractInsnNode compare = instruction.getPrevious().getPrevious();
+            if (compare.getOpcode() != Opcodes.FLOAD || instruction.getPrevious().getOpcode() != Opcodes.ALOAD) break;
+            int width = ((VarInsnNode) compare).var;
+            InsnList pose = call(RIPTIDE, "desiredHeight", "(" + player + "FF)F",
+                    ref(0), new VarInsnNode(Opcodes.FLOAD, width), new VarInsnNode(Opcodes.FLOAD, width + 1));
+            pose.add(new VarInsnNode(Opcodes.FSTORE, width + 1));
+            size.instructions.insertBefore(compare, pose);
+            return;
+        }
+        throw new IllegalStateException("Could not locate the player size comparison");
     }
 
     private static void patchHands(ClassNode type) {
