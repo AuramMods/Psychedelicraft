@@ -101,8 +101,11 @@ final class PlantBiomes {
     }
 
     private static boolean forest(Biome biome) {
-        return BiomeDictionary.hasType(biome, BiomeDictionary.Type.FOREST)
-                && !BiomeDictionary.hasType(biome, BiomeDictionary.Type.CONIFEROUS) && !jungle(biome);
+        // The vanilla tag includes these forest families after biome renaming. Grove has no legacy biome.
+        return biome == Biomes.FOREST || biome == Biomes.FOREST_HILLS || biome == Biomes.MUTATED_FOREST
+                || biome == Biomes.ROOFED_FOREST || biome == Biomes.MUTATED_ROOFED_FOREST
+                || biome == Biomes.BIRCH_FOREST || biome == Biomes.BIRCH_FOREST_HILLS
+                || biome == Biomes.MUTATED_BIRCH_FOREST || biome == Biomes.MUTATED_BIRCH_FOREST_HILLS;
     }
 
     private static boolean hills(Biome biome) {

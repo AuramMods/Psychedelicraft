@@ -3,6 +3,7 @@ package ivorius.psychedelicraft.world.gen;
 import ivorius.psychedelicraft.config.PSConfig;
 import net.minecraft.init.Biomes;
 import net.minecraft.init.Bootstrap;
+import net.minecraft.world.biome.Biome;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
@@ -77,6 +78,40 @@ public class PlantBiomesTest {
         assertFalse(PlantBiomes.juniper(Biomes.PLAINS));
         assertFalse(PlantBiomes.juniper(Biomes.DESERT_HILLS));
         assertFalse(PlantBiomes.juniper(Biomes.SAVANNA));
+    }
+
+    @Test
+    public void vanillaForestAndHillTagsHaveSeparateMembership() {
+        PSConfig.Feature forest = new PSConfig.Feature();
+        forest.included = new String[]{"#minecraft:is_forest"};
+        PSConfig.Feature hills = new PSConfig.Feature();
+        hills.included = new String[]{"#minecraft:is_hill"};
+        Biome[] forests = {Biomes.FOREST, Biomes.FOREST_HILLS, Biomes.MUTATED_FOREST,
+                Biomes.ROOFED_FOREST, Biomes.MUTATED_ROOFED_FOREST, Biomes.BIRCH_FOREST, Biomes.BIRCH_FOREST_HILLS,
+                Biomes.MUTATED_BIRCH_FOREST, Biomes.MUTATED_BIRCH_FOREST_HILLS};
+        Biome[] mountains = {Biomes.EXTREME_HILLS, Biomes.EXTREME_HILLS_EDGE, Biomes.EXTREME_HILLS_WITH_TREES,
+                Biomes.MUTATED_EXTREME_HILLS, Biomes.MUTATED_EXTREME_HILLS_WITH_TREES};
+        for (Biome biome : forests) {
+            assertTrue(PlantBiomes.allows(forest, ignored -> false, biome));
+            assertFalse(PlantBiomes.allows(hills, ignored -> false, biome));
+        }
+        for (Biome biome : mountains) {
+            assertFalse(PlantBiomes.allows(forest, ignored -> false, biome));
+            assertTrue(PlantBiomes.allows(hills, ignored -> false, biome));
+            assertTrue(PlantBiomes.juniper(biome));
+        }
+    }
+
+    @Test
+    public void megaSpruceTaigaRequiresAnExplicitOverride() {
+        PSConfig.Feature options = new PSConfig.Feature();
+        for (Biome biome : new Biome[]{Biomes.MUTATED_REDWOOD_TAIGA, Biomes.MUTATED_REDWOOD_TAIGA_HILLS}) {
+            assertFalse(PlantBiomes.tallCrops(biome));
+            assertFalse(PlantBiomes.juniper(biome));
+        }
+        options.included = new String[]{"#forge:FOREST"};
+        assertTrue(PlantBiomes.allows(options, PlantBiomes::tallCrops, Biomes.MUTATED_REDWOOD_TAIGA));
+        assertTrue(PlantBiomes.allows(options, PlantBiomes::juniper, Biomes.MUTATED_REDWOOD_TAIGA_HILLS));
     }
 
     @Test
