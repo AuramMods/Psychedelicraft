@@ -6,8 +6,10 @@ package ivorius.psychedelicraft.client.render;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.entity.EntityPlayerSP;
+import net.minecraft.entity.SharedMonsterAttributes;
 import net.minecraft.init.SoundEvents;
 import net.minecraft.util.math.MathHelper;
+import net.minecraft.util.math.Vec3d;
 import net.minecraft.util.text.ITextComponent;
 import net.minecraft.util.text.TextComponentString;
 import net.minecraft.util.text.TextComponentTranslation;
@@ -48,49 +50,71 @@ final class RastaHeadChat {
         ITextComponent message = new TextComponentTranslation("chat.type.text",
                 new TextComponentString(NAME), new TextComponentString(line));
         Minecraft.getMinecraft().ingameGUI.getChatGUI().printChatMessage(message);
-        if (random.nextFloat() < 0.3F || line.contains("!")) {
-            double x = random.nextFloat();
-            double z = random.nextFloat();
+        Random worldRandom = player.world.rand;
+        if (worldRandom.nextFloat() < 0.3F || line.contains("!")) {
+            double x = worldRandom.nextFloat();
+            double z = worldRandom.nextFloat();
             player.performHurtAnimation();
-            player.attackedAtYaw = (float) (Math.toDegrees(MathHelper.atan2(z, x)) - player.rotationYaw);
+            player.attackedAtYaw = (float) (MathHelper.atan2(z, x) * (180F / (float) Math.PI) - player.rotationYaw);
             player.playSound(SoundEvents.ENTITY_PLAYER_HURT, 1F, 1F);
-            if (x != 0 || z != 0) player.knockBack(player, 0.2F, x, z);
+            pushPlayer(x, z);
         }
     }
 
+    private void pushPlayer(double x, double z) {
+        // In 1.20.1 knockback resistance scales the impulse. The legacy method rolls a chance to cancel it.
+        double strength = 0.2F * (1D - player.getEntityAttribute(SharedMonsterAttributes.KNOCKBACK_RESISTANCE)
+                .getAttributeValue());
+        if (strength <= 0) return;
+        Vec3d push = new Vec3d(x, 0, z).normalize().scale(strength);
+        player.isAirBorne = true;
+        player.motionX = player.motionX / 2D - push.x;
+        player.motionZ = player.motionZ / 2D - push.z;
+        if (player.onGround) player.motionY = Math.min(0.4D, player.motionY / 2D + strength);
+    }
+
     private final class Voice {
-        private final Deque<String> lines = new ArrayDeque<>();
+        private final Deque<DelayedLine> lines = new ArrayDeque<>();
         private int idleTicks;
         private int sleepTicks;
-        private int delay;
 
         boolean tick(boolean visible) {
             if (sleepTicks-- > 0) return false;
             if (lines.isEmpty() && idleTicks++ > 300 && random.nextInt(300) == 0) {
                 if (random.nextInt(120) == 0) return true;
-                queue(RastaHeadDialogue.statement(random), 5 + random.nextInt(96));
+                queue(RastaHeadDialogue.statement(random));
+                sleepTicks = 5 + random.nextInt(96);
             }
-            if (!lines.isEmpty()) {
-                if (--delay <= 0) {
-                    String line = lines.removeFirst();
-                    if (visible) emit(line);
-                    delay = 2 + random.nextInt(19);
+            DelayedLine line = lines.peekFirst();
+            if (line != null) {
+                if (--line.delay <= 0) {
+                    if (visible) emit(line.text);
+                    lines.removeFirst();
                 }
-                if (sleepTicks <= 0) sleepTicks = 2 + random.nextInt(19);
+                sleepTicks = 2 + random.nextInt(19);
             }
             return false;
         }
 
         void respond() {
-            queue(RastaHeadDialogue.response(random), 1 + random.nextInt(5));
+            lines.clear();
+            queue(RastaHeadDialogue.response(random));
+            sleepTicks = 1 + random.nextInt(5);
         }
 
-        private void queue(String[] script, int sleep) {
-            lines.clear();
-            for (String line : script) lines.addLast(line);
+        private void queue(String[] script) {
+            for (String line : script) lines.addLast(new DelayedLine(line, 2 + random.nextInt(19)));
             idleTicks = 0;
-            sleepTicks = sleep;
-            delay = 2 + random.nextInt(19);
+        }
+    }
+
+    private static final class DelayedLine {
+        private final String text;
+        private int delay;
+
+        DelayedLine(String text, int delay) {
+            this.text = text;
+            this.delay = delay;
         }
     }
 }
