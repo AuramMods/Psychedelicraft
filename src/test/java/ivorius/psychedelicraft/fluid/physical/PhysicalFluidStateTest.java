@@ -3,6 +3,7 @@ package ivorius.psychedelicraft.fluid.physical;
 import ivorius.psychedelicraft.fluid.BrewFluid;
 import ivorius.psychedelicraft.fluid.FluidContents;
 import ivorius.psychedelicraft.fluid.PSFluids;
+import net.minecraft.block.BlockLiquid;
 import net.minecraft.block.material.Material;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.entity.passive.EntityPig;
@@ -167,6 +168,28 @@ public class PhysicalFluidStateTest {
         world.put(cell.down().west(), Blocks.ICE.getDefaultState(), null);
         assertEquals(0D, coffee.getFlowVector(world, cell.down()).y, 0D);
 
+    }
+
+    @Test
+    public void mixedWaterCancelsBeforeMobNormalization() {
+        PhysicalFluidBlock coffee = new PhysicalFluidBlock(PSFluids.COFFEE);
+        FluidWorld world = new FluidWorld();
+        BlockPos cell = new BlockPos(0, 64, 0);
+        world.put(cell, coffee.getStateFromMeta(6), null);
+        world.put(cell.west(), coffee.getStateFromMeta(5), null);
+        IBlockState water = Blocks.FLOWING_WATER.getDefaultState();
+        world.put(cell.east(), water.withProperty(BlockLiquid.LEVEL, 6), null);
+        world.put(cell.east(2), water.withProperty(BlockLiquid.LEVEL, 5), null);
+        EntityPig pig = new EntityPig(world);
+        pig.setPosition(1, 64.15, 0.5);
+
+        assertEquals(Vec3d.ZERO, PhysicalFluidCurrents.mixedPush(world, Material.WATER, pig));
+        world.put(cell.east(), water.withProperty(BlockLiquid.LEVEL, 7), null);
+        Vec3d push = PhysicalFluidCurrents.mixedPush(world, Material.WATER, pig);
+        assertEquals(0.014D, push.x, 0.000001D);
+        assertEquals(0D, push.z, 0D);
+        world.put(cell, Blocks.AIR.getDefaultState(), null);
+        assertNull(PhysicalFluidCurrents.mixedPush(world, Material.WATER, pig));
     }
 
     private static final class FluidWorld extends World {

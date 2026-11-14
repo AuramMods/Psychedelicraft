@@ -20,6 +20,8 @@ import org.objectweb.asm.tree.MethodNode;
 import org.objectweb.asm.tree.TypeInsnNode;
 import org.objectweb.asm.tree.VarInsnNode;
 
+import java.util.ArrayList;
+
 import static ivorius.psychedelicraft.core.ClientEffectsTransformer.field;
 import static ivorius.psychedelicraft.core.ClientEffectsTransformer.method;
 
@@ -62,7 +64,7 @@ public final class WaterloggingTransformer implements IClassTransformer {
                 || FARMLAND.equals(transformedName) || SUSPENDED.equals(transformedName)
                 || WORLD_CLIENT.equals(transformedName))) return bytes;
         ClassNode type = new ClassNode(Opcodes.ASM5);
-        new ClassReader(bytes).accept(type, 0);
+        new ClassReader(bytes).accept(type, WORLD_CLASS.equals(transformedName) ? ClassReader.EXPAND_FRAMES : 0);
         switch (transformedName) {
             case DISPATCHER:
                 patchDispatcher(type);
@@ -164,24 +166,56 @@ public final class WaterloggingTransformer implements IClassTransformer {
 
     private static void patchPhysicalCurrents(ClassNode type) {
         MethodNode method = method(type, "handleMaterialAcceleration", "func_72918_a", "(" + AABB + MATERIAL + ENTITY + ")Z");
-        AbstractInsnNode result = null;
+        int pushSlot = method.maxLocals++;
+        Type[] args = Type.getArgumentTypes(method.desc);
+        AbstractInsnNode unloadedReturn = null;
+        AbstractInsnNode contactReturn = null;
+        Type vector = null;
         for (AbstractInsnNode instruction : method.instructions.toArray()) {
             if (matches(instruction, "modifyAcceleration", "func_176197_a", "(" + WORLD + POS + ENTITY + VECTOR + ")" + VECTOR)) {
                 MethodInsnNode call = (MethodInsnNode) instruction;
+                vector = Type.getReturnType(call.desc);
+                method.instructions.insertBefore(call, new VarInsnNode(Opcodes.ALOAD, pushSlot));
                 method.instructions.set(call, new MethodInsnNode(Opcodes.INVOKESTATIC, CURRENTS, "accumulateLegacy",
-                        "(L" + call.owner + ";" + call.desc.substring(1), false));
+                        "(L" + call.owner + ";" + call.desc.substring(1, call.desc.indexOf(')'))
+                                + vector.getDescriptor() + ")" + vector.getDescriptor(), false));
             }
-            if (instruction.getOpcode() == Opcodes.IRETURN) result = instruction;
+            if (instruction.getOpcode() != Opcodes.IRETURN) continue;
+            if (unloadedReturn == null) unloadedReturn = instruction;
+            else contactReturn = instruction;
         }
-        if (result == null) throw new IllegalStateException("Could not locate Forge fluid contact result");
-        Type[] args = Type.getArgumentTypes(method.desc);
-        InsnList hook = new InsnList();
-        hook.add(new VarInsnNode(Opcodes.ALOAD, 0));
-        hook.add(new VarInsnNode(Opcodes.ALOAD, 2));
-        hook.add(new VarInsnNode(Opcodes.ALOAD, 3));
-        hook.add(new MethodInsnNode(Opcodes.INVOKESTATIC, CURRENTS, "apply", Type.getMethodDescriptor(
-                Type.BOOLEAN_TYPE, Type.BOOLEAN_TYPE, Type.getObjectType(type.name), args[1], args[2]), false));
-        method.instructions.insertBefore(result, hook);
+        if (unloadedReturn == null || contactReturn == null || vector == null) {
+            throw new IllegalStateException("Could not locate Forge fluid current scan");
+        }
+
+        // Sample after Forge's loaded-area return and keep the result through the legacy scan.
+        AbstractInsnNode scan = unloadedReturn.getNext();
+        while (scan != null && scan.getOpcode() < 0) scan = scan.getNext();
+        if (scan == null) throw new IllegalStateException("Could not locate Forge fluid scan after loaded-area check");
+        for (AbstractInsnNode instruction = scan.getNext(); instruction != null; instruction = instruction.getNext()) {
+            if (!(instruction instanceof FrameNode)) continue;
+            FrameNode frame = (FrameNode) instruction;
+            frame.local = new ArrayList<>(frame.local);
+            int slots = 0;
+            for (Object local : frame.local) slots += Opcodes.LONG.equals(local) || Opcodes.DOUBLE.equals(local) ? 2 : 1;
+            for (; slots < pushSlot; slots++) frame.local.add(Opcodes.TOP);
+            frame.local.add(vector.getInternalName());
+        }
+        InsnList sample = new InsnList();
+        sample.add(new VarInsnNode(Opcodes.ALOAD, 0));
+        sample.add(new VarInsnNode(Opcodes.ALOAD, 2));
+        sample.add(new VarInsnNode(Opcodes.ALOAD, 3));
+        sample.add(new MethodInsnNode(Opcodes.INVOKESTATIC, CURRENTS, "mixedPush",
+                Type.getMethodDescriptor(vector, Type.getObjectType(type.name), args[1], args[2]), false));
+        sample.add(new VarInsnNode(Opcodes.ASTORE, pushSlot));
+        method.instructions.insertBefore(scan, sample);
+
+        InsnList finish = new InsnList();
+        finish.add(new VarInsnNode(Opcodes.ALOAD, 3));
+        finish.add(new VarInsnNode(Opcodes.ALOAD, pushSlot));
+        finish.add(new MethodInsnNode(Opcodes.INVOKESTATIC, CURRENTS, "apply", Type.getMethodDescriptor(
+                Type.BOOLEAN_TYPE, Type.BOOLEAN_TYPE, args[2], vector), false));
+        method.instructions.insertBefore(contactReturn, finish);
     }
 
     private static void patchBlock(ClassNode type) {
