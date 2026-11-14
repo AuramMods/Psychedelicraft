@@ -1,5 +1,6 @@
 package ivorius.psychedelicraft.block;
 
+import ivorius.psychedelicraft.block.entity.CampfireBlockEntity;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockHorizontal;
 import net.minecraft.block.SoundType;
@@ -16,6 +17,7 @@ import net.minecraft.init.SoundEvents;
 import net.minecraft.item.ItemSpade;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
+import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.DamageSource;
 import net.minecraft.util.BlockRenderLayer;
 import net.minecraft.util.EnumFacing;
@@ -37,7 +39,7 @@ import java.util.Random;
 
 public final class CampfireBlock extends Block {
     public static final PropertyBool LIT = PropertyBool.create("lit");
-    private static final PropertyDirection FACING = BlockHorizontal.FACING;
+    public static final PropertyDirection FACING = BlockHorizontal.FACING;
     private static final AxisAlignedBB SHAPE = new AxisAlignedBB(0, 0, 0, 1, 7D / 16D, 1);
     private static final AxisAlignedBB SMOKE_COLUMN = new AxisAlignedBB(6D / 16D, 0, 6D / 16D, 10D / 16D, 1, 10D / 16D);
 
@@ -96,6 +98,23 @@ public final class CampfireBlock extends Block {
     }
 
     @Override
+    public boolean hasTileEntity(IBlockState state) {
+        return true;
+    }
+
+    @Override
+    public TileEntity createTileEntity(World world, IBlockState state) {
+        return new CampfireBlockEntity();
+    }
+
+    @Override
+    public void breakBlock(World world, BlockPos pos, IBlockState state) {
+        TileEntity tile = world.getTileEntity(pos);
+        if (!world.isRemote && tile instanceof CampfireBlockEntity) ((CampfireBlockEntity) tile).dropFood();
+        super.breakBlock(world, pos, state);
+    }
+
+    @Override
     public Item getItemDropped(IBlockState state, Random random, int fortune) {
         return Items.COAL;
     }
@@ -145,7 +164,8 @@ public final class CampfireBlock extends Block {
             }
             return true;
         }
-        return false;
+        TileEntity tile = world.getTileEntity(pos);
+        return tile instanceof CampfireBlockEntity && ((CampfireBlockEntity) tile).placeFood(held, player.isCreative());
     }
 
     @Override

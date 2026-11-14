@@ -8,6 +8,7 @@ import ivorius.psychedelicraft.Psychedelicraft;
 import ivorius.psychedelicraft.block.TallCropBlock.Crop;
 import ivorius.psychedelicraft.block.entity.BarrelBlockEntity;
 import ivorius.psychedelicraft.block.entity.BeeNestBlockEntity;
+import ivorius.psychedelicraft.block.entity.CampfireBlockEntity;
 import ivorius.psychedelicraft.block.entity.BottleRackBlockEntity;
 import ivorius.psychedelicraft.block.entity.DistilleryBlockEntity;
 import ivorius.psychedelicraft.block.entity.FlaskBlockEntity;
@@ -167,6 +168,7 @@ public final class PSBlocks {
         GameRegistry.registerTileEntity(JuniperSignBlockEntity.class, Psychedelicraft.id("juniper_sign"));
         GameRegistry.registerTileEntity(RiftJarBlockEntity.class, Psychedelicraft.id("rift_jar"));
         GameRegistry.registerTileEntity(BeeNestBlockEntity.class, Psychedelicraft.id("bee_nest"));
+        GameRegistry.registerTileEntity(CampfireBlockEntity.class, Psychedelicraft.id("campfire"));
         Blocks.FIRE.setFireInfo(DRYING_TABLE, 5, 20);
         Blocks.FIRE.setFireInfo(BOTTLE_RACK, 5, 20);
         Blocks.FIRE.setFireInfo(LATTICE, 5, 20);

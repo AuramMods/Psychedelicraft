@@ -1710,6 +1710,15 @@ sh run/production/background-qa/run.sh "$qa" game-background Overlay-QA \
 - A separate Forge process reopened the same save and found the shared flower in the nest at its original coordinates. See `runtime-reopen.log`.
 - Next, port the regular campfire's four cooking positions and its cooldown and rendering behavior.
 
+### Cycle 189 · Campfire cooking
+
+- Ported four independent food slots from the 1.20.1 `CampfireBlockEntity`. A successful click adds one item to the first empty slot and keeps the held stack in Creative. After 600 lit ticks, the slot ejects one cooked item. An unlit slot loses two ticks of progress per tick, down to zero. Breaking the campfire drops its remaining raw food separately from the block's usual drops.
+- Added the eight donor recipes with native 1.12 inputs. The explicit recipe list preserves cod and salmon metadata and prevents other furnace recipes from running on the campfire. The donor dried-kelp recipe still needs a kelp equivalent. Waterlogging and tall signal smoke remain open.
+- The tile saves the four stacks and timers. Chunk and block updates send the stacks to the client. The Forge renderer places them at the donor corner positions with the block's rotation. Lit slots emit cooking smoke from the same corners.
+- The Java 8 build ran `reobfJar` and all 223 tests passed. The muted Forge 2864 cooking probe placed beef, a potato, cod and salmon, checked offhand and Creative use, rejected a fifth input and a pufferfish, and observed the four stacks on the client. The screenshot shows the four foods on the grate. A shovel extinguished the campfire and 20 unlit ticks reduced the first timer from 125 to 85. The smoke and bee-defense regression passed. See `build.log`, `build-tests.log`, `donor-campfire.javap`, `runtime-cooking-final.log` and `runtime-defense.log` under `run/production/runtime-qa-cycle189`. The tested jar SHA-256 is `59a060e975df29bd588d1f1d993b173a3630ffefc821b92d18bf9cf10e3b64e2`.
+- The first comparison fixture referenced the new tile class during startup and could not load against the old jar. A separate baseline probe confirmed the old campfire rejected beef and had no tile. The first reopening assertion sampled after the unlit slots had continued to cool. The final fixture read 81 and zero ticks from the first and fourth slots as their chunk loaded. It then relit the campfire, observed four cooked drops and cleared client slots, and broke the block to recover exactly two newly placed raw items. See `runtime-baseline-final.log` and `runtime-reopen-final.log`.
+- Next, integrate the campfire tile with the backported waterlogging system and compare the donor's normal and hay-bale signal smoke.
+
 Dedicated Forge startup and multiplayer on that server remain open pending EULA acceptance.
 
 ## Repository and branch survey
