@@ -2,6 +2,7 @@ package ivorius.psychedelicraft.block;
 
 import ivorius.psychedelicraft.block.entity.CampfireBlockEntity;
 import ivorius.psychedelicraft.client.particle.CampfireSmoke;
+import ivorius.psychedelicraft.entity.CampfireProjectile;
 import ivorius.psychedelicraft.fluid.physical.Waterloggable;
 import ivorius.psychedelicraft.fluid.physical.Waterlogging;
 import net.minecraft.block.Block;
@@ -15,9 +16,11 @@ import net.minecraft.block.state.IBlockState;
 import net.minecraft.enchantment.EnchantmentHelper;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityLivingBase;
+import net.minecraft.entity.item.EntityFireworkRocket;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.projectile.EntityArrow;
 import net.minecraft.entity.projectile.EntityFireball;
+import net.minecraft.entity.projectile.EntityFishHook;
 import net.minecraft.entity.projectile.EntityLlamaSpit;
 import net.minecraft.entity.projectile.EntityThrowable;
 import net.minecraft.init.Blocks;
@@ -248,6 +251,8 @@ public final class CampfireBlock extends Block implements Waterloggable {
         if (projectile instanceof EntityFireball) return ((EntityFireball) projectile).shootingEntity;
         if (projectile instanceof EntityThrowable) return ((EntityThrowable) projectile).getThrower();
         if (projectile instanceof EntityLlamaSpit) return ((EntityLlamaSpit) projectile).owner;
+        if (projectile instanceof EntityFishHook) return ((EntityFishHook) projectile).getAngler();
+        if (projectile instanceof EntityFireworkRocket) return CampfireProjectile.fireworkOwner(projectile);
         return null;
     }
 
