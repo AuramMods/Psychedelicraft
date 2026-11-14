@@ -43,10 +43,28 @@ enum ApparitionModels {
         return null;
     }
 
-    void draw(float age, float red, float green, float blue, float alpha) {
+    float swimYaw(float age) {
+        switch (this) {
+            case COD:
+            case SALMON:
+            case TROPICAL_FISH:
+                return 4.3F * MathHelper.sin(0.6F * age);
+            default:
+                return 0;
+        }
+    }
+
+    void draw(float age, double horizontalSpeedSquared, float red, float green, float blue, float alpha) {
         if (model == null) model = factory.get();
+        if (this == SALMON) GlStateManager.translate(0, 0, -0.4F);
+        if (this == DOLPHIN && horizontalSpeedSquared > 1.0E-7D) {
+            float bodyPitch = 0.05F + 0.05F * MathHelper.cos(age * 0.3F);
+            GlStateManager.translate(0, 0.125F, 0);
+            GlStateManager.rotate((float) Math.toDegrees(bodyPitch), 1, 0, 0);
+            GlStateManager.translate(0, -0.125F, 0);
+        }
         for (Part part : model.parts) {
-            part.draw(age, red, green, blue, alpha);
+            part.draw(age, horizontalSpeedSquared, red, green, blue, alpha);
         }
     }
 
@@ -132,8 +150,8 @@ enum ApparitionModels {
                     .rotate(0, side * 0.38F, side * -0.34F);
         }
         Part peduncle = m.joint(0x6d8798, 0, 6, 6, -2, -2, 0, 4, 4, 8);
-        peduncle.sway(0.22F);
-        m.child(peduncle, 0x5c798f, 0, 0, 6, -6, -0.5F, 0, 12, 1, 4);
+        peduncle.swimPitch = 0.1F;
+        m.child(peduncle, 0x5c798f, 0, 0, 6, -6, -0.5F, 0, 12, 1, 4).swimPitch = 0.2F;
         return m;
     }
 
@@ -176,7 +194,7 @@ enum ApparitionModels {
     private static VoxelModel cod() {
         VoxelModel m = fish(0xb89465, 0xe1c699, 2, 4, 8);
         m.box(0x8f754e, -0.5F, 7, 0, 1, 2, 3);
-        m.joint(0x9b7b54, 0, 5, 4, -0.5F, -2, 0, 1, 4, 3).tail(0.48F);
+        m.joint(0x9b7b54, 0, 5, 4, -0.5F, -2, 0, 1, 4, 3).swimTail = -0.45F;
         return m;
     }
 
@@ -184,7 +202,7 @@ enum ApparitionModels {
         VoxelModel m = fish(0xc24f4e, 0xcfa69f, 3, 5, 12);
         m.box(0x687a64, -1.5F, 7, -5.5F, 3, 1, 10);
         m.box(0x576a60, -0.5F, 8, 0, 1, 2, 4);
-        m.joint(0xa75658, 0, 5.5F, 6, -0.5F, -3, 0, 1, 6, 4).tail(0.53F);
+        m.joint(0xa75658, 0, 5.5F, 6, -0.5F, -3, 0, 1, 6, 4).swimTail = -0.25F;
         return m;
     }
 
@@ -193,7 +211,7 @@ enum ApparitionModels {
         m.box(0xffe3b0, -1.08F, 3.03F, -1, 2, 5, 1);
         m.box(0x5d544a, -1.1F, 3.05F, 1.1F, 2, 5, 1);
         m.box(0xa9713c, -0.5F, 7, -1, 1, 2, 3);
-        m.joint(0xd17f3d, 0, 5.5F, 2, -0.5F, -2, 0, 1, 4, 3).tail(0.6F);
+        m.joint(0xd17f3d, 0, 5.5F, 2, -0.5F, -2, 0, 1, 4, 3).swimTail = -0.45F;
         return m;
     }
 
@@ -233,11 +251,12 @@ enum ApparitionModels {
             return part;
         }
 
-        void child(Part parent, int color, float pivotX, float pivotY, float pivotZ, float x, float y, float z,
+        Part child(Part parent, int color, float pivotX, float pivotY, float pivotZ, float x, float y, float z,
                    int width, int height, int depth) {
             Part part = joint(color, pivotX, pivotY, pivotZ, x, y, z, width, height, depth);
             parts.remove(part);
             parent.children.add(part);
+            return part;
         }
     }
 
@@ -251,6 +270,8 @@ enum ApparitionModels {
         private float sway;
         private float tail;
         private float wing;
+        private float swimPitch;
+        private float swimTail;
 
         private Part(ModelRenderer renderer, int color) {
             this.renderer = renderer;
@@ -275,9 +296,12 @@ enum ApparitionModels {
             wing = side;
         }
 
-        void draw(float age, float red, float green, float blue, float alpha) {
+        void draw(float age, double horizontalSpeedSquared, float red, float green, float blue, float alpha) {
             renderer.rotateAngleX = pitch + sway * MathHelper.sin(age * 0.28F);
-            renderer.rotateAngleY = yaw + tail * MathHelper.sin(age * 0.44F);
+            if (swimPitch != 0 && horizontalSpeedSquared > 1.0E-7D) {
+                renderer.rotateAngleX += swimPitch * MathHelper.cos(age * 0.3F);
+            }
+            renderer.rotateAngleY = yaw + tail * MathHelper.sin(age * 0.44F) + swimTail * MathHelper.sin(age * 0.6F);
             renderer.rotateAngleZ = roll + wing * (0.2F + MathHelper.cos(age * 1.9F) * 0.46F);
             GlStateManager.color(red * (color >> 16 & 255) / 255F, green * (color >> 8 & 255) / 255F,
                     blue * (color & 255) / 255F, alpha);
@@ -285,7 +309,7 @@ enum ApparitionModels {
             if (!children.isEmpty()) {
                 GlStateManager.pushMatrix();
                 renderer.postRender(0.0625F);
-                for (Part child : children) child.draw(age, red, green, blue, alpha);
+                for (Part child : children) child.draw(age, horizontalSpeedSquared, red, green, blue, alpha);
                 GlStateManager.popMatrix();
             }
         }

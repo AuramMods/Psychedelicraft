@@ -60,7 +60,8 @@ public final class ApparitionRender {
         }
     }
 
-    static void drawModel(ApparitionModels model, Vec3d[] offsets, Vec3d center, float yaw, float age, float scale,
+    static void drawModel(ApparitionModels model, Vec3d[] offsets, Vec3d center, float yaw, float age,
+                          double horizontalSpeedSquared, float scale,
                           float red, float green, float blue, float alpha) {
         prepareBlend();
         GlStateManager.disableTexture2D();
@@ -70,9 +71,9 @@ public final class ApparitionRender {
                 GlStateManager.pushMatrix();
                 try {
                     GlStateManager.translate(position.x, position.y, position.z);
-                    GlStateManager.rotate(180F - yaw, 0, 1, 0);
+                    GlStateManager.rotate(180F - yaw + model.swimYaw(age), 0, 1, 0);
                     GlStateManager.scale(scale, scale, scale);
-                    model.draw(age, red, green, blue, alpha);
+                    model.draw(age, horizontalSpeedSquared, red, green, blue, alpha);
                 } finally {
                     GlStateManager.popMatrix();
                 }

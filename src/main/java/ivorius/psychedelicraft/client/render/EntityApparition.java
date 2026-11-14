@@ -68,7 +68,12 @@ final class EntityApparition {
             double spread = Math.max(2, i / 10F) * width;
             offsets[i] = grouped ? new Vec3d(triangle(random, spread), triangle(random, spread), triangle(random, spread)) : Vec3d.ZERO;
         }
-        if (entity != null) updateEntity();
+        if (entity != null) {
+            entity.motionX = velocity.x;
+            entity.motionY = velocity.y;
+            entity.motionZ = velocity.z;
+            updateEntityTransform();
+        }
     }
 
     private static Entity createEntity(EntityPlayerSP player, ResourceLocation id) {
@@ -81,16 +86,16 @@ final class EntityApparition {
     }
 
     boolean tick() {
-        if (++age >= maxAge) return true;
+        age++;
         previousPosition = position;
         position = position.add(velocity);
         previousYaw = yaw;
         yaw = MathHelper.wrapDegrees(yaw + rotationSpeed);
         if (entity != null) updateEntity();
-        return false;
+        return age >= maxAge;
     }
 
-    private void updateEntity() {
+    private void updateEntityTransform() {
         entity.ticksExisted = age;
         entity.setPosition(position.x, position.y, position.z);
         entity.prevPosX = entity.lastTickPosX = previousPosition.x;
@@ -102,16 +107,25 @@ final class EntityApparition {
             EntityLivingBase living = (EntityLivingBase) entity;
             living.prevRenderYawOffset = living.prevRotationYawHead = previousYaw;
             living.renderYawOffset = living.rotationYawHead = yaw;
+        }
+    }
+
+    private void updateEntity() {
+        updateEntityTransform();
+        if (entity instanceof EntityLivingBase) {
+            EntityLivingBase living = (EntityLivingBase) entity;
+            double dx = entity.posX - entity.prevPosX;
+            double dz = entity.posZ - entity.prevPosZ;
+            float stride = Math.min(1F, MathHelper.sqrt(dx * dx + dz * dz) * 4F);
             living.prevLimbSwingAmount = living.limbSwingAmount;
-            float stride = MathHelper.sqrt(velocity.x * velocity.x + velocity.z * velocity.z) * 4F;
-            living.limbSwingAmount += (Math.min(1F, stride) - living.limbSwingAmount) * 0.4F;
+            living.limbSwingAmount += (stride - living.limbSwingAmount) * 0.4F;
             living.limbSwing += living.limbSwingAmount;
         }
     }
 
     void render(Minecraft client, float partialTicks, float strength) {
-        float fade = MathHelper.sin(Math.min(age, maxAge - 2) * (float) Math.PI / (maxAge - 2)) * 18F;
-        float alpha = MathHelper.clamp(fade, 0F, 1F) * strength;
+        float progress = (float) Math.min(age, maxAge - 2) / (maxAge - 2);
+        float alpha = Math.min(1F, MathHelper.sin(progress * (float) Math.PI) * 18F) * strength;
         if (alpha <= 0.001F) return;
 
         RenderManager manager = client.getRenderManager();
@@ -121,7 +135,8 @@ final class EntityApparition {
         if (offsets.length > 1) {
             Arrays.sort(offsets, Comparator.comparingDouble((Vec3d offset) -> distanceSquared(center, offset)).reversed());
         }
-        if (entity == null) ApparitionRender.drawModel(model, offsets, center, facing, age + partialTicks, scale, red, green, blue, alpha);
+        if (entity == null) ApparitionRender.drawModel(model, offsets, center, facing, age + partialTicks,
+                velocity.x * velocity.x + velocity.z * velocity.z, scale, red, green, blue, alpha);
         else ApparitionRender.drawEntity(client, entity, offsets, center, facing, partialTicks, scale, red, green, blue, alpha);
     }
 
