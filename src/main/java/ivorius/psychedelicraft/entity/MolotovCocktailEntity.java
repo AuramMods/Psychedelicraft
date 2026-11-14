@@ -30,8 +30,6 @@ import net.minecraft.world.World;
 import net.minecraft.world.WorldServer;
 import net.minecraftforge.event.ForgeEventFactory;
 import net.minecraftforge.fml.relauncher.ReflectionHelper;
-import net.minecraftforge.fml.relauncher.Side;
-import net.minecraftforge.fml.relauncher.SideOnly;
 
 import java.lang.reflect.Field;
 
@@ -154,12 +152,6 @@ public final class MolotovCocktailEntity extends EntityThrowable {
 
     private double offset(float spread) {
         return (rand.nextDouble() - rand.nextDouble()) * 0.5 * spread;
-    }
-
-    @Override
-    @SideOnly(Side.CLIENT)
-    public int getBrightnessForRender() {
-        return 0xF000F0;
     }
 
     @Override

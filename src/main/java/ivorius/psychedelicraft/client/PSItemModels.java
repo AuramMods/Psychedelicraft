@@ -46,12 +46,16 @@ import net.minecraft.block.state.IBlockState;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.entity.EntityPlayerSP;
 import net.minecraft.client.gui.inventory.GuiInventory;
+import net.minecraft.client.renderer.OpenGlHelper;
 import net.minecraft.client.renderer.block.model.ModelResourceLocation;
 import net.minecraft.client.renderer.block.statemap.StateMap;
 import net.minecraft.client.renderer.block.statemap.StateMapperBase;
 import net.minecraft.client.renderer.entity.RenderSnowball;
+import net.minecraft.entity.Entity;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
+import net.minecraft.util.math.BlockPos;
+import net.minecraft.world.EnumSkyBlock;
 import net.minecraftforge.client.event.GuiOpenEvent;
 import net.minecraftforge.client.event.ColorHandlerEvent;
 import net.minecraftforge.client.event.ModelRegistryEvent;
@@ -173,6 +177,24 @@ public final class PSItemModels {
         RenderingRegistry.registerEntityRenderingHandler(RealityRiftEntity.class, RealityRiftRenderer::new);
         RenderingRegistry.registerEntityRenderingHandler(MolotovCocktailEntity.class, manager ->
                 new RenderSnowball<MolotovCocktailEntity>(manager, PSItems.MOLOTOV_COCKTAIL, Minecraft.getMinecraft().getRenderItem()) {
+                    @Override
+                    public void doRender(MolotovCocktailEntity projectile, double x, double y, double z,
+                                         float yaw, float partialTicks) {
+                        Entity camera = manager.renderViewEntity;
+                        if (projectile.ticksExisted < 2 && camera != null && camera.getDistanceSq(projectile) < 12.25) return;
+                        int sky = projectile.world.provider.hasSkyLight()
+                                ? projectile.world.getLightFor(EnumSkyBlock.SKY, new BlockPos(projectile.getPositionEyes(partialTicks)))
+                                : 0;
+                        float blockLight = OpenGlHelper.lastBrightnessX;
+                        float skyLight = OpenGlHelper.lastBrightnessY;
+                        OpenGlHelper.setLightmapTextureCoords(OpenGlHelper.lightmapTexUnit, 240, sky << 4);
+                        try {
+                            super.doRender(projectile, x, y, z, yaw, partialTicks);
+                        } finally {
+                            OpenGlHelper.setLightmapTextureCoords(OpenGlHelper.lightmapTexUnit, blockLight, skyLight);
+                        }
+                    }
+
                     @Override
                     public ItemStack getStackToRender(MolotovCocktailEntity projectile) {
                         return projectile.getProjectileStack();
