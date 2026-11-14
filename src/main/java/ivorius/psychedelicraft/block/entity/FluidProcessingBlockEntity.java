@@ -84,6 +84,8 @@ public abstract class FluidProcessingBlockEntity extends FluidMachineBlockEntity
         if (!ready) return;
         int previous = elapsed;
         elapsed += Math.min(tickRate, duration - elapsed);
+        // Persist every tick without sending a tile update for each increment.
+        if (elapsed != previous) world.markChunkDirty(pos, this);
         if (elapsed >= duration) {
             if (completeProcess(next, contents)) reset(BrewProcess.IDLE, 0);
         } else if (previous / 20 != elapsed / 20) {
