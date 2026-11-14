@@ -15,6 +15,9 @@ import org.objectweb.asm.tree.MethodInsnNode;
 import org.objectweb.asm.tree.MethodNode;
 
 import java.io.InputStream;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 
 import static org.junit.Assert.assertEquals;
 
@@ -33,6 +36,33 @@ public class ItemGeometryTransformerTest {
         assertEquals(4, countHooks(ModelRenderer.class.getName(), "drawBuiltInModelList"));
         assertEquals(1, countHooks(ItemRenderer.class.getName(), "drawMapQuads"));
         assertEquals(2, countHooks("net.minecraft.client.gui.MapItemRenderer$Instance", "drawMapQuads"));
+    }
+
+    @Test
+    public void firstPersonTremorWrapsForgeAndVanillaHandDrawsOnce() throws Exception {
+        String className = ItemRenderer.class.getName();
+        ClassNode renderer = new ClassNode();
+        try (InputStream bytes = ItemGeometryTransformerTest.class
+                .getResourceAsStream("/" + className.replace('.', '/') + ".class")) {
+            byte[] transformed = new CameraEffectsTransformer().transform(className, className,
+                    ByteStreams.toByteArray(bytes));
+            new ClassReader(transformed).accept(renderer, 0);
+        }
+        List<String> calls = new ArrayList<>();
+        for (MethodNode method : renderer.methods) {
+            for (AbstractInsnNode instruction : method.instructions.toArray()) {
+                if (!(instruction instanceof MethodInsnNode)) continue;
+                MethodInsnNode call = (MethodInsnNode) instruction;
+                if (call.owner.equals("ivorius/psychedelicraft/client/render/CameraEffects")
+                        || method.name.equals("renderItemInFirstPerson") && method.desc.equals("(F)V")
+                        && (call.name.equals("rotateArm") || call.name.equals("renderSpecificFirstPersonHand")
+                        || call.name.equals("renderItemInFirstPerson") || call.name.equals("disableRescaleNormal"))) {
+                    calls.add(call.name);
+                }
+            }
+        }
+        assertEquals(Arrays.asList("rotateArm", "beginHands", "renderSpecificFirstPersonHand", "renderItemInFirstPerson",
+                "renderSpecificFirstPersonHand", "renderItemInFirstPerson", "endHands", "disableRescaleNormal"), calls);
     }
 
     private static int countHooks(String className, String hook) throws Exception {

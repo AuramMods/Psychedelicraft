@@ -123,7 +123,8 @@ public final class CameraEffects {
         player.turn(x, y);
     }
 
-    public static void shiftHand(float partial) {
+    public static void beginHands(float partial) {
+        GlStateManager.pushMatrix();
         EntityPlayerSP player = Minecraft.getMinecraft().player;
         DrugProperties drugs = player == null ? null : DrugCapability.get(player);
         if (drugs == null) return;
@@ -132,6 +133,10 @@ public final class CameraEffects {
         if (hand <= 0F && view <= 0F) return;
         float tick = player.ticksExisted + partial;
         GlStateManager.translate(noise(tick) * 0.015F * hand, verticalTremble(tick, view) * 0.3F, 0F);
+    }
+
+    public static void endHands() {
+        GlStateManager.popMatrix();
     }
 
     public static void posePlayer(ModelBase base, EntityLivingBase entity, float partial) {

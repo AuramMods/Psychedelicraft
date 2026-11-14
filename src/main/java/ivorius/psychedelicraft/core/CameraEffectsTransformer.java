@@ -81,22 +81,26 @@ public final class CameraEffectsTransformer implements IClassTransformer {
     }
 
     private static void patchHands(ClassNode type) {
-        String descriptor = "(Lnet/minecraft/client/entity/AbstractClientPlayer;FFLnet/minecraft/util/EnumHand;F"
-                + "Lnet/minecraft/item/ItemStack;F)V";
-        MethodNode hand = method(type, "renderItemInFirstPerson", "func_187457_a", descriptor);
-        for (AbstractInsnNode instruction : hand.instructions.toArray()) {
+        MethodNode hands = method(type, "renderItemInFirstPerson", "func_78440_a", "(F)V");
+        boolean began = false;
+        boolean ended = false;
+        for (AbstractInsnNode instruction : hands.instructions.toArray()) {
             if (!(instruction instanceof MethodInsnNode)) continue;
             MethodInsnNode call = (MethodInsnNode) instruction;
-            if ("net/minecraft/client/renderer/GlStateManager".equals(FMLDeobfuscatingRemapper.INSTANCE.map(call.owner))
-                    && matches(call, "pushMatrix", "func_179094_E", "()V")) {
-                InsnList shift = new InsnList();
-                shift.add(new VarInsnNode(Opcodes.FLOAD, 2));
-                shift.add(hook("shiftHand", "(F)V"));
-                hand.instructions.insert(call, shift);
-                return;
+            if (!"net/minecraft/client/renderer/GlStateManager".equals(FMLDeobfuscatingRemapper.INSTANCE.map(call.owner))) continue;
+            if (matches(call, "enableRescaleNormal", "func_179091_B", "()V")) {
+                // Arm rotation is ready here, and Forge has yet to dispatch either hand.
+                InsnList begin = new InsnList();
+                begin.add(new VarInsnNode(Opcodes.FLOAD, 1));
+                begin.add(hook("beginHands", "(F)V"));
+                hands.instructions.insert(call, begin);
+                began = true;
+            } else if (matches(call, "disableRescaleNormal", "func_179101_C", "()V")) {
+                hands.instructions.insertBefore(call, hook("endHands", "()V"));
+                ended = true;
             }
         }
-        throw new IllegalStateException("Could not locate Forge 1.12 first-person hand matrix");
+        if (!began || !ended) throw new IllegalStateException("Could not locate Forge 1.12 first-person hand pass");
     }
 
     private static void patchPose(ClassNode type) {
