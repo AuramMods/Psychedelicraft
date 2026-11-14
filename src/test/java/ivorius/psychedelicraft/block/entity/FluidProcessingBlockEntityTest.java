@@ -47,6 +47,7 @@ public class FluidProcessingBlockEntityTest {
             assertEquals(3, DistilleryBlockEntity.heatRate(lit.withProperty(CampfireBlock.LIT, false)));
         }
         assertEquals(3, DistilleryBlockEntity.heatRate(Blocks.FIRE.getDefaultState()));
+        assertEquals(3, DistilleryBlockEntity.heatRate(PSBlocks.SOUL_FIRE.getDefaultState()));
         assertEquals(7, DistilleryBlockEntity.heatRate(Blocks.LAVA.getDefaultState()));
         assertEquals(2, DistilleryBlockEntity.heatRate(Blocks.MAGMA.getDefaultState()));
         assertEquals(1, DistilleryBlockEntity.heatRate(Blocks.SOUL_SAND.getDefaultState()));

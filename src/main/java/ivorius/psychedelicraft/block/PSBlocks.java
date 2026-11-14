@@ -123,6 +123,7 @@ public final class PSBlocks {
     public static final CampfireBlock CAMPFIRE = named("campfire", new CampfireBlock(false));
     public static final CampfireBlock SOUL_CAMPFIRE = named("soul_campfire", new CampfireBlock(true));
     public static final Block SOUL_SOIL = named("soul_soil", new SoulSoilBlock());
+    public static final Block SOUL_FIRE = named("soul_fire", new SoulFireBlock());
     public static final KelpBlock KELP = named("kelp", new KelpBlock(false));
     public static final KelpBlock KELP_STALK = named("kelp_stalk", new KelpBlock(true));
     public static final Block DRIED_KELP_BLOCK = named("dried_kelp_block", new DriedKelpBlock());
@@ -151,7 +152,7 @@ public final class PSBlocks {
                 JUNIPER_STAIRS, JUNIPER_SLAB, JUNIPER_DOUBLE_SLAB, JUNIPER_FENCE, JUNIPER_FENCE_GATE,
                 JUNIPER_DOOR, JUNIPER_TRAPDOOR, POWERED_JUNIPER_TRAPDOOR, JUNIPER_BUTTON, JUNIPER_PRESSURE_PLATE,
                 JUNIPER_SIGN, JUNIPER_WALL_SIGN, JUNIPER_HANGING_SIGN, JUNIPER_WALL_HANGING_SIGN, BEE_NEST, BUBBLE_COLUMN,
-                CAMPFIRE, SOUL_CAMPFIRE, SOUL_SOIL, KELP, KELP_STALK, DRIED_KELP_BLOCK);
+                CAMPFIRE, SOUL_CAMPFIRE, SOUL_SOIL, SOUL_FIRE, KELP, KELP_STALK, DRIED_KELP_BLOCK);
         for (PottedPlantBlock pot : POTTED_PLANTS) {
             event.getRegistry().register(pot);
         }

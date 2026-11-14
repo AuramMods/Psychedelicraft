@@ -252,6 +252,7 @@ tile.psychedelicraft.copper_ore.name=Ruda miedzi
 tile.psychedelicraft.bee_nest.name=Gniazdo pszczół
 tile.psychedelicraft.campfire.name=Ognisko
 tile.psychedelicraft.soul_campfire.name=Ognisko dusz
+tile.psychedelicraft.soul_fire.name=Ogień dusz
 tile.psychedelicraft.soul_soil.name=Ziemia dusz
 tile.psychedelicraft.kelp.name=Wodorosty
 item.psychedelicraft.dried_kelp.name=Suszone wodorosty

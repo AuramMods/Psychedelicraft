@@ -7,6 +7,7 @@ package ivorius.psychedelicraft.block.entity;
 import ivorius.psychedelicraft.block.CampfireBlock;
 import ivorius.psychedelicraft.block.DistilleryBlock;
 import ivorius.psychedelicraft.block.MashTubBlock;
+import ivorius.psychedelicraft.block.SoulFireBlock;
 import ivorius.psychedelicraft.fluid.BrewFluid;
 import ivorius.psychedelicraft.fluid.BrewProcess;
 import ivorius.psychedelicraft.fluid.PSFluids;
@@ -110,7 +111,7 @@ public final class DistilleryBlockEntity extends FluidProcessingBlockEntity {
         Block block = below.getBlock();
         if (below.getMaterial() == Material.LAVA) return 7;
         // The donor's campfire tag includes unlit and waterlogged states.
-        if (block == Blocks.FIRE || block instanceof CampfireBlock) return 3;
+        if (SoulFireBlock.isOpenFire(block) || block instanceof CampfireBlock) return 3;
         if (block == Blocks.MAGMA) return 2;
         return 1;
     }

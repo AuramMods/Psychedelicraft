@@ -1,0 +1,6 @@
+{
+  "parent": "psychedelicraft:block/soul_fire_template_side_alt",
+  "textures": {
+    "fire": "psychedelicraft:blocks/soul_fire_0"
+  }
+}
