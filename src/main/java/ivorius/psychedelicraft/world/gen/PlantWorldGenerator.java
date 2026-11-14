@@ -29,8 +29,11 @@ import net.minecraft.world.World;
 import net.minecraft.world.biome.Biome;
 import net.minecraft.world.chunk.Chunk;
 import net.minecraftforge.event.terraingen.DecorateBiomeEvent;
+import net.minecraftforge.fluids.IFluidBlock;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
+
+import javax.annotation.Nullable;
 
 @Mod.EventBusSubscriber(modid = Psychedelicraft.MOD_ID)
 public final class PlantWorldGenerator {
@@ -82,7 +85,8 @@ public final class PlantWorldGenerator {
             for (int attempt = 0; attempt < attempts; attempt++) {
                 BlockPos column = chunk.getBlock(8 + random.nextInt(16), 0, 8 + random.nextInt(16));
                 if (PlantBiomes.allows(OPTIONS.juniper, PlantBiomes::juniper, world.getBiome(column))) {
-                    JuniperTree.generate(world, random, motionBlockingSurface(world, column));
+                    BlockPos surface = juniperSurface(world, column);
+                    if (surface != null) JuniperTree.generate(world, random, surface);
                 }
             }
         }
@@ -101,16 +105,36 @@ public final class PlantWorldGenerator {
 
     static BlockPos motionBlockingSurface(World world, BlockPos column) {
         Chunk chunk = world.getChunkFromBlockCoords(column);
-        int top = Math.min(world.getActualHeight() - 1, chunk.getTopFilledSegment() + 15);
-        BlockPos.MutableBlockPos probe = new BlockPos.MutableBlockPos(column.getX(), top, column.getZ());
+        BlockPos.MutableBlockPos probe = topOfColumn(world, chunk, column);
         while (probe.getY() >= 0) {
-            Material material = chunk.getBlockState(probe).getMaterial();
-            if (material.blocksMovement() || material.isLiquid()) {
+            IBlockState state = chunk.getBlockState(probe);
+            if (state.getMaterial().blocksMovement() || state.getMaterial().isLiquid()
+                    || state.getBlock() instanceof IFluidBlock || Waterlogging.isWet(world, probe, state)) {
                 return probe.up();
             }
             probe.move(EnumFacing.DOWN);
         }
-        return column;
+        return new BlockPos(column.getX(), 0, column.getZ());
+    }
+
+    @Nullable
+    static BlockPos juniperSurface(World world, BlockPos column) {
+        Chunk chunk = world.getChunkFromBlockCoords(column);
+        BlockPos.MutableBlockPos probe = topOfColumn(world, chunk, column);
+        while (probe.getY() >= 0) {
+            IBlockState state = chunk.getBlockState(probe);
+            if (state.getMaterial() != Material.AIR) {
+                // Zero surface depth requires the first non-air block to also be the ocean floor.
+                return state.getMaterial().blocksMovement() ? probe.up() : null;
+            }
+            probe.move(EnumFacing.DOWN);
+        }
+        return null;
+    }
+
+    private static BlockPos.MutableBlockPos topOfColumn(World world, Chunk chunk, BlockPos column) {
+        int top = Math.min(world.getActualHeight() - 1, chunk.getTopFilledSegment() + 15);
+        return new BlockPos.MutableBlockPos(column.getX(), top, column.getZ());
     }
 
     static void placeLowPatch(World world, BlockPos surface, Random random, Block plant, int maxAge) {
