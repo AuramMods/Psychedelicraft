@@ -73,8 +73,10 @@ final class PlantBiomes {
         return biome == Biomes.ROOFED_FOREST || biome == Biomes.MUTATED_ROOFED_FOREST;
     }
 
-    static boolean jungle(Biome biome) {
-        return BiomeDictionary.hasType(biome, BiomeDictionary.Type.JUNGLE);
+    static boolean jimsonweed(Biome biome) {
+        // Modern Jungle and Sparse Jungle include these legacy variants after biome renaming.
+        return biome == Biomes.JUNGLE || biome == Biomes.JUNGLE_HILLS || biome == Biomes.MUTATED_JUNGLE
+                || biome == Biomes.JUNGLE_EDGE || biome == Biomes.MUTATED_JUNGLE_EDGE;
     }
 
     static boolean tomato(Biome biome) {
@@ -92,6 +94,10 @@ final class PlantBiomes {
     static boolean juniper(Biome biome) {
         // The later donor branches allow juniper in forest and hill biomes with precipitation.
         return hills(biome) || forest(biome);
+    }
+
+    private static boolean jungle(Biome biome) {
+        return BiomeDictionary.hasType(biome, BiomeDictionary.Type.JUNGLE);
     }
 
     private static boolean forest(Biome biome) {

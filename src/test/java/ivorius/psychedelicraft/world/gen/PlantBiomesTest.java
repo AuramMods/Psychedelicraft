@@ -23,13 +23,26 @@ public class PlantBiomesTest {
         assertFalse(PlantBiomes.tallCrops(Biomes.DESERT_HILLS));
         assertTrue(PlantBiomes.morningGlory(Biomes.MUTATED_FOREST));
         assertTrue(PlantBiomes.morningGlory(Biomes.MUTATED_PLAINS));
-        assertTrue(PlantBiomes.belladonna(Biomes.ROOFED_FOREST));
-        assertTrue(PlantBiomes.jungle(Biomes.JUNGLE_EDGE));
-        assertTrue(PlantBiomes.tomato(Biomes.FOREST_HILLS));
-        assertFalse(PlantBiomes.tomato(Biomes.MUTATED_FOREST));
         assertTrue(PlantBiomes.peyote(Biomes.SAVANNA));
         assertTrue(PlantBiomes.agave(Biomes.MESA));
         assertFalse(PlantBiomes.agave(Biomes.ICE_PLAINS));
+    }
+
+    @Test
+    public void namedCropDefaultsIncludeTheLegacyBiomesMergedIntoTheirModernNames() {
+        assertTrue(PlantBiomes.belladonna(Biomes.ROOFED_FOREST));
+        assertTrue(PlantBiomes.belladonna(Biomes.MUTATED_ROOFED_FOREST));
+        assertFalse(PlantBiomes.belladonna(Biomes.MUTATED_FOREST));
+        assertTrue(PlantBiomes.jimsonweed(Biomes.JUNGLE));
+        assertTrue(PlantBiomes.jimsonweed(Biomes.JUNGLE_HILLS));
+        assertTrue(PlantBiomes.jimsonweed(Biomes.MUTATED_JUNGLE));
+        assertTrue(PlantBiomes.jimsonweed(Biomes.JUNGLE_EDGE));
+        assertTrue(PlantBiomes.jimsonweed(Biomes.MUTATED_JUNGLE_EDGE));
+        assertFalse(PlantBiomes.jimsonweed(Biomes.PLAINS));
+        assertTrue(PlantBiomes.tomato(Biomes.FOREST));
+        assertTrue(PlantBiomes.tomato(Biomes.FOREST_HILLS));
+        assertFalse(PlantBiomes.tomato(Biomes.MUTATED_FOREST));
+        assertFalse(PlantBiomes.tomato(Biomes.BIRCH_FOREST));
     }
 
     @Test
