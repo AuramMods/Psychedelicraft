@@ -24,6 +24,7 @@ import ivorius.psychedelicraft.world.gen.ChestLoot;
 import ivorius.psychedelicraft.world.gen.CopperOreGenerator;
 import ivorius.psychedelicraft.world.gen.SmallFlowerWorldGenerator;
 import ivorius.psychedelicraft.world.gen.VillageGarden;
+import ivorius.psychedelicraft.world.gen.WarmOceanRuin;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.fml.common.Mod;
@@ -48,6 +49,7 @@ public class Psychedelicraft {
         Channel.register();
         ChestLoot.register();
         VillageGarden.register();
+        WarmOceanRuin.register();
         NetworkRegistry.INSTANCE.registerGuiHandler(this, new PSGuiHandler());
     }
 

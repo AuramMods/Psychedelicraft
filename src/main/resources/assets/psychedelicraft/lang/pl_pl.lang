@@ -560,3 +560,7 @@ tile.psychedelicraft.suspicious_sand.name=Podejrzany piasek
 subtitle.psychedelicraft.item.brush.brushing.generic=Zmiatanie
 subtitle.psychedelicraft.item.brush.brushing.sand=Zmiatanie piasku
 subtitle.psychedelicraft.item.brush.brushing.sand.complete=Zmiatanie piasku ukończone
+item.psychedelicraft.sniffer_egg.name=Jajo niuchacza
+item.psychedelicraft.angler_pottery_sherd.name=Odłamek ceramiki „Rybak”
+item.psychedelicraft.shelter_pottery_sherd.name=Odłamek ceramiki „Ostoja”
+item.psychedelicraft.snort_pottery_sherd.name=Odłamek ceramiki „Niuch”
