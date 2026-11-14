@@ -551,3 +551,7 @@ psychedelicraft.jei.process.mature=Mature for %s s
 psychedelicraft.jei.process.harden=Harden for %s s
 psychedelicraft.jei.process.cool=Cool for %s s
 psychedelicraft.jei.process.distill=Distill with a connected outlet (%s s without heat)
+subtitle.psychedelicraft.mooshroom_convert=Mooshroom transforms
+subtitle.psychedelicraft.mooshroom_eat=Mooshroom eats
+subtitle.psychedelicraft.mooshroom_milk=Mooshroom gets milked
+subtitle.psychedelicraft.mooshroom_suspicious_milk=Mooshroom gets milked suspiciously

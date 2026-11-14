@@ -51,7 +51,7 @@ public enum StewFlower {
         return SuspiciousStewItem.withEffect(createEffect());
     }
 
-    PotionEffect createEffect() {
+    public PotionEffect createEffect() {
         return new PotionEffect(potion, duration);
     }
 

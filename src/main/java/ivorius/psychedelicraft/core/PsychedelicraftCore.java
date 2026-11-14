@@ -43,6 +43,7 @@ public final class PsychedelicraftCore implements IFMLLoadingPlugin {
                 "ivorius.psychedelicraft.core.WeightedPressurePlateTransformer",
                 "ivorius.psychedelicraft.core.ProjectileGatewayTransformer",
                 "ivorius.psychedelicraft.core.CampfireProjectileTransformer",
+                "ivorius.psychedelicraft.core.MooshroomVariantsTransformer",
                 "ivorius.psychedelicraft.core.SoulFireTransformer",
                 "ivorius.psychedelicraft.core.NetherSurfaceTransformer");
         if (client) transformers.add("ivorius.psychedelicraft.core.IntegratedShutdownTransformer");

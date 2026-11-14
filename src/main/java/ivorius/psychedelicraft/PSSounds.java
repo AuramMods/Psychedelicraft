@@ -39,6 +39,10 @@ public final class PSSounds {
     public static final SoundEvent BERRY_BUSH_BREAK = sound("block.sweet_berry_bush.break");
     public static final SoundEvent BERRY_BUSH_PLACE = sound("block.sweet_berry_bush.place");
     public static final SoundEvent BERRY_BUSH_PICK = sound("block.sweet_berry_bush.pick_berries");
+    public static final SoundEvent MOOSHROOM_CONVERT = sound("entity.mooshroom.convert");
+    public static final SoundEvent MOOSHROOM_EAT = sound("entity.mooshroom.eat");
+    public static final SoundEvent MOOSHROOM_MILK = sound("entity.mooshroom.milk");
+    public static final SoundEvent MOOSHROOM_SUSPICIOUS_MILK = sound("entity.mooshroom.suspicious_milk");
     public static final SoundEvent DRUG_GENERIC = sound("drug.generic");
 
     private PSSounds() {
@@ -56,6 +60,7 @@ public final class PSSounds {
                 SIGN_DYE, SIGN_INK, SIGN_GLOW_INK, SIGN_WAX, WAXED_SIGN_INTERACT_FAIL, AXE_STRIP, BEE_NEST_DRIP,
                 BEE_NEST_ENTER, BEE_NEST_EXIT, BEE_NEST_WORK, BEE_NEST_SHEAR,
                 BEE_LOOP, BEE_LOOP_ANGRY, BEE_POLLINATE, BEE_STING, BEE_HURT, BEE_DEATH,
-                HONEY_DRINK, CROP_PLANT, DRUG_GENERIC, BERRY_BUSH_BREAK, BERRY_BUSH_PLACE, BERRY_BUSH_PICK);
+                HONEY_DRINK, CROP_PLANT, DRUG_GENERIC, BERRY_BUSH_BREAK, BERRY_BUSH_PLACE, BERRY_BUSH_PICK,
+                MOOSHROOM_CONVERT, MOOSHROOM_EAT, MOOSHROOM_MILK, MOOSHROOM_SUSPICIOUS_MILK);
     }
 }

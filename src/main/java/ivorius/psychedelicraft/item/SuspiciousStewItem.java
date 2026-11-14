@@ -36,7 +36,7 @@ public final class SuspiciousStewItem extends ItemFood {
         return withEffect(new PotionEffect(potion, duration));
     }
 
-    static ItemStack withEffect(PotionEffect effect) {
+    public static ItemStack withEffect(PotionEffect effect) {
         return PotionUtils.appendEffects(new ItemStack(PSItems.SUSPICIOUS_STEW), Collections.singletonList(effect));
     }
 

@@ -254,5 +254,123 @@
         "stream": true
       }
     ]
+  },
+  "entity.mooshroom.convert": {
+    "subtitle": "subtitle.psychedelicraft.mooshroom_convert",
+    "sounds": [
+      {
+        "name": "psychedelicraft:mooshroom/convert1",
+        "volume": 0.75
+      },
+      {
+        "name": "psychedelicraft:mooshroom/convert2",
+        "volume": 0.75
+      }
+    ]
+  },
+  "entity.mooshroom.eat": {
+    "subtitle": "subtitle.psychedelicraft.mooshroom_eat",
+    "sounds": [
+      "psychedelicraft:mooshroom/eat1",
+      {
+        "name": "psychedelicraft:mooshroom/eat1",
+        "pitch": 0.95
+      },
+      {
+        "name": "psychedelicraft:mooshroom/eat1",
+        "pitch": 1.05
+      },
+      "psychedelicraft:mooshroom/eat2",
+      {
+        "name": "psychedelicraft:mooshroom/eat2",
+        "pitch": 0.95
+      },
+      {
+        "name": "psychedelicraft:mooshroom/eat2",
+        "pitch": 1.05
+      },
+      "psychedelicraft:mooshroom/eat3",
+      {
+        "name": "psychedelicraft:mooshroom/eat3",
+        "pitch": 0.95
+      },
+      {
+        "name": "psychedelicraft:mooshroom/eat3",
+        "pitch": 1.05
+      },
+      "psychedelicraft:mooshroom/eat4",
+      {
+        "name": "psychedelicraft:mooshroom/eat4",
+        "pitch": 0.95
+      },
+      {
+        "name": "psychedelicraft:mooshroom/eat4",
+        "pitch": 1.05
+      }
+    ]
+  },
+  "entity.mooshroom.milk": {
+    "subtitle": "subtitle.psychedelicraft.mooshroom_milk",
+    "sounds": [
+      "psychedelicraft:mooshroom/milk1",
+      {
+        "name": "psychedelicraft:mooshroom/milk1",
+        "pitch": 0.9
+      },
+      {
+        "name": "psychedelicraft:mooshroom/milk1",
+        "pitch": 1.1
+      },
+      "psychedelicraft:mooshroom/milk2",
+      {
+        "name": "psychedelicraft:mooshroom/milk2",
+        "pitch": 0.9
+      },
+      {
+        "name": "psychedelicraft:mooshroom/milk2",
+        "pitch": 1.1
+      },
+      "psychedelicraft:mooshroom/milk3",
+      {
+        "name": "psychedelicraft:mooshroom/milk3",
+        "pitch": 0.9
+      },
+      {
+        "name": "psychedelicraft:mooshroom/milk3",
+        "pitch": 1.1
+      }
+    ]
+  },
+  "entity.mooshroom.suspicious_milk": {
+    "subtitle": "subtitle.psychedelicraft.mooshroom_suspicious_milk",
+    "sounds": [
+      "psychedelicraft:mooshroom/milk1",
+      {
+        "name": "psychedelicraft:mooshroom/milk1",
+        "pitch": 0.9
+      },
+      {
+        "name": "psychedelicraft:mooshroom/milk1",
+        "pitch": 1.1
+      },
+      "psychedelicraft:mooshroom/milk2",
+      {
+        "name": "psychedelicraft:mooshroom/milk2",
+        "pitch": 0.9
+      },
+      {
+        "name": "psychedelicraft:mooshroom/milk2",
+        "pitch": 1.1
+      },
+      "psychedelicraft:mooshroom/milk3",
+      {
+        "name": "psychedelicraft:mooshroom/milk3",
+        "pitch": 0.9
+      },
+      {
+        "name": "psychedelicraft:mooshroom/milk3",
+        "pitch": 1.1
+      }
+    ]
   }
 }
