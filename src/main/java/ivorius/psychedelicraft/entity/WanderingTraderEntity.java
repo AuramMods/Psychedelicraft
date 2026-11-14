@@ -26,6 +26,9 @@ import net.minecraft.util.DamageSource;
 import net.minecraft.util.EnumHand;
 import net.minecraft.util.SoundEvent;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.Vec3d;
+import net.minecraft.util.text.ITextComponent;
+import net.minecraft.util.text.TextComponentTranslation;
 import net.minecraft.village.MerchantRecipe;
 import net.minecraft.village.MerchantRecipeList;
 import net.minecraft.world.World;
@@ -37,6 +40,7 @@ public final class WanderingTraderEntity extends EntityCreature implements INpc,
     private MerchantRecipeList offers;
     private EntityPlayer customer;
     private int despawnDelay;
+    private BlockPos visitTarget;
 
     public WanderingTraderEntity(World world) {
         super(world);
@@ -52,6 +56,7 @@ public final class WanderingTraderEntity extends EntityCreature implements INpc,
         tasks.addTask(1, new EntityAIAvoidEntity<>(this, EntityVindicator.class, 8F, 0.5D, 0.5D));
         tasks.addTask(1, new EntityAIAvoidEntity<>(this, EntityVex.class, 8F, 0.5D, 0.5D));
         tasks.addTask(1, new EntityAIPanic(this, 0.5D));
+        tasks.addTask(2, new ApproachVisitTarget());
         tasks.addTask(4, new EntityAIMoveTowardsRestriction(this, 0.35D));
         tasks.addTask(8, new EntityAIWanderAvoidWater(this, 0.35D));
         tasks.addTask(9, new EntityAIWatchClosest(this, EntityPlayer.class, 8F));
@@ -85,6 +90,15 @@ public final class WanderingTraderEntity extends EntityCreature implements INpc,
 
     public void setDespawnDelay(int ticks) {
         despawnDelay = ticks;
+    }
+
+    int getDespawnDelay() {
+        return despawnDelay;
+    }
+
+    void setVisitTarget(BlockPos target) {
+        visitTarget = target;
+        setHomePosAndDistance(target, 16);
     }
 
     @Override
@@ -144,6 +158,13 @@ public final class WanderingTraderEntity extends EntityCreature implements INpc,
     }
 
     @Override
+    public ITextComponent getDisplayName() {
+        ITextComponent display = super.getDisplayName();
+        return hasCustomName() ? display
+                : new TextComponentTranslation("entity.psychedelicraft.wandering_trader.name").setStyle(display.getStyle());
+    }
+
+    @Override
     protected SoundEvent getAmbientSound() {
         return customer == null ? SoundEvents.ENTITY_VILLAGER_AMBIENT : SoundEvents.ENTITY_VILLAGER_TRADING;
     }
@@ -163,6 +184,8 @@ public final class WanderingTraderEntity extends EntityCreature implements INpc,
         super.writeEntityToNBT(tag);
         if (offers != null) tag.setTag("Offers", offers.getRecipiesAsTags());
         tag.setInteger("DespawnDelay", despawnDelay);
+        if (visitTarget != null) tag.setLong("VisitTarget", visitTarget.toLong());
+        if (hasHome()) tag.setLong("VisitCenter", getHomePosition().toLong());
     }
 
     @Override
@@ -170,6 +193,35 @@ public final class WanderingTraderEntity extends EntityCreature implements INpc,
         super.readEntityFromNBT(tag);
         offers = tag.hasKey("Offers", 10) ? new MerchantRecipeList(tag.getCompoundTag("Offers")) : null;
         despawnDelay = tag.getInteger("DespawnDelay");
+        visitTarget = tag.hasKey("VisitTarget", 4) ? BlockPos.fromLong(tag.getLong("VisitTarget")) : null;
+        if (tag.hasKey("VisitCenter", 4)) setHomePosAndDistance(BlockPos.fromLong(tag.getLong("VisitCenter")), 16);
+    }
+
+    private final class ApproachVisitTarget extends EntityAIBase {
+        private ApproachVisitTarget() {
+            setMutexBits(1);
+        }
+
+        @Override
+        public boolean shouldExecute() {
+            return visitTarget != null && getDistanceSqToCenter(visitTarget) > 4D;
+        }
+
+        @Override
+        public void updateTask() {
+            if (!getNavigator().noPath()) return;
+            Vec3d position = getPositionVector();
+            Vec3d target = new Vec3d(visitTarget);
+            Vec3d offset = target.subtract(position);
+            if (offset.lengthSquared() > 100D) target = position.add(offset.normalize().scale(10D));
+            getNavigator().tryMoveToXYZ(target.x, target.y, target.z, 0.35D);
+        }
+
+        @Override
+        public void resetTask() {
+            visitTarget = null;
+            getNavigator().clearPath();
+        }
     }
 
     private final class TradeWithCustomer extends EntityAIBase {
