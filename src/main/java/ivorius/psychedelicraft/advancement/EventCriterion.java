@@ -16,17 +16,25 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.BiPredicate;
 import java.util.function.Function;
 import java.util.function.Predicate;
 
 final class EventCriterion<T> implements ICriterionTrigger<EventCriterion.Condition<T>> {
     private final ResourceLocation id;
-    private final Function<JsonObject, Predicate<T>> parse;
+    private final Function<JsonObject, BiPredicate<EntityPlayerMP, T>> parse;
     private final Map<PlayerAdvancements, Set<Listener<Condition<T>>>> listeners = new HashMap<>();
 
-    EventCriterion(ResourceLocation id, Function<JsonObject, Predicate<T>> parse) {
+    EventCriterion(ResourceLocation id, Function<JsonObject, BiPredicate<EntityPlayerMP, T>> parse) {
         this.id = id;
         this.parse = parse;
+    }
+
+    static <T> EventCriterion<T> withoutPlayer(ResourceLocation id, Function<JsonObject, Predicate<T>> parse) {
+        return new EventCriterion<>(id, json -> {
+            Predicate<T> condition = parse.apply(json);
+            return (player, value) -> condition.test(value);
+        });
     }
 
     @Override
@@ -64,7 +72,7 @@ final class EventCriterion<T> implements ICriterionTrigger<EventCriterion.Condit
         List<Listener<Condition<T>>> matching = null;
         for (Listener<Condition<T>> listener : registered) {
             Condition<T> condition = listener.getCriterionInstance();
-            if (condition.player.test(serverPlayer, serverPlayer) && condition.matches.test(value)) {
+            if (condition.player.test(serverPlayer, serverPlayer) && condition.matches.test(serverPlayer, value)) {
                 if (matching == null) matching = new ArrayList<>();
                 matching.add(listener);
             }
@@ -75,9 +83,9 @@ final class EventCriterion<T> implements ICriterionTrigger<EventCriterion.Condit
 
     static final class Condition<T> extends AbstractCriterionInstance {
         private final EntityPredicate player;
-        private final Predicate<T> matches;
+        private final BiPredicate<EntityPlayerMP, T> matches;
 
-        private Condition(ResourceLocation id, EntityPredicate player, Predicate<T> matches) {
+        private Condition(ResourceLocation id, EntityPredicate player, BiPredicate<EntityPlayerMP, T> matches) {
             super(id);
             this.player = player;
             this.matches = matches;

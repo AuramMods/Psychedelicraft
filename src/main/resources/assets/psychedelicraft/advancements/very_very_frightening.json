@@ -1,0 +1,14 @@
+{
+  "parent": "psychedelicraft:throw_trident",
+  "display": {
+    "icon": { "item": "psychedelicraft:trident" },
+    "title": { "translate": "advancements.psychedelicraft.very_very_frightening.title" },
+    "description": { "translate": "advancements.psychedelicraft.very_very_frightening.description" }
+  },
+  "criteria": {
+    "struck_villager": {
+      "trigger": "psychedelicraft:channeled_lightning",
+      "conditions": { "victims": [{ "type": "minecraft:villager" }] }
+    }
+  }
+}

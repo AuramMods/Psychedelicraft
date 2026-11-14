@@ -10,6 +10,7 @@ import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.effect.EntityLightningBolt;
 import net.minecraft.entity.monster.EntityEnderman;
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.entity.projectile.EntityArrow;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
@@ -163,7 +164,10 @@ public final class ThrownTridentEntity extends EntityArrow implements IEntityAdd
         BlockPos strike = target.getPosition();
         if (world.isThundering() && world.canSeeSky(strike)
                 && EnchantmentHelper.getEnchantmentLevel(TridentEnchantments.CHANNELING, trident) > 0) {
-            world.addWeatherEffect(new EntityLightningBolt(world, strike.getX() + 0.5, strike.getY(), strike.getZ() + 0.5, false));
+            EntityLightningBolt bolt = shootingEntity instanceof EntityPlayerMP
+                    ? new ChanneledLightningBolt(world, strike, (EntityPlayerMP) shootingEntity)
+                    : new EntityLightningBolt(world, strike.getX() + 0.5, strike.getY(), strike.getZ() + 0.5, false);
+            world.addWeatherEffect(bolt);
             playSound(PSSounds.TRIDENT_THUNDER, 5, 1);
         } else {
             playSound(PSSounds.TRIDENT_HIT, 1, 1);

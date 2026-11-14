@@ -45,6 +45,7 @@ public final class PsychedelicraftCore implements IFMLLoadingPlugin {
                 "ivorius.psychedelicraft.core.ProjectileGatewayTransformer",
                 "ivorius.psychedelicraft.core.CampfireProjectileTransformer",
                 "ivorius.psychedelicraft.core.TridentTransformer",
+                "ivorius.psychedelicraft.core.ChanneledLightningTransformer",
                 "ivorius.psychedelicraft.core.MooshroomVariantsTransformer",
                 "ivorius.psychedelicraft.core.ZombieConversionTransformer",
                 "ivorius.psychedelicraft.core.TreasureMapTransformer",

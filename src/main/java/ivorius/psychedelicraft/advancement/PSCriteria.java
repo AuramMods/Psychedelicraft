@@ -10,8 +10,11 @@ import ivorius.psychedelicraft.fluid.BrewFluid;
 import ivorius.psychedelicraft.fluid.FluidVesselHandler;
 import ivorius.psychedelicraft.fluid.PSFluids;
 import net.minecraft.advancements.CriteriaTriggers;
+import net.minecraft.advancements.critereon.EntityPredicate;
 import net.minecraft.advancements.critereon.MinMaxBounds;
+import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.JsonUtils;
 import net.minecraftforge.fluids.Fluid;
@@ -20,17 +23,21 @@ import net.minecraftforge.fluids.capability.IFluidHandlerItem;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.BiPredicate;
 import java.util.function.Predicate;
 
 public final class PSCriteria {
-    private static final EventCriterion<String> CUSTOM = new EventCriterion<>(Psychedelicraft.id("custom"),
+    private static final EventCriterion<String> CUSTOM = EventCriterion.withoutPlayer(Psychedelicraft.id("custom"),
             json -> JsonUtils.getString(json, "event")::equals);
-    private static final EventCriterion<DrugProperties> DRUG_EFFECTS_CHANGED = new EventCriterion<>(
+    private static final EventCriterion<DrugProperties> DRUG_EFFECTS_CHANGED = EventCriterion.withoutPlayer(
             Psychedelicraft.id("drug_effects_changed"), PSCriteria::drugEffects);
-    private static final EventCriterion<FluidStack> MASHED_ITEM = new EventCriterion<>(
+    private static final EventCriterion<FluidStack> MASHED_ITEM = EventCriterion.withoutPlayer(
             Psychedelicraft.id("mashed_item"), PSCriteria::mashedFluid);
-    private static final EventCriterion<FluidStack> DRANK_BREW = new EventCriterion<>(
+    private static final EventCriterion<FluidStack> DRANK_BREW = EventCriterion.withoutPlayer(
             Psychedelicraft.id("drank_brew"), PSCriteria::brew);
+
+    private static final EventCriterion<List<Entity>> CHANNELED_LIGHTNING = new EventCriterion<>(
+            Psychedelicraft.id("channeled_lightning"), PSCriteria::struckVictims);
 
     private PSCriteria() {
     }
@@ -40,6 +47,7 @@ public final class PSCriteria {
         CriteriaTriggers.register(DRUG_EFFECTS_CHANGED);
         CriteriaTriggers.register(MASHED_ITEM);
         CriteriaTriggers.register(DRANK_BREW);
+        CriteriaTriggers.register(CHANNELED_LIGHTNING);
     }
 
     public static void feedVillager(EntityPlayer player) {
@@ -65,6 +73,20 @@ public final class PSCriteria {
 
     public static void drankBrew(EntityPlayer player, FluidStack fluid) {
         if (fluid.getFluid() instanceof BrewFluid) DRANK_BREW.trigger(player, fluid);
+    }
+
+    public static void channeledLightning(EntityPlayerMP player, List<Entity> struck) {
+        CHANNELED_LIGHTNING.trigger(player, struck);
+    }
+
+    private static BiPredicate<EntityPlayerMP, List<Entity>> struckVictims(JsonObject json) {
+        List<EntityPredicate> victims = new ArrayList<>();
+        if (json.has("victims")) {
+            for (JsonElement element : JsonUtils.getJsonArray(json, "victims")) {
+                victims.add(EntityPredicate.deserialize(element));
+            }
+        }
+        return (player, struck) -> victims.stream().allMatch(victim -> struck.stream().anyMatch(entity -> victim.test(player, entity)));
     }
 
     private static Predicate<DrugProperties> drugEffects(JsonObject json) {
