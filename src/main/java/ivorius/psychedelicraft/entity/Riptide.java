@@ -55,13 +55,13 @@ public final class Riptide {
     public static float desiredHeight(EntityPlayer player, float width, float vanilla) {
         if (vanilla <= COMPACT_HEIGHT) return vanilla;
         if (isSpinning(player) || hasPredictedLaunch(player)) return COMPACT_HEIGHT;
-        if (player.height == COMPACT_HEIGHT) {
-            AxisAlignedBB bounds = player.getEntityBoundingBox();
-            if (!blockedAtHeight(player.world, bounds, width, vanilla)) return vanilla;
-            if (!blockedAtHeight(player.world, bounds, width, RECOVERY_CROUCH_HEIGHT)) return RECOVERY_CROUCH_HEIGHT;
-            return COMPACT_HEIGHT;
-        }
-        return vanilla;
+        if (player.isSpectator() || player.isRiding()) return vanilla;
+
+        // A newly loaded player starts standing, even if their saved position only fits a lower pose.
+        AxisAlignedBB bounds = player.getEntityBoundingBox();
+        if (!blockedAtHeight(player.world, bounds, width, vanilla)) return vanilla;
+        return blockedAtHeight(player.world, bounds, width, RECOVERY_CROUCH_HEIGHT)
+                ? COMPACT_HEIGHT : RECOVERY_CROUCH_HEIGHT;
     }
 
     private static boolean blockedAtHeight(World world, AxisAlignedBB bounds, float width, float height) {
