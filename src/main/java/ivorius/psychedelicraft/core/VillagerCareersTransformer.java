@@ -53,7 +53,8 @@ public final class VillagerCareersTransformer implements IClassTransformer {
             patchRandomSpawns(type);
             if (VILLAGER.equals(transformedName)) {
                 prependHandler(type, "useRecipe", "func_70933_a", "(Lnet/minecraft/village/MerchantRecipe;)V", "useRecipe");
-                prependHandler(type, "updateEquipmentIfNeeded", "func_175445_a", "(Lnet/minecraft/entity/item/EntityItem;)V", "collectDealerItem");
+                prependHandler(type, "updateEquipmentIfNeeded", "func_175445_a", "(Lnet/minecraft/entity/item/EntityItem;)V", "collectItem");
+                patchFarmlandInventory(type);
                 patchCustomer(type);
                 patchLightningConversion(type);
             }
@@ -66,6 +67,21 @@ public final class VillagerCareersTransformer implements IClassTransformer {
         ClassWriter writer = new ClassWriter(ClassWriter.COMPUTE_MAXS);
         type.accept(writer);
         return writer.toByteArray();
+    }
+
+    private static void patchFarmlandInventory(ClassNode type) {
+        MethodNode method = find(type, "isFarmItemInInventory", "func_175556_cs", "()Z");
+        LabelNode vanilla = new LabelNode();
+        InsnList instructions = new InsnList();
+        instructions.add(new VarInsnNode(Opcodes.ALOAD, 0));
+        instructions.add(new MethodInsnNode(Opcodes.INVOKESTATIC, CAREERS, "hasSnifferSeed",
+                "(L" + type.name + ";)Z", false));
+        instructions.add(new JumpInsnNode(Opcodes.IFEQ, vanilla));
+        instructions.add(new InsnNode(Opcodes.ICONST_1));
+        instructions.add(new InsnNode(Opcodes.IRETURN));
+        instructions.add(vanilla);
+        instructions.add(new FrameNode(Opcodes.F_SAME, 0, null, 0, null));
+        method.instructions.insert(instructions);
     }
 
     private static void patchLightningConversion(ClassNode type) {

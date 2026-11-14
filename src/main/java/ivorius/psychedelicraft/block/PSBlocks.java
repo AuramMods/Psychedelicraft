@@ -25,6 +25,7 @@ import ivorius.psychedelicraft.fluid.physical.FluidAttributesTile;
 import ivorius.psychedelicraft.fluid.physical.PhysicalFluidBlock;
 import ivorius.psychedelicraft.item.PSItems;
 import net.minecraft.block.Block;
+import net.minecraft.block.BlockBush;
 import net.minecraft.block.BlockButtonWood;
 import net.minecraft.block.BlockCrops;
 import net.minecraft.block.BlockDoor;
@@ -132,7 +133,7 @@ public final class PSBlocks {
     public static final SweetBerryBushBlock SWEET_BERRY_BUSH = named("sweet_berry_bush", new SweetBerryBushBlock());
     public static final Block TORCHFLOWER = named("torchflower", new SmallFlowerBlock());
     public static final BlockCrops TORCHFLOWER_CROP = named("torchflower_crop", new TorchflowerCropBlock());
-    public static final BlockCrops PITCHER_CROP = named("pitcher_crop", new PitcherCropBlock());
+    public static final BlockBush PITCHER_CROP = named("pitcher_crop", new PitcherCropBlock());
     public static final Block PITCHER_PLANT = named("pitcher_plant", new PitcherPlantBlock());
     public static final BubbleColumnBlock BUBBLE_COLUMN = named("bubble_column", new BubbleColumnBlock());
 

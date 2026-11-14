@@ -1,6 +1,7 @@
 package ivorius.psychedelicraft.block;
 
 import ivorius.psychedelicraft.item.PSItems;
+import net.minecraft.block.BlockBush;
 import net.minecraft.block.BlockCrops;
 import net.minecraft.block.properties.PropertyInteger;
 import net.minecraft.block.state.BlockStateContainer;
@@ -59,6 +60,10 @@ final class TorchflowerCropBlock extends BlockCrops {
     @Override
     public void updateTick(World world, BlockPos pos, IBlockState state, Random random) {
         if (random.nextInt(3) != 0) super.updateTick(world, pos, state, random);
+    }
+
+    static boolean rollFarmlandGrowth(BlockBush crop, World world, BlockPos pos, Random random) {
+        return random.nextInt((int) (25F / getGrowthChance(crop, world, pos)) + 1) == 0;
     }
 
     @Override

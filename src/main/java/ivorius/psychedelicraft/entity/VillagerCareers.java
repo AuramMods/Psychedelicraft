@@ -175,15 +175,11 @@ public final class VillagerCareers {
         }
     }
 
-    public static boolean collectDealerItem(EntityVillager villager, EntityItem entity) {
-        if (villager.getProfessionForge() != DEALER) return false;
+    public static boolean collectItem(EntityVillager villager, EntityItem entity) {
         ItemStack stack = entity.getItem();
         Item item = stack.getItem();
-        if (!(VillagerWork.isSeed(item) || item == PSItems.CANNABIS_BUDS || item == PSItems.CANNABIS_LEAF
-                || item == PSItems.TOBACCO_LEAVES || item == PSItems.COCA_LEAVES || item == PSItems.PEYOTE
-                || item == Items.DYE && stack.getMetadata() == EnumDyeColor.WHITE.getDyeDamage()
-                || item == Items.BREAD || item == Items.POTATO || item == Items.CARROT || item == Items.WHEAT
-                || item == Items.WHEAT_SEEDS || item == Items.BEETROOT || item == Items.BEETROOT_SEEDS)) return false;
+        if (!PSItems.isSnifferSeed(item)
+                && (villager.getProfessionForge() != DEALER || !isDealerPickup(stack))) return false;
         ItemStack remainder = storeDealerItem(villager.getVillagerInventory(), stack);
         int collected = stack.getCount() - remainder.getCount();
         if (collected == 0) return true;
@@ -195,6 +191,24 @@ public final class VillagerCareers {
             entity.setItem(remainder);
         }
         return true;
+    }
+
+    private static boolean isDealerPickup(ItemStack stack) {
+        Item item = stack.getItem();
+        return VillagerWork.isSeed(item) || item == PSItems.CANNABIS_BUDS || item == PSItems.CANNABIS_LEAF
+                || item == PSItems.TOBACCO_LEAVES || item == PSItems.COCA_LEAVES || item == PSItems.PEYOTE
+                || item == Items.DYE && stack.getMetadata() == EnumDyeColor.WHITE.getDyeDamage()
+                || item == Items.BREAD || item == Items.POTATO || item == Items.CARROT || item == Items.WHEAT
+                || item == Items.WHEAT_SEEDS || item == Items.BEETROOT || item == Items.BEETROOT_SEEDS;
+    }
+
+    public static boolean hasSnifferSeed(EntityVillager villager) {
+        IInventory inventory = villager.getVillagerInventory();
+        for (int slot = 0; slot < inventory.getSizeInventory(); slot++) {
+            ItemStack stack = inventory.getStackInSlot(slot);
+            if (!stack.isEmpty() && PSItems.isSnifferSeed(stack.getItem())) return true;
+        }
+        return false;
     }
 
     static ItemStack storeDealerItem(IInventory inventory, ItemStack stack) {

@@ -2,6 +2,7 @@ package ivorius.psychedelicraft.block;
 
 import ivorius.psychedelicraft.item.PSItems;
 import net.minecraft.block.Block;
+import net.minecraft.block.BlockCrops;
 import net.minecraft.block.BlockDoublePlant;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.init.Bootstrap;
@@ -12,6 +13,7 @@ import net.minecraftforge.common.IPlantable;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertSame;
 
 public class SnifferCropsTest {
@@ -40,5 +42,11 @@ public class SnifferCropsTest {
         }
         assertSame(EnumPlantType.Crop, ((IPlantable) PSItems.TORCHFLOWER_SEEDS).getPlantType(null, BlockPos.ORIGIN));
         assertSame(EnumPlantType.Crop, ((IPlantable) PSItems.PITCHER_POD).getPlantType(null, BlockPos.ORIGIN));
+    }
+
+    @Test
+    public void ripePitcherKeepsItsStateWithoutBecomingAForgeFarmerHarvestTarget() {
+        assertFalse(PSBlocks.PITCHER_CROP instanceof BlockCrops);
+        assertSame(PSBlocks.PITCHER_CROP, PSBlocks.PITCHER_CROP.getStateFromMeta(4).getBlock());
     }
 }

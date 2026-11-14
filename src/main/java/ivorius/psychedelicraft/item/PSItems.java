@@ -211,6 +211,10 @@ public final class PSItems {
         return Collections.unmodifiableList(ITEMS);
     }
 
+    public static boolean isSnifferSeed(Item item) {
+        return item == TORCHFLOWER_SEEDS || item == PITCHER_POD;
+    }
+
     @SubscribeEvent
     public static void registerItems(RegistryEvent.Register<Item> event) {
         for (Item item : ITEMS) {
