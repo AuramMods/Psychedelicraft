@@ -56,6 +56,8 @@ public final class EntityGeometryTransformer implements IClassTransformer {
         new ClassReader(bytes).accept(type, 0);
         if (ENTITY_RENDERER.equals(transformedName)) {
             patchWorld(method(type, "updateCameraAndRender", "func_181560_a", "(FJ)V"));
+            patchNameplate(method(type, "drawNameplate", "func_189692_a",
+                    "(Lnet/minecraft/client/gui/FontRenderer;Ljava/lang/String;FFFIFFZZ)V"));
         } else if (RENDER_GLOBAL.equals(transformedName)) {
             method(type, "renderEntities", "func_180446_a",
                     "(Lnet/minecraft/entity/Entity;Lnet/minecraft/client/renderer/culling/ICamera;F)V")
@@ -126,6 +128,24 @@ public final class EntityGeometryTransformer implements IClassTransformer {
         section.add(new VarInsnNode(Opcodes.ALOAD, 8));
         section.add(hook("shadowSurface", "(" + descriptor + ")V"));
         surface.instructions.insert(section);
+    }
+
+    private static void patchNameplate(MethodNode render) {
+        patchQuads(Collections.singletonList(render), "drawNameplateBackground");
+        FMLDeobfuscatingRemapper remapper = FMLDeobfuscatingRemapper.INSTANCE;
+        boolean seeThrough = true;
+        for (AbstractInsnNode instruction : render.instructions.toArray()) {
+            if (instruction.getOpcode() != Opcodes.INVOKEVIRTUAL) continue;
+            MethodInsnNode draw = (MethodInsnNode) instruction;
+            String name = remapper.mapMethodName(draw.owner, draw.name, draw.desc);
+            if (!"net/minecraft/client/gui/FontRenderer".equals(remapper.map(draw.owner))
+                    || !("drawString".equals(name) || "func_78276_b".equals(name))
+                    || !"(Ljava/lang/String;III)I".equals(draw.desc)) continue;
+            render.instructions.insertBefore(draw, new InsnNode(seeThrough ? Opcodes.ICONST_1 : Opcodes.ICONST_0));
+            render.instructions.set(draw, hook("drawNameplateText",
+                    "(L" + draw.owner + ";Ljava/lang/String;IIIZ)I"));
+            seeThrough = false;
+        }
     }
 
     private static void patchQuads(Iterable<MethodNode> methods, String target) {

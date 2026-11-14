@@ -329,6 +329,17 @@ public final class DrugRenderer {
         }
     }
 
+    public static void drawNameplateBackground(Tessellator tessellator) {
+        Material material = GL11.glIsEnabled(GL11.GL_DEPTH_TEST) ? Material.ENTITY : Material.ENTITY_UNIFORM_PULSE;
+        drawWorldQuads(tessellator, material, null);
+    }
+
+    public static int drawNameplateText(FontRenderer font, String text, int x, int y, int color, boolean seeThrough) {
+        try (Scope scope = beginWorldModel(seeThrough ? Material.ENTITY_UNIFORM_PULSE : Material.ENTITY)) {
+            return font.drawString(text, x, y, color);
+        }
+    }
+
     public static void drawPiston(Tessellator tessellator, TileEntityPiston piston) {
         // The translucent moving-block shader has no vertex distance. Solid and cutout blocks use terrain programs.
         boolean translucent = piston.getPistonState().getBlock().getBlockLayer() == BlockRenderLayer.TRANSLUCENT;

@@ -1,6 +1,7 @@
 package ivorius.psychedelicraft.core;
 
 import com.google.common.io.ByteStreams;
+import net.minecraft.client.renderer.EntityRenderer;
 import net.minecraft.client.renderer.entity.Render;
 import net.minecraft.client.renderer.entity.RenderArrow;
 import net.minecraft.client.renderer.entity.RenderBoat;
@@ -71,6 +72,25 @@ public class EntityGeometryTransformerTest {
         assertEquals(1, calls(renderer, "renderShadow", "drawShadow"));
         assertEquals(1, calls(renderer, "renderEntityOnFire", "drawWorldQuads"));
         assertEquals(1, calls(renderer, "renderOffsetAABB", "draw"));
+    }
+
+    @Test
+    public void nameplateKeepsSeparateBackgroundAndTextPasses() throws Exception {
+        ClassNode renderer = transform(EntityRenderer.class);
+        assertEquals(1, calls(renderer, "drawNameplate", "drawNameplateBackground"));
+        assertEquals(2, calls(renderer, "drawNameplate", "drawNameplateText"));
+        int expectedPass = Opcodes.ICONST_1;
+        for (MethodNode method : renderer.methods) {
+            if (!"drawNameplate".equals(method.name)) continue;
+            for (AbstractInsnNode instruction : method.instructions.toArray()) {
+                if (!(instruction instanceof MethodInsnNode)) continue;
+                MethodInsnNode call = (MethodInsnNode) instruction;
+                if (!"drawNameplateText".equals(call.name)) continue;
+                assertEquals("(Lnet/minecraft/client/gui/FontRenderer;Ljava/lang/String;IIIZ)I", call.desc);
+                assertEquals(expectedPass, call.getPrevious().getOpcode());
+                expectedPass = Opcodes.ICONST_0;
+            }
+        }
     }
 
     private static int calls(ClassNode renderer, String methodName, String callName) {
