@@ -3,6 +3,7 @@ package ivorius.psychedelicraft.entity;
 import ivorius.psychedelicraft.PSSounds;
 import ivorius.psychedelicraft.block.BeeNestBlock;
 import ivorius.psychedelicraft.block.PSBlocks;
+import ivorius.psychedelicraft.block.SmallFlowerBlock;
 import ivorius.psychedelicraft.block.SweetBerryBushBlock;
 import ivorius.psychedelicraft.block.entity.BeeNestBlockEntity;
 import ivorius.psychedelicraft.client.BeeFlightSound;
@@ -130,8 +131,8 @@ public final class BeeEntity extends EntityAnimal {
     public boolean isBreedingItem(ItemStack item) {
         if (!(item.getItem() instanceof ItemBlock)) return false;
         Block block = ((ItemBlock) item.getItem()).getBlock();
-        if (block == PSBlocks.TORCHFLOWER || block == PSBlocks.PITCHER_PLANT) return true;
         if (block instanceof BlockFlower) return true;
+        if (block instanceof SmallFlowerBlock || block == PSBlocks.PITCHER_PLANT) return true;
         int meta = item.getMetadata();
         return block == Blocks.DOUBLE_PLANT && meta >= 0 && meta < 6 && BeeNestBlock.isFlower(block.getStateFromMeta(meta));
     }

@@ -9,7 +9,7 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.IBlockAccess;
 import net.minecraft.world.World;
 
-final class SmallFlowerBlock extends BlockBush {
+public class SmallFlowerBlock extends BlockBush {
     SmallFlowerBlock() {
         setSoundType(SoundType.PLANT);
         setTickRandomly(false);

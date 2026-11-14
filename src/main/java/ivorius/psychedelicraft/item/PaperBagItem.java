@@ -6,6 +6,7 @@ package ivorius.psychedelicraft.item;
 
 import ivorius.psychedelicraft.PSSounds;
 import ivorius.psychedelicraft.Psychedelicraft;
+import ivorius.psychedelicraft.block.SmallFlowerBlock;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockButton;
 import net.minecraft.block.BlockDispenser;
@@ -218,11 +219,11 @@ public final class PaperBagItem extends Item {
             BlockFlower flower = (BlockFlower) block;
             return isVariant(stack, BlockFlower.EnumFlowerType.getTypes(flower.getBlockType()).length - 1);
         }
-        return block instanceof BlockButton
+        return block instanceof BlockButton || block instanceof SmallFlowerBlock
                 || block == Blocks.RED_MUSHROOM || block == Blocks.BROWN_MUSHROOM
                 || item == Items.COOKIE || item == PSItems.SWEET_BERRIES || item == Items.NETHER_WART || item == Items.WHEAT_SEEDS
                 || item == Items.BEETROOT_SEEDS || item == Items.CARROT || item == Items.POTATO
-                || PSItems.isSnifferSeed(item) || item == PSItems.TORCHFLOWER
+                || PSItems.isSnifferSeed(item)
                 || item == Items.SPIDER_EYE || (item == Items.FISH && isVariant(stack, 3))
                 || (item == Items.COOKED_FISH && isVariant(stack, 1))
                 || item == Items.GOLDEN_CARROT || item == Items.MELON || item == Items.POISONOUS_POTATO

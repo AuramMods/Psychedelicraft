@@ -102,7 +102,10 @@ public final class PSBlocks {
             named("potted_tobacco", new PottedPlantBlock(() -> PSItems.TOBACCO_SEEDS)),
             named("potted_coca", new PottedPlantBlock(() -> PSItems.COCA_SEEDS)),
             named("potted_coffea", new PottedPlantBlock(() -> PSItems.COFFEA_CHERRIES)),
-            named("potted_torchflower", new PottedPlantBlock(() -> PSItems.TORCHFLOWER))));
+            named("potted_torchflower", new PottedPlantBlock(() -> PSItems.TORCHFLOWER)),
+            named("potted_cornflower", new PottedPlantBlock(() -> PSItems.CORNFLOWER)),
+            named("potted_lily_of_the_valley", new PottedPlantBlock(() -> PSItems.LILY_OF_THE_VALLEY)),
+            named("potted_wither_rose", new PottedPlantBlock(() -> PSItems.WITHER_ROSE))));
     public static final DryingTableBlock DRYING_TABLE = named("drying_table", new DryingTableBlock(Material.WOOD));
     public static final DryingTableBlock IRON_DRYING_TABLE = named("iron_drying_table", new DryingTableBlock(Material.IRON));
     public static final MashTubBlock MASH_TUB = named("mash_tub", new MashTubBlock(false));
@@ -132,6 +135,9 @@ public final class PSBlocks {
     public static final Block DRIED_KELP_BLOCK = named("dried_kelp_block", new DriedKelpBlock());
     public static final SweetBerryBushBlock SWEET_BERRY_BUSH = named("sweet_berry_bush", new SweetBerryBushBlock());
     public static final Block TORCHFLOWER = named("torchflower", new SmallFlowerBlock());
+    public static final BlockBush CORNFLOWER = named("cornflower", new SmallFlowerBlock());
+    public static final BlockBush LILY_OF_THE_VALLEY = named("lily_of_the_valley", new SmallFlowerBlock());
+    public static final WitherRoseBlock WITHER_ROSE = named("wither_rose", new WitherRoseBlock());
     public static final BlockCrops TORCHFLOWER_CROP = named("torchflower_crop", new TorchflowerCropBlock());
     public static final BlockBush PITCHER_CROP = named("pitcher_crop", new PitcherCropBlock());
     public static final Block PITCHER_PLANT = named("pitcher_plant", new PitcherPlantBlock());
@@ -161,7 +167,7 @@ public final class PSBlocks {
                 JUNIPER_DOOR, JUNIPER_TRAPDOOR, POWERED_JUNIPER_TRAPDOOR, JUNIPER_BUTTON, JUNIPER_PRESSURE_PLATE,
                 JUNIPER_SIGN, JUNIPER_WALL_SIGN, JUNIPER_HANGING_SIGN, JUNIPER_WALL_HANGING_SIGN, BEE_NEST, BUBBLE_COLUMN,
                 CAMPFIRE, SOUL_CAMPFIRE, SOUL_SOIL, SOUL_FIRE, KELP, KELP_STALK, DRIED_KELP_BLOCK, SWEET_BERRY_BUSH,
-                TORCHFLOWER, TORCHFLOWER_CROP, PITCHER_CROP, PITCHER_PLANT);
+                TORCHFLOWER, CORNFLOWER, LILY_OF_THE_VALLEY, WITHER_ROSE, TORCHFLOWER_CROP, PITCHER_CROP, PITCHER_PLANT);
         for (PottedPlantBlock pot : POTTED_PLANTS) {
             event.getRegistry().register(pot);
         }

@@ -22,6 +22,7 @@ import ivorius.psychedelicraft.recipe.JuniperWoodRecipes;
 import ivorius.psychedelicraft.screen.PSGuiHandler;
 import ivorius.psychedelicraft.world.gen.ChestLoot;
 import ivorius.psychedelicraft.world.gen.CopperOreGenerator;
+import ivorius.psychedelicraft.world.gen.SmallFlowerWorldGenerator;
 import ivorius.psychedelicraft.world.gen.VillageGarden;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.ResourceLocation;
@@ -61,6 +62,7 @@ public class Psychedelicraft {
         OreDictionary.registerOre("beeCombHoney", PSItems.HONEYCOMB);
         OreDictionary.registerOre("cropTomato", PSItems.TOMATO);
         GameRegistry.registerWorldGenerator(new CopperOreGenerator(), 0);
+        SmallFlowerWorldGenerator.registerGrassFlowers();
         JuniperWoodRecipes.register();
         PSItems.JUNIPER_BOAT.registerDispenserBehavior();
         PSItems.JUNIPER_CHEST_BOAT.registerDispenserBehavior();

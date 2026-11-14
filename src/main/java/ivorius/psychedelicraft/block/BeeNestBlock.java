@@ -234,7 +234,7 @@ public final class BeeNestBlock extends Block {
 
     public static boolean isFlower(IBlockState state) {
         Block block = state.getBlock();
-        return block instanceof BlockFlower || block == PSBlocks.TORCHFLOWER || (block == PSBlocks.PITCHER_PLANT
+        return block instanceof BlockFlower || block instanceof SmallFlowerBlock || (block == PSBlocks.PITCHER_PLANT
                 && state.getValue(BlockDoublePlant.HALF) == BlockDoublePlant.EnumBlockHalf.LOWER) || (block instanceof BlockDoublePlant
                 && state.getValue(BlockDoublePlant.HALF) == BlockDoublePlant.EnumBlockHalf.LOWER
                 && state.getValue(BlockDoublePlant.VARIANT) != BlockDoublePlant.EnumPlantType.GRASS
