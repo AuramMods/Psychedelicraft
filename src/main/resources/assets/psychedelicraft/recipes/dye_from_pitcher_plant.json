@@ -1,0 +1,13 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "ingredients": [
+    {
+      "item": "psychedelicraft:pitcher_plant"
+    }
+  ],
+  "result": {
+    "item": "minecraft:dye",
+    "data": 6,
+    "count": 2
+  }
+}

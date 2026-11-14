@@ -26,6 +26,7 @@ import ivorius.psychedelicraft.fluid.physical.PhysicalFluidBlock;
 import ivorius.psychedelicraft.item.PSItems;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockButtonWood;
+import net.minecraft.block.BlockCrops;
 import net.minecraft.block.BlockDoor;
 import net.minecraft.block.BlockFence;
 import net.minecraft.block.BlockFenceGate;
@@ -99,7 +100,8 @@ public final class PSBlocks {
             named("potted_hop", new PottedPlantBlock(() -> PSItems.HOP_SEEDS)),
             named("potted_tobacco", new PottedPlantBlock(() -> PSItems.TOBACCO_SEEDS)),
             named("potted_coca", new PottedPlantBlock(() -> PSItems.COCA_SEEDS)),
-            named("potted_coffea", new PottedPlantBlock(() -> PSItems.COFFEA_CHERRIES))));
+            named("potted_coffea", new PottedPlantBlock(() -> PSItems.COFFEA_CHERRIES)),
+            named("potted_torchflower", new PottedPlantBlock(() -> PSItems.TORCHFLOWER))));
     public static final DryingTableBlock DRYING_TABLE = named("drying_table", new DryingTableBlock(Material.WOOD));
     public static final DryingTableBlock IRON_DRYING_TABLE = named("iron_drying_table", new DryingTableBlock(Material.IRON));
     public static final MashTubBlock MASH_TUB = named("mash_tub", new MashTubBlock(false));
@@ -128,6 +130,10 @@ public final class PSBlocks {
     public static final KelpBlock KELP_STALK = named("kelp_stalk", new KelpBlock(true));
     public static final Block DRIED_KELP_BLOCK = named("dried_kelp_block", new DriedKelpBlock());
     public static final SweetBerryBushBlock SWEET_BERRY_BUSH = named("sweet_berry_bush", new SweetBerryBushBlock());
+    public static final Block TORCHFLOWER = named("torchflower", new SmallFlowerBlock());
+    public static final BlockCrops TORCHFLOWER_CROP = named("torchflower_crop", new TorchflowerCropBlock());
+    public static final BlockCrops PITCHER_CROP = named("pitcher_crop", new PitcherCropBlock());
+    public static final Block PITCHER_PLANT = named("pitcher_plant", new PitcherPlantBlock());
     public static final BubbleColumnBlock BUBBLE_COLUMN = named("bubble_column", new BubbleColumnBlock());
 
     private PSBlocks() {
@@ -153,7 +159,8 @@ public final class PSBlocks {
                 JUNIPER_STAIRS, JUNIPER_SLAB, JUNIPER_DOUBLE_SLAB, JUNIPER_FENCE, JUNIPER_FENCE_GATE,
                 JUNIPER_DOOR, JUNIPER_TRAPDOOR, POWERED_JUNIPER_TRAPDOOR, JUNIPER_BUTTON, JUNIPER_PRESSURE_PLATE,
                 JUNIPER_SIGN, JUNIPER_WALL_SIGN, JUNIPER_HANGING_SIGN, JUNIPER_WALL_HANGING_SIGN, BEE_NEST, BUBBLE_COLUMN,
-                CAMPFIRE, SOUL_CAMPFIRE, SOUL_SOIL, SOUL_FIRE, KELP, KELP_STALK, DRIED_KELP_BLOCK, SWEET_BERRY_BUSH);
+                CAMPFIRE, SOUL_CAMPFIRE, SOUL_SOIL, SOUL_FIRE, KELP, KELP_STALK, DRIED_KELP_BLOCK, SWEET_BERRY_BUSH,
+                TORCHFLOWER, TORCHFLOWER_CROP, PITCHER_CROP, PITCHER_PLANT);
         for (PottedPlantBlock pot : POTTED_PLANTS) {
             event.getRegistry().register(pot);
         }
@@ -182,6 +189,7 @@ public final class PSBlocks {
         Blocks.FIRE.setFireInfo(LATTICE, 5, 20);
         Blocks.FIRE.setFireInfo(MORNING_GLORY_LATTICE, 5, 20);
         Blocks.FIRE.setFireInfo(WINE_GRAPE_LATTICE, 5, 20);
+        Blocks.FIRE.setFireInfo(PITCHER_PLANT, 60, 100);
         Blocks.FIRE.setFireInfo(JUNIPER_LOG, 5, 5);
         Blocks.FIRE.setFireInfo(JUNIPER_WOOD, 5, 5);
         Blocks.FIRE.setFireInfo(STRIPPED_JUNIPER_LOG, 5, 5);

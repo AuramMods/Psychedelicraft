@@ -222,6 +222,7 @@ public final class PaperBagItem extends Item {
                 || block == Blocks.RED_MUSHROOM || block == Blocks.BROWN_MUSHROOM
                 || item == Items.COOKIE || item == PSItems.SWEET_BERRIES || item == Items.NETHER_WART || item == Items.WHEAT_SEEDS
                 || item == Items.BEETROOT_SEEDS || item == Items.CARROT || item == Items.POTATO
+                || item == PSItems.TORCHFLOWER_SEEDS || item == PSItems.PITCHER_POD || item == PSItems.TORCHFLOWER
                 || item == Items.SPIDER_EYE || (item == Items.FISH && isVariant(stack, 3))
                 || (item == Items.COOKED_FISH && isVariant(stack, 1))
                 || item == Items.GOLDEN_CARROT || item == Items.MELON || item == Items.POISONOUS_POTATO

@@ -130,6 +130,7 @@ public final class BeeEntity extends EntityAnimal {
     public boolean isBreedingItem(ItemStack item) {
         if (!(item.getItem() instanceof ItemBlock)) return false;
         Block block = ((ItemBlock) item.getItem()).getBlock();
+        if (block == PSBlocks.TORCHFLOWER || block == PSBlocks.PITCHER_PLANT) return true;
         if (block instanceof BlockFlower) return true;
         int meta = item.getMetadata();
         return block == Blocks.DOUBLE_PLANT && meta >= 0 && meta < 6 && BeeNestBlock.isFlower(block.getStateFromMeta(meta));
@@ -306,7 +307,8 @@ public final class BeeEntity extends EntityAnimal {
 
     static IBlockState nextCropAge(IBlockState state) {
         Block block = state.getBlock();
-        if (block == Blocks.WHEAT || block == Blocks.CARROTS || block == Blocks.POTATOES || block == Blocks.BEETROOTS) {
+        if (block == Blocks.WHEAT || block == Blocks.CARROTS || block == Blocks.POTATOES || block == Blocks.BEETROOTS
+                || block == PSBlocks.TORCHFLOWER_CROP) {
             BlockCrops crop = (BlockCrops) block;
             if (!crop.isMaxAge(state)) return crop.withAge(crop.getMetaFromState(state) + 1);
         } else if (block == Blocks.MELON_STEM || block == Blocks.PUMPKIN_STEM) {
