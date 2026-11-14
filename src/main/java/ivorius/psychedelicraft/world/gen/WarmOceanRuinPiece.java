@@ -3,6 +3,7 @@ package ivorius.psychedelicraft.world.gen;
 import ivorius.psychedelicraft.Psychedelicraft;
 import ivorius.psychedelicraft.block.PSBlocks;
 import ivorius.psychedelicraft.block.entity.BrushableBlockEntity;
+import ivorius.psychedelicraft.fluid.physical.Waterlogging;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockFalling;
 import net.minecraft.block.state.IBlockState;
@@ -100,11 +101,14 @@ public final class WarmOceanRuinPiece extends StructureComponent {
                 .setIgnoreStructureBlock(true).setReplacedBlock(Blocks.AIR).setBoundingBox(area);
         float integrity = large ? .9F : .8F;
         Map<BlockPos, Long> buried = chooseBuriedSand((WorldServer) world, template, placement, integrity);
+        OceanTemplateWater water = new OceanTemplateWater(world);
         template.addBlocksToWorld(world, origin, (level, pos, info) -> {
             Block block = info.blockState.getBlock();
             if (block == Blocks.AIR || block == Blocks.STRUCTURE_BLOCK || !survives(pos, integrity)) return null;
+            water.remember(pos, info);
             return buried.containsKey(pos) ? new Template.BlockInfo(info.pos, PSBlocks.SUSPICIOUS_SAND.getDefaultState(), null) : info;
         }, placement, 2);
+        water.restore();
 
         buried.forEach((pos, seed) -> {
             if (!area.isVecInside(pos)) return;
@@ -118,7 +122,10 @@ public final class WarmOceanRuinPiece extends StructureComponent {
     }
 
     private void placeChest(World world, BlockPos pos) {
+        // The donor sets the chest wet even when the marker contains flowing water.
+        boolean wet = Waterlogging.isWater(world, pos);
         world.setBlockState(pos, Blocks.CHEST.getDefaultState().withRotation(rotation), 2);
+        if (wet) Waterlogging.fillSource(world, pos);
         TileEntity tile = world.getTileEntity(pos);
         if (tile instanceof TileEntityChest) {
             ((TileEntityChest) tile).setLootTable(large ? LARGE_CHEST : SMALL_CHEST, positionSeed(pos));

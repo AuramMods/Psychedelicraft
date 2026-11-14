@@ -33,6 +33,7 @@ public final class PsychedelicraftCore implements IFMLLoadingPlugin {
         Collections.addAll(transformers,
                 "ivorius.psychedelicraft.core.VillagerCareersTransformer",
                 "ivorius.psychedelicraft.core.WaterloggingTransformer",
+                "ivorius.psychedelicraft.core.OceanWaterloggingTransformer",
                 "ivorius.psychedelicraft.core.BoatFlotationTransformer",
                 "ivorius.psychedelicraft.core.BubbleColumnTransformer",
                 "ivorius.psychedelicraft.core.LatticePistonTransformer",

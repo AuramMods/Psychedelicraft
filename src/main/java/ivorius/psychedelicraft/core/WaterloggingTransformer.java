@@ -548,9 +548,19 @@ public final class WaterloggingTransformer implements IClassTransformer {
             hook.add(new MethodInsnNode(Opcodes.INVOKESTATIC, HOOKS, "blocksPiston",
                     "(Z" + call.desc.substring(1), false));
             push.instructions.insert(call, hook);
+            keepPistonWaterAtSource(type);
             return;
         }
         throw new IllegalStateException("Could not locate Forge 1.12 piston tile check");
+    }
+
+    private static void keepPistonWaterAtSource(ClassNode type) {
+        MethodNode move = method(type, "doMove", "func_176319_a",
+                "(" + WORLD + POS + FACING + "Z)Z");
+        for (AbstractInsnNode instruction : move.instructions.toArray()) {
+            if (!matches(instruction, "setBlockState", "func_180501_a", "(" + POS + STATE + "I)Z")) continue;
+            replaceWorldCall(move, (MethodInsnNode) instruction, "remove");
+        }
     }
 
     private static void preservePistonSourceGrowth(ClassNode type) {

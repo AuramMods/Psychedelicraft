@@ -4,8 +4,10 @@ import ivorius.psychedelicraft.Psychedelicraft;
 import ivorius.psychedelicraft.block.BubbleColumnBlock;
 import ivorius.psychedelicraft.block.entity.WaterloggedBlockEntity;
 import net.minecraft.block.Block;
+import net.minecraft.block.BlockChest;
 import net.minecraft.block.BlockDispenser;
 import net.minecraft.block.BlockLiquid;
+import net.minecraft.block.BlockStoneSlab;
 import net.minecraft.block.material.Material;
 import net.minecraft.block.state.BlockFaceShape;
 import net.minecraft.block.state.IBlockState;
@@ -36,6 +38,8 @@ import net.minecraftforge.fluids.Fluid;
 import net.minecraftforge.fluids.FluidRegistry;
 import net.minecraftforge.fluids.FluidStack;
 import net.minecraftforge.fluids.IFluidBlock;
+import net.minecraftforge.fluids.capability.CapabilityFluidHandler;
+import net.minecraftforge.fluids.capability.IFluidHandler;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.common.eventhandler.Event;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
@@ -49,19 +53,32 @@ public final class Waterlogging {
     }
 
     public static boolean supports(IBlockState state) {
-        return state.getBlock() instanceof Waterloggable;
+        return state.getBlock() instanceof Waterloggable || supportsOceanBlock(state);
+    }
+
+    public static boolean supportsOceanBlock(IBlockState state) {
+        Block block = state.getBlock();
+        if (block == Blocks.STONE_SLAB) return state.getValue(BlockStoneSlab.VARIANT) == BlockStoneSlab.EnumType.SAND;
+        return block == Blocks.CHEST || block == Blocks.TRAPPED_CHEST || block == Blocks.WOODEN_SLAB
+                || block == Blocks.SANDSTONE_STAIRS || block == Blocks.OAK_STAIRS || block == Blocks.BIRCH_STAIRS
+                || block == Blocks.SPRUCE_STAIRS || block == Blocks.JUNGLE_STAIRS || block == Blocks.DARK_OAK_STAIRS
+                || block == Blocks.ACACIA_STAIRS || block == Blocks.TRAPDOOR || block == Blocks.OAK_FENCE
+                || block == Blocks.BIRCH_FENCE || block == Blocks.SPRUCE_FENCE || block == Blocks.JUNGLE_FENCE
+                || block == Blocks.DARK_OAK_FENCE || block == Blocks.ACACIA_FENCE;
     }
 
     public static boolean needsWaterTile(IBlockState state) {
         Block block = state.getBlock();
-        return block instanceof Waterloggable && !((Waterloggable) block).hasOwnWaterTile()
-                && !((Waterloggable) block).alwaysWaterlogged();
+        if (block instanceof Waterloggable) {
+            return !((Waterloggable) block).hasOwnWaterTile() && !((Waterloggable) block).alwaysWaterlogged();
+        }
+        return !(block instanceof BlockChest) && supportsOceanBlock(state);
     }
 
     @Nullable
-    public static WaterloggedBlockEntity tile(IBlockAccess world, BlockPos pos) {
+    private static IFluidHandler handler(IBlockAccess world, BlockPos pos) {
         TileEntity tile = world.getTileEntity(pos);
-        return tile instanceof WaterloggedBlockEntity ? (WaterloggedBlockEntity) tile : null;
+        return tile == null ? null : tile.getCapability(CapabilityFluidHandler.FLUID_HANDLER_CAPABILITY, null);
     }
 
     public static boolean isWet(IBlockAccess world, BlockPos pos) {
@@ -79,9 +96,10 @@ public final class Waterlogging {
 
     public static boolean isWet(IBlockAccess world, BlockPos pos, IBlockState state) {
         if (!supports(state)) return false;
-        if (((Waterloggable) state.getBlock()).alwaysWaterlogged()) return true;
-        WaterloggedBlockEntity tile = tile(world, pos);
-        return tile != null && tile.isWaterlogged();
+        if (state.getBlock() instanceof Waterloggable && ((Waterloggable) state.getBlock()).alwaysWaterlogged()) return true;
+        TileEntity tile = world.getTileEntity(pos);
+        if (tile instanceof WaterloggedBlockEntity) return ((WaterloggedBlockEntity) tile).isWaterlogged();
+        return ChestWaterlogging.isWetChest(tile);
     }
 
     public static boolean isWaterSource(IBlockState state) {
@@ -90,8 +108,15 @@ public final class Waterlogging {
     }
 
     public static void fillSource(World world, BlockPos pos) {
-        WaterloggedBlockEntity tile = tile(world, pos);
+        IFluidHandler tile = handler(world, pos);
         if (tile != null) tile.fill(new FluidStack(FluidRegistry.WATER, Fluid.BUCKET_VOLUME), true);
+    }
+
+    public static boolean placeInSource(World world, BlockPos pos, IBlockState state, int flags) {
+        boolean wet = !world.isRemote && supportsOceanBlock(state) && isWaterSource(world.getBlockState(pos));
+        if (!world.setBlockState(pos, state, flags)) return false;
+        if (wet) fillSource(world, pos);
+        return true;
     }
 
     public static IBlockState fluidState(IBlockAccess world, BlockPos pos) {
@@ -145,12 +170,14 @@ public final class Waterlogging {
 
     public static boolean blocksPiston(boolean blocked, IBlockState state) {
         Block block = state.getBlock();
+        if (supportsOceanBlock(state) && needsWaterTile(state)) return false;
         if (!(block instanceof Waterloggable)) return blocked;
         return block.hasTileEntity(state) && !((Waterloggable) block).canPistonMove();
     }
 
     public static boolean canDetachForPiston(Block block, IBlockState state) {
-        return block.hasTileEntity(state) && (!(block instanceof Waterloggable) || !((Waterloggable) block).canPistonMove());
+        return !(supportsOceanBlock(state) && needsWaterTile(state)) && block.hasTileEntity(state)
+                && (!(block instanceof Waterloggable) || !((Waterloggable) block).canPistonMove());
     }
 
     public static void scheduleFlow(World world, BlockPos pos) {
@@ -164,7 +191,7 @@ public final class Waterlogging {
     public static void tickBlock(Block block, World world, BlockPos pos, IBlockState state, Random random) {
         block.updateTick(world, pos, state, random);
         if (block == Blocks.SOUL_SAND) BubbleColumnBlock.updateAbove(world, pos);
-        if (block instanceof Waterloggable && isWet(world, pos)) {
+        if (isWet(world, pos)) {
             Blocks.FLOWING_WATER.updateTick(world, pos, Blocks.FLOWING_WATER.getDefaultState(), random);
         }
     }
@@ -267,7 +294,7 @@ public final class Waterlogging {
             return;
         }
 
-        WaterloggedBlockEntity tile = tile(world, pos);
+        IFluidHandler tile = handler(world, pos);
         if (tile == null) return;
         if (pickup ? tile.drain(Fluid.BUCKET_VOLUME, true) == null
                 : tile.fill(new FluidStack(FluidRegistry.WATER, Fluid.BUCKET_VOLUME), true) == 0) return;
@@ -292,7 +319,7 @@ public final class Waterlogging {
             World world = source.getWorld();
             BlockPos pos = source.getBlockPos().offset(source.getBlockState().getValue(BlockDispenser.FACING));
             if (!supports(world.getBlockState(pos))) return vanilla.dispense(source, stack);
-            WaterloggedBlockEntity tile = tile(world, pos);
+            IFluidHandler tile = handler(world, pos);
             if (tile == null || tile.fill(new FluidStack(FluidRegistry.WATER, Fluid.BUCKET_VOLUME), true) == 0) {
                 return vanilla.dispense(source, stack);
             }
@@ -316,7 +343,7 @@ public final class Waterlogging {
             World world = source.getWorld();
             BlockPos pos = source.getBlockPos().offset(source.getBlockState().getValue(BlockDispenser.FACING));
             if (!isWet(world, pos)) return emptyBucket.dispense(source, stack);
-            WaterloggedBlockEntity tile = tile(world, pos);
+            IFluidHandler tile = handler(world, pos);
             if (tile == null || tile.drain(Fluid.BUCKET_VOLUME, true) == null) return emptyBucket.dispense(source, stack);
             world.playSound(null, pos, SoundEvents.ITEM_BUCKET_FILL, SoundCategory.BLOCKS, 1, 1);
             return pickup.dispense(source, stack);

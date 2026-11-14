@@ -89,7 +89,12 @@ public final class ShipwreckPiece extends StructureComponent {
         PlacementSettings placement = new PlacementSettings().setRotation(rotation).setIgnoreEntities(true)
                 .setIgnoreStructureBlock(true).setReplacedBlock(Blocks.AIR).setBoundingBox(area);
         BlockPos origin = origin(placement);
-        template.addBlocksToWorld(world, origin, placement, 2);
+        OceanTemplateWater water = new OceanTemplateWater(world);
+        template.addBlocksToWorld(world, origin, (level, pos, info) -> {
+            water.remember(pos, info);
+            return info;
+        }, placement, 2);
+        water.restore();
         template.getDataBlocks(origin, placement).forEach((marker, name) -> {
             ResourceLocation table = LOOT.get(name);
             if (table == null) return;
