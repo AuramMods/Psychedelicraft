@@ -1,9 +1,8 @@
 package ivorius.psychedelicraft.block;
 
-import ivorius.psychedelicraft.fluid.FluidVesselHandler;
-import ivorius.psychedelicraft.fluid.PSFluids;
 import ivorius.psychedelicraft.item.PSItems;
 import net.minecraft.block.Block;
+import net.minecraft.block.BlockDispenser;
 import net.minecraft.block.BlockDoublePlant;
 import net.minecraft.block.BlockFlower;
 import net.minecraft.block.SoundType;
@@ -11,11 +10,16 @@ import net.minecraft.block.material.Material;
 import net.minecraft.block.properties.PropertyInteger;
 import net.minecraft.block.state.BlockStateContainer;
 import net.minecraft.block.state.IBlockState;
+import net.minecraft.dispenser.BehaviorDefaultDispenseItem;
+import net.minecraft.dispenser.IBehaviorDispenseItem;
+import net.minecraft.dispenser.IBlockSource;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.init.Items;
 import net.minecraft.init.SoundEvents;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
+import net.minecraft.stats.StatList;
+import net.minecraft.tileentity.TileEntityDispenser;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.util.EnumHand;
 import net.minecraft.util.SoundCategory;
@@ -111,18 +115,15 @@ public final class BeeNestBlock extends Block {
         if (world.isRemote) {
             return true;
         }
-        if (!world.setBlockState(pos, state.withProperty(HONEY_LEVEL, 0), 3)) {
+        if (!resetHoney(world, pos, state)) {
             return false;
         }
         if (item == Items.SHEARS) {
-            spawnAsEntity(world, pos, new ItemStack(PSItems.HONEYCOMB, 3));
+            dropCombs(world, pos);
             held.damageItem(1, player);
-            world.playSound(null, pos, SoundEvents.ENTITY_SHEEP_SHEAR, SoundCategory.BLOCKS, 1, 1);
         } else {
-            ItemStack bottle = FluidVesselHandler.forCrafting(held).craftContents(PSFluids.HONEY, -1, null);
-            if (!player.capabilities.isCreativeMode) {
-                held.shrink(1);
-            }
+            ItemStack bottle = new ItemStack(PSItems.HONEY_BOTTLE);
+            held.shrink(1);
             if (held.isEmpty()) {
                 player.setHeldItem(hand, bottle);
             } else {
@@ -130,6 +131,61 @@ public final class BeeNestBlock extends Block {
             }
             world.playSound(null, pos, SoundEvents.ITEM_BOTTLE_FILL, SoundCategory.BLOCKS, 1, 1);
         }
+        player.addStat(StatList.getObjectUseStats(item));
         return true;
+    }
+
+    private static boolean fullNest(IBlockState state) {
+        return state.getBlock() == PSBlocks.BEE_NEST && state.getValue(HONEY_LEVEL) == FULL_HONEY;
+    }
+
+    private static boolean resetHoney(World world, BlockPos pos, IBlockState state) {
+        return world.setBlockState(pos, state.withProperty(HONEY_LEVEL, 0), 3);
+    }
+
+    private static void dropCombs(World world, BlockPos pos) {
+        spawnAsEntity(world, pos, new ItemStack(PSItems.HONEYCOMB, 3));
+        world.playSound(null, pos, SoundEvents.ENTITY_SHEEP_SHEAR, SoundCategory.BLOCKS, 1, 1);
+    }
+
+    public static void registerDispenserBehaviors() {
+        registerDispenserHarvest(Items.GLASS_BOTTLE);
+        registerDispenserHarvest(Items.SHEARS);
+    }
+
+    private static void registerDispenserHarvest(Item item) {
+        IBehaviorDispenseItem fallback = BlockDispenser.DISPENSE_BEHAVIOR_REGISTRY.getObject(item);
+        IBehaviorDispenseItem harvest = new BehaviorDefaultDispenseItem() {
+            @Override
+            protected ItemStack dispenseStack(IBlockSource source, ItemStack stack) {
+                World world = source.getWorld();
+                EnumFacing facing = source.getBlockState().getValue(BlockDispenser.FACING);
+                BlockPos pos = source.getBlockPos().offset(facing);
+                if (item == Items.SHEARS) {
+                    dropCombs(world, pos);
+                    return stack.attemptDamageItem(1, world.rand, null) ? ItemStack.EMPTY : stack;
+                }
+
+                ItemStack bottle = new ItemStack(PSItems.HONEY_BOTTLE);
+                stack.shrink(1);
+                if (stack.isEmpty()) return bottle;
+                TileEntityDispenser dispenser = source.getBlockTileEntity();
+                if (dispenser.addItemStack(bottle) < 0) {
+                    doDispense(world, bottle, 6, facing, BlockDispenser.getDispensePosition(source));
+                }
+                return stack;
+            }
+        };
+        BlockDispenser.DISPENSE_BEHAVIOR_REGISTRY.putObject(item, (source, stack) -> {
+            World world = source.getWorld();
+            BlockPos pos = source.getBlockPos().offset(source.getBlockState().getValue(BlockDispenser.FACING));
+            IBlockState state = world.getBlockState(pos);
+            if (fullNest(state) && resetHoney(world, pos, state)) return harvest.dispense(source, stack);
+            if (item == Items.SHEARS && state.getBlock() == PSBlocks.BEE_NEST) {
+                world.playEvent(1001, source.getBlockPos(), 0);
+                return stack;
+            }
+            return fallback.dispense(source, stack);
+        });
     }
 }

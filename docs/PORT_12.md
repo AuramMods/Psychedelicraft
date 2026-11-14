@@ -1591,6 +1591,14 @@ sh run/production/background-qa/run.sh "$qa" game-background Overlay-QA \
 - A fresh muted Forge client reopened the save and verified the grown tree and both stage-one saplings. The cycle jar SHA-256 is `273797d3f504b18985f9dc384ffd3e604007db9ebdd29be1c5506177e0a1fd49`. Evidence is under `run/production/runtime-qa-cycle174` in `build.log`, `runtime-baseline.log`, `runtime-final.log` and `runtime-reopen.log`. A separate start with that jar through the dedicated Forge launcher reached the EULA check and exited before opening a world. See `runtime-dedicated.log`.
 - Next, compare the honey acquisition equivalent and its native tree decoration and harvesting behavior.
 
+### Cycle 175 · Dispensers harvest bee nests
+
+- The 1.20.1 honey mash uses eight honeycombs with water. Its vanilla dispenser behaviors can harvest the honey source with glass bottles or shears. Forge registers the corresponding behavior for the port's bee nests, consuming one empty bottle for 125 mB of honey or applying one durability damage for three combs. A stacked bottle input returns the filled bottle to an empty dispenser slot or ejects it when full. A nest below level five leaves shears intact, and targets outside the bee nest preserve the previously registered behavior.
+- Player harvest awards the held item's use statistic. Manual bottle harvest exchanges one bottle from the active hand, including in creative mode, as in the donor's block interaction.
+- A clean Java 8 build ran `reobfJar` and passed all 208 tests. The muted Forge 2864 honey regression found a natural nest on an oak or birch in a forest, tested weather and daylight gating and manual harvest, then fermented 1,000 mB of honey into Young Honey Mead. The client found separate empty and full models. The tested jar SHA-256 is `2739126ff64d21bc23b66f4e8ccf7d4606efd8d4e6c00165cfdaee7fb6074404`. See `run/production/runtime-qa-cycle175/build.log` and `runtime-honey-regression.log`.
+- The previous packaged jar ejected an empty bottle and left the nest full. The rebuilt jar passed redstone-driven single, stacked and overflow bottle cases, ordinary and worn shears, a partially filled nest, unrelated dispenser output and a creative offhand exchange. Early fixture runs needed to set the dispenser facing after placement and move the player out of comb pickup range. Final evidence is in `runtime-baseline-verified.log` and `runtime-final-confirmed.log` in the same directory.
+- Next, audit Silk Touch nest relocation and preservation of the harvested nest's honey level against the donor loot table.
+
 Dedicated Forge startup and multiplayer on that server remain open pending EULA acceptance.
 
 ## Repository and branch survey

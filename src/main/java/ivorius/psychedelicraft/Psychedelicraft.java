@@ -5,6 +5,7 @@
 package ivorius.psychedelicraft;
 
 import ivorius.psychedelicraft.advancement.PSCriteria;
+import ivorius.psychedelicraft.block.BeeNestBlock;
 import ivorius.psychedelicraft.entity.drug.DrugCapability;
 import ivorius.psychedelicraft.command.VomitCommand;
 import ivorius.psychedelicraft.command.DrugCommand;
@@ -65,6 +66,7 @@ public class Psychedelicraft {
         FilledBucketItem.registerDispenserBehavior();
         Waterlogging.registerDispenserBehavior();
         PaperBagItem.registerDispenserBehavior();
+        BeeNestBlock.registerDispenserBehaviors();
         FarmerTrades.register();
     }
 
