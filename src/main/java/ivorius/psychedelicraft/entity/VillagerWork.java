@@ -27,8 +27,6 @@ import net.minecraft.util.SoundCategory;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
-import net.minecraft.world.WorldServer;
-import net.minecraft.world.chunk.Chunk;
 import net.minecraftforge.event.ForgeEventFactory;
 import net.minecraftforge.fml.common.registry.VillagerRegistry.VillagerProfession;
 
@@ -39,12 +37,12 @@ import java.util.List;
 final class VillagerWork extends EntityAIBase {
     private static final String WORKSITE = "Worksite";
     private static final String WORKSITE_DIMENSION = "WorksiteDimension";
-    private static final int SEARCH_RADIUS = 32;
     private static final double WORK_DISTANCE_SQ = 1.73D * 1.73D;
     private static final int CROP_SESSION_TICKS = 60;
     private static final int CROP_TARGET_DELAY = 20;
     private static final int CROP_SESSION_DELAY = 40;
     private static final int FARMLAND_WALK_DELAY = 100;
+    private static final int CLAIM_TIMEOUT = 1200;
     private static final int TABLE_APPROACH_DELAY = 80;
     private static final int TABLE_STROLL_DELAY = 180;
     private static final double TABLE_WALK_SPEED = 0.4D;
@@ -54,6 +52,7 @@ final class VillagerWork extends EntityAIBase {
 
     private final EntityVillager villager;
     private final VillagerTradePreview preview;
+    private final WorksiteSearch worksiteSearch = new WorksiteSearch();
     private final List<BlockPos> cropTargets = new ArrayList<>();
     private long nextTask;
     private long lastWorkCheck;
@@ -68,6 +67,7 @@ final class VillagerWork extends EntityAIBase {
     private BlockPos returnSite;
     private BlockPos releasedSite;
     private BlockPos target;
+    private Path claimPath;
     private Vec3d wander;
     private Job job;
     private int remaining;
@@ -110,9 +110,12 @@ final class VillagerWork extends EntityAIBase {
             }
         }
         if (site == null) {
-            target = findWorksite();
+            WorksiteSearch.Result result = worksiteSearch.find(villager, now, now < retryReleasedSite ? releasedSite : null);
+            if (result == null) return false;
+            target = result.site;
+            claimPath = result.path;
             job = Job.CLAIM;
-            return target != null;
+            return true;
         }
         if (now >= nextCropSession && withinWorkArea(site) && villager.getRNG().nextInt(3) == 0
                 && ForgeEventFactory.getMobGriefingEvent(villager.world, villager)) {
@@ -162,10 +165,13 @@ final class VillagerWork extends EntityAIBase {
 
     @Override
     public void startExecuting() {
-        remaining = job == Job.CROP ? CROP_SESSION_TICKS : 160;
+        remaining = job == Job.CLAIM ? CLAIM_TIMEOUT : job == Job.CROP ? CROP_SESSION_TICKS : 160;
         nextCropAction = villager.world.getTotalWorldTime();
         if (job == Job.WANDER) {
             villager.getNavigator().tryMoveToXYZ(wander.x, wander.y, wander.z, TABLE_WALK_SPEED);
+        } else if (job == Job.CLAIM) {
+            villager.getNavigator().setPath(claimPath, 0.5D);
+            claimPath = null;
         } else if (job == Job.DRY) {
             if (villager.getDistanceSqToCenter(target) > WORK_DISTANCE_SQ) returnToWorksite();
         } else {
@@ -203,7 +209,21 @@ final class VillagerWork extends EntityAIBase {
             if (manhattan(villager.getPosition(), target) <= 1 || villager.getNavigator().noPath()) remaining = 0;
             return;
         }
-        double range = job == Job.CLAIM ? 6.25D : job == Job.VISIT_FARMLAND ? 1D : WORK_DISTANCE_SQ;
+        if (job == Job.CLAIM) {
+            DryingTableBlockEntity table = table(villager.world, target);
+            if (table == null || !table.availableTo(villager.getUniqueID())) {
+                remaining = 0;
+            } else if (WorksiteSearch.isApproach(villager.getPosition(), target)
+                    && villager.getDistanceSqToCenter(target) < 4D) {
+                claim(table);
+                remaining = 0;
+            } else if (villager.getNavigator().noPath()) {
+                worksiteSearch.retryLater(target, villager);
+                remaining = 0;
+            }
+            return;
+        }
+        double range = job == Job.VISIT_FARMLAND ? 1D : WORK_DISTANCE_SQ;
         if (villager.getDistanceSqToCenter(target) > range) {
             if (remaining % 20 == 0) {
                 if (job == Job.DRY) {
@@ -212,8 +232,7 @@ final class VillagerWork extends EntityAIBase {
             }
             return;
         }
-        if (job == Job.CLAIM) claim();
-        else if (job == Job.DRY) {
+        if (job == Job.DRY) {
             unreachableSince = -1;
             workTable();
         }
@@ -303,11 +322,11 @@ final class VillagerWork extends EntityAIBase {
         }
     }
 
-    private void claim() {
+    private void claim(DryingTableBlockEntity table) {
         VillagerProfession profession = villager.getProfessionForge();
         if (profession != VillagerCareers.UNEMPLOYED && profession != VillagerCareers.DEALER) return;
-        DryingTableBlockEntity table = table(villager.world, target);
-        if (table != null && table.claim(villager.getUniqueID())) {
+        if (table.claim(villager.getUniqueID())) {
+            worksiteSearch.clearRetries();
             if (profession == VillagerCareers.UNEMPLOYED) {
                 VillagerCareers.changeCareer(villager, VillagerCareers.DEALER);
                 villager.world.setEntityState(villager, (byte) 14);
@@ -352,32 +371,6 @@ final class VillagerWork extends EntityAIBase {
             }
         }
         return false;
-    }
-
-    @Nullable
-    private BlockPos findWorksite() {
-        WorldServer world = (WorldServer) villager.world;
-        BlockPos center = villager.getPosition();
-        BlockPos best = null;
-        double distance = SEARCH_RADIUS * SEARCH_RADIUS;
-        long now = world.getTotalWorldTime();
-        for (int x = (center.getX() - SEARCH_RADIUS) >> 4; x <= (center.getX() + SEARCH_RADIUS) >> 4; x++) {
-            for (int z = (center.getZ() - SEARCH_RADIUS) >> 4; z <= (center.getZ() + SEARCH_RADIUS) >> 4; z++) {
-                Chunk chunk = world.getChunkProvider().getLoadedChunk(x, z);
-                if (chunk == null) continue;
-                for (TileEntity tile : chunk.getTileEntityMap().values()) {
-                    if (!(tile instanceof DryingTableBlockEntity) || tile.isInvalid()
-                            || !((DryingTableBlockEntity) tile).availableTo(villager.getUniqueID())) continue;
-                    if (now < retryReleasedSite && tile.getPos().equals(releasedSite)) continue;
-                    double candidate = villager.getDistanceSqToCenter(tile.getPos());
-                    if (candidate < distance) {
-                        distance = candidate;
-                        best = tile.getPos();
-                    }
-                }
-            }
-        }
-        return best;
     }
 
     private void findCrops() {
