@@ -35,13 +35,15 @@ final class MotionBlurHistory {
             sourceWidth = source.framebufferWidth;
             sourceHeight = source.framebufferHeight;
         }
-        int intervals = MathHelper.floor((ticks - lastCapture) / SAMPLE_INTERVAL);
-        if (latest < 0 || intervals > 0) {
-            lastCapture = latest < 0 ? ticks : lastCapture + intervals * SAMPLE_INTERVAL;
-            latest = (latest + 1) % samples.length;
-            if (samples[latest] == null) samples[latest] = new Framebuffer(width, height, false);
-            renderer.draw(samples[latest], 0);
-            sampleTimes[latest] = ticks;
+        if (latest < 0) {
+            capture(ticks, renderer);
+        } else {
+            int intervals = MathHelper.floor((ticks - lastCapture) / SAMPLE_INTERVAL);
+            // The donor samples the current frame for every elapsed half-tick in the history window.
+            float finalCapture = lastCapture + intervals * SAMPLE_INTERVAL;
+            for (int offset = Math.min(intervals, SAMPLE_COUNT) - 1; offset >= 0; offset--) {
+                capture(finalCapture - offset * SAMPLE_INTERVAL, renderer);
+            }
         }
 
         // Draw the ring in the donor's slot order and skip samples older than its history window.
@@ -53,8 +55,17 @@ final class MotionBlurHistory {
         }
     }
 
+    private void capture(float time, FrameRenderer renderer) throws IOException {
+        int index = (latest + 1) % samples.length;
+        if (samples[index] == null) samples[index] = new Framebuffer(width, height, false);
+        renderer.draw(samples[index], 0);
+        sampleTimes[index] = time;
+        latest = index;
+        lastCapture = time;
+    }
+
     void release() {
-        if (latest < 0) return;
+        if (latest < 0 && samples[0] == null) return;
         int framebuffer = GL11.glGetInteger(EXTFramebufferObject.GL_FRAMEBUFFER_BINDING_EXT);
         int texture = GL11.glGetInteger(GL11.GL_TEXTURE_BINDING_2D);
         for (int index = 0; index < samples.length; index++) {
