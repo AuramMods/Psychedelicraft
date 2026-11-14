@@ -4,6 +4,7 @@
 
 package ivorius.psychedelicraft.entity;
 
+import io.netty.buffer.ByteBuf;
 import ivorius.psychedelicraft.PSDamageTypes;
 import ivorius.psychedelicraft.fluid.BrewFluid;
 import ivorius.psychedelicraft.item.MolotovCocktailItem;
@@ -25,15 +26,19 @@ import net.minecraft.util.EnumParticleTypes;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.RayTraceResult;
+import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.Explosion;
 import net.minecraft.world.World;
 import net.minecraft.world.WorldServer;
 import net.minecraftforge.event.ForgeEventFactory;
+import net.minecraftforge.fml.common.registry.IEntityAdditionalSpawnData;
 import net.minecraftforge.fml.relauncher.ReflectionHelper;
 
 import java.lang.reflect.Field;
 
-public final class MolotovCocktailEntity extends EntityThrowable {
+public final class MolotovCocktailEntity extends EntityThrowable implements IEntityAdditionalSpawnData {
+    private static final double SPAWN_VELOCITY_SCALE = 8000;
+    private static final double MAX_SPAWN_VELOCITY = 3.9;
     private static final DataParameter<ItemStack> STACK =
             EntityDataManager.createKey(MolotovCocktailEntity.class, DataSerializers.ITEM_STACK);
 
@@ -63,6 +68,45 @@ public final class MolotovCocktailEntity extends EntityThrowable {
 
     public ItemStack getProjectileStack() {
         return dataManager.get(STACK);
+    }
+
+    @Override
+    public void writeSpawnData(ByteBuf data) {
+        EntityLivingBase owner = getThrower();
+        data.writeInt(owner == null ? -1 : owner.getEntityId());
+        writeSpawnVelocity(data, motionX);
+        writeSpawnVelocity(data, motionY);
+        writeSpawnVelocity(data, motionZ);
+    }
+
+    @Override
+    public void readSpawnData(ByteBuf data) {
+        if (!data.isReadable()) return;
+        int ownerId = data.readInt();
+        Entity owner = ownerId == -1 ? null : world.getEntityByID(ownerId);
+        thrower = owner instanceof EntityLivingBase ? (EntityLivingBase) owner : null;
+        setVelocity(data.readShort() / SPAWN_VELOCITY_SCALE,
+                data.readShort() / SPAWN_VELOCITY_SCALE, data.readShort() / SPAWN_VELOCITY_SCALE);
+    }
+
+    private static void writeSpawnVelocity(ByteBuf data, double motion) {
+        data.writeShort((int) (MathHelper.clamp(motion, -MAX_SPAWN_VELOCITY, MAX_SPAWN_VELOCITY)
+                * SPAWN_VELOCITY_SCALE));
+    }
+
+    @Override
+    public void shoot(double x, double y, double z, float speed, float inaccuracy) {
+        double length = Math.sqrt(x * x + y * y + z * z);
+        Vec3d direction = length < 1E-4 ? Vec3d.ZERO : new Vec3d(x / length, y / length, z / length);
+        double spread = 0.0172275 * inaccuracy;
+        motionX = (direction.x + triangularOffset(spread)) * speed;
+        motionY = (direction.y + triangularOffset(spread)) * speed;
+        motionZ = (direction.z + triangularOffset(spread)) * speed;
+        double horizontal = Math.sqrt(motionX * motionX + motionZ * motionZ);
+        rotationYaw = (float) Math.toDegrees(MathHelper.atan2(motionX, motionZ));
+        rotationPitch = (float) Math.toDegrees(MathHelper.atan2(motionY, horizontal));
+        prevRotationYaw = rotationYaw;
+        prevRotationPitch = rotationPitch;
     }
 
     private float strength() {
@@ -140,9 +184,9 @@ public final class MolotovCocktailEntity extends EntityThrowable {
     }
 
     private void particle(EnumParticleTypes type, double y, float spread) {
-        double x = posX + offset(spread);
-        double z = posZ + offset(spread);
-        y += offset(spread);
+        double x = posX + triangularOffset(0.5 * spread);
+        double z = posZ + triangularOffset(0.5 * spread);
+        y += triangularOffset(0.5 * spread);
         if (world.isRemote) {
             world.spawnParticle(type, x, y, z, 0, 0, 0);
         } else {
@@ -150,8 +194,8 @@ public final class MolotovCocktailEntity extends EntityThrowable {
         }
     }
 
-    private double offset(float spread) {
-        return (rand.nextDouble() - rand.nextDouble()) * 0.5 * spread;
+    private double triangularOffset(double deviation) {
+        return deviation * (rand.nextDouble() - rand.nextDouble());
     }
 
     @Override
