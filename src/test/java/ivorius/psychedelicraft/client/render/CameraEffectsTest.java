@@ -58,6 +58,22 @@ public class CameraEffectsTest {
     }
 
     @Test
+    public void mouseInertiaMatchesDonorWhenMovementAndStrengthChange() {
+        // Captured from Minecraft 1.20.1 SmoothUtil using these inputs and multipliers.
+        float[] movement = {64, 16, -48, -32, 0, 0, 0, 12, 0, 0};
+        float[] strength = {0.5F, 0.5F, 0.2F, 0.8F, 0.8F, 0.4F, 0.2F, 0.6F, 0.3F, 0.1F};
+        float[] expected = {16, 24, 4, -9.6F, -18.56F, -6.336F, -1.9008F, -3.03456F, 0.356064F, 0.413109F};
+        CameraInertia inertia = new CameraInertia();
+        for (int tick = 0; tick < movement.length; tick++) {
+            inertia.sample(movement[tick], -movement[tick], 0F);
+            inertia.tick(strength[tick], 1F);
+            Vec2f output = inertia.sample(0F, 0F, 1F);
+            assertEquals(expected[tick], output.x, 0.00001F);
+            assertEquals(-expected[tick], output.y, 0.00001F);
+        }
+    }
+
+    @Test
     public void trembleStrengthsStackThroughTheRemainingFraction() {
         DrugProperties drugs = new DrugProperties();
         set(drugs, DrugType.LSD, 0.9);

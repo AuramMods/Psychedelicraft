@@ -102,13 +102,13 @@ public final class CameraEffects {
             float sensitivity = CameraInertia.sensitivity(client.gameSettings.mouseSensitivity);
             int invert = client.gameSettings.invertMouse ? -1 : 1;
             Vec2f change = inertia.sample(client.mouseHelper.deltaX * sensitivity,
-                    client.mouseHelper.deltaY * sensitivity * invert, partial);
+                    client.mouseHelper.deltaY * sensitivity, partial);
             if (client.gameSettings.smoothCamera) {
                 x += change.x;
-                y += change.y;
+                y += change.y * invert;
             } else {
                 x = change.x;
-                y = change.y;
+                y = change.y * invert;
             }
         }
         player.turn(x, y);
