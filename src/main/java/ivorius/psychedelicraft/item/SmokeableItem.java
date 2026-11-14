@@ -28,6 +28,16 @@ public final class SmokeableItem extends SmokingItem {
         this.influences = influences.clone();
     }
 
+    SmokeableItem stackable() {
+        setMaxStackSize(64);
+        return this;
+    }
+
+    @Override
+    public int getItemStackLimit(ItemStack stack) {
+        return stack.getItemDamage() > 0 ? 1 : super.getItemStackLimit(stack);
+    }
+
     @Override
     public ItemStack onItemUseFinish(ItemStack stack, World world, EntityLivingBase entity) {
         if (entity instanceof EntityPlayer) {
@@ -37,6 +47,13 @@ public final class SmokeableItem extends SmokingItem {
             if (!world.isRemote) {
                 if (properties != null) applyInfluences(player, properties);
                 recordDraw(player, stack);
+            }
+            if (!player.capabilities.isCreativeMode && stack.getCount() > 1 && stack.getMaxStackSize() > 1) {
+                ItemStack used = wear(stack.splitStack(1), player);
+                if (!world.isRemote && !used.isEmpty() && !player.addItemStackToInventory(used)) {
+                    player.dropItem(used, false);
+                }
+                return stack;
             }
         }
         return wear(stack, entity);

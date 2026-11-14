@@ -60,7 +60,7 @@ public final class PSItems {
     public static final Item JOLLY_RANCHER = edible("jolly_rancher", 0, 0.1F,
             new DrugInfluence(DrugType.SUGAR, DrugInfluence.INGESTED_DELAY, 0.005, 0.003, 0.05));
     public static final SmokeableItem JOINT = named("joint", new SmokeableItem(2, 20, 0xe6e6e6,
-            new DrugInfluence(DrugType.CANNABIS, DrugInfluence.INHALED_DELAY, 0.002, 0.001, 0.20)));
+            new DrugInfluence(DrugType.CANNABIS, DrugInfluence.INHALED_DELAY, 0.002, 0.001, 0.20)).stackable());
     public static final Item HOP_SEEDS = named("hop_seeds", new CropSeedItem(PSBlocks.HOP, "hop_seeds"));
     public static final Item HOP_CONES = named("hop_cones", new Item());
     public static final Item COCA_SEEDS = named("coca_seeds", new CropSeedItem(PSBlocks.COCA, "coca_seeds"));
@@ -83,7 +83,7 @@ public final class PSItems {
     public static final Item DRIED_PEYOTE = edible("dried_peyote", 0, 0.1F, DrugType.PEYOTE);
     public static final SmokeableItem PEYOTE_JOINT = named("peyote_joint", new SmokeableItem(2, 20, 0x80e666,
             new DrugInfluence(DrugType.PEYOTE, DrugInfluence.INHALED_DELAY, 0.003, 0.0015, 0.4),
-            new DrugInfluence(DrugType.TOBACCO, DrugInfluence.IMMEDIATE, 0.1, 0.02, 0.1)));
+            new DrugInfluence(DrugType.TOBACCO, DrugInfluence.IMMEDIATE, 0.1, 0.02, 0.1)).stackable());
     public static final Item AGAVE_LEAF = named("agave_leaf", new CropSeedItem(PSBlocks.AGAVE_PLANT, "agave_leaf"));
     public static final Item JIMSONWEED_SEEDS = named("jimsonweed_seeds", new CropSeedItem(PSBlocks.JIMSONWEED, "jimsonweed_seeds"));
     public static final Item JIMSONWEED_SEED_POD = named("jimsonweed_seed_pod", new Item());

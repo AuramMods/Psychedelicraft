@@ -1889,6 +1889,12 @@ sh run/production/background-qa/run.sh "$qa" game-background Overlay-QA \
 - The multiplayer render retry from Cycle 208 joined the copied server and captured 601 underwater frames at locked LSD 0.95 with both shader settings enabled. None of those samples had an all-black center after the effects pass. The controller stopped at its time limit before the 751-frame target and sober capture. The copied server saved on shutdown. Evidence is in `run/production/runtime-qa-cycle208/pack-retry-control.log` and `runtime-pack-server.log`.
 - Next, implement the requested joint stacking and continue the camera comparison.
 
+### Cycle 210 · Stack fresh cannabis and peyote joints
+
+- Fresh cannabis and peyote joints stack to 64. Both still take two draws. The first draw from a stack leaves the fresh joints in hand and puts one partially smoked joint in the inventory. If the inventory is full, the partially smoked joint drops by the player. Its stack limit is one, so the second draw finishes that joint. Existing partially worn joints retain their damage.
+- The Java 8 clean build ran `reobfJar` and passed 228 tests. In muted Forge 2864 a survival client merged two piles of 32 cannabis joints. A right-click draw left 63 fresh joints and one partial joint. A second draw finished the partial joint. The off-hand peyote check left two fresh joints and dropped one partial joint when the inventory was full. A creative draw left its stack of five intact. The client and server saved and shut down cleanly.
+- The tested jar has SHA-256 `14e26b3918c0645add2cb7a977bccc2f0bf3ac7d862ff0566fa52fe8cf1e6054`. Evidence is under `run/production/runtime-qa-cycle210` in `build-production.log` and `runtime-joint.log`.
+
 ## Repository and branch survey
 
 The checkout initially used `1.21.5`; its working tree was clean. `origin` is [AuramMods/Psychedelicraft](https://github.com/AuramMods/Psychedelicraft), and the upstream is [Sollace/Psychedelicraft](https://github.com/Sollace/Psychedelicraft). After fetching origin, all 16 origin branch heads matched upstream's advertised heads. There was no existing 1.12 branch in either branch listing. Searching the fetched commit subjects for `1.12` also returned no matches; this does not rule out work in other forks or unpublished history.
