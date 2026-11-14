@@ -6,11 +6,17 @@ import ivorius.psychedelicraft.PSDamageTypes;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.passive.EntityPig;
+import net.minecraft.block.state.IBlockState;
+import net.minecraft.init.Blocks;
 import net.minecraft.init.Bootstrap;
 import net.minecraft.item.ItemStack;
 import net.minecraft.profiler.Profiler;
 import net.minecraft.util.DamageSource;
+import net.minecraft.util.EnumFacing;
+import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.MathHelper;
+import net.minecraft.util.math.RayTraceResult;
+import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.Explosion;
 import net.minecraft.world.World;
 import net.minecraft.world.WorldProviderSurface;
@@ -71,6 +77,30 @@ public class MolotovDamageTest {
     }
 
     @Test
+    public void projectileClipsPhysicalShapesAndHonorsSegmentBounds() {
+        TestWorld world = new TestWorld() {
+            @Override
+            public IBlockState getBlockState(BlockPos pos) {
+                if (pos.equals(BlockPos.ORIGIN)) return Blocks.TALLGRASS.getStateFromMeta(1);
+                if (pos.equals(BlockPos.ORIGIN.east())) return Blocks.STONE.getDefaultState();
+                return Blocks.AIR.getDefaultState();
+            }
+        };
+        MolotovCocktailEntity projectile = new MolotovCocktailEntity(world);
+        Vec3d start = new Vec3d(-0.5, 0.25, 0.5);
+        assertNull(ProjectileBlockCollision.trace(projectile, start, new Vec3d(1, 0.25, 0.5)));
+        RayTraceResult throughGrass = ProjectileBlockCollision.trace(projectile, start, new Vec3d(1.5, 0.25, 0.5));
+        assertEquals(BlockPos.ORIGIN.east(), throughGrass.getBlockPos());
+        assertEquals(EnumFacing.WEST, throughGrass.sideHit);
+        assertEquals(1D, throughGrass.hitVec.x, 0);
+
+        RayTraceResult inside = ProjectileBlockCollision.trace(projectile, new Vec3d(1.5, 0.25, 0.5), start);
+        assertEquals(BlockPos.ORIGIN.east(), inside.getBlockPos());
+        assertEquals(EnumFacing.EAST, inside.sideHit);
+        assertEquals(1.498, inside.hitVec.x, 1E-12);
+    }
+
+    @Test
     public void spawnDataPreservesVelocityWhenOwnerIdIsZero() {
         TestWorld world = new TestWorld();
         EntityPig owner = new EntityPig(world);
@@ -124,7 +154,7 @@ public class MolotovDamageTest {
         assertEquals((float) Math.toDegrees(MathHelper.atan2(y, Math.sqrt(x * x + z * z))), projectile.rotationPitch, 1E-5F);
     }
 
-    private static final class TestWorld extends World {
+    private static class TestWorld extends World {
         private Entity trackedEntity;
 
         private TestWorld() {
