@@ -7,6 +7,7 @@ import net.minecraft.block.Block;
 import net.minecraft.block.BlockSapling;
 import net.minecraft.block.material.Material;
 import net.minecraft.block.state.IBlockState;
+import net.minecraft.init.Biomes;
 import net.minecraft.init.Blocks;
 import net.minecraft.init.Bootstrap;
 import net.minecraft.profiler.Profiler;
@@ -19,7 +20,10 @@ import net.minecraft.world.chunk.IChunkProvider;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Random;
 
@@ -212,6 +216,35 @@ public class PlantPatchTest {
         world.light = 9;
         PSBlocks.JUNIPER_SAPLING.updateTick(world, pos, sapling, successfulTick);
         assertSame(sapling.withProperty(BlockSapling.STAGE, 1), world.getBlockState(pos));
+    }
+
+    @Test
+    public void beeNestPlacementUsesLowestLeavesAndNeedsAClearSouthExit() {
+        PatchWorld world = new PatchWorld();
+        BlockPos trunk = new BlockPos(7, 64, 7);
+        BlockPos height = trunk.up(2);
+        IBlockState stone = Blocks.STONE.getDefaultState();
+        world.setBlockState(height.east().south(), stone, 2);
+        world.setBlockState(height.south(2), stone, 2);
+
+        BeeNestWorldGenerator.placeNest(world, new HashSet<>(Arrays.asList(trunk, trunk.up(), height)),
+                Collections.singleton(trunk.west().up(3)), new Random(179));
+
+        assertSame(PSBlocks.BEE_NEST, world.getBlockState(height.west()).getBlock());
+        assertSame(Blocks.AIR, world.getBlockState(height.east()).getBlock());
+        assertSame(Blocks.AIR, world.getBlockState(height.north()).getBlock());
+        assertSame(Blocks.AIR, world.getBlockState(trunk.west().up()).getBlock());
+    }
+
+    @Test
+    public void beeNestRatesFollowTheLegacyBiomeCounterparts() {
+        assertEquals(0.05F, BeeNestWorldGenerator.naturalChance(Biomes.PLAINS), 0F);
+        assertEquals(0.05F, BeeNestWorldGenerator.naturalChance(Biomes.MUTATED_PLAINS), 0F);
+        assertEquals(0.02F, BeeNestWorldGenerator.naturalChance(Biomes.MUTATED_FOREST), 0F);
+        assertEquals(0.002F, BeeNestWorldGenerator.naturalChance(Biomes.FOREST), 0F);
+        assertEquals(0.002F, BeeNestWorldGenerator.naturalChance(Biomes.MUTATED_BIRCH_FOREST), 0F);
+        assertEquals(0F, BeeNestWorldGenerator.naturalChance(Biomes.ROOFED_FOREST), 0F);
+        assertEquals(0F, BeeNestWorldGenerator.naturalChance(Biomes.SWAMPLAND), 0F);
     }
 
     private static final class PatchWorld extends World {

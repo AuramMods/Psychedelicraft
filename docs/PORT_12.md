@@ -1626,6 +1626,15 @@ sh run/production/background-qa/run.sh "$qa" game-background Overlay-QA \
 - A separate run with natural honey acquisition, bottle draining, manual drinking, mash processing, mead fermentation and nest rendering passed. See `runtime-honey-regression.log` in the same directory.
 - Next, compare the donor's bee-nest tree eligibility and placement with the Forge honey source generator.
 
+### Cycle 179 · Bee nests on naturally generated and grown trees
+
+- Traced the donor's native worldgen data through `TreeFeatures`, `VegetationFeatures` and `BeehiveDecorator`. The legacy plains and sunflower plains now roll five percent per eligible tree. Flower forest rolls two percent. Forest, birch forest and old-growth birch counterparts roll 0.2 percent. Natural placement uses the local tree biome and preserves the legacy config's explicit biome overrides. The modern meadow, cherry grove and mangrove swamp have no corresponding vanilla biomes or trees in 1.12.2.
+- Forge records the logs and leaves placed by a successful oak, large oak or birch generation. A nest attaches at the higher of one block above the lowest log or one below the lowest leaves, with the donor's bounded fallback for a tree with no recorded leaves. North-side candidates are excluded and the south exit must be clear. The placement check does not request unloaded chunks. The nest roll uses a separate seed so the native tree generator keeps its RNG sequence.
+- The native sapling path now gives oak and birch a five-percent nest roll when a flower is within the donor's five-by-three-by-five search volume. This still uses the existing refill simulation. The independent vanilla bee entity and its behavior remain unimplemented.
+- The Java 8 clean build ran `reobfJar` and passed all 213 tests, including the legacy biome rates and a clearance case where only the west-side nest can be placed. The tested jar SHA-256 is `3114e04884cb67028501e293d48c4c77a5073f9686fafddd03cae805252f511c`. Evidence is under `run/production/runtime-qa-cycle179`.
+- Muted Forge 2864 launched both jars in default-terrain survival worlds. The rebuilt jar generated a forest nest at `(-98, 69, 230)` with a clear south exit. With controlled successful rolls it also decorated native oak and birch saplings near flowers, and the flowerless and disabled-config controls remained undecorated. An early probe selected an oak whose foliage blocked every candidate, so the final positive case used a taller native oak. Natural collection, renewable harvest, bottled honey, mead and the nest models passed the separate regression. See `build-final.log`, `runtime-baseline.log`, `runtime-confirmed.log` and `runtime-honey-regression.log`.
+- Next, match the nest's entrance orientation in its placed model and preserve all six honey levels in existing worlds.
+
 Dedicated Forge startup and multiplayer on that server remain open pending EULA acceptance.
 
 ## Repository and branch survey

@@ -26,6 +26,7 @@ public final class PsychedelicraftCore implements IFMLLoadingPlugin {
                 "ivorius.psychedelicraft.core.BoatFlotationTransformer",
                 "ivorius.psychedelicraft.core.BubbleColumnTransformer",
                 "ivorius.psychedelicraft.core.LatticePistonTransformer",
+                "ivorius.psychedelicraft.core.BeeNestTreeTransformer",
                 "ivorius.psychedelicraft.core.TrayRayTraceTransformer",
                 "ivorius.psychedelicraft.core.ExplosionDropTransformer",
                 "ivorius.psychedelicraft.core.PlantMovementTransformer",

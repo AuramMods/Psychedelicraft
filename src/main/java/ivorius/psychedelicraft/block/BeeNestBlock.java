@@ -145,17 +145,19 @@ public final class BeeNestBlock extends Block {
                 }
                 for (int y = bottom; y <= top; y++) {
                     IBlockState state = world.getBlockState(flower.setPos(x, y, z));
-                    Block block = state.getBlock();
-                    if (block instanceof BlockFlower || (block instanceof BlockDoublePlant
-                            && state.getValue(BlockDoublePlant.HALF) == BlockDoublePlant.EnumBlockHalf.LOWER
-                            && state.getValue(BlockDoublePlant.VARIANT) != BlockDoublePlant.EnumPlantType.GRASS
-                            && state.getValue(BlockDoublePlant.VARIANT) != BlockDoublePlant.EnumPlantType.FERN)) {
-                        return true;
-                    }
+                    if (isFlower(state)) return true;
                 }
             }
         }
         return false;
+    }
+
+    public static boolean isFlower(IBlockState state) {
+        Block block = state.getBlock();
+        return block instanceof BlockFlower || (block instanceof BlockDoublePlant
+                && state.getValue(BlockDoublePlant.HALF) == BlockDoublePlant.EnumBlockHalf.LOWER
+                && state.getValue(BlockDoublePlant.VARIANT) != BlockDoublePlant.EnumPlantType.GRASS
+                && state.getValue(BlockDoublePlant.VARIANT) != BlockDoublePlant.EnumPlantType.FERN);
     }
 
     @Override
