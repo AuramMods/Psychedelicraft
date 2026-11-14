@@ -48,6 +48,7 @@ public final class DryingTableBlockEntity extends TileEntity implements ITickabl
     private float heat;
     private float progress;
     private UUID dealer;
+    private long reservationExpires;
 
     public DryingTableBlockEntity() {
         for (EnumFacing facing : EnumFacing.VALUES) {
@@ -68,6 +69,7 @@ public final class DryingTableBlockEntity extends TileEntity implements ITickabl
             return;
         }
         WorldServer server = (WorldServer) world;
+        if (reservationExpired()) release(dealer);
         Block block = getBlockType();
         float oldHeat = heat;
         float oldProgress = progress;
@@ -139,13 +141,36 @@ public final class DryingTableBlockEntity extends TileEntity implements ITickabl
     }
 
     public boolean availableTo(UUID villager) {
-        return dealer == null || dealer.equals(villager);
+        return dealer == null || dealer.equals(villager) || reservationExpired();
+    }
+
+    public boolean reservedFor(UUID villager) {
+        return villager.equals(dealer) && !reservationExpired();
+    }
+
+    public void releaseReservation(UUID villager, long expiresAt) {
+        if (expiresAt != 0 && expiresAt == reservationExpires) release(villager);
+    }
+
+    public boolean reserve(UUID villager, long expiresAt) {
+        if (!availableTo(villager)) return false;
+        if (!reservedFor(villager)) {
+            dealer = villager;
+            reservationExpires = expiresAt;
+            markDirty();
+        }
+        return true;
+    }
+
+    private boolean reservationExpired() {
+        return reservationExpires != 0 && world != null && world.getTotalWorldTime() >= reservationExpires;
     }
 
     public boolean claim(UUID villager) {
         if (!availableTo(villager)) return false;
-        if (dealer == null) {
+        if (!villager.equals(dealer) || reservationExpires != 0) {
             dealer = villager;
+            reservationExpires = 0;
             markDirty();
         }
         return true;
@@ -154,6 +179,7 @@ public final class DryingTableBlockEntity extends TileEntity implements ITickabl
     public void release(UUID villager) {
         if (villager.equals(dealer)) {
             dealer = null;
+            reservationExpires = 0;
             markDirty();
         }
     }
@@ -165,6 +191,7 @@ public final class DryingTableBlockEntity extends TileEntity implements ITickabl
         tag.setFloat("heatRatio", heat);
         tag.setFloat("dryingProgress", progress);
         if (dealer != null) tag.setUniqueId("Dealer", dealer);
+        if (reservationExpires != 0) tag.setLong("ReservationExpires", reservationExpires);
         return tag;
     }
 
@@ -176,6 +203,7 @@ public final class DryingTableBlockEntity extends TileEntity implements ITickabl
         heat = MathHelper.clamp(tag.getFloat("heatRatio"), 0, 1);
         progress = MathHelper.clamp(tag.getFloat("dryingProgress"), 0, 1);
         dealer = tag.hasUniqueId("Dealer") ? tag.getUniqueId("Dealer") : null;
+        reservationExpires = dealer == null ? 0 : tag.getLong("ReservationExpires");
         if (world != null && !world.isRemote) {
             recipe = DryingRecipe.match(this);
         }

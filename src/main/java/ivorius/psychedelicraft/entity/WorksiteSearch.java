@@ -9,7 +9,6 @@ import net.minecraft.pathfinding.Path;
 import net.minecraft.pathfinding.PathFinder;
 import net.minecraft.pathfinding.PathNavigateGround;
 import net.minecraft.pathfinding.PathPoint;
-import net.minecraft.pathfinding.WalkNodeProcessor;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.util.math.BlockPos;
@@ -23,6 +22,7 @@ import net.minecraftforge.fml.relauncher.SideOnly;
 
 import javax.annotation.Nullable;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
@@ -49,9 +49,18 @@ final class WorksiteSearch {
         List<BlockPos> sites = findCandidates(world, villager, origin, now, releasedSite);
         if (sites.isEmpty()) return null;
         sites.sort(Comparator.comparingDouble(origin::distanceSq));
+        return findReachable(villager, origin, sites);
+    }
 
+    @Nullable
+    Result resume(EntityVillager villager, BlockPos site) {
+        return findReachable(villager, villager.getPosition(), Collections.singletonList(site));
+    }
+
+    @Nullable
+    private Result findReachable(EntityVillager villager, BlockPos origin, List<BlockPos> sites) {
         PathFinder finder = new PathFinder(((PathNavigateGround) villager.getNavigator()).getNodeProcessor());
-        IBlockAccess blocks = new LoadedBlocks(world);
+        IBlockAccess blocks = new LoadedBlocks((WorldServer) villager.world);
         Result nearest = null;
         float shortest = Float.POSITIVE_INFINITY;
         for (int i = 0; i < Math.min(sites.size(), CANDIDATE_LIMIT); i++) {

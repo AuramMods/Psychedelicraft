@@ -27,6 +27,7 @@ import net.minecraft.util.SoundCategory;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
+import net.minecraft.world.WorldServer;
 import net.minecraftforge.event.ForgeEventFactory;
 import net.minecraftforge.fml.common.registry.VillagerRegistry.VillagerProfession;
 
@@ -37,6 +38,9 @@ import java.util.List;
 final class VillagerWork extends EntityAIBase {
     private static final String WORKSITE = "Worksite";
     private static final String WORKSITE_DIMENSION = "WorksiteDimension";
+    private static final String POTENTIAL_WORKSITE = "PotentialWorksite";
+    private static final String POTENTIAL_DIMENSION = "PotentialWorksiteDimension";
+    private static final String POTENTIAL_EXPIRES = "PotentialWorksiteExpires";
     private static final double WORK_DISTANCE_SQ = 1.73D * 1.73D;
     private static final int CROP_SESSION_TICKS = 60;
     private static final int CROP_TARGET_DELAY = 20;
@@ -110,7 +114,7 @@ final class VillagerWork extends EntityAIBase {
             }
         }
         if (site == null) {
-            WorksiteSearch.Result result = worksiteSearch.find(villager, now, now < retryReleasedSite ? releasedSite : null);
+            WorksiteSearch.Result result = findClaim(now);
             if (result == null) return false;
             target = result.site;
             claimPath = result.path;
@@ -149,6 +153,21 @@ final class VillagerWork extends EntityAIBase {
         return true;
     }
 
+    @Nullable
+    private WorksiteSearch.Result findClaim(long now) {
+        BlockPos pending = potentialWorksite(villager);
+        if (pending != null) {
+            if (!villager.world.isBlockLoaded(pending)) return null;
+            DryingTableBlockEntity table = table(villager.world, pending);
+            if (table != null && table.reservedFor(villager.getUniqueID())) {
+                WorksiteSearch.Result route = worksiteSearch.resume(villager, pending);
+                if (route != null) return route;
+            }
+            releasePotentialWorksite(villager);
+        }
+        return worksiteSearch.find(villager, now, now < retryReleasedSite ? releasedSite : null);
+    }
+
     private boolean withinWorkArea(BlockPos site) {
         return manhattan(villager.getPosition(), site) <= 9;
     }
@@ -170,7 +189,8 @@ final class VillagerWork extends EntityAIBase {
         if (job == Job.WANDER) {
             villager.getNavigator().tryMoveToXYZ(wander.x, wander.y, wander.z, TABLE_WALK_SPEED);
         } else if (job == Job.CLAIM) {
-            villager.getNavigator().setPath(claimPath, 0.5D);
+            if (reserveWorksite()) villager.getNavigator().setPath(claimPath, 0.5D);
+            else remaining = 0;
             claimPath = null;
         } else if (job == Job.DRY) {
             if (villager.getDistanceSqToCenter(target) > WORK_DISTANCE_SQ) returnToWorksite();
@@ -187,6 +207,7 @@ final class VillagerWork extends EntityAIBase {
 
     @Override
     public void updateTask() {
+        if (remaining == 0) return;
         remaining--;
         if (job == Job.WANDER) return;
         if (job == Job.CROP) {
@@ -211,7 +232,7 @@ final class VillagerWork extends EntityAIBase {
         }
         if (job == Job.CLAIM) {
             DryingTableBlockEntity table = table(villager.world, target);
-            if (table == null || !table.availableTo(villager.getUniqueID())) {
+            if (table == null || !target.equals(potentialWorksite(villager)) || !table.reservedFor(villager.getUniqueID())) {
                 remaining = 0;
             } else if (WorksiteSearch.isApproach(villager.getPosition(), target)
                     && villager.getDistanceSqToCenter(target) < 4D) {
@@ -245,6 +266,7 @@ final class VillagerWork extends EntityAIBase {
             nextCropSession = villager.world.getTotalWorldTime() + CROP_SESSION_DELAY;
             cropTargets.clear();
         }
+        if (job == Job.CLAIM) releasePotentialWorksite(villager);
         villager.getNavigator().clearPath();
     }
 
@@ -322,10 +344,24 @@ final class VillagerWork extends EntityAIBase {
         }
     }
 
+    private boolean reserveWorksite() {
+        DryingTableBlockEntity table = table(villager.world, target);
+        if (table == null) return false;
+        if (target.equals(potentialWorksite(villager))) return table.reservedFor(villager.getUniqueID());
+        long expiresAt = villager.world.getTotalWorldTime() + CLAIM_TIMEOUT;
+        if (!table.reserve(villager.getUniqueID(), expiresAt)) return false;
+        NBTTagCompound data = VillagerCareers.data(villager);
+        data.setLong(POTENTIAL_WORKSITE, target.toLong());
+        data.setInteger(POTENTIAL_DIMENSION, villager.world.provider.getDimension());
+        data.setLong(POTENTIAL_EXPIRES, expiresAt);
+        return true;
+    }
+
     private void claim(DryingTableBlockEntity table) {
         VillagerProfession profession = villager.getProfessionForge();
         if (profession != VillagerCareers.UNEMPLOYED && profession != VillagerCareers.DEALER) return;
         if (table.claim(villager.getUniqueID())) {
+            forgetPotentialWorksite(villager);
             worksiteSearch.clearRetries();
             if (profession == VillagerCareers.UNEMPLOYED) {
                 VillagerCareers.changeCareer(villager, VillagerCareers.DEALER);
@@ -508,6 +544,40 @@ final class VillagerWork extends EntityAIBase {
         NBTTagCompound data = VillagerCareers.savedData(villager);
         data.removeTag(WORKSITE);
         data.removeTag(WORKSITE_DIMENSION);
+    }
+
+    @Nullable
+    private static BlockPos potentialWorksite(EntityVillager villager) {
+        NBTTagCompound data = VillagerCareers.savedData(villager);
+        return data.hasKey(POTENTIAL_WORKSITE, 4) ? BlockPos.fromLong(data.getLong(POTENTIAL_WORKSITE)) : null;
+    }
+
+    static void validatePotentialWorksite(EntityVillager villager) {
+        if (potentialWorksite(villager) == null) return;
+        NBTTagCompound data = VillagerCareers.savedData(villager);
+        VillagerProfession profession = villager.getProfessionForge();
+        if (data.getInteger(POTENTIAL_DIMENSION) != villager.world.provider.getDimension()
+                || villager.world.getTotalWorldTime() >= data.getLong(POTENTIAL_EXPIRES)
+                || villager.isAIDisabled() || !canWork(villager)
+                || profession != VillagerCareers.UNEMPLOYED && profession != VillagerCareers.DEALER) {
+            releasePotentialWorksite(villager);
+        }
+    }
+
+    static void releasePotentialWorksite(EntityVillager villager) {
+        BlockPos pending = potentialWorksite(villager);
+        if (pending == null || !(villager.world instanceof WorldServer)) return;
+        NBTTagCompound data = VillagerCareers.savedData(villager);
+        WorksiteReleases.releaseReservation((WorldServer) villager.world, data.getInteger(POTENTIAL_DIMENSION),
+                pending, villager.getUniqueID(), data.getLong(POTENTIAL_EXPIRES));
+        forgetPotentialWorksite(villager);
+    }
+
+    private static void forgetPotentialWorksite(EntityVillager villager) {
+        NBTTagCompound data = VillagerCareers.savedData(villager);
+        data.removeTag(POTENTIAL_WORKSITE);
+        data.removeTag(POTENTIAL_DIMENSION);
+        data.removeTag(POTENTIAL_EXPIRES);
     }
 
     @Nullable

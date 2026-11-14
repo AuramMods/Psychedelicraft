@@ -13,31 +13,37 @@ import net.minecraft.world.storage.WorldSavedData;
 import net.minecraftforge.common.DimensionManager;
 
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Map;
-import java.util.Set;
 import java.util.UUID;
 
 public final class WorksiteReleases extends WorldSavedData {
     private static final String NAME = "psychedelicraft_worksite_releases";
-    private final Map<Integer, Map<Long, Map<BlockPos, Set<UUID>>>> pending = new HashMap<>();
+    private final Map<Integer, Map<Long, Map<BlockPos, Map<UUID, Long>>>> pending = new HashMap<>();
 
     public WorksiteReleases(String name) {
         super(name);
     }
 
     static void release(WorldServer world, int dimension, BlockPos pos, UUID dealer) {
-        WorldServer ownerWorld = DimensionManager.getWorld(dimension);
-        if (ownerWorld != null && ownerWorld.isBlockLoaded(pos)) {
-            DryingTableBlockEntity table = VillagerWork.table(ownerWorld, pos);
-            if (table != null) table.release(dealer);
-            return;
-        }
-        records(world).add(dimension, pos, dealer);
+        release(world, dimension, pos, dealer, 0L);
     }
 
     static void onChunkLoad(WorldServer world, Chunk chunk) {
         records(world).apply(world.provider.getDimension(), chunk);
+    }
+
+    static void releaseReservation(WorldServer world, int dimension, BlockPos pos, UUID dealer, long expiresAt) {
+        if (expiresAt != 0) release(world, dimension, pos, dealer, expiresAt);
+    }
+
+    private static void release(WorldServer world, int dimension, BlockPos pos, UUID dealer, long expiresAt) {
+        WorldServer ownerWorld = DimensionManager.getWorld(dimension);
+        if (ownerWorld != null && ownerWorld.isBlockLoaded(pos)) {
+            DryingTableBlockEntity table = VillagerWork.table(ownerWorld, pos);
+            if (table != null) release(table, dealer, expiresAt);
+            return;
+        }
+        records(world).add(dimension, pos, dealer, expiresAt);
     }
 
     private static WorksiteReleases records(WorldServer world) {
@@ -52,27 +58,42 @@ public final class WorksiteReleases extends WorldSavedData {
     }
 
     void add(int dimension, BlockPos pos, UUID dealer) {
-        if (forChunk(dimension, pos).computeIfAbsent(pos.toImmutable(), key -> new HashSet<>()).add(dealer)) markDirty();
+        add(dimension, pos, dealer, 0L);
     }
 
-    private Map<BlockPos, Set<UUID>> forChunk(int dimension, BlockPos pos) {
+    private Map<UUID, Long> forTable(int dimension, BlockPos pos) {
         return pending.computeIfAbsent(dimension, key -> new HashMap<>())
-                .computeIfAbsent(ChunkPos.asLong(pos.getX() >> 4, pos.getZ() >> 4), key -> new HashMap<>());
+                .computeIfAbsent(ChunkPos.asLong(pos.getX() >> 4, pos.getZ() >> 4), key -> new HashMap<>())
+                .computeIfAbsent(pos.toImmutable(), key -> new HashMap<>());
+    }
+
+    void add(int dimension, BlockPos pos, UUID dealer, long expiresAt) {
+        Map<UUID, Long> releases = forTable(dimension, pos);
+        Long previous = releases.get(dealer);
+        if (previous != null && (previous == 0L || previous == expiresAt)) return;
+        releases.put(dealer, expiresAt);
+        markDirty();
     }
 
     void apply(int dimension, Chunk chunk) {
-        Map<Long, Map<BlockPos, Set<UUID>>> chunks = pending.get(dimension);
+        Map<Long, Map<BlockPos, Map<UUID, Long>>> chunks = pending.get(dimension);
         if (chunks == null) return;
-        Map<BlockPos, Set<UUID>> releases = chunks.remove(ChunkPos.asLong(chunk.x, chunk.z));
+        Map<BlockPos, Map<UUID, Long>> releases = chunks.remove(ChunkPos.asLong(chunk.x, chunk.z));
         if (releases == null) return;
         releases.forEach((pos, dealers) -> {
             TileEntity table = chunk.getTileEntityMap().get(pos);
             if (table instanceof DryingTableBlockEntity) {
-                dealers.forEach(((DryingTableBlockEntity) table)::release);
+                DryingTableBlockEntity dryingTable = (DryingTableBlockEntity) table;
+                dealers.forEach((dealer, expiresAt) -> release(dryingTable, dealer, expiresAt));
             }
         });
         if (chunks.isEmpty()) pending.remove(dimension);
         markDirty();
+    }
+
+    private static void release(DryingTableBlockEntity table, UUID dealer, long expiresAt) {
+        if (expiresAt == 0) table.release(dealer);
+        else table.releaseReservation(dealer, expiresAt);
     }
 
     @Override
@@ -83,25 +104,22 @@ public final class WorksiteReleases extends WorldSavedData {
             NBTTagCompound entry = list.getCompoundTagAt(index);
             if (!entry.hasUniqueId("Dealer") || !entry.hasKey("Pos", 4) || !entry.hasKey("Dimension", 3)) continue;
             BlockPos pos = BlockPos.fromLong(entry.getLong("Pos"));
-            forChunk(entry.getInteger("Dimension"), pos)
-                    .computeIfAbsent(pos, key -> new HashSet<>()).add(entry.getUniqueId("Dealer"));
+            forTable(entry.getInteger("Dimension"), pos).put(entry.getUniqueId("Dealer"), entry.getLong("ReservationExpires"));
         }
     }
 
     @Override
     public NBTTagCompound writeToNBT(NBTTagCompound tag) {
         NBTTagList list = new NBTTagList();
-        for (Map.Entry<Integer, Map<Long, Map<BlockPos, Set<UUID>>>> dimension : pending.entrySet()) {
-            for (Map<BlockPos, Set<UUID>> releases : dimension.getValue().values()) {
-                releases.forEach((pos, dealers) -> dealers.forEach(dealer -> {
+        pending.forEach((dimension, chunks) -> chunks.values().forEach(releases ->
+                releases.forEach((pos, dealers) -> dealers.forEach((dealer, expiresAt) -> {
                     NBTTagCompound entry = new NBTTagCompound();
-                    entry.setInteger("Dimension", dimension.getKey());
+                    entry.setInteger("Dimension", dimension);
                     entry.setLong("Pos", pos.toLong());
                     entry.setUniqueId("Dealer", dealer);
+                    if (expiresAt != 0) entry.setLong("ReservationExpires", expiresAt);
                     list.appendTag(entry);
-                }));
-            }
-        }
+                }))));
         tag.setTag("Releases", list);
         return tag;
     }

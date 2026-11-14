@@ -111,6 +111,7 @@ public final class VillagerCareers {
         if (!event.getWorld().isRemote && event.getEntity() instanceof EntityVillager) {
             EntityVillager villager = (EntityVillager) event.getEntity();
             VillagerWork.rememberWorksiteDimension(villager);
+            VillagerWork.validatePotentialWorksite(villager);
             if (villager.tasks.taskEntries.stream().noneMatch(entry -> entry.action instanceof VillagerWork)) {
                 VillagerTradePreview preview = new VillagerTradePreview(villager);
                 villager.tasks.addTask(7, new DealerBonemealTask(villager, preview));
@@ -138,6 +139,7 @@ public final class VillagerCareers {
     public static void stopDisabledDisplayTasks(LivingEvent.LivingUpdateEvent event) {
         if (!(event.getEntityLiving() instanceof EntityVillager) || event.getEntityLiving().world.isRemote) return;
         EntityVillager villager = (EntityVillager) event.getEntityLiving();
+        VillagerWork.validatePotentialWorksite(villager);
         if (!villager.isAIDisabled()) return;
         for (EntityAITasks.EntityAITaskEntry entry : villager.tasks.taskEntries) {
             if (entry.using && (entry.action instanceof DealerBonemealTask || entry.action instanceof VillagerTradePreview)) {
@@ -153,6 +155,7 @@ public final class VillagerCareers {
     }
 
     public static void releaseWorksite(EntityVillager villager) {
+        VillagerWork.releasePotentialWorksite(villager);
         if (!(villager.world instanceof WorldServer) || villager.getProfessionForge() != DEALER) return;
         BlockPos pos = VillagerWork.worksite(villager);
         if (pos == null) return;
@@ -247,6 +250,7 @@ public final class VillagerCareers {
     }
 
     static void changeCareer(EntityVillager villager, VillagerProfession profession) {
+        VillagerWork.releasePotentialWorksite(villager);
         MerchantRecipeList recipes = storedOffers(villager);
         recipes.clear();
         villager.getEntityData().removeTag(CAREER);
