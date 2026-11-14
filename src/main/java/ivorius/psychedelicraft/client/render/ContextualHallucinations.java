@@ -87,16 +87,14 @@ public final class ContextualHallucinations {
         if (chance <= 0) return;
         Random random = player.getRNG();
         if (random.nextInt(Math.max(1, (int) (1F / chance))) != 0) return;
-        add(pickNatural(random, naturalStrength, drugs.getActiveValue(DrugType.CANNABIS), !heads.isEmpty()), null);
+        add(pickNatural(random, (float) drugs.getActiveValue(DrugType.CANNABIS), !heads.isEmpty()), null);
     }
 
-    static HallucinationType pickNatural(Random random, float strength, double cannabis, boolean existingHead) {
-        if (random.nextFloat() <= 0.1F && cannabis > 0.4 && !existingHead) return HallucinationType.RASTA_HEAD;
+    static HallucinationType pickNatural(Random random, float cannabis, boolean existingHead) {
+        if (random.nextFloat() <= 0.1F && cannabis > 0.4F && !existingHead) return HallucinationType.RASTA_HEAD;
         if (random.nextFloat() <= 0.5F) return HallucinationType.MULTIPLE_ENTITY;
-        if (strength >= 0.8F) {
-            return random.nextBoolean() ? HallucinationType.HOSTILE_VILLAGERS : HallucinationType.FRIENDLY_ZOMBIES;
-        }
-        return HallucinationType.SINGLE_ENTITY;
+        // The pinned registry discards the swap's minimum strength and visits it before the solo apparition.
+        return HallucinationType.FRIENDLY_ZOMBIES;
     }
 
     private void add(HallucinationType type, @Nullable Vec3d position) {

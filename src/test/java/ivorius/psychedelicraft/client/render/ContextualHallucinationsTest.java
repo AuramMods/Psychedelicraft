@@ -29,21 +29,17 @@ public class ContextualHallucinationsTest {
     @Test
     public void naturalSelectionRespectsCannabisAndAvoidsADuplicateHead() {
         assertSame(HallucinationType.RASTA_HEAD, ContextualHallucinations.pickNatural(
-                rolls(false, 0.05F), 0.4F, 0.41, false));
+                rolls(0.1F), 0.41F, false));
         assertSame(HallucinationType.MULTIPLE_ENTITY, ContextualHallucinations.pickNatural(
-                rolls(false, 0.05F, 0.1F), 0.4F, 0.41, true));
-        assertSame(HallucinationType.SINGLE_ENTITY, ContextualHallucinations.pickNatural(
-                rolls(false, 0.05F, 0.7F), 0.4F, 0.4, false));
+                rolls(0.05F, 0.5F), 0.41F, true));
+        assertSame(HallucinationType.FRIENDLY_ZOMBIES, ContextualHallucinations.pickNatural(
+                rolls(0.05F, 0.7F), 0.4F, false));
     }
 
     @Test
-    public void identitySwapsRequireTheAuthoredStrength() {
-        assertSame(HallucinationType.SINGLE_ENTITY, ContextualHallucinations.pickNatural(
-                rolls(true, 0.6F, 0.7F), 0.79F, 0, false));
-        assertSame(HallucinationType.HOSTILE_VILLAGERS, ContextualHallucinations.pickNatural(
-                rolls(true, 0.6F, 0.7F), 0.8F, 0, false));
+    public void naturalFallbackFollowsPinnedRegistryOrder() {
         assertSame(HallucinationType.FRIENDLY_ZOMBIES, ContextualHallucinations.pickNatural(
-                rolls(false, 0.6F, 0.7F), 0.8F, 0, false));
+                rolls(0.6F, 0.7F), 0, false));
     }
 
     @Test
@@ -93,18 +89,13 @@ public class ContextualHallucinationsTest {
         assertEquals(new ResourceLocation("villager_golem"), ApparitionPool.legacyId(new ResourceLocation("iron_golem")));
     }
 
-    private static Random rolls(boolean choice, float... floats) {
+    private static Random rolls(float... floats) {
         return new Random() {
             private int index;
 
             @Override
             public float nextFloat() {
                 return floats[index++];
-            }
-
-            @Override
-            public boolean nextBoolean() {
-                return choice;
             }
         };
     }
