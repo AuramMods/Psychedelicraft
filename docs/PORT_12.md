@@ -1836,6 +1836,15 @@ sh run/production/background-qa/run.sh "$qa" game-background Overlay-QA \
 - The tested jar SHA-256 is `55c2723cc71e8d7f77edb16606796b672a23d22c30617fede5b72c310baa6225`. Evidence is under `run/production/runtime-qa-cycle203` in `build-production.log`, both retry client logs and screenshots, `runtime-geometry.log` and `runtime-dedicated.log`.
 - Next, audit the apparent head's orbit, gaze and timing against the pinned Reggie implementation.
 
+### Cycle 204 · Reggie's orbit and gaze
+
+- The pinned Reggie lives 2,400–3,560 ticks in 20-tick steps. Its detached pig advances with the hallucination, stores the orbit's logarithmic velocity, and receives a final update before expiry. Forge now follows that sequence, including zero motion when the orbit target is coincident. The sampled orbit distance and plane rotations retain the donor's ranges.
+- The modern look controller preserves yaw when the target is directly overhead or below. The Forge head now follows that rule and retains the donor's ten-degree yaw step and forty-degree pitch limit. Rendering uses the pinned pitch interpolation and samples the lightmap at the interpolated eye position.
+- The clean Java 8 build ran `reobfJar` and passed all 227 tests. A muted Forge 2864 client matched the donor's orbit equation over 24 ticks. Both jars clamped a vertical target to 40 degrees of pitch. The old jar changed yaw from 135 to 145 degrees and left the detached pig at age zero. The rebuilt jar kept yaw at 135 degrees, recorded the orbit velocity, and advanced the detached entity to age 2,800 before removing it at its sampled lifetime. The fixture advanced the clock to one tick before expiry for that check.
+- Both jars rendered the head and produced a client-only chat reply without server health loss. The first fixture let the 40-percent reply roll run freely and received no reply. The passing rerun seeded that roll and issued one incoming message per client. The same rebuilt jar reached `Done` on dedicated Forge 2860.
+- The tested jar SHA-256 is `6ce022b655f52bc9de6fad8c8b56fd8ae906397f93b71e942b2327026cda51ff`. Evidence is under `run/production/runtime-qa-cycle204` in `build-production.log`, `runtime-baseline-reply.log`, `runtime-final-reply.log`, their screenshots and `runtime-dedicated.log`.
+- Next, compare Reggie's message queue and apparent knockback against the pinned chatbot.
+
 ## Repository and branch survey
 
 The checkout initially used `1.21.5`; its working tree was clean. `origin` is [AuramMods/Psychedelicraft](https://github.com/AuramMods/Psychedelicraft), and the upstream is [Sollace/Psychedelicraft](https://github.com/Sollace/Psychedelicraft). After fetching origin, all 16 origin branch heads matched upstream's advertised heads. There was no existing 1.12 branch in either branch listing. Searching the fetched commit subjects for `1.12` also returned no matches; this does not rule out work in other forks or unpublished history.

@@ -13,6 +13,7 @@ import net.minecraft.client.renderer.RenderHelper;
 import net.minecraft.client.renderer.entity.RenderManager;
 import net.minecraft.entity.passive.EntityPig;
 import net.minecraft.util.ResourceLocation;
+import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.Vec3d;
 
@@ -48,12 +49,13 @@ final class RastaHeadHallucination {
     }
 
     boolean tick(boolean visible) {
-        if (++age >= maxAge) return true;
+        head.ticksExisted = ++age;
+        chat.tick(visible);
         previousPosition = head.getPositionVector();
         head.prevRotationYawHead = head.rotationYawHead;
         head.prevRotationPitch = head.rotationPitch;
-        head.getLookHelper().setLookPositionWithEntity(owner, 10F, 40F);
-        head.getLookHelper().onUpdateLook();
+        Vec3d eyes = owner.getPositionEyes(1F);
+        lookAt(eyes);
 
         int seed = owner.ticksExisted + head.getEntityId() * 3;
         Vec3d offset = new Vec3d(MathHelper.sin(seed / 50F) * distance,
@@ -62,14 +64,29 @@ final class RastaHeadHallucination {
         float sin = MathHelper.sin(planeRotationZ);
         float cos = MathHelper.cos(planeRotationZ);
         offset = new Vec3d(offset.x * cos + offset.y * sin, offset.y * cos - offset.x * sin, offset.z);
-        Vec3d delta = owner.getPositionEyes(1F).add(offset).subtract(previousPosition);
+        Vec3d delta = eyes.add(offset).subtract(previousPosition);
         double length = delta.lengthVector();
-        if (length > 0.0001) {
-            Vec3d position = previousPosition.add(delta.scale(Math.log(length) / length));
-            head.setPosition(position.x, position.y, position.z);
+        Vec3d velocity = length < 1.0E-4D ? Vec3d.ZERO : delta.normalize().scale(Math.log((float) length));
+        head.motionX = velocity.x;
+        head.motionY = velocity.y;
+        head.motionZ = velocity.z;
+        Vec3d position = previousPosition.add(velocity);
+        head.setPosition(position.x, position.y, position.z);
+        return age >= maxAge;
+    }
+
+    private void lookAt(Vec3d eyes) {
+        double dx = eyes.x - head.posX;
+        double dy = eyes.y - (head.posY + head.getEyeHeight());
+        double dz = eyes.z - head.posZ;
+        if (Math.abs(dx) > 1.0E-5F || Math.abs(dz) > 1.0E-5F) {
+            float targetYaw = (float) (MathHelper.atan2(dz, dx) * (180F / (float) Math.PI)) - 90F;
+            float yawDelta = MathHelper.wrapDegrees(targetYaw - head.rotationYawHead);
+            head.rotationYawHead += MathHelper.clamp(yawDelta, -10F, 10F);
         }
-        chat.tick(visible);
-        return false;
+        double horizontal = Math.sqrt(dx * dx + dz * dz);
+        float targetPitch = (float) (-MathHelper.atan2(dy, horizontal) * (180F / (float) Math.PI));
+        head.rotationPitch = MathHelper.clamp(targetPitch, -40F, 40F);
     }
 
     void render(Minecraft client, float partialTicks, float strength) {
@@ -78,10 +95,12 @@ final class RastaHeadHallucination {
         if (alpha <= 0.001F) return;
         Vec3d position = previousPosition.add(head.getPositionVector().subtract(previousPosition).scale(partialTicks));
         RenderManager render = client.getRenderManager();
-        float yaw = head.prevRotationYawHead + MathHelper.wrapDegrees(head.rotationYawHead - head.prevRotationYawHead) * partialTicks;
-        float pitch = head.prevRotationPitch + (head.rotationPitch - head.prevRotationPitch) * partialTicks;
+        float yaw = head.prevRotationYawHead + (head.rotationYawHead - head.prevRotationYawHead) * partialTicks;
+        // The donor interpolates toward the entity's already interpolated pitch.
+        float pitch = head.prevRotationPitch + (head.rotationPitch - head.prevRotationPitch) * partialTicks * partialTicks;
 
-        int light = head.getBrightnessForRender();
+        BlockPos lightPosition = new BlockPos(position.addVector(0, head.getEyeHeight(), 0));
+        int light = head.world.isBlockLoaded(lightPosition) ? head.world.getCombinedLight(lightPosition, 0) : 0;
         GlStateManager.pushMatrix();
         client.entityRenderer.enableLightmap();
         RenderHelper.enableStandardItemLighting();
