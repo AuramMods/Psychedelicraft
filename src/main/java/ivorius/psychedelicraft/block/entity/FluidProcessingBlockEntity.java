@@ -32,7 +32,7 @@ public abstract class FluidProcessingBlockEntity extends FluidMachineBlockEntity
     }
 
     public float getProcessingProgress() {
-        return duration > 0 ? (float) elapsed / duration : 0;
+        return duration > 0 ? (float) Math.min(elapsed, duration) / duration : 0;
     }
 
     public final ItemStack getSolidOutput() {
@@ -65,17 +65,19 @@ public abstract class FluidProcessingBlockEntity extends FluidMachineBlockEntity
     }
 
     protected final void processFluid(boolean aging) {
-        processFluid(BrewProcess.find(getTank().getFluid(), aging, solidOutput.getCount() < 64), 1, true);
+        FluidStack contents = getTank().getFluid();
+        BrewProcess next = BrewProcess.find(contents, aging, solidOutput.getCount() < 64);
+        processFluid(next, next == BrewProcess.IDLE ? 0 : next.duration(contents), true);
     }
 
-    protected final void processFluid(BrewProcess next, int tickRate, boolean ready) {
+    protected final void processFluid(BrewProcess next, int requiredTicks, boolean ready) {
         if (next == BrewProcess.IDLE) {
             if (stage != BrewProcess.IDLE) reset(BrewProcess.IDLE, 0);
             return;
         }
 
         FluidStack contents = getTank().getFluid();
-        int ticks = Math.max(1, next.duration(contents));
+        int ticks = Math.max(1, requiredTicks);
         if (next != stage) reset(next, ticks);
         else if (duration != ticks) {
             duration = ticks;
@@ -83,7 +85,7 @@ public abstract class FluidProcessingBlockEntity extends FluidMachineBlockEntity
         }
         if (!ready) return;
         int previous = elapsed;
-        elapsed += Math.min(tickRate, duration - elapsed);
+        if (elapsed < duration) elapsed++;
         // Persist every tick without sending a tile update for each increment.
         if (elapsed != previous) world.markChunkDirty(pos, this);
         if (elapsed >= duration) {
@@ -91,6 +93,18 @@ public abstract class FluidProcessingBlockEntity extends FluidMachineBlockEntity
         } else if (previous / 20 != elapsed / 20) {
             changed();
         }
+    }
+
+    protected final void rescaleProcessingProgress(int requiredTicks) {
+        if (duration <= 0 || requiredTicks <= 0) return;
+        elapsed = (int) ((long) Math.min(elapsed, duration) * requiredTicks / duration);
+        changed();
+    }
+
+    protected final void clearProcessingProgress() {
+        if (elapsed == 0) return;
+        elapsed = 0;
+        changed();
     }
 
     protected boolean completeProcess(BrewProcess process, FluidStack contents) {
@@ -126,7 +140,8 @@ public abstract class FluidProcessingBlockEntity extends FluidMachineBlockEntity
         batch = contents == null ? null : contents.copy();
         stage = BrewProcess.fromId(compound.getInteger("process"));
         duration = Math.max(0, compound.getInteger("timeNeeded"));
-        elapsed = Math.max(0, Math.min(duration, compound.getInteger("timeProcessed")));
+        // A blocked distillery can have more elapsed ticks than its current heated duration.
+        elapsed = Math.max(0, compound.getInteger("timeProcessed"));
         solidOutput = new ItemStack(compound.getCompoundTag("solidContents"));
     }
 }

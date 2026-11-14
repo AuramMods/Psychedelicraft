@@ -26,6 +26,15 @@ public class FluidProcessingBlockEntityTest {
     }
 
     @Test
+    public void distilleryDurationRoundsDownAndKeepsTheCompletionTick() {
+        assertEquals(102, DistilleryBlockEntity.distillationTicks(101, 1));
+        assertEquals(51, DistilleryBlockEntity.distillationTicks(101, 2));
+        assertEquals(34, DistilleryBlockEntity.distillationTicks(101, 3));
+        assertEquals(15, DistilleryBlockEntity.distillationTicks(101, 7));
+        assertEquals(2, DistilleryBlockEntity.distillationTicks(3, 7));
+    }
+
+    @Test
     public void processingBetweenSyncUpdatesMarksTheChunkDirty() {
         ProcessingWorld world = new ProcessingWorld();
         Processor machine = new Processor();

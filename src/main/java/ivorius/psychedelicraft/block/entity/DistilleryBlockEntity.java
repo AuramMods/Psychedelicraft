@@ -29,6 +29,7 @@ import java.util.Locale;
 
 public final class DistilleryBlockEntity extends FluidProcessingBlockEntity {
     private Outlet outlet = Outlet.MISSING;
+    private boolean legacyTiming;
 
     public DistilleryBlockEntity() {
         super(FlaskBlockEntity.CAPACITY);
@@ -62,7 +63,19 @@ public final class DistilleryBlockEntity extends FluidProcessingBlockEntity {
                 if (world.rand.nextInt(50) == 0) bubbleSound();
             }
         }
-        processFluid(process, heatRate(), outlet == Outlet.READY);
+        int duration = process == BrewProcess.IDLE ? 0 : distillationTicks(process.duration(contents), heatRate());
+        if (legacyTiming) {
+            rescaleProcessingProgress(duration);
+            legacyTiming = false;
+            world.markChunkDirty(pos, this);
+        }
+        if (outlet == Outlet.MISSING) clearProcessingProgress();
+        processFluid(process, duration, outlet == Outlet.READY);
+    }
+
+    static int distillationTicks(int baseTicks, int rate) {
+        // The donor counts up to the scaled duration and finishes on the following tick.
+        return 1 + Math.max(1, Math.min(Integer.MAX_VALUE - 1, baseTicks / rate));
     }
 
     @Override
@@ -123,6 +136,7 @@ public final class DistilleryBlockEntity extends FluidProcessingBlockEntity {
     public NBTTagCompound writeToNBT(NBTTagCompound compound) {
         super.writeToNBT(compound);
         compound.setInteger("outlet", outlet.ordinal());
+        if (!legacyTiming) compound.setBoolean("wallTickProgress", true);
         return compound;
     }
 
@@ -131,6 +145,7 @@ public final class DistilleryBlockEntity extends FluidProcessingBlockEntity {
         super.readFromNBT(compound);
         int index = compound.getInteger("outlet");
         outlet = index >= 0 && index < Outlet.values().length ? Outlet.values()[index] : Outlet.MISSING;
+        legacyTiming = !compound.getBoolean("wallTickProgress") && getStage() == BrewProcess.DISTILL;
     }
 
     public enum Outlet {
