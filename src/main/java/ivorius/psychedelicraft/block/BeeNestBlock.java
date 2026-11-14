@@ -1,5 +1,6 @@
 package ivorius.psychedelicraft.block;
 
+import ivorius.psychedelicraft.PSSounds;
 import ivorius.psychedelicraft.block.entity.BeeNestBlockEntity;
 import ivorius.psychedelicraft.client.particle.HoneyDripParticle;
 import ivorius.psychedelicraft.entity.BeeEntity;
@@ -298,7 +299,7 @@ public final class BeeNestBlock extends Block {
 
     private static void dropCombs(World world, BlockPos pos) {
         spawnAsEntity(world, pos, new ItemStack(PSItems.HONEYCOMB, 3));
-        world.playSound(null, pos, SoundEvents.ENTITY_SHEEP_SHEAR, SoundCategory.BLOCKS, 1, 1);
+        world.playSound(null, pos, PSSounds.BEE_NEST_SHEAR, SoundCategory.BLOCKS, 1, 1);
     }
 
     public static void registerDispenserBehaviors() {

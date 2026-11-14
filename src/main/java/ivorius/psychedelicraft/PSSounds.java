@@ -24,6 +24,16 @@ public final class PSSounds {
     public static final SoundEvent WAXED_SIGN_INTERACT_FAIL = sound("block.sign.waxed_interact_fail");
     public static final SoundEvent AXE_STRIP = sound("item.axe.strip");
     public static final SoundEvent BEE_NEST_DRIP = sound("block.bee_nest.drip");
+    public static final SoundEvent BEE_NEST_ENTER = sound("block.bee_nest.enter");
+    public static final SoundEvent BEE_NEST_EXIT = sound("block.bee_nest.exit");
+    public static final SoundEvent BEE_NEST_WORK = sound("block.bee_nest.work");
+    public static final SoundEvent BEE_NEST_SHEAR = sound("block.bee_nest.shear");
+    public static final SoundEvent BEE_LOOP = sound("entity.bee.loop");
+    public static final SoundEvent BEE_LOOP_ANGRY = sound("entity.bee.loop_aggressive");
+    public static final SoundEvent BEE_POLLINATE = sound("entity.bee.pollinate");
+    public static final SoundEvent BEE_STING = sound("entity.bee.sting");
+    public static final SoundEvent BEE_HURT = sound("entity.bee.hurt");
+    public static final SoundEvent BEE_DEATH = sound("entity.bee.death");
     public static final SoundEvent HONEY_DRINK = sound("item.honey_bottle.drink");
     public static final SoundEvent CROP_PLANT = sound("item.crop.plant");
     public static final SoundEvent DRUG_GENERIC = sound("drug.generic");
@@ -41,6 +51,8 @@ public final class PSSounds {
         event.getRegistry().registerAll(BREATH, HEARTBEAT, RIFT_JAR_TOGGLE, RIFT_JAR_OPEN, RIFT_JAR_CLOSE,
                 BOTTLE_RACK_USE, PLACED_DRINK_SET_DOWN, PAPER_BAG_INSERT, PAPER_BAG_REMOVE,
                 SIGN_DYE, SIGN_INK, SIGN_GLOW_INK, SIGN_WAX, WAXED_SIGN_INTERACT_FAIL, AXE_STRIP, BEE_NEST_DRIP,
+                BEE_NEST_ENTER, BEE_NEST_EXIT, BEE_NEST_WORK, BEE_NEST_SHEAR,
+                BEE_LOOP, BEE_LOOP_ANGRY, BEE_POLLINATE, BEE_STING, BEE_HURT, BEE_DEATH,
                 HONEY_DRINK, CROP_PLANT, DRUG_GENERIC);
     }
 }

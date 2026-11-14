@@ -1,7 +1,9 @@
 package ivorius.psychedelicraft.entity;
 
+import ivorius.psychedelicraft.PSSounds;
 import ivorius.psychedelicraft.block.BeeNestBlock;
 import ivorius.psychedelicraft.block.entity.BeeNestBlockEntity;
+import ivorius.psychedelicraft.client.BeeFlightSound;
 import ivorius.psychedelicraft.client.particle.NectarParticle;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockCrops;
@@ -34,6 +36,7 @@ import net.minecraft.pathfinding.PathNodeType;
 import net.minecraft.potion.PotionEffect;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.DamageSource;
+import net.minecraft.util.SoundEvent;
 import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.MathHelper;
@@ -189,7 +192,18 @@ public final class BeeEntity extends EntityAnimal {
         EnchantmentHelper.applyArthropodEnchantments(this, target);
         dataManager.set(STUNG, true);
         clearAnger();
+        playSound(PSSounds.BEE_STING, 1F, 1F);
         return true;
+    }
+
+    @Override
+    protected SoundEvent getHurtSound(DamageSource source) {
+        return PSSounds.BEE_HURT;
+    }
+
+    @Override
+    protected SoundEvent getDeathSound() {
+        return PSSounds.BEE_DEATH;
     }
 
     private void setNectar(boolean nectar) {
@@ -212,8 +226,11 @@ public final class BeeEntity extends EntityAnimal {
     @Override
     public void onUpdate() {
         super.onUpdate();
-        if (world.isRemote && isEntityAlive() && hasNectar() && dataManager.get(CROPS_GROWN) < CROP_GROWTH_LIMIT) {
-            NectarParticle.trySpawn(this);
+        if (world.isRemote) {
+            BeeFlightSound.tick(this);
+            if (isEntityAlive() && hasNectar() && dataManager.get(CROPS_GROWN) < CROP_GROWTH_LIMIT) {
+                NectarParticle.trySpawn(this);
+            }
         }
     }
 
@@ -381,6 +398,7 @@ public final class BeeEntity extends EntityAnimal {
         private BlockPos wanderTarget;
         private int wanderTime;
         private int flowerTime;
+        private int lastPollinationSound;
         private int findFlowerDelay;
         private int findHomeDelay;
 
@@ -395,7 +413,7 @@ public final class BeeEntity extends EntityAnimal {
 
         @Override
         public void resetTask() {
-            flowerTime = 0;
+            resetPollination();
             wanderTarget = null;
             getNavigator().clearPath();
         }
@@ -404,7 +422,7 @@ public final class BeeEntity extends EntityAnimal {
         public void updateTask() {
             boolean resting = !world.isDaytime() || world.isRaining();
             if (!isAngry() && !hasStung() && stayOutside == 0 && (resting || hasNectar() || ticksWithoutNectar == WITHOUT_NECTAR_LIMIT)) {
-                flowerTime = 0;
+                resetPollination();
                 if (findHomeDelay-- <= 0) {
                     nest = findHome();
                     findHomeDelay = 40;
@@ -428,9 +446,14 @@ public final class BeeEntity extends EntityAnimal {
                         if (getDistanceSq(flower.getX() + 0.5D, flower.getY() + 0.6D, flower.getZ() + 0.5D) < 0.16D) {
                             getNavigator().clearPath();
                             getMoveHelper().setMoveTo(flower.getX() + 0.5D, flower.getY() + 0.6D, flower.getZ() + 0.5D, 0.35D);
-                            if (++flowerTime > POLLINATION_TICKS) {
+                            ++flowerTime;
+                            if (flowerTime > lastPollinationSound + 60 && rand.nextFloat() < 0.05F) {
+                                lastPollinationSound = flowerTime;
+                                playSound(PSSounds.BEE_POLLINATE, 1F, 1F);
+                            }
+                            if (flowerTime > POLLINATION_TICKS) {
                                 setNectar(true);
-                                flowerTime = 0;
+                                resetPollination();
                             }
                         } else {
                             flyTo(flower, 0.6D);
@@ -438,7 +461,7 @@ public final class BeeEntity extends EntityAnimal {
                         return;
                     }
                     flower = null;
-                    flowerTime = 0;
+                    resetPollination();
                     getNavigator().clearPath();
                 }
             }
@@ -458,6 +481,11 @@ public final class BeeEntity extends EntityAnimal {
                     wanderTime = 100;
                 }
             }
+        }
+
+        private void resetPollination() {
+            flowerTime = 0;
+            lastPollinationSound = 0;
         }
 
         private void flyTo(BlockPos target, double height) {

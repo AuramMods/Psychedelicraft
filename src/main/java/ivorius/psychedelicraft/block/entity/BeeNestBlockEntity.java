@@ -1,5 +1,6 @@
 package ivorius.psychedelicraft.block.entity;
 
+import ivorius.psychedelicraft.PSSounds;
 import ivorius.psychedelicraft.block.BeeNestBlock;
 import ivorius.psychedelicraft.entity.BeeEntity;
 import net.minecraft.block.state.IBlockState;
@@ -13,6 +14,7 @@ import net.minecraft.util.EnumFacing;
 import net.minecraft.util.ITickable;
 import net.minecraft.util.Mirror;
 import net.minecraft.util.Rotation;
+import net.minecraft.util.SoundCategory;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 import net.minecraftforge.common.util.Constants;
@@ -114,6 +116,7 @@ public final class BeeNestBlockEntity extends TileEntity implements ITickable {
         occupants.add(new Occupant(data, 0));
         bee.setDead();
         world.markChunkDirty(pos, this);
+        world.playSound(null, pos.getX(), pos.getY(), pos.getZ(), PSSounds.BEE_NEST_ENTER, SoundCategory.BLOCKS, 1F, 1F);
         return true;
     }
 
@@ -146,6 +149,9 @@ public final class BeeNestBlockEntity extends TileEntity implements ITickable {
             }
         }
         world.markChunkDirty(pos, this);
+        if (!occupants.isEmpty() && world.rand.nextDouble() < 0.005D) {
+            world.playSound(null, pos.getX() + 0.5D, pos.getY(), pos.getZ() + 0.5D, PSSounds.BEE_NEST_WORK, SoundCategory.BLOCKS, 1F, 1F);
+        }
     }
 
     private boolean release(Occupant occupant, boolean emergency, boolean delivered, @Nullable EntityPlayer player) {
@@ -162,6 +168,7 @@ public final class BeeNestBlockEntity extends TileEntity implements ITickable {
         bee.leaveNest(pos, delivered, occupant.ticks);
         if (player != null && bee.getDistanceSq(player) <= 16D) bee.angerAt(player);
         if (!world.spawnEntity(bee)) return false;
+        world.playSound(null, pos, PSSounds.BEE_NEST_EXIT, SoundCategory.BLOCKS, 1F, 1F);
         if (delivered) {
             IBlockState state = world.getBlockState(pos);
             int level = state.getValue(BeeNestBlock.HONEY_LEVEL);

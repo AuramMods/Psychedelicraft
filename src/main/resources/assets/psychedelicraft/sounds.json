@@ -110,6 +110,78 @@
       { "name": "minecraft:mob/slime/small3", "volume": 0.3, "pitch": 0.85 }
     ]
   },
+  "block.bee_nest.enter": {
+    "subtitle": "subtitle.psychedelicraft.bee_nest_enter",
+    "sounds": [
+      {"name": "psychedelicraft:bee/nest_enter", "volume": 1.0, "pitch": 0.7},
+      {"name": "psychedelicraft:bee/nest_enter", "volume": 1.0, "pitch": 0.8}
+    ]
+  },
+  "block.bee_nest.exit": {
+    "subtitle": "subtitle.psychedelicraft.bee_nest_exit",
+    "sounds": [
+      {"name": "psychedelicraft:bee/nest_exit", "volume": 1.0, "pitch": 0.9},
+      {"name": "psychedelicraft:bee/nest_exit", "volume": 1.0, "pitch": 1.0},
+      {"name": "psychedelicraft:bee/nest_exit", "volume": 1.0, "pitch": 1.1}
+    ]
+  },
+  "block.bee_nest.work": {
+    "subtitle": "subtitle.psychedelicraft.bee_nest_work",
+    "sounds": [
+      {"name": "psychedelicraft:bee/nest_work", "volume": 0.6, "pitch": 0.94},
+      {"name": "psychedelicraft:bee/nest_work", "volume": 0.6, "pitch": 1.0},
+      {"name": "psychedelicraft:bee/nest_work", "volume": 0.6, "pitch": 1.06}
+    ]
+  },
+  "block.bee_nest.shear": {
+    "subtitle": "subtitle.psychedelicraft.bee_nest_shear",
+    "sounds": [
+      {"name": "psychedelicraft:bee/nest_shear", "volume": 0.8, "pitch": 0.8},
+      {"name": "psychedelicraft:bee/nest_shear", "volume": 0.8, "pitch": 0.9},
+      {"name": "psychedelicraft:bee/nest_shear", "volume": 0.8, "pitch": 1.0}
+    ]
+  },
+  "entity.bee.loop": {
+    "subtitle": "subtitle.psychedelicraft.bee_loop",
+    "sounds": [
+      {"name": "psychedelicraft:bee/flight", "volume": 0.65, "pitch": 1.0}
+    ]
+  },
+  "entity.bee.loop_aggressive": {
+    "subtitle": "subtitle.psychedelicraft.bee_loop_angry",
+    "sounds": [
+      {"name": "psychedelicraft:bee/flight_angry", "volume": 0.8, "pitch": 1.0}
+    ]
+  },
+  "entity.bee.pollinate": {
+    "subtitle": "subtitle.psychedelicraft.bee_pollinate",
+    "sounds": [
+      {"name": "psychedelicraft:bee/pollinate", "volume": 0.8, "pitch": 0.96},
+      {"name": "psychedelicraft:bee/pollinate", "volume": 0.8, "pitch": 1.0},
+      {"name": "psychedelicraft:bee/pollinate", "volume": 0.8, "pitch": 1.04}
+    ]
+  },
+  "entity.bee.sting": {
+    "subtitle": "subtitle.psychedelicraft.bee_sting",
+    "sounds": [
+      {"name": "psychedelicraft:bee/sting", "volume": 1.0, "pitch": 0.8},
+      {"name": "psychedelicraft:bee/sting", "volume": 1.0, "pitch": 1.0}
+    ]
+  },
+  "entity.bee.hurt": {
+    "subtitle": "subtitle.psychedelicraft.bee_hurt",
+    "sounds": [
+      {"name": "psychedelicraft:bee/hurt", "volume": 1.0, "pitch": 1.0},
+      {"name": "psychedelicraft:bee/hurt", "volume": 1.0, "pitch": 1.2}
+    ]
+  },
+  "entity.bee.death": {
+    "subtitle": "subtitle.psychedelicraft.bee_death",
+    "sounds": [
+      {"name": "psychedelicraft:bee/death", "volume": 1.0, "pitch": 0.96},
+      {"name": "psychedelicraft:bee/death", "volume": 1.0, "pitch": 1.0}
+    ]
+  },
   "item.honey_bottle.drink": {
     "subtitle": "subtitle.psychedelicraft.honey_bottle_drink",
     "sounds": [
