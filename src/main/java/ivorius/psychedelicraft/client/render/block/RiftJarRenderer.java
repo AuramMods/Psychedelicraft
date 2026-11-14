@@ -59,7 +59,7 @@ public final class RiftJarRenderer extends TileEntitySpecialRenderer<RiftJarBloc
         float lid = jar.getLid(1F);
         float handle = jar.getHandle(1F);
         renderJar(x + 0.5, y, z + 0.5, state.getValue(RiftJarBlock.FACING), jar.getAmount(), lid, handle, age, ticks, time);
-        glyphs.render(jar, x + 0.5, y + 0.6, z + 0.5, ticks, handle * lid);
+        glyphs.render(jar, x + 0.5, y + 0.5, z + 0.5, ticks, handle * lid);
     }
 
     private static float gameTime(long tick, float partialTicks) {

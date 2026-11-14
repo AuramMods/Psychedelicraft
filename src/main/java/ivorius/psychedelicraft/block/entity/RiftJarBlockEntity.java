@@ -148,8 +148,8 @@ public final class RiftJarBlockEntity extends TileEntity implements ITickable {
     private void tickConnections() {
         if (sucking && lid > 0) {
             for (RealityRiftEntity rift : nearbyRifts()) {
-                Connection connection = connections.computeIfAbsent(rift.getUniqueID(), key -> new Connection());
-                connection.position = new Vec3d(rift.posX, rift.posY + rift.getEyeHeight(), rift.posZ);
+                Connection connection = connections.computeIfAbsent(rift.getUniqueID(),
+                        key -> new Connection(new Vec3d(rift.posX, rift.posY + rift.getEyeHeight(), rift.posZ)));
                 connection.strength = Math.min(1, connection.strength + 0.02F * lid);
             }
         }
@@ -213,8 +213,12 @@ public final class RiftJarBlockEntity extends TileEntity implements ITickable {
     }
 
     public static final class Connection {
-        private Vec3d position;
+        private final Vec3d position;
         private float strength;
+
+        private Connection(Vec3d position) {
+            this.position = position;
+        }
 
         public Vec3d getPosition() {
             return position;
