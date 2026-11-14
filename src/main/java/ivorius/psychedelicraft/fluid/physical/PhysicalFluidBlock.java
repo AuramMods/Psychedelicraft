@@ -104,6 +104,15 @@ public final class PhysicalFluidBlock extends BlockFluidClassic {
         return super.getFluidHeightForRender(world, pos, up);
     }
 
+    public float surfaceHeight(IBlockAccess world, BlockPos pos, IBlockState state) {
+        return world.getBlockState(pos.up()).getBlock() == this ? 1F : (8 - state.getValue(LEVEL)) / 9F;
+    }
+
+    @Override
+    public IBlockState getStateAtViewpoint(IBlockState state, IBlockAccess world, BlockPos pos, Vec3d viewpoint) {
+        return viewpoint.y < pos.getY() + (double) surfaceHeight(world, pos, state) ? state : Blocks.AIR.getDefaultState();
+    }
+
     @Override
     public Fluid getFluid() {
         return fluid;
@@ -352,7 +361,7 @@ public final class PhysicalFluidBlock extends BlockFluidClassic {
     @SideOnly(Side.CLIENT)
     public Vec3d getFogColor(World world, BlockPos pos, IBlockState state, Entity entity, Vec3d original, float partialTicks) {
         double cameraY = ActiveRenderInfo.projectViewFromEntity(entity, partialTicks).y;
-        if (cameraY >= pos.getY() + getFilledPercentage(world, pos)) return original;
+        if (!waterLike || cameraY >= pos.getY() + (double) surfaceHeight(world, pos, state)) return original;
         int color = fluid.getColor(contents(world, pos));
         return new Vec3d((color >> 16 & 255) / 255D, (color >> 8 & 255) / 255D, (color & 255) / 255D);
     }

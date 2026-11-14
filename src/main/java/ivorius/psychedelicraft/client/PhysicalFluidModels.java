@@ -69,10 +69,12 @@ public final class PhysicalFluidModels implements IBakedModel {
 
     @SubscribeEvent
     public static void fogDensity(EntityViewRenderEvent.FogDensity event) {
-        if (!(event.getState().getBlock() instanceof PhysicalFluidBlock)) return;
+        if (!(event.getState().getBlock() instanceof PhysicalFluidBlock)
+                || !((PhysicalFluidBlock) event.getState().getBlock()).isWaterLike()) return;
         float density = 0.1F;
         if (event.getEntity() instanceof EntityLivingBase) {
             EntityLivingBase entity = (EntityLivingBase) event.getEntity();
+            if (entity.isPotionActive(MobEffects.BLINDNESS)) return;
             density = entity.isPotionActive(MobEffects.WATER_BREATHING) ? 0.01F
                     : Math.max(0.01F, density - EnchantmentHelper.getRespirationModifier(entity) * 0.03F);
         }

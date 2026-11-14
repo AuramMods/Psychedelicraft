@@ -10,6 +10,7 @@ import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.profiler.Profiler;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
 import net.minecraft.world.WorldProviderSurface;
 import net.minecraft.world.chunk.IChunkProvider;
@@ -93,6 +94,24 @@ public class PhysicalFluidStateTest {
 
         world.put(cell.down(), brew.getStateFromMeta(7), null);
         assertNull(brew.neighborAttributes(world, cell));
+    }
+
+    @Test
+    public void cameraUsesFluidOnlyBelowTheSurface() {
+        PhysicalFluidBlock coffee = new PhysicalFluidBlock(PSFluids.COFFEE);
+        FluidWorld world = new FluidWorld();
+        BlockPos cell = new BlockPos(0, 64, 0);
+        IBlockState flow = coffee.getStateFromMeta(15);
+        world.put(cell, flow, null);
+        double surface = cell.getY() + (double) (1F / 9F);
+        assertSame(flow, coffee.getStateAtViewpoint(flow, world, cell, new Vec3d(0.5, surface - 0.001, 0.5)));
+        assertSame(Blocks.AIR.getDefaultState(), coffee.getStateAtViewpoint(flow, world, cell, new Vec3d(0.5, surface, 0.5)));
+        assertSame(Blocks.AIR.getDefaultState(), coffee.getStateAtViewpoint(flow, world, cell, new Vec3d(0.5, 64.16, 0.5)));
+
+        world.put(cell.up(), coffee.getDefaultState(), null);
+        assertSame(flow, coffee.getStateAtViewpoint(flow, world, cell, new Vec3d(0.5, 64.99, 0.5)));
+        world.put(cell.up(), Blocks.WATER.getDefaultState(), null);
+        assertSame(Blocks.AIR.getDefaultState(), coffee.getStateAtViewpoint(flow, world, cell, new Vec3d(0.5, 64.99, 0.5)));
     }
 
     private static final class FluidWorld extends World {

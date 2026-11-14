@@ -1163,6 +1163,15 @@ sh run/production/background-qa/run.sh "$qa" game-background Overlay-QA \
 - The tested jar SHA-256 is `ef3283f33c68d4be358ddd9900624ce067d3dc64328130e45fad3c22ef9ca8fc`. Evidence is under `run/production/runtime-qa-cycle127` in `build-production.log`, `build-fixture-final.log`, `runtime-baseline-final.log`, `runtime-verified.log`, `runtime-reopen.log` and `runtime-vat.log`. Each client ran on Xvfb at zero master volume with OpenAL's `No Output` device.
 - Next, audit how the world-fluid surface height affects fog density and color just above a shallow flow, while submerged and with vanilla status effects active.
 
+### Cycle 128 · Camera fog at fluid surfaces
+
+- Forge now uses the same physical fluid surface for the camera and juniper boats. A lone flow is `(8 - level) / 9` blocks deep. A block of the same fluid directly above fills the cell, and a different fluid leaves its height unchanged. The camera switches to air at the surface. Only fluids in the donor water tag use underwater fog. [Pinned water tag](https://github.com/Sollace/Psychedelicraft/blob/319a4ea0160d6600cffcd5f5cc9e363ceaab44a1/src/main/resources/data/minecraft/tags/fluids/water.json)
+- The 1.12 renderer keeps exponential fog and the current batch tint when submerged. Water Breathing and Respiration retain the legacy density values. Blindness takes precedence and uses the native fog distance and color. The donor's underwater screen distortion reads the eye block's fluid tag separately and keeps that behavior.
+- The clean Java 8 build and reobfuscation passed all 171 tests. The added viewpoint test checks both sides of the shallow surface, equality, and stacked cells containing matching or different fluids.
+- In muted Forge 14.23.5.2864, the previous jar used exponential fog 0.16 blocks above the floor of a level-seven brew flow. On the rebuilt jar the same viewpoint had the sky's linear fog and color, and the submerged sample at 0.05 blocks used the batch tint at density `0.1`. The topped column stayed submerged at 0.99 blocks. Kava used ambient fog and vanilla water retained its native fog. Water Breathing gave `0.01`, Respiration II gave `0.04`, and Blindness gave linear black fog with a five-block end distance. These values come from the installed renderer and OpenGL state. The fluid-contact regression also passed drips, suspended particles, slurry bubbles, vat packets and buoyancy.
+- The tested production jar SHA-256 is `bea50d29afb009e9c80b51da6453f613909698a5b79850790afb4f7ef9079b79`. Evidence is under `run/production/runtime-qa-cycle128` in `build-production.log`, `build-fixture.log`, `runtime-baseline.log`, `runtime-fixed.log` and `runtime-contact.log`. Clients ran on Xvfb at zero master volume with OpenAL's `No Output` device.
+- Next, compare the fluid surface used for head immersion and body contact with the surface the camera and boats use, including shallow and stacked flows.
+
 Dedicated Forge startup and multiplayer on that server remain open pending EULA acceptance.
 
 ## Repository and branch survey
