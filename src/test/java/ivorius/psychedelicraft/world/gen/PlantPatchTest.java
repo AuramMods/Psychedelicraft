@@ -1,6 +1,7 @@
 package ivorius.psychedelicraft.world.gen;
 
 import ivorius.psychedelicraft.block.PSBlocks;
+import ivorius.psychedelicraft.block.TallCropBlock;
 import net.minecraft.block.Block;
 import net.minecraft.block.material.Material;
 import net.minecraft.block.state.IBlockState;
@@ -22,7 +23,7 @@ import java.util.Random;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertSame;
 
-public class LowPlantPatchTest {
+public class PlantPatchTest {
     @BeforeClass
     public static void bootstrapMinecraft() {
         Bootstrap.register();
@@ -66,6 +67,35 @@ public class LowPlantPatchTest {
         assertEquals(PSBlocks.AGAVE_PLANT.getStateFromMeta(4), world.getBlockState(origin.east(2)));
         assertSame(addonAir, world.getBlockState(origin.east(3)));
         assertEquals(PSBlocks.AGAVE_PLANT.getStateFromMeta(1), world.getBlockState(origin.east(4)));
+    }
+
+    @Test
+    public void tallPatchFindsSoilBeneathJuniperLeavesAndUsesSupportForHigherSections() {
+        PatchWorld world = new PatchWorld();
+        BlockPos base = new BlockPos(8, 64, 8);
+        world.setBlockState(base.down(), Blocks.GRASS.getDefaultState(), 2);
+        world.setBlockState(base, PSBlocks.JUNIPER_LEAVES.getDefaultState(), 2);
+        world.setBlockState(base.up(), Blocks.LEAVES.getDefaultState(), 2);
+        world.setBlockState(base.up(2), Blocks.COBBLESTONE.getDefaultState(), 2);
+        TallCropBlock crop = PSBlocks.NATURAL_CANNABIS;
+        Random random = new Random() {
+            private final int[] draws = {0, 0, 1, 1, 6};
+            private int index;
+
+            @Override
+            public int nextInt(int bound) {
+                int value = draws[index++];
+                if (value >= bound) throw new AssertionError("draw " + value + " for bound " + bound);
+                return value;
+            }
+        };
+
+        PlantWorldGenerator.placeTallPatch(world, base.up(), random, crop, false);
+
+        assertSame(Blocks.GRASS, world.getBlockState(base.down()).getBlock());
+        assertSame(crop.stateForHeight(0, 15), world.getBlockState(base));
+        assertSame(crop.stateForHeight(1, 15), world.getBlockState(base.up()));
+        assertSame(crop.stateForHeight(2, 6), world.getBlockState(base.up(2)));
     }
 
     private static final class PatchWorld extends World {

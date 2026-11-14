@@ -18,7 +18,7 @@ import net.minecraft.block.Block;
 import net.minecraft.block.BlockBush;
 import net.minecraft.block.BlockDirt;
 import net.minecraft.block.BlockDoublePlant;
-import net.minecraft.block.BlockLeaves;
+import net.minecraft.block.BlockStone;
 import net.minecraft.block.material.Material;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.init.Blocks;
@@ -157,7 +157,7 @@ public final class PlantWorldGenerator {
         return random.nextInt(radius + 1) - random.nextInt(radius + 1);
     }
 
-    private static void placeTallPatch(World world, BlockPos surface, Random random, TallCropBlock crop, boolean waterRequired) {
+    static void placeTallPatch(World world, BlockPos surface, Random random, TallCropBlock crop, boolean waterRequired) {
         BlockPos origin = findTerrainLevel(world, surface);
         if (!insideWorld(world, origin) || !TallCropBlock.isWildSoil(world.getBlockState(origin.down()))
                 || (waterRequired && !waterNearby(world, origin.down()))) {
@@ -183,21 +183,21 @@ public final class PlantWorldGenerator {
         BlockPos cursor = base;
         for (int level = 0; level < height; level++) {
             cursor = base.up(level);
-            if (!insideWorld(world, cursor) || !replaceable(world.getBlockState(cursor))) {
-                break;
-            }
             IBlockState section = crop.stateForHeight(level);
-            if (!crop.canBlockStay(world, cursor, section)) {
-                break;
-            }
             int maxAge = crop.maxAge(section);
             int age = level == height - 1 ? random.nextInt(maxAge + 1) : maxAge;
-            world.setBlockState(cursor, crop.stateForHeight(level, age), 2);
+            IBlockState state = crop.stateForHeight(level, age);
+            // The donor checks the terrain at the base, then uses the sampled state's support rule for each section.
+            if (!insideWorld(world, cursor) || !crop.canBlockStay(world, cursor, state)) {
+                break;
+            }
+            world.setBlockState(cursor, state, 2);
         }
         // Match the donor's cursor-relative substrate update, using coarse dirt on 1.12.
         BlockPos roots = cursor.down();
         IBlockState under = world.getBlockState(roots);
-        if (TallCropBlock.isWildSoil(under) || under.getBlock() == Blocks.STONE) {
+        if (TallCropBlock.isWildSoil(under)
+                || (under.getBlock() == Blocks.STONE && under.getValue(BlockStone.VARIANT).isNatural())) {
             world.setBlockState(roots, Blocks.DIRT.getDefaultState().withProperty(BlockDirt.VARIANT, BlockDirt.DirtType.COARSE_DIRT), 2);
         }
     }
@@ -213,12 +213,12 @@ public final class PlantWorldGenerator {
 
     private static BlockPos findTerrainLevel(World world, BlockPos start) {
         BlockPos pos = start;
-        if (replaceable(world.getBlockState(pos))) {
-            while (pos.getY() > 0 && replaceable(world.getBlockState(pos.down()))) {
+        if (replaceableTerrain(world, pos)) {
+            while (pos.getY() > 0 && replaceableTerrain(world, pos.down())) {
                 pos = pos.down();
             }
         } else {
-            while (pos.getY() < world.getActualHeight() && !replaceable(world.getBlockState(pos))) {
+            while (pos.getY() < world.getActualHeight() && !replaceableTerrain(world, pos)) {
                 pos = pos.up();
             }
         }
@@ -229,10 +229,11 @@ public final class PlantWorldGenerator {
         return pos.getY() > 0 && pos.getY() < world.getActualHeight();
     }
 
-    private static boolean replaceable(IBlockState state) {
+    private static boolean replaceableTerrain(World world, BlockPos pos) {
+        IBlockState state = world.getBlockState(pos);
         Block block = state.getBlock();
-        return state.getMaterial() == Material.AIR || state.getMaterial() == Material.WATER
-                || block instanceof BlockLeaves || block instanceof BlockDoublePlant
+        return block.isAir(state, world, pos) || block == Blocks.WATER || block == Blocks.FLOWING_WATER
+                || block.isLeaves(state, world, pos) || block instanceof BlockDoublePlant
                 || block == Blocks.TALLGRASS || block == Blocks.DEADBUSH || block == Blocks.VINE;
     }
 
