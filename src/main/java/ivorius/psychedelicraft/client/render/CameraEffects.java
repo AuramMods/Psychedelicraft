@@ -14,6 +14,7 @@ import net.minecraft.client.model.ModelBase;
 import net.minecraft.client.model.ModelBiped;
 import net.minecraft.client.model.ModelPlayer;
 import net.minecraft.client.renderer.GlStateManager;
+import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.util.math.MathHelper;
@@ -45,7 +46,8 @@ public final class CameraEffects {
     }
 
     static void transformView(EntityViewRenderEvent.CameraSetup event) {
-        EntityPlayerSP player = Minecraft.getMinecraft().player;
+        Minecraft client = Minecraft.getMinecraft();
+        EntityPlayerSP player = client.player;
         DrugProperties drugs = player == null ? null : DrugCapability.get(player);
         if (drugs == null) return;
         float partial = (float) event.getRenderPartialTicks();
@@ -67,9 +69,16 @@ public final class CameraEffects {
                 GlStateManager.rotate(-event.getRoll(), 0, 0, 1);
             }
         }
-        wobble(tick, Math.min(1F, drugs.getModifier(Drug::viewWobblyness)));
+        float wobble = Math.min(1F, drugs.getModifier(Drug::viewWobblyness));
         float amount = drugs.blendStrength(0F, Drug::viewTrembleStrength);
+        Entity view = event.getEntity();
+        boolean frontView = (wobble > 0F || amount > 0F) && client.gameSettings.thirdPersonView == 2
+                && !(view instanceof EntityLivingBase && ((EntityLivingBase) view).isPlayerSleeping());
+        // Forge has already turned the front-facing camera around. Keep wobble and tremor in screen axes.
+        if (frontView) GlStateManager.rotate(-180F, 0F, 1F, 0F);
+        wobble(tick, wobble);
         if (amount > 0F) GlStateManager.translate(noise(tick) * 0.05F * amount, verticalTremble(tick, amount), 0F);
+        if (frontView) GlStateManager.rotate(180F, 0F, 1F, 0F);
     }
 
     private static void wobble(float tick, float strength) {
