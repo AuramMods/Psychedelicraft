@@ -110,7 +110,7 @@ public final class MashTubBlockEntity extends FluidProcessingBlockEntity {
         }
         if (matches == 0) {
             supplied.clear();
-            getTank().replace(new FluidStack(PSFluids.SLURRY, contents.amount));
+            getTank().replace(new FluidStack(PSFluids.SLURRY, contents.amount, contents.tag));
             bubbles(90, 0.5F, SoundEvents.BLOCK_GRAVEL_BREAK);
         } else if (matches == 1 && complete != null) {
             activeRecipe = complete.getRegistryName();
@@ -138,7 +138,7 @@ public final class MashTubBlockEntity extends FluidProcessingBlockEntity {
             return;
         }
         MashingRecipe recipe = (MashingRecipe) entry;
-        if (!recipe.matchesPool(getTank().getFluid())) {
+        if (!recipe.matchesPool(getTank().getFluid()) || !recipe.matchesIngredients(supplied)) {
             endStew();
             return;
         }

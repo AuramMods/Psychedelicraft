@@ -71,6 +71,10 @@ public final class MashingRecipe extends IForgeRegistryEntry.Impl<IRecipe> imple
         return assign(supplied, 0, 0);
     }
 
+    public boolean matchesIngredients(List<ItemStack> supplied) {
+        return supplied.size() == ingredients.size() && matchesPartial(supplied);
+    }
+
     private boolean assign(List<ItemStack> supplied, int index, int occupied) {
         if (index == supplied.size()) return true;
         for (int i = 0; i < ingredients.size(); i++) {
