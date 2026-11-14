@@ -1687,6 +1687,11 @@ sh run/production/background-qa/run.sh "$qa" game-background Overlay-QA \
 - Adult and baby bees use four original sprite atlases for the combinations of anger and nectar. The server starts the attack tilt when an angry, unstung bee comes within two blocks of its target. The client interpolates the tilt and returns the bee to its ordinary pose after a sting.
 - The clean Java 8 build ran `reobfJar` and passed 218 tests. The muted Forge 2864 probe compared the previous renderer and the new native render path. It received live pose changes over the network and verified the rest pose, half-sized baby, full attack tilt, retraction after a sting, state textures and balanced GL matrices. The tested jar SHA-256 is `885553c7ac04246d8e9983914d38b0224ffe00509e50a64e10f8c3ecfbb081ac`. See `build.log`, `runtime-baseline.log`, `runtime-model.log` and the screenshots under `run/production/runtime-qa-cycle185`.
 
+### Cycle 186 · Creative use for edibles
+
+- The vanilla 1.12 food-use check rejects Creative players even for always-edible items. The mod's shared edible item now starts the normal timed use in Creative. The existing finish handler applies a dose and preserves the Creative stack.
+- The clean Java 8 build ran `reobfJar` and passed 218 tests. The previous jar consumed the LSD pill and both magic-mushroom items at full hunger in Survival and blocked them in Creative. The fixed jar consumed exactly one in Survival and kept the stack in Creative. Both hands received the use animation and each completion queued one matching influence. Initial probes failed after the test player fell through the flat-world spawn or the input did not stay active. The final probe used a stone platform and sent the real use request through the client controller. See `runtime-baseline-floor.log` and `runtime-fixed-controller.log` under `run/production/runtime-qa-cycle186`. The tested jar SHA-256 is `3e5dbc6ec1b71f87e510883df8d617b2cdc552e0439da6c3e765b9d2c7d23f7f`.
+
 Dedicated Forge startup and multiplayer on that server remain open pending EULA acceptance.
 
 ## Repository and branch survey

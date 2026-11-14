@@ -14,6 +14,9 @@ import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemFood;
 import net.minecraft.item.ItemStack;
+import net.minecraft.util.ActionResult;
+import net.minecraft.util.EnumActionResult;
+import net.minecraft.util.EnumHand;
 import net.minecraft.world.World;
 
 public class EdibleItem extends ItemFood {
@@ -28,6 +31,14 @@ public class EdibleItem extends ItemFood {
         super(hunger, saturation, false);
         this.influence = influence;
         setAlwaysEdible();
+    }
+
+    @Override
+    public ActionResult<ItemStack> onItemRightClick(World world, EntityPlayer player, EnumHand hand) {
+        // The 1.12 food check rejects Creative even for always-edible items.
+        if (!player.isCreative()) return super.onItemRightClick(world, player, hand);
+        player.setActiveHand(hand);
+        return new ActionResult<>(EnumActionResult.SUCCESS, player.getHeldItem(hand));
     }
 
     @Override
