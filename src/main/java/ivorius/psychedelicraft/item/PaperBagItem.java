@@ -220,7 +220,7 @@ public final class PaperBagItem extends Item {
         }
         return block instanceof BlockButton
                 || block == Blocks.RED_MUSHROOM || block == Blocks.BROWN_MUSHROOM
-                || item == Items.COOKIE || item == Items.NETHER_WART || item == Items.WHEAT_SEEDS
+                || item == Items.COOKIE || item == PSItems.SWEET_BERRIES || item == Items.NETHER_WART || item == Items.WHEAT_SEEDS
                 || item == Items.BEETROOT_SEEDS || item == Items.CARROT || item == Items.POTATO
                 || item == Items.SPIDER_EYE || (item == Items.FISH && isVariant(stack, 3))
                 || (item == Items.COOKED_FISH && isVariant(stack, 1))

@@ -47,6 +47,7 @@ public final class PSItems {
     public static final Item KELP = named("kelp", new ItemBlock(PSBlocks.KELP));
     public static final Item DRIED_KELP = named("dried_kelp", new QuickFoodItem(1, 0.3F, false, 16));
     public static final Item DRIED_KELP_BLOCK = named("dried_kelp_block", new ItemBlock(PSBlocks.DRIED_KELP_BLOCK));
+    public static final Item SWEET_BERRIES = named("sweet_berries", new SweetBerriesItem());
     public static final FilledBucketItem FILLED_BUCKET = named("filled_bucket", new FilledBucketItem(), PSItemGroups.DRINKS);
     public static final Item BROWN_MAGIC_MUSHROOMS = edible("brown_magic_mushrooms", 0, 0.1F, DrugType.BROWN_SHROOMS);
     public static final Item RED_MAGIC_MUSHROOMS = edible("red_magic_mushrooms", 0, 0.1F, DrugType.RED_SHROOMS);

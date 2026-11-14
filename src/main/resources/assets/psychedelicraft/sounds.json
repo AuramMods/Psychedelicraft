@@ -102,6 +102,63 @@
       { "name": "minecraft:block.grass.hit", "type": "event", "volume": 0.45, "pitch": 1.2 }
     ]
   },
+  "block.sweet_berry_bush.break": {
+    "sounds": [
+      {
+        "name": "psychedelicraft:sweet_berry_bush/break1",
+        "volume": 0.8
+      },
+      {
+        "name": "psychedelicraft:sweet_berry_bush/break2",
+        "volume": 0.8
+      },
+      {
+        "name": "psychedelicraft:sweet_berry_bush/break3",
+        "volume": 0.8
+      },
+      {
+        "name": "psychedelicraft:sweet_berry_bush/break4",
+        "volume": 0.8
+      }
+    ],
+    "subtitle": "subtitles.block.generic.break"
+  },
+  "block.sweet_berry_bush.place": {
+    "sounds": [
+      {
+        "name": "psychedelicraft:sweet_berry_bush/place1",
+        "volume": 0.8
+      },
+      {
+        "name": "psychedelicraft:sweet_berry_bush/place2",
+        "volume": 0.8
+      },
+      {
+        "name": "psychedelicraft:sweet_berry_bush/place3",
+        "volume": 0.8
+      },
+      {
+        "name": "psychedelicraft:sweet_berry_bush/place4",
+        "volume": 0.8
+      },
+      {
+        "name": "psychedelicraft:sweet_berry_bush/place5",
+        "volume": 0.8
+      },
+      {
+        "name": "psychedelicraft:sweet_berry_bush/place6",
+        "volume": 0.8
+      }
+    ],
+    "subtitle": "subtitles.block.generic.place"
+  },
+  "block.sweet_berry_bush.pick_berries": {
+    "sounds": [
+      "psychedelicraft:sweet_berry_bush/pick_from_bush1",
+      "psychedelicraft:sweet_berry_bush/pick_from_bush2"
+    ],
+    "subtitle": "subtitle.psychedelicraft.sweet_berry_bush_pick"
+  },
   "block.bee_nest.drip": {
     "subtitle": "subtitle.psychedelicraft.bee_nest_drip",
     "sounds": [

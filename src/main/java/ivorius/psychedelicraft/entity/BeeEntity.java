@@ -2,6 +2,8 @@ package ivorius.psychedelicraft.entity;
 
 import ivorius.psychedelicraft.PSSounds;
 import ivorius.psychedelicraft.block.BeeNestBlock;
+import ivorius.psychedelicraft.block.PSBlocks;
+import ivorius.psychedelicraft.block.SweetBerryBushBlock;
 import ivorius.psychedelicraft.block.entity.BeeNestBlockEntity;
 import ivorius.psychedelicraft.client.BeeFlightSound;
 import ivorius.psychedelicraft.client.particle.NectarParticle;
@@ -310,6 +312,9 @@ public final class BeeEntity extends EntityAnimal {
         } else if (block == Blocks.MELON_STEM || block == Blocks.PUMPKIN_STEM) {
             int age = state.getValue(BlockStem.AGE);
             if (age < 7) return state.withProperty(BlockStem.AGE, age + 1);
+        } else if (block == PSBlocks.SWEET_BERRY_BUSH) {
+            int age = state.getValue(SweetBerryBushBlock.AGE);
+            if (age < PSBlocks.SWEET_BERRY_BUSH.maxAge()) return state.withProperty(SweetBerryBushBlock.AGE, age + 1);
         }
         return state;
     }

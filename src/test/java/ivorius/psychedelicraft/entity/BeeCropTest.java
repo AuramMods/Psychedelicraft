@@ -20,8 +20,9 @@ public class BeeCropTest {
     @Test
     public void eligibleCropsAdvanceExactlyOneAgeUntilMature() {
         for (Block block : new Block[]{Blocks.WHEAT, Blocks.CARROTS, Blocks.POTATOES, Blocks.BEETROOTS,
-                Blocks.MELON_STEM, Blocks.PUMPKIN_STEM}) {
-            int max = block instanceof BlockCrops ? ((BlockCrops) block).getMaxAge() : 7;
+                Blocks.MELON_STEM, Blocks.PUMPKIN_STEM, PSBlocks.SWEET_BERRY_BUSH}) {
+            int max = block == PSBlocks.SWEET_BERRY_BUSH ? PSBlocks.SWEET_BERRY_BUSH.maxAge()
+                    : block instanceof BlockCrops ? ((BlockCrops) block).getMaxAge() : 7;
             for (int age = 0; age < max; age++) {
                 assertSame(block.getStateFromMeta(age + 1), BeeEntity.nextCropAge(block.getStateFromMeta(age)));
             }

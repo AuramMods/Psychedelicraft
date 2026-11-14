@@ -1,5 +1,7 @@
 package ivorius.psychedelicraft.block;
 
+import java.util.Random;
+
 import net.minecraft.block.BlockSand;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.init.Bootstrap;
@@ -28,6 +30,7 @@ public class AgePlantBlockTest {
         assertAges(new NightshadeBlock(() -> Items.AIR, () -> Items.AIR), 7);
         assertAges(new AgavePlantBlock(), 5);
         assertAges(new PeyoteBlock(), 3);
+        assertAges(new SweetBerryBushBlock(), 3);
     }
 
     @Test
@@ -37,6 +40,22 @@ public class AgePlantBlockTest {
             IBlockState state = plant.getStateFromMeta(age);
             assertEquals(age + 1, plant.quantityDropped(state, 0, null));
             assertEquals(age + 1, plant.quantityDropped(state, 3, null));
+        }
+    }
+
+    @Test
+    public void sweetBerryHarvestUsesTheAgeAndUniformFortuneBonus() {
+        SweetBerryBushBlock bush = new SweetBerryBushBlock();
+        Random maximumRoll = new Random() {
+            @Override
+            public int nextInt(int bound) {
+                return bound - 1;
+            }
+        };
+        for (int age = 0; age <= 3; age++) {
+            IBlockState state = bush.getStateFromMeta(age);
+            assertEquals(age < 2 ? 0 : age, bush.quantityDropped(state, 0, maximumRoll));
+            assertEquals(age < 2 ? 0 : age + 3, bush.quantityDropped(state, 3, maximumRoll));
         }
     }
 

@@ -22,6 +22,7 @@ public final class PSDamageTypes {
     public static final DamageSource KIDNEY_FAILURE = new DamageSource("psychedelicraft.kidney_failure").setDamageBypassesArmor();
     public static final DamageSource IN_SLEEP = new DamageSource("psychedelicraft.in_sleep").setDamageBypassesArmor();
     public static final DamageSource OVER_EATING = new DamageSource("psychedelicraft.over_eating").setDamageBypassesArmor();
+    public static final DamageSource SWEET_BERRY_BUSH = new DamageSource("psychedelicraft.sweet_berry_bush");
 
     public static DamageSource molotov(Entity projectile, @Nullable EntityLivingBase owner, Entity target, ItemStack stack) {
         String type = target == owner ? "psychedelicraft.self_molotov" : "psychedelicraft.molotov";
