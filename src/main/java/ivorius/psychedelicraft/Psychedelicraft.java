@@ -24,6 +24,7 @@ import ivorius.psychedelicraft.screen.PSGuiHandler;
 import ivorius.psychedelicraft.world.gen.ChestLoot;
 import ivorius.psychedelicraft.world.gen.CopperOreGenerator;
 import ivorius.psychedelicraft.world.gen.MossCaveWorldGenerator;
+import ivorius.psychedelicraft.world.gen.Shipwreck;
 import ivorius.psychedelicraft.world.gen.SmallFlowerWorldGenerator;
 import ivorius.psychedelicraft.world.gen.VillageGarden;
 import ivorius.psychedelicraft.world.gen.WarmOceanRuin;
@@ -53,6 +54,7 @@ public class Psychedelicraft {
         SnifferEntity.registerLoot();
         VillageGarden.register();
         WarmOceanRuin.register();
+        Shipwreck.register();
         NetworkRegistry.INSTANCE.registerGuiHandler(this, new PSGuiHandler());
     }
 

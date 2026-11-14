@@ -4,8 +4,6 @@ import ivorius.psychedelicraft.Psychedelicraft;
 import net.minecraft.command.CommandLocate;
 import net.minecraft.command.ICommandSender;
 import net.minecraft.init.Biomes;
-import net.minecraft.nbt.NBTTagCompound;
-import net.minecraft.nbt.NBTTagList;
 import net.minecraft.util.Rotation;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.ChunkPos;
@@ -23,7 +21,6 @@ import net.minecraft.world.gen.structure.StructureComponent;
 import net.minecraft.world.gen.structure.StructureStart;
 import net.minecraft.world.storage.loot.LootTableList;
 import net.minecraftforge.common.BiomeDictionary;
-import net.minecraftforge.common.util.Constants;
 import net.minecraftforge.event.CommandEvent;
 import net.minecraftforge.event.terraingen.PopulateChunkEvent;
 import net.minecraftforge.event.world.WorldEvent;
@@ -33,11 +30,9 @@ import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import javax.annotation.Nullable;
 import java.util.ArrayList;
 import java.util.IdentityHashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
-import java.util.Set;
 
 @Mod.EventBusSubscriber(modid = Psychedelicraft.MOD_ID)
 public final class WarmOceanRuin extends MapGenStructure {
@@ -62,7 +57,7 @@ public final class WarmOceanRuin extends MapGenStructure {
     @SubscribeEvent
     public static void populate(PopulateChunkEvent.Pre event) {
         World world = event.getWorld();
-        if (!allowsRuins(world)) return;
+        if (!allowsOceanStructures(world)) return;
         WarmOceanRuin generator = GENERATORS.computeIfAbsent(world, key -> new WarmOceanRuin());
         int x = event.getChunkX();
         int z = event.getChunkZ();
@@ -94,7 +89,7 @@ public final class WarmOceanRuin extends MapGenStructure {
         }
     }
 
-    private static boolean allowsRuins(World world) {
+    static boolean allowsOceanStructures(World world) {
         return world instanceof WorldServer && world.provider.getDimensionType() == DimensionType.OVERWORLD
                 && world.getWorldInfo().isMapFeaturesEnabled()
                 && ((WorldServer) world).getChunkProvider().chunkGenerator instanceof ChunkGeneratorOverworld;
@@ -143,7 +138,7 @@ public final class WarmOceanRuin extends MapGenStructure {
 
     @Nullable
     private static BlockPos findWarmRuin(World world, BlockPos origin, boolean unexplored) {
-        if (!allowsRuins(world)) return null;
+        if (!allowsOceanStructures(world)) return null;
         int regionX = Math.floorDiv(origin.getX() >> 4, SPACING);
         int regionZ = Math.floorDiv(origin.getZ() >> 4, SPACING);
         BlockPos nearest = null;
@@ -166,9 +161,7 @@ public final class WarmOceanRuin extends MapGenStructure {
         return nearest;
     }
 
-    public static final class Start extends StructureStart {
-        private final Set<ChunkPos> populated = new HashSet<>();
-
+    public static final class Start extends PopulatedStructureStart {
         public Start() {
         }
 
@@ -182,37 +175,6 @@ public final class WarmOceanRuin extends MapGenStructure {
             updateBoundingBox();
         }
 
-        @Override
-        public boolean isValidForPostProcess(ChunkPos pos) {
-            return !populated.contains(pos);
-        }
-
-        @Override
-        public void notifyPostProcessAt(ChunkPos pos) {
-            populated.add(pos);
-        }
-
-        @Override
-        public void writeToNBT(NBTTagCompound tag) {
-            NBTTagList chunks = new NBTTagList();
-            for (ChunkPos pos : populated) {
-                NBTTagCompound chunk = new NBTTagCompound();
-                chunk.setInteger("X", pos.x);
-                chunk.setInteger("Z", pos.z);
-                chunks.appendTag(chunk);
-            }
-            tag.setTag("Populated", chunks);
-        }
-
-        @Override
-        public void readFromNBT(NBTTagCompound tag) {
-            populated.clear();
-            NBTTagList chunks = tag.getTagList("Populated", Constants.NBT.TAG_COMPOUND);
-            for (int i = 0; i < chunks.tagCount(); i++) {
-                NBTTagCompound chunk = chunks.getCompoundTagAt(i);
-                populated.add(new ChunkPos(chunk.getInteger("X"), chunk.getInteger("Z")));
-            }
-        }
 
         private void addCluster(BlockPos origin, Rotation rotation, Random random) {
             StructureBoundingBox main = WarmOceanRuinPiece.bounds(origin, rotation, true);
