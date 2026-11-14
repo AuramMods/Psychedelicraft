@@ -1,13 +1,16 @@
 package ivorius.psychedelicraft.block;
 
+import ivorius.psychedelicraft.block.entity.BeeNestBlockEntity;
 import ivorius.psychedelicraft.client.particle.HoneyDripParticle;
 import ivorius.psychedelicraft.item.PSItems;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockDispenser;
 import net.minecraft.block.BlockDoublePlant;
 import net.minecraft.block.BlockFlower;
+import net.minecraft.block.BlockHorizontal;
 import net.minecraft.block.SoundType;
 import net.minecraft.block.material.Material;
+import net.minecraft.block.properties.PropertyDirection;
 import net.minecraft.block.properties.PropertyInteger;
 import net.minecraft.block.state.BlockStateContainer;
 import net.minecraft.block.state.IBlockState;
@@ -22,11 +25,15 @@ import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.stats.StatList;
+import net.minecraft.tileentity.TileEntity;
 import net.minecraft.tileentity.TileEntityDispenser;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.util.EnumHand;
+import net.minecraft.util.Mirror;
+import net.minecraft.util.Rotation;
 import net.minecraft.util.SoundCategory;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.world.IBlockAccess;
 import net.minecraft.world.World;
 import net.minecraftforge.common.util.Constants;
 import net.minecraftforge.fml.relauncher.Side;
@@ -38,11 +45,12 @@ import java.util.Random;
 public final class BeeNestBlock extends Block {
     public static final int FULL_HONEY = 5;
     public static final PropertyInteger HONEY_LEVEL = PropertyInteger.create("honey_level", 0, FULL_HONEY);
+    public static final PropertyDirection FACING = BlockHorizontal.FACING;
     private static final String STATE_TAG = "BlockStateTag";
 
     BeeNestBlock() {
         super(Material.WOOD);
-        setDefaultState(blockState.getBaseState().withProperty(HONEY_LEVEL, 0));
+        setDefaultState(blockState.getBaseState().withProperty(HONEY_LEVEL, 0).withProperty(FACING, EnumFacing.NORTH));
         setHardness(0.3F);
         setSoundType(SoundType.WOOD);
         setTickRandomly(true);
@@ -50,7 +58,7 @@ public final class BeeNestBlock extends Block {
 
     @Override
     protected BlockStateContainer createBlockState() {
-        return new BlockStateContainer(this, HONEY_LEVEL);
+        return new BlockStateContainer(this, HONEY_LEVEL, FACING);
     }
 
     @Override
@@ -60,7 +68,48 @@ public final class BeeNestBlock extends Block {
 
     @Override
     public int getMetaFromState(IBlockState state) {
+        // Keep legacy honey metadata. The block entity stores the entrance direction.
         return state.getValue(HONEY_LEVEL);
+    }
+
+    @Override
+    public boolean hasTileEntity(IBlockState state) {
+        return true;
+    }
+
+    @Override
+    public TileEntity createTileEntity(World world, IBlockState state) {
+        return new BeeNestBlockEntity(state.getValue(FACING));
+    }
+
+    @Override
+    public IBlockState getActualState(IBlockState state, IBlockAccess world, BlockPos pos) {
+        TileEntity tile = world.getTileEntity(pos);
+        return tile instanceof BeeNestBlockEntity ? state.withProperty(FACING, ((BeeNestBlockEntity) tile).getFacing()) : state;
+    }
+
+    @Override
+    public IBlockState withRotation(IBlockState state, Rotation rotation) {
+        return state.withProperty(FACING, rotation.rotate(state.getValue(FACING)));
+    }
+
+    @Override
+    public IBlockState withMirror(IBlockState state, Mirror mirror) {
+        return state.withProperty(FACING, mirror.mirror(state.getValue(FACING)));
+    }
+
+    @Override
+    public boolean rotateBlock(World world, BlockPos pos, EnumFacing axis) {
+        TileEntity tile = world.getTileEntity(pos);
+        if (!(tile instanceof BeeNestBlockEntity)) return false;
+        BeeNestBlockEntity nest = (BeeNestBlockEntity) tile;
+        nest.setFacing(nest.getFacing().rotateY());
+        return true;
+    }
+
+    public void setFacing(World world, BlockPos pos, EnumFacing facing) {
+        TileEntity tile = world.getTileEntity(pos);
+        if (tile instanceof BeeNestBlockEntity) ((BeeNestBlockEntity) tile).setFacing(facing);
     }
 
     @Override
@@ -103,6 +152,7 @@ public final class BeeNestBlock extends Block {
 
     @Override
     public void onBlockPlacedBy(World world, BlockPos pos, IBlockState state, EntityLivingBase placer, ItemStack stack) {
+        setFacing(world, pos, placer.getHorizontalFacing().getOpposite());
         int level = storedHoneyLevel(stack);
         if (level != state.getValue(HONEY_LEVEL)) {
             world.setBlockState(pos, state.withProperty(HONEY_LEVEL, level), 3);

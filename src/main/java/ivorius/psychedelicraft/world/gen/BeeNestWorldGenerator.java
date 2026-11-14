@@ -126,7 +126,10 @@ public final class BeeNestWorldGenerator {
             BlockPos exit = nest.south();
             if (world.isBlockLoaded(nest) && world.isBlockLoaded(exit) && world.getBlockState(nest).getBlock() == Blocks.AIR
                     && world.getBlockState(exit).getBlock() == Blocks.AIR
-                    && world.setBlockState(nest, PSBlocks.BEE_NEST.getDefaultState(), 2 | 16)) return;
+                    && world.setBlockState(nest, PSBlocks.BEE_NEST.getDefaultState(), 2 | 16)) {
+                PSBlocks.BEE_NEST.setFacing(world, nest, EnumFacing.SOUTH);
+                return;
+            }
         }
     }
 

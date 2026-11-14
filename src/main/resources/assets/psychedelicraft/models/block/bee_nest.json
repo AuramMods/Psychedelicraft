@@ -1,7 +1,23 @@
 {
-  "parent": "block/cube_column",
+  "parent": "block/block",
   "textures": {
     "end": "psychedelicraft:blocks/bee_nest_end",
-    "side": "psychedelicraft:blocks/bee_nest_side"
-  }
+    "side": "psychedelicraft:blocks/bee_nest_wood",
+    "front": "psychedelicraft:blocks/bee_nest_side",
+    "particle": "psychedelicraft:blocks/bee_nest_wood"
+  },
+  "elements": [
+    {
+      "from": [0, 0, 0],
+      "to": [16, 16, 16],
+      "faces": {
+        "down":  { "texture": "#end", "cullface": "down" },
+        "up":    { "texture": "#end", "cullface": "up" },
+        "north": { "texture": "#front", "cullface": "north" },
+        "south": { "texture": "#side", "cullface": "south" },
+        "west":  { "texture": "#side", "cullface": "west" },
+        "east":  { "texture": "#side", "cullface": "east" }
+      }
+    }
+  ]
 }

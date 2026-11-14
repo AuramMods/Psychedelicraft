@@ -1,10 +1,12 @@
 package ivorius.psychedelicraft.block;
 
+import ivorius.psychedelicraft.block.entity.BeeNestBlockEntity;
 import ivorius.psychedelicraft.item.PSItems;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.init.Bootstrap;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.util.EnumFacing;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
@@ -25,8 +27,29 @@ public class BeeNestBlockTest {
             assertEquals(level, nest.getMetaFromState(state));
             assertEquals(state, nest.getStateFromMeta(level));
             assertEquals(level, nest.getComparatorInputOverride(state, null, null));
+            for (EnumFacing facing : EnumFacing.HORIZONTALS) {
+                assertEquals(level, nest.getMetaFromState(state.withProperty(BeeNestBlock.FACING, facing)));
+            }
         }
         assertEquals(nest.getDefaultState(), nest.getStateFromMeta(15));
+    }
+
+    @Test
+    public void missingOrInvalidEntranceDataDefaultsToNorth() {
+        BeeNestBlockEntity tile = new BeeNestBlockEntity();
+        NBTTagCompound tag = new NBTTagCompound();
+        for (EnumFacing facing : EnumFacing.HORIZONTALS) {
+            tag.setString("Facing", facing.getName());
+            tile.readFromNBT(tag);
+            assertEquals(facing, tile.getFacing());
+        }
+        for (String invalid : new String[]{"up", "unknown"}) {
+            tag.setString("Facing", invalid);
+            tile.readFromNBT(tag);
+            assertEquals(EnumFacing.NORTH, tile.getFacing());
+        }
+        tile.readFromNBT(new NBTTagCompound());
+        assertEquals(EnumFacing.NORTH, tile.getFacing());
     }
 
     @Test

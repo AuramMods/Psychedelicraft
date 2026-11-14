@@ -1,6 +1,6 @@
 {
   "parent": "psychedelicraft:block/bee_nest",
   "textures": {
-    "side": "psychedelicraft:blocks/bee_nest_full"
+    "front": "psychedelicraft:blocks/bee_nest_full"
   }
 }
