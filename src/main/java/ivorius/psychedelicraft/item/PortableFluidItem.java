@@ -5,12 +5,12 @@ import ivorius.psychedelicraft.advancement.PSCriteria;
 import ivorius.psychedelicraft.block.BarrelBlock;
 import ivorius.psychedelicraft.block.MashTubBlock;
 import ivorius.psychedelicraft.block.PlacedDrinksBlock;
-import ivorius.psychedelicraft.block.entity.MashTubBlockEntity;
 import ivorius.psychedelicraft.fluid.BrewFluid;
 import ivorius.psychedelicraft.fluid.FluidVessel;
 import ivorius.psychedelicraft.fluid.FluidVesselHandler;
 import ivorius.psychedelicraft.fluid.PSFluids;
 import net.minecraft.advancements.CriteriaTriggers;
+import net.minecraft.block.Block;
 import net.minecraft.client.util.ITooltipFlag;
 import net.minecraft.creativetab.CreativeTabs;
 import net.minecraft.entity.EntityLivingBase;
@@ -76,11 +76,10 @@ public class PortableFluidItem extends Item {
     @Override
     public EnumActionResult onItemUseFirst(EntityPlayer player, World world, BlockPos pos, EnumFacing face,
                                           float x, float y, float z, EnumHand hand) {
-        if (world.isRemote || world.getBlockState(pos).getBlock() instanceof BarrelBlock
-                || !world.isBlockModifiable(player, pos)) return EnumActionResult.PASS;
-        MashTubBlockEntity vat = MashTubBlock.getVat(world, pos);
-        boolean transferred = vat == null ? FluidUtil.interactWithFluidHandler(player, hand, world, pos, face)
-                : vat.interactWithVessel(player, hand);
+        if (world.isRemote || !world.isBlockModifiable(player, pos)) return EnumActionResult.PASS;
+        Block block = world.getBlockState(pos).getBlock();
+        if (block instanceof BarrelBlock || block instanceof MashTubBlock) return EnumActionResult.PASS;
+        boolean transferred = FluidUtil.interactWithFluidHandler(player, hand, world, pos, face);
         return transferred ? EnumActionResult.SUCCESS : EnumActionResult.PASS;
     }
 

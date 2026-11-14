@@ -28,7 +28,7 @@ public final class BarrelBlockEntity extends FluidProcessingBlockEntity {
     }
 
     public boolean dispense(EntityPlayer player, EnumHand hand) {
-        if (!transferHeldFluid(player, hand, Fluid.BUCKET_VOLUME, true)) return false;
+        if (transferHeldFluid(player, hand, Fluid.BUCKET_VOLUME, true) == null) return false;
         tapTicks = 20;
         changed();
         return true;

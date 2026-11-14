@@ -40,12 +40,19 @@ public abstract class FluidProcessingBlockEntity extends FluidMachineBlockEntity
     }
 
     public final boolean collectSolidOutput(EntityPlayer player) {
-        if (solidOutput.isEmpty()) return false;
-        ItemStack output = solidOutput;
-        solidOutput = ItemStack.EMPTY;
+        ItemStack output = takeSolidOutput();
+        if (output.isEmpty()) return false;
         ItemHandlerHelper.giveItemToPlayer(player, output);
-        changed();
         return true;
+    }
+
+    protected final ItemStack takeSolidOutput() {
+        ItemStack output = solidOutput;
+        if (!output.isEmpty()) {
+            solidOutput = ItemStack.EMPTY;
+            changed();
+        }
+        return output;
     }
 
     @Override

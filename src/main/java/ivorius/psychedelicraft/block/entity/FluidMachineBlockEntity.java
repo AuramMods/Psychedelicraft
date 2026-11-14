@@ -93,26 +93,32 @@ public abstract class FluidMachineBlockEntity extends TileEntity implements ITic
     }
 
     public final boolean depositHeldFluid(EntityPlayer player, EnumHand hand) {
-        if (!transferHeldFluid(player, hand, Integer.MAX_VALUE, false)) return false;
+        if (transferHeldFluid(player, hand, Integer.MAX_VALUE, false) == null) return false;
         world.playSound(null, pos, SoundEvents.ITEM_BUCKET_FILL, SoundCategory.BLOCKS, 1, 1);
         return true;
     }
 
-    protected final boolean transferHeldFluid(EntityPlayer player, EnumHand hand, int amount, boolean drainTank) {
-        ItemStack held = player.getHeldItem(hand);
-        IFluidHandlerItem vessel = FluidVesselHandler.forTransfer(held);
-        if (vessel == null) return false;
+    @Nullable
+    protected final FluidStack transferHeldFluid(EntityPlayer player, EnumHand hand, int amount, boolean drainTank) {
+        IFluidHandlerItem vessel = FluidVesselHandler.forTransfer(player.getHeldItem(hand));
+        return vessel == null ? null : transferHeldFluid(player, hand, vessel, amount, drainTank);
+    }
+
+    @Nullable
+    protected final FluidStack transferHeldFluid(EntityPlayer player, EnumHand hand, IFluidHandlerItem vessel,
+                                                 int amount, boolean drainTank) {
         FluidStack moved = drainTank ? FluidUtil.tryFluidTransfer(vessel, tank, amount, true)
                 : FluidUtil.tryFluidTransfer(tank, vessel, amount, true);
-        if (moved == null) return false;
+        if (moved == null) return null;
         if (drainTank || !player.capabilities.isCreativeMode) {
+            ItemStack held = player.getHeldItem(hand);
             if (held.getCount() == 1) player.setHeldItem(hand, vessel.getContainer());
             else {
                 held.shrink(1);
                 ItemHandlerHelper.giveItemToPlayer(player, vessel.getContainer());
             }
         }
-        return true;
+        return moved;
     }
 
     @Override

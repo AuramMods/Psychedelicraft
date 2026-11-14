@@ -210,12 +210,11 @@ public final class MashTubBlock extends BlockContainer {
                                     EnumHand hand, EnumFacing side, float x, float y, float z) {
         MashTubBlockEntity vat = getVat(world, pos);
         if (vat == null) return false;
-        if (!world.isRemote && !vat.depositHeldFluid(player, hand)) {
+        if (!world.isRemote && !vat.interactWithVessel(player, hand)) {
             ItemStack held = player.getHeldItem(hand);
-            if (held.isEmpty() && vat.collectSolidOutput(player)) return true;
             if (vat.addIngredient(held)) {
                 if (!player.capabilities.isCreativeMode) held.shrink(1);
-            } else {
+            } else if (!vat.dropSolidOutput(player)) {
                 BlockPos center = vat.getPos();
                 player.openGui(Psychedelicraft.MOD_ID, PSGuiHandler.MASH_TUB, world,
                         center.getX(), center.getY(), center.getZ());

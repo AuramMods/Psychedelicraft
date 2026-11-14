@@ -10,6 +10,7 @@ import ivorius.psychedelicraft.fluid.FluidVesselHandler;
 import ivorius.psychedelicraft.client.particle.SlurryBubble;
 import ivorius.psychedelicraft.network.Channel;
 import ivorius.psychedelicraft.recipe.MashingRecipe;
+import net.minecraft.block.Block;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.init.SoundEvents;
 import net.minecraft.item.ItemStack;
@@ -24,7 +25,7 @@ import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Vec3d;
 import net.minecraftforge.fluids.FluidStack;
-import net.minecraftforge.fluids.FluidUtil;
+import net.minecraftforge.fluids.capability.IFluidHandlerItem;
 import net.minecraftforge.fml.common.registry.ForgeRegistries;
 
 import java.util.ArrayList;
@@ -58,10 +59,22 @@ public final class MashTubBlockEntity extends FluidProcessingBlockEntity {
     }
 
     public boolean interactWithVessel(EntityPlayer player, EnumHand hand) {
-        FluidStack contents = getTank().getFluid();
-        int amount = getTank().getFluidAmount();
-        if (!FluidUtil.interactWithFluidHandler(player, hand, getTank())) return false;
-        if (getTank().getFluidAmount() < amount) PSCriteria.tookMash(player, contents);
+        IFluidHandlerItem vessel = FluidVesselHandler.forTransfer(player.getHeldItem(hand));
+        if (vessel == null) return false;
+        boolean withdraw = vessel.drain(Integer.MAX_VALUE, false) == null;
+        FluidStack moved = transferHeldFluid(player, hand, vessel, Integer.MAX_VALUE, withdraw);
+        if (moved == null) return false;
+        if (withdraw) PSCriteria.tookMash(player, moved);
+        SoundEvent sound = withdraw ? moved.getFluid().getFillSound(moved) : SoundEvents.ITEM_BUCKET_FILL;
+        world.playSound(null, pos, sound, SoundCategory.BLOCKS, 1, 1);
+        return true;
+    }
+
+    public boolean dropSolidOutput(EntityPlayer player) {
+        ItemStack output = takeSolidOutput();
+        if (output.isEmpty()) return false;
+        PSCriteria.tookMash(player, output);
+        Block.spawnAsEntity(world, pos, output);
         return true;
     }
 
