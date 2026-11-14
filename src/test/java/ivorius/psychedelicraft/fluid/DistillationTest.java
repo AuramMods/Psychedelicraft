@@ -5,17 +5,26 @@ import ivorius.psychedelicraft.block.PSBlocks;
 import ivorius.psychedelicraft.block.entity.DistilleryBlockEntity;
 import ivorius.psychedelicraft.item.PSItems;
 import net.minecraft.block.state.IBlockState;
+import net.minecraft.init.Blocks;
 import net.minecraft.init.Bootstrap;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.profiler.Profiler;
 import net.minecraft.util.EnumFacing;
+import net.minecraft.util.EnumHand;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.world.World;
+import net.minecraft.world.WorldProviderSurface;
+import net.minecraft.world.chunk.IChunkProvider;
 import net.minecraftforge.fluids.Fluid;
 import net.minecraftforge.fluids.FluidRegistry;
 import net.minecraftforge.fluids.FluidStack;
 import net.minecraftforge.fluids.capability.IFluidHandlerItem;
 import org.junit.BeforeClass;
 import org.junit.Test;
+
+import java.util.HashMap;
+import java.util.Map;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -116,5 +125,53 @@ public class DistillationTest {
         DistilleryBlockEntity machine = new DistilleryBlockEntity();
         assertFalse(machine.shouldRefresh(null, BlockPos.ORIGIN, disconnected, connected));
         assertTrue(machine.shouldRefresh(null, BlockPos.ORIGIN, connected, PSBlocks.FLASK.getDefaultState()));
+    }
+
+    @Test
+    public void currentReceiverChangeRescansButOtherReceiverChangesKeepTheOutlet() {
+        OutletWorld world = new OutletWorld();
+        BlockPos center = new BlockPos(0, 64, 0);
+        DistilleryBlock still = PSBlocks.DISTILLERY;
+        IBlockState flask = PSBlocks.FLASK.getDefaultState();
+        IBlockState east = still.getDefaultState().withProperty(DistilleryBlock.FACING, EnumFacing.EAST);
+        world.states.put(center, east);
+        world.states.put(center.east(), flask);
+        world.states.put(center.north(), flask);
+
+        assertSame(EnumFacing.NORTH, still.getStateForPlacement(world, center, EnumFacing.UP,
+                0.5F, 0.5F, 0.5F, 0, null, EnumHand.MAIN_HAND).getValue(DistilleryBlock.FACING));
+        still.neighborChanged(east, world, center, PSBlocks.FLASK, center.north());
+        assertSame(east, world.getBlockState(center));
+        still.neighborChanged(east, world, center, PSBlocks.FLASK, center.east());
+        assertSame(EnumFacing.NORTH, world.getBlockState(center).getValue(DistilleryBlock.FACING));
+    }
+
+    private static final class OutletWorld extends World {
+        private final Map<BlockPos, IBlockState> states = new HashMap<>();
+
+        private OutletWorld() {
+            super(null, null, new WorldProviderSurface(), new Profiler(), false);
+        }
+
+        @Override
+        protected IChunkProvider createChunkProvider() {
+            return null;
+        }
+
+        @Override
+        protected boolean isChunkLoaded(int x, int z, boolean allowEmpty) {
+            return true;
+        }
+
+        @Override
+        public IBlockState getBlockState(BlockPos pos) {
+            return states.getOrDefault(pos, Blocks.AIR.getDefaultState());
+        }
+
+        @Override
+        public boolean setBlockState(BlockPos pos, IBlockState state, int flags) {
+            states.put(pos, state);
+            return true;
+        }
     }
 }

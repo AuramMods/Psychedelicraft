@@ -69,7 +69,7 @@ public final class DistilleryBlock extends FlaskBlock {
     public void neighborChanged(IBlockState state, World world, BlockPos pos, Block neighbor, BlockPos changed) {
         if (world.isRemote) return;
         EnumFacing current = state.getValue(FACING);
-        if (!current.getAxis().isHorizontal() || !canConnectTo(world, pos, current)) {
+        if (!current.getAxis().isHorizontal() || pos.offset(current).equals(changed)) {
             EnumFacing output = findOutput(world, pos);
             if (output != current) world.setBlockState(pos, state.withProperty(FACING, output), 3);
         }

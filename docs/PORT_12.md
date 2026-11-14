@@ -1245,6 +1245,16 @@ sh run/production/background-qa/run.sh "$qa" game-background Overlay-QA \
 - The tested jar SHA-256 is `e47a6b869a2fd1abf8e7a4b91f462960ed0df990dddd83ca51e2ba20443bf164`. Evidence is under `run/production/runtime-qa-cycle136` in `build-production-release.log`, `runtime-baseline-final.log`, `runtime-release.log`, `runtime-reopen.log` and `runtime-regression-release.log`. Clients ran on Xvfb with zero master volume and OpenAL's `No Output` device.
 - Next, compare distillery outlet selection and reconnection when several compatible receivers are placed around one machine.
 
+### Cycle 137 · Distillery outlet selection with several receivers
+
+- Both versions scan north, east, south, then west during placement. Forge now repeats that scan when the selected neighbor changes, including a replacement that still accepts an outlet. Changes elsewhere keep the selected direction. A vertical outlet still scans on a neighbor update. [Pinned outlet callbacks](https://github.com/Sollace/Psychedelicraft/blob/319a4ea0160d6600cffcd5f5cc9e363ceaab44a1/src/main/java/ivorius/psychedelicraft/block/DistilleryBlock.java)
+- The clean Java 8 build and reobfuscation passed all 179 tests. The new regression verifies placement priority and compares notifications from the current receiver and an unused receiver.
+- In muted Forge 14.23.5.2864, adding a north flask left the east outlet intact. Switching the east flask to a barrel caused the rebuilt jar to select north and give that flask 1 mB of slurry. The previous jar sent the same increment east. Changing tank contents alone kept the blocked outlet and its progress. The rebuilt jar kept the same source tile and the 12 elapsed ticks when the block changed.
+- The fixture removed receivers in succession and verified the transfer to a barrel, through the vat rim to its center, and into a second distillery once it stopped facing the source. Four stages left 996 mB of tagged brew in the source. The first packaged fixture called inherited methods through mod classes and used a placement flag that suppressed neighbor notifications. The passing fixture used the vanilla block method declarations and enabled native notifications.
+- A fresh process reopened the west outlet and observed stage six with 994 mB of the original tagged brew. The west receiver held 3 mB, covering that outlet's stage four through six transfers. The first reopen assertion expected exactly four stages even though the machine continued running during the save and load. The corrected assertion checked the distribution against the observed stage.
+- The tested jar SHA-256 is `801490b4282ce75c695524fc207008d3bd5a79be59f63a00edb48985aeb4590d`. Evidence is under `run/production/runtime-qa-cycle137` in `build-production.log`, `runtime-baseline-verified.log`, `runtime-fixed-verified.log` and `runtime-reopen-verified.log`. Clients ran on Xvfb with zero master volume and OpenAL's `No Output` device.
+- Next, compare the pinned fluid machine vessel slots with their Forge transfer rates, partial remainders and hopper access.
+
 Dedicated Forge startup and multiplayer on that server remain open pending EULA acceptance.
 
 ## Repository and branch survey
