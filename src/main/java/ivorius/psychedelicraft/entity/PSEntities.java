@@ -54,6 +54,13 @@ public final class PSEntities {
                         .id(Psychedelicraft.id("thrown_trident"), 7)
                         .name(Psychedelicraft.MOD_ID + ".thrown_trident")
                         .tracker(64, 1, true)
+                        .build(),
+                EntityEntryBuilder.<WanderingTraderEntity>create()
+                        .entity(WanderingTraderEntity.class)
+                        .id(Psychedelicraft.id("wandering_trader"), 8)
+                        .name(Psychedelicraft.MOD_ID + ".wandering_trader")
+                        .tracker(100, 3, true)
+                        .egg(0x456296, 0xeaa430)
                         .build());
     }
 
