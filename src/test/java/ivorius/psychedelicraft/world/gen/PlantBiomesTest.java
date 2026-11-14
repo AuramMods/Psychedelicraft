@@ -4,6 +4,8 @@ import ivorius.psychedelicraft.config.PSConfig;
 import net.minecraft.init.Biomes;
 import net.minecraft.init.Bootstrap;
 import net.minecraft.world.biome.Biome;
+import net.minecraftforge.common.BiomeDictionary;
+import net.minecraftforge.fml.common.registry.ForgeRegistries;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
@@ -55,6 +57,22 @@ public class PlantBiomesTest {
         assertTrue(PlantBiomes.allows(options, PlantBiomes::tallCrops, Biomes.PLAINS));
         options.enabled = false;
         assertFalse(PlantBiomes.allows(options, PlantBiomes::tallCrops, Biomes.PLAINS));
+    }
+
+    @Test
+    public void cocaRecognizesModdedJunglesWithoutChangingVanillaBiomeSelectors() {
+        Biome miniJungle = new Biome(new Biome.BiomeProperties("Test Mini Jungle")) {};
+        miniJungle.setRegistryName("psychedelicraft", "test_mini_jungle");
+        ForgeRegistries.BIOMES.register(miniJungle);
+        BiomeDictionary.addTypes(miniJungle, BiomeDictionary.Type.JUNGLE);
+        PSConfig.Feature options = new PSConfig.Feature();
+        assertTrue(PlantBiomes.cocaJungle(Biomes.JUNGLE_HILLS));
+        assertTrue(PlantBiomes.allows(options, PlantBiomes::cocaJungle, miniJungle));
+        assertFalse(PlantBiomes.cocaJungle(Biomes.RIVER));
+        assertFalse(PlantBiomes.cocaJungle(Biomes.BEACH));
+        assertFalse(PlantBiomes.jungle(miniJungle));
+        options.excluded = new String[]{"#forge:JUNGLE"};
+        assertFalse(PlantBiomes.allows(options, PlantBiomes::cocaJungle, miniJungle));
     }
 
     @Test

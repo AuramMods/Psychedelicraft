@@ -39,11 +39,13 @@ import javax.annotation.Nullable;
 @Mod.EventBusSubscriber(modid = Psychedelicraft.MOD_ID)
 public final class PlantWorldGenerator {
     private static final int TALL_RARITY = 160;
+    private static final int JUNGLE_COCA_RARITY = 4;
     private static final int LOW_RARITY = 20;
     private static final int LOW_ATTEMPTS = 5;
     private static final int LOW_XZ_SPREAD = 7;
     private static final int LOW_Y_SPREAD = 3;
     private static final long JUNIPER_SALT = 0x9e3779b97f4a7c15L * "juniper".hashCode();
+    private static final long JUNGLE_COCA_SALT = 0x9e3779b97f4a7c15L * "jungle_coca".hashCode();
     private static final PSConfig.Generation OPTIONS = PSConfig.balancing.worldGeneration;
     private static final Patch[] PATCHES = {
             tall("cannabis", PSBlocks.NATURAL_CANNABIS, OPTIONS.cannabis, false),
@@ -95,6 +97,16 @@ public final class PlantWorldGenerator {
             BlockPos surface = motionBlockingSurface(world, column);
             if (PlantBiomes.allows(patch.options, patch.defaults, world.getBiome(surface))) {
                 patch.placement.place(world, surface, random);
+            }
+        }
+        if (OPTIONS.coca.enabled) {
+            random.setSeed(seed ^ JUNGLE_COCA_SALT);
+            if (random.nextInt(JUNGLE_COCA_RARITY) == 0) {
+                BlockPos column = chunk.getBlock(8 + random.nextInt(16), 0, 8 + random.nextInt(16));
+                Biome biome = world.getBiome(column);
+                if (PlantBiomes.cocaJungle(biome) && PlantBiomes.allows(OPTIONS.coca, PlantBiomes::cocaJungle, biome)) {
+                    placeTallPatch(world, motionBlockingSurface(world, column), random, PSBlocks.NATURAL_COCA, false);
+                }
             }
         }
     }

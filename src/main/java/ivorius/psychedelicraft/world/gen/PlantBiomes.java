@@ -79,6 +79,10 @@ final class PlantBiomes {
                 || biome == Biomes.JUNGLE_EDGE || biome == Biomes.MUTATED_JUNGLE_EDGE;
     }
 
+    static boolean cocaJungle(Biome biome) {
+        return jungle(biome) || BiomeDictionary.hasType(biome, BiomeDictionary.Type.JUNGLE);
+    }
+
     static boolean tomato(Biome biome) {
         return biome == Biomes.FOREST || biome == Biomes.FOREST_HILLS;
     }
