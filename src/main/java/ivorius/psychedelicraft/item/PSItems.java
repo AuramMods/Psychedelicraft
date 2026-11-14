@@ -53,6 +53,7 @@ public final class PSItems {
     public static final Item CORNFLOWER = named("cornflower", new ItemBlock(PSBlocks.CORNFLOWER));
     public static final Item LILY_OF_THE_VALLEY = named("lily_of_the_valley", new ItemBlock(PSBlocks.LILY_OF_THE_VALLEY));
     public static final Item WITHER_ROSE = named("wither_rose", new ItemBlock(PSBlocks.WITHER_ROSE));
+    public static final SuspiciousStewItem SUSPICIOUS_STEW = named("suspicious_stew", new SuspiciousStewItem());
     public static final Item PITCHER_POD = named("pitcher_pod", new CropSeedItem(PSBlocks.PITCHER_CROP, "pitcher_pod"));
     public static final Item PITCHER_PLANT = named("pitcher_plant", new ItemBlock(PSBlocks.PITCHER_PLANT));
     public static final FilledBucketItem FILLED_BUCKET = named("filled_bucket", new FilledBucketItem(), PSItemGroups.DRINKS);

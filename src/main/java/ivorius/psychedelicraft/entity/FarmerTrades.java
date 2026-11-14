@@ -6,9 +6,13 @@ package ivorius.psychedelicraft.entity;
 
 import ivorius.psychedelicraft.Psychedelicraft;
 import ivorius.psychedelicraft.config.PSConfig;
+import ivorius.psychedelicraft.item.PSItems;
+import ivorius.psychedelicraft.item.SuspiciousStewItem;
 import net.minecraft.init.Items;
+import net.minecraft.init.MobEffects;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
+import net.minecraft.potion.Potion;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.village.MerchantRecipe;
 import net.minecraft.village.MerchantRecipeList;
@@ -37,6 +41,24 @@ public final class FarmerTrades {
 
     public static void register() {
         VillagerRegistry.FARMER.getCareer(0).addTrade(1, (merchant, recipes, random) -> addOffers(recipes, random));
+        // The donor pairs its expert stew pool with cake, which is a tier-four trade on 1.12.
+        VillagerRegistry.FARMER.getCareer(0).addTrade(4, (merchant, recipes, random) -> addStewOffers(recipes, random));
+    }
+
+    private static void addStewOffers(MerchantRecipeList recipes, Random random) {
+        Potion[] effects = {MobEffects.NIGHT_VISION, MobEffects.JUMP_BOOST, MobEffects.WEAKNESS,
+                MobEffects.BLINDNESS, MobEffects.POISON, MobEffects.SATURATION};
+        int[] durations = {100, 160, 140, 120, 280, 7};
+        // The seventh draw is the cake entry already supplied by the legacy farmer.
+        int first = random.nextInt(7);
+        int second = random.nextInt(6);
+        int[] draws = {first, second >= first ? second + 1 : second};
+        for (int draw : draws) {
+            if (draw < effects.length) {
+                recipes.add(new MerchantRecipe(new ItemStack(Items.EMERALD), ItemStack.EMPTY,
+                        SuspiciousStewItem.withEffect(effects[draw], durations[draw]), 0, 12));
+            }
+        }
     }
 
     static void addOffers(MerchantRecipeList recipes, Random random) {
@@ -68,6 +90,7 @@ public final class FarmerTrades {
     static float priceMultiplier(MerchantRecipe recipe) {
         if (recipe.getItemToBuy().getItem() != Items.EMERALD || recipe.hasSecondItemToBuy()) return -1;
         ItemStack output = recipe.getItemToSell();
+        if (output.getItem() == PSItems.SUSPICIOUS_STEW) return 0.05F;
         for (Offer offer : OFFERS) {
             if (offer.item.equals(output.getItem().getRegistryName()) && offer.quantity == output.getCount()
                     && offer.cost == recipe.getItemToBuy().getCount()) return offer.multiplier;

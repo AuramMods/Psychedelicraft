@@ -9,6 +9,7 @@ import ivorius.psychedelicraft.fluid.FluidVesselHandler;
 import ivorius.psychedelicraft.item.FluidMachineItem;
 import ivorius.psychedelicraft.item.PSItems;
 import ivorius.psychedelicraft.item.PortableFluidItem;
+import ivorius.psychedelicraft.item.StewFlower;
 import ivorius.psychedelicraft.recipe.FurnaceRecipe;
 import ivorius.psychedelicraft.recipe.DryingRecipe;
 import ivorius.psychedelicraft.recipe.FillReceptacleRecipe;
@@ -32,6 +33,7 @@ import mezz.jei.api.recipe.IRecipeWrapper;
 import mezz.jei.api.recipe.IVanillaRecipeFactory;
 import mezz.jei.api.recipe.VanillaRecipeCategoryUid;
 import mezz.jei.api.recipe.wrapper.ICustomCraftingRecipeWrapper;
+import mezz.jei.api.recipe.wrapper.ICraftingRecipeWrapper;
 import mezz.jei.api.recipe.wrapper.IShapedCraftingRecipeWrapper;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiScreen;
@@ -85,6 +87,7 @@ public final class PsychedelicraftJeiPlugin implements IModPlugin {
 
     @Override
     public void registerItemSubtypes(ISubtypeRegistry registry) {
+        registry.useNbtForSubtypes(PSItems.SUSPICIOUS_STEW);
         Item.REGISTRY.forEach(item -> {
             if (item instanceof PortableFluidItem || item instanceof FluidMachineItem) {
                 registry.registerSubtypeInterpreter(item, PsychedelicraftJeiPlugin::subtype);
@@ -172,6 +175,15 @@ public final class PsychedelicraftJeiPlugin implements IModPlugin {
             }
         });
         registry.addRecipes(dyedBottles, VanillaRecipeCategoryUid.CRAFTING);
+        List<ICraftingRecipeWrapper> stews = new ArrayList<>();
+        for (StewFlower flower : StewFlower.values()) {
+            stews.add(display -> {
+                display.setInputs(VanillaTypes.ITEM, Arrays.asList(new ItemStack(Items.BOWL),
+                        new ItemStack(Blocks.RED_MUSHROOM), new ItemStack(Blocks.BROWN_MUSHROOM), flower.ingredient()));
+                display.setOutput(VanillaTypes.ITEM, flower.stew());
+            });
+        }
+        registry.addRecipes(stews, VanillaRecipeCategoryUid.CRAFTING);
     }
 
     private static void catalyst(IModRegistry registry, Item item, String... categories) {
