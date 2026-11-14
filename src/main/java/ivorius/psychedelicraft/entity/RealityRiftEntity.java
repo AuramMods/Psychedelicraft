@@ -71,6 +71,11 @@ public final class RealityRiftEntity extends Entity {
         return false;
     }
 
+    @Override
+    public boolean doesEntityNotTriggerPressurePlate() {
+        return true;
+    }
+
     public float getRiftSize() {
         return dataManager.get(SIZE);
     }

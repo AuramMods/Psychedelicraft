@@ -1369,6 +1369,14 @@ sh run/production/background-qa/run.sh "$qa" game-background Overlay-QA \
 - The native Rift Jar regression passed capture with the tracked rift, discharge, survival harvest, overload, Glitch and NBT. The tested jar SHA-256 is `24581f0a83e96c00df9f23979e808f510ac143d2609e254667eea02de6ab8402`. Evidence is under `run/production/runtime-qa-cycle150` in `build-production.log`, `runtime-before-verified.log`, `runtime-motion.log`, `runtime-gameplay.log` and the screenshots. Clients ran on Xvfb with zero master volume and OpenAL's `No Output` device.
 - Next, compare the Rift's pressure-plate and tripwire behavior with the donor's trap immunity and verify the native redstone paths.
 
+### Cycle 151 · Reality Rift trap immunity
+
+- The pinned Rift opts out of block triggers. The Forge entity now uses 1.12's equivalent hook for ordinary pressure plates and tripwire. Weighted plates in 1.12 bypass that hook, so a targeted transformer supplies the same non-spectator and trap-immunity filter that the donor uses. Gold and iron plates still use native weights, signal levels, scheduled checks and neighbor notifications. [Pinned Reality Rift entity](https://github.com/Sollace/Psychedelicraft/blob/319a4ea0160d6600cffcd5f5cc9e363ceaab44a1/src/main/java/ivorius/psychedelicraft/entity/RealityRiftEntity.java)
+- The clean Java 8 build passed all 183 tests and reobfuscated the production jar. The muted Forge 14.23.5.2864 fixture exercised native collision callbacks and scheduled ticks on oak, juniper, stone, gold, iron and an attached tripwire with two hooks. The previous jar gave a rift alone a signal on every tested trap except stone. The rebuilt jar left them all unpowered.
+- Dropped items still triggered oak and juniper. Stone responded to a cow. Six items on gold and 60 on iron each gave signal 6 with a Rift present, compared with 7 on the previous jar. An item powered both tripwire hooks. Removing ordinary entities released every trap while the Rifts remained. The weighted plate also ignored a bat and a spectator. The first fixture used the wrong weight expectations. The passing comparison used the native capacities of 15 and 150.
+- The Rift Jar gameplay regression passed spawning, capture, exposure, survival harvest, overload, Glitch and NBT. The tested jar SHA-256 is `4b33670913d43be7e557d818a757d02076c7d5f5d953708baaf01c9a50b4e49a`. Evidence is under `run/production/runtime-qa-cycle151` in `build-production.log`, `runtime-before.log`, `runtime-after.log` and `runtime-gameplay.log`. Clients ran on Xvfb with zero master volume and OpenAL's `No Output` device.
+- Next, compare Glitch's full block render and collision behavior, including placement against it and interaction with neighboring blocks.
+
 Dedicated Forge startup and multiplayer on that server remain open pending EULA acceptance.
 
 ## Repository and branch survey
