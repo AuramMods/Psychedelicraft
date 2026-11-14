@@ -213,12 +213,12 @@ public final class PlantWorldGenerator {
 
     private static BlockPos findTerrainLevel(World world, BlockPos start) {
         BlockPos pos = start;
-        if (replaceableTerrain(world, pos)) {
-            while (pos.getY() > 0 && replaceableTerrain(world, pos.down())) {
+        if (replaceableByTrees(world, pos)) {
+            while (pos.getY() > 0 && replaceableByTrees(world, pos.down())) {
                 pos = pos.down();
             }
         } else {
-            while (pos.getY() < world.getActualHeight() && !replaceableTerrain(world, pos)) {
+            while (pos.getY() < world.getActualHeight() && !replaceableByTrees(world, pos)) {
                 pos = pos.up();
             }
         }
@@ -229,7 +229,7 @@ public final class PlantWorldGenerator {
         return pos.getY() > 0 && pos.getY() < world.getActualHeight();
     }
 
-    private static boolean replaceableTerrain(World world, BlockPos pos) {
+    static boolean replaceableByTrees(World world, BlockPos pos) {
         IBlockState state = world.getBlockState(pos);
         Block block = state.getBlock();
         return block.isAir(state, world, pos) || block == Blocks.WATER || block == Blocks.FLOWING_WATER

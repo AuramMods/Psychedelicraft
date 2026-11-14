@@ -21,7 +21,9 @@ import java.util.Map;
 import java.util.Random;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertSame;
+import static org.junit.Assert.assertTrue;
 
 public class PlantPatchTest {
     @BeforeClass
@@ -96,6 +98,36 @@ public class PlantPatchTest {
         assertSame(crop.stateForHeight(0, 15), world.getBlockState(base));
         assertSame(crop.stateForHeight(1, 15), world.getBlockState(base.up()));
         assertSame(crop.stateForHeight(2, 6), world.getBlockState(base.up(2)));
+    }
+
+    @Test
+    public void juniperForkUsesItsOriginalLevelBudgetAndSkipsAnObstructedLog() {
+        PatchWorld world = new PatchWorld();
+        BlockPos base = new BlockPos(8, 64, 8);
+        BlockPos obstruction = base.north(3).up(3);
+        world.setBlockState(base.down(), Blocks.GRASS.getDefaultState(), 2);
+        world.setBlockState(obstruction, Blocks.COBBLESTONE.getDefaultState(), 2);
+
+        assertTrue(JuniperTree.generate(world, new Random(98), base));
+
+        assertSame(Blocks.COBBLESTONE, world.getBlockState(obstruction).getBlock());
+        assertSame(PSBlocks.JUNIPER_LOG, world.getBlockState(base.north(3).up(4)).getBlock());
+        assertSame(PSBlocks.JUNIPER_LOG, world.getBlockState(base.south().up()).getBlock());
+        assertFalse(world.getBlockState(base.south(2).up(2)).getBlock() == PSBlocks.JUNIPER_LOG);
+    }
+
+    @Test
+    public void vineInTheClearanceVolumeStopsJuniperGrowth() {
+        PatchWorld world = new PatchWorld();
+        BlockPos base = new BlockPos(8, 64, 8);
+        IBlockState grass = Blocks.GRASS.getDefaultState();
+        world.setBlockState(base.down(), grass, 2);
+        world.setBlockState(base.up().east(), Blocks.VINE.getStateFromMeta(1), 2);
+
+        assertFalse(JuniperTree.generate(world, new Random(98), base));
+
+        assertSame(grass, world.getBlockState(base.down()));
+        assertSame(Blocks.AIR, world.getBlockState(base).getBlock());
     }
 
     private static final class PatchWorld extends World {

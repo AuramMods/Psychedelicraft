@@ -6,8 +6,8 @@ import java.util.Set;
 
 import ivorius.psychedelicraft.block.JuniperLeavesBlock;
 import ivorius.psychedelicraft.block.PSBlocks;
+import ivorius.psychedelicraft.fluid.physical.Waterlogging;
 import net.minecraft.block.BlockDirt;
-import net.minecraft.block.material.Material;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.init.Blocks;
 import net.minecraft.util.EnumFacing;
@@ -20,7 +20,7 @@ public final class JuniperTree {
 
     public static boolean generate(World world, Random random, BlockPos base) {
         int height = 5 + random.nextInt(3) + random.nextInt(3);
-        if (base.getY() < 1 || base.getY() + height + 1 >= world.getActualHeight()
+        if (base.getY() < 1 || base.getY() + height + 1 > world.getActualHeight()
                 || !world.isAreaLoaded(base.add(-6, 0, -6), base.add(6, 0, 6))
                 || !PSBlocks.JUNIPER_SAPLING.canBlockStay(world, base, PSBlocks.JUNIPER_SAPLING.getDefaultState())) {
             return false;
@@ -29,7 +29,9 @@ public final class JuniperTree {
         for (int y = 0; y <= height + 1; y++) {
             int radius = y == 0 ? 0 : 2;
             for (BlockPos pos : BlockPos.getAllInBox(base.add(-radius, y, -radius), base.add(radius, y, radius))) {
-                if (!replaceable(world, pos)) {
+                IBlockState state = world.getBlockState(pos);
+                if (state.getBlock() == Blocks.VINE || (!canPlaceLog(world, base, pos)
+                        && !state.getBlock().canSustainLeaves(state, world, pos))) {
                     return false;
                 }
             }
@@ -38,24 +40,24 @@ public final class JuniperTree {
         EnumFacing first = EnumFacing.Plane.HORIZONTAL.random(random);
         int bend = height - random.nextInt(4) - 1;
         Set<BlockPos> logs = new LinkedHashSet<>();
-        BlockPos top = addBranch(logs, base, first, 0, height, bend, 3 - random.nextInt(3));
+        BlockPos top = addBranch(world, logs, base, first, 0, height, bend, 3 - random.nextInt(3));
         Set<BlockPos> leaves = new LinkedHashSet<>();
         EnumFacing second = EnumFacing.Plane.HORIZONTAL.random(random);
         BlockPos fork = null;
         if (first != second) {
             int start = bend - random.nextInt(2) - 1;
-            int steps = 1 + random.nextInt(3);
-            fork = addBranch(logs, base, second, Math.max(1, start), Math.min(height, start + steps),
-                    Math.max(1, start), steps);
+            int end = Math.min(height, start + 1 + random.nextInt(3));
+            int firstLevel = Math.max(1, start);
+            fork = addBranch(world, logs, base, second, firstLevel, end, firstLevel, end - firstLevel);
         }
-        for (BlockPos log : logs) {
-            if (!replaceable(world, log)) {
-                return false;
-            }
+        if (logs.isEmpty()) {
+            return false;
         }
-        addCanopy(world, random, leaves, top.up(), 1);
+        if (top != null) {
+            addCanopy(world, random, leaves, top, 1);
+        }
         if (fork != null) {
-            addCanopy(world, random, leaves, fork.up(), 0);
+            addCanopy(world, random, leaves, fork, 0);
         }
         leaves.removeAll(logs);
 
@@ -65,7 +67,6 @@ public final class JuniperTree {
         for (BlockPos pos : logs) {
             world.setBlockState(pos, log, 2);
         }
-        IBlockState leaf = PSBlocks.JUNIPER_LEAVES.getDefaultState();
         Set<BlockPos> frontier = logs;
         for (int distance = 1; distance < JuniperLeavesBlock.UNSUPPORTED && !frontier.isEmpty(); distance++) {
             Set<BlockPos> next = new LinkedHashSet<>();
@@ -73,7 +74,7 @@ public final class JuniperTree {
                 for (EnumFacing face : EnumFacing.VALUES) {
                     BlockPos adjacent = pos.offset(face);
                     if (leaves.remove(adjacent)) {
-                        world.setBlockState(adjacent, leaf.withProperty(JuniperLeavesBlock.DISTANCE, distance), 2);
+                        placeLeaf(world, adjacent, distance);
                         next.add(adjacent);
                     }
                 }
@@ -81,24 +82,27 @@ public final class JuniperTree {
             frontier = next;
         }
         for (BlockPos pos : leaves) {
-            world.setBlockState(pos, leaf, 2);
+            placeLeaf(world, pos, JuniperLeavesBlock.UNSUPPORTED);
         }
         return true;
     }
 
-    private static BlockPos addBranch(Set<BlockPos> logs, BlockPos base, EnumFacing direction,
+    private static BlockPos addBranch(World world, Set<BlockPos> logs, BlockPos base, EnumFacing direction,
                                       int start, int end, int bend, int steps) {
         BlockPos column = base;
-        BlockPos top = null;
+        int canopyHeight = 0;
         for (int y = start; y < end; y++) {
             if (y >= bend && steps > 0) {
                 column = column.offset(direction);
                 steps--;
             }
-            top = column.up(y);
-            logs.add(top);
+            BlockPos log = column.up(y);
+            if (!logs.contains(log) && canPlaceLog(world, base, log)) {
+                logs.add(log);
+                canopyHeight = y + 1;
+            }
         }
-        return top;
+        return canopyHeight == 0 ? null : column.up(canopyHeight);
     }
 
     private static void addCanopy(World world, Random random, Set<BlockPos> leaves, BlockPos center, int extraRadius) {
@@ -110,7 +114,7 @@ public final class JuniperTree {
                         continue;
                     }
                     BlockPos pos = center.add(x, y, z);
-                    if (replaceable(world, pos)) {
+                    if (PlantWorldGenerator.replaceableByTrees(world, pos)) {
                         leaves.add(pos);
                     }
                 }
@@ -118,10 +122,18 @@ public final class JuniperTree {
         }
     }
 
-    private static boolean replaceable(World world, BlockPos pos) {
-        IBlockState state = world.getBlockState(pos);
-        Material material = state.getMaterial();
-        return material == Material.AIR || material == Material.PLANTS || material == Material.VINE
-                || state.getBlock().isLeaves(state, world, pos);
+    private static boolean canPlaceLog(World world, BlockPos base, BlockPos pos) {
+        return (base.equals(pos) && world.getBlockState(pos).getBlock() == PSBlocks.JUNIPER_SAPLING)
+                || PlantWorldGenerator.replaceableByTrees(world, pos);
+    }
+
+    private static void placeLeaf(World world, BlockPos pos, int distance) {
+        IBlockState previous = world.getBlockState(pos);
+        boolean waterlogged = Waterlogging.isWaterSource(previous) || Waterlogging.isWet(world, pos, previous);
+        IBlockState leaf = PSBlocks.JUNIPER_LEAVES.getDefaultState().withProperty(JuniperLeavesBlock.DISTANCE, distance);
+        world.setBlockState(pos, leaf, 2);
+        if (waterlogged) {
+            Waterlogging.fillSource(world, pos);
+        }
     }
 }
