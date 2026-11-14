@@ -3,6 +3,7 @@ package ivorius.psychedelicraft.entity.drug;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.util.function.DoubleSupplier;
 
 import ivorius.psychedelicraft.entity.drug.influence.DrugInfluence;
 import net.minecraft.nbt.CompressedStreamTools;
@@ -63,6 +64,41 @@ public class DrugPropertiesTest {
     }
 
     @Test
+    public void eitherMushroomStartsLocalGrowthAtTwoBlocksAndThreeTicks() {
+        for (DrugType type : new DrugType[]{DrugType.RED_SHROOMS, DrugType.BROWN_SHROOMS}) {
+            DrugProperties properties = withMushroom(type);
+            assertEquals(0, MushroomGrowth.tickCount(MushroomGrowth.strength(properties)));
+            double peak = peakValue(properties, () -> MushroomGrowth.strength(properties));
+            assertTrue(peak > 0);
+            assertEquals(2, MushroomGrowth.radius(peak));
+            assertEquals(3, MushroomGrowth.tickCount(peak));
+        }
+    }
+
+    @Test
+    public void overlappingMushroomsExpandGrowthAndStopAfterTheEffectExpires() {
+        DrugProperties properties = withMushroom(DrugType.RED_SHROOMS);
+        properties.addInfluence(mushroom(DrugType.BROWN_SHROOMS));
+        double mixed = peakValue(properties, () -> MushroomGrowth.strength(properties));
+        assertTrue(MushroomGrowth.radius(mixed) > 2 && MushroomGrowth.radius(mixed) < 5);
+        assertTrue(MushroomGrowth.tickCount(mixed) > 3 && MushroomGrowth.tickCount(mixed) < 18);
+
+        DrugProperties stacked = withMushroom(DrugType.RED_SHROOMS);
+        stacked.addInfluence(mushroom(DrugType.RED_SHROOMS));
+        stacked.addInfluence(mushroom(DrugType.BROWN_SHROOMS));
+        stacked.addInfluence(mushroom(DrugType.BROWN_SHROOMS));
+        double strongest = peakValue(stacked, () -> MushroomGrowth.strength(stacked));
+        assertEquals(1, strongest, EPSILON);
+        assertEquals(5, MushroomGrowth.radius(strongest));
+        assertEquals(18, MushroomGrowth.tickCount(strongest));
+
+        tick(stacked, 901, 18000);
+        double expired = MushroomGrowth.strength(stacked);
+        assertEquals(0, MushroomGrowth.radius(expired));
+        assertEquals(0, MushroomGrowth.tickCount(expired));
+    }
+
+    @Test
     public void peyoteFlightCostsTwiceAsMuchUpToOnePointPerSecond() {
         assertEquals(20F, 1F / PeyoteFlight.saturationPerTick(0), 0.001F);
         assertEquals(20F, 1F / PeyoteFlight.saturationPerTick(0.1), 0.001F);
@@ -71,10 +107,14 @@ public class DrugPropertiesTest {
     }
 
     private static float peak(DrugProperties properties, Drug.Modifier modifier) {
-        float maximum = 0F;
+        return (float) peakValue(properties, () -> properties.getModifier(modifier));
+    }
+
+    private static double peakValue(DrugProperties properties, DoubleSupplier value) {
+        double maximum = 0;
         for (int age = 1; age <= 900; age++) {
             properties.tick(age);
-            maximum = Math.max(maximum, properties.getModifier(modifier));
+            maximum = Math.max(maximum, value.getAsDouble());
         }
         return maximum;
     }

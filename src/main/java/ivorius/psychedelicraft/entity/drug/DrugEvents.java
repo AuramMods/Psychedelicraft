@@ -58,6 +58,7 @@ public final class DrugEvents {
                         properties.getMultiplier(Drug::attackDamageModifier) - 1.0, 2);
                 updateModifier(event.player.getEntityAttribute(EntityPlayer.REACH_DISTANCE),
                         properties.getModifier(Drug::extraBlockReach), 0);
+                MushroomGrowth.tick(event.player, properties);
                 int riftSpawnInterval = PSConfig.balancing.randomTicksUntilRiftSpawn;
                 if (riftSpawnInterval > 0 && event.player.getRNG().nextInt(riftSpawnInterval) == 0) {
                     RealityRiftEntity.spawnNear(event.player);
