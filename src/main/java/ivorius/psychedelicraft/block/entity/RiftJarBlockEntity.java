@@ -107,7 +107,9 @@ public final class RiftJarBlockEntity extends TileEntity implements ITickable {
         }
 
         if (before != amount || previousLid != lid || previousHandle != handle) markDirty();
-        if (lastSentAmount != amount && (amount == 0 || world.getTotalWorldTime() % 5 == 0)) publish();
+        // Chunk tracking can send a loaded fill before this tile broadcasts its first change.
+        boolean emptied = before > 0 && amount == 0;
+        if (emptied || (lastSentAmount != amount && (amount == 0 || world.getTotalWorldTime() % 5 == 0))) publish();
     }
 
     private void collect() {
@@ -119,12 +121,14 @@ public final class RiftJarBlockEntity extends TileEntity implements ITickable {
 
     private void discharge() {
         float drained = Math.min(0.0004F * lid * amount + 0.0004F, amount);
+        Vec3d center = new Vec3d(pos).addVector(0.5, 0.5, 0.5);
         AxisAlignedBB area = new AxisAlignedBB(pos.getX() - 5, pos.getY() - 5, pos.getZ() - 2,
                 pos.getX() + 6, pos.getY() + 6, pos.getZ() + 6);
         for (EntityPlayer player : world.getEntitiesWithinAABB(EntityPlayer.class, area, EntitySelectors.CAN_AI_TARGET)) {
             DrugProperties drugs = DrugCapability.get(player);
             if (drugs != null) {
-                double effect = (5 - player.getDistance(pos.getX() + 0.5, pos.getY() + 0.5, pos.getZ() + 0.5)) * 0.2F * drained;
+                double distance = Math.sqrt(player.getPositionVector().squareDistanceTo(center));
+                double effect = (5 - distance) * 0.2F * drained;
                 drugs.addToDrug(DrugType.ZERO, effect * 5);
                 drugs.addToDrug(DrugType.POWER, effect * 35);
             }

@@ -22,7 +22,7 @@ import java.util.List;
 
 import static org.junit.Assert.assertEquals;
 
-public class RiftJarIntakeTest {
+public class RiftJarProcessingTest {
     @BeforeClass
     public static void bootstrap() {
         Bootstrap.register();
@@ -30,7 +30,7 @@ public class RiftJarIntakeTest {
 
     @Test
     public void threeWayIntakeUsesTheDonorFloatOrder() {
-        IntakeWorld world = new IntakeWorld();
+        JarWorld world = new JarWorld();
         RealityRiftEntity stable = world.rift(.002F);
         RealityRiftEntity depleted = world.rift(.00002F);
         depleted.onKillCommand();
@@ -55,10 +55,31 @@ public class RiftJarIntakeTest {
         assertEquals(withdrawn + .00002F + withdrawn, jar.getAmount(), 0F);
     }
 
-    private static final class IntakeWorld extends World {
-        private final List<RealityRiftEntity> rifts = new ArrayList<>();
+    @Test
+    public void restoredRemainderPublishesZeroOnTheTickItEmpties() {
+        JarWorld world = new JarWorld();
+        RiftJarBlockEntity jar = new RiftJarBlockEntity();
+        jar.setWorld(world);
+        NBTTagCompound tag = new NBTTagCompound();
+        tag.setBoolean("isOpening", true);
+        tag.setBoolean("suckingRifts", false);
+        tag.setFloat("fractionOpen", .5F);
+        tag.setFloat("currentRiftFraction", .0002F);
+        jar.readFromNBT(tag);
 
-        private IntakeWorld() {
+        jar.update();
+        assertEquals(0F, jar.getAmount(), 0F);
+        assertEquals(1, world.fillUpdates);
+
+        jar.update();
+        assertEquals(1, world.fillUpdates);
+    }
+
+    private static final class JarWorld extends World {
+        private final List<RealityRiftEntity> rifts = new ArrayList<>();
+        private int fillUpdates;
+
+        private JarWorld() {
             super(null, null, new WorldProviderSurface(), new Profiler(), false);
         }
 
@@ -87,6 +108,11 @@ public class RiftJarIntakeTest {
 
         @Override
         public void markChunkDirty(BlockPos pos, TileEntity tile) {
+        }
+
+        @Override
+        public void notifyBlockUpdate(BlockPos pos, IBlockState previous, IBlockState state, int flags) {
+            fillUpdates++;
         }
 
         @Override
