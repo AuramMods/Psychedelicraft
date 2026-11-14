@@ -7,13 +7,20 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.world.World;
 
 class QuickFoodItem extends ItemFood {
+    private final int useTicks;
+
     QuickFoodItem(int hunger, float saturation, boolean wolfFood) {
+        this(hunger, saturation, wolfFood, 15);
+    }
+
+    QuickFoodItem(int hunger, float saturation, boolean wolfFood, int useTicks) {
         super(hunger, saturation, wolfFood);
+        this.useTicks = useTicks;
     }
 
     @Override
     public int getMaxItemUseDuration(ItemStack stack) {
-        return 15;
+        return useTicks;
     }
 
     @Override

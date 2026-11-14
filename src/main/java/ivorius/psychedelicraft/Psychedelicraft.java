@@ -55,6 +55,7 @@ public class Psychedelicraft {
         FurnaceRecipe.load();
         GameRegistry.addSmelting(new ItemStack(PSItems.RAW_COPPER), new ItemStack(PSItems.COPPER_INGOT), 0.7F);
         GameRegistry.addSmelting(new ItemStack(PSItems.COPPER_ORE), new ItemStack(PSItems.COPPER_INGOT), 0.7F);
+        GameRegistry.addSmelting(new ItemStack(PSItems.KELP), new ItemStack(PSItems.DRIED_KELP), 0.1F);
         OreDictionary.registerOre("oreCopper", PSItems.COPPER_ORE);
         OreDictionary.registerOre("ingotCopper", PSItems.COPPER_INGOT);
         OreDictionary.registerOre("beeCombHoney", PSItems.HONEYCOMB);

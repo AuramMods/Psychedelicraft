@@ -6,6 +6,7 @@ import ivorius.psychedelicraft.item.HarmoniumItem;
 import ivorius.psychedelicraft.block.BarrelBlock;
 import ivorius.psychedelicraft.block.JuniperLeavesBlock;
 import ivorius.psychedelicraft.block.JuniperSignBlock;
+import ivorius.psychedelicraft.block.KelpBlock;
 import ivorius.psychedelicraft.block.LatticeCropBlock;
 import ivorius.psychedelicraft.block.MashTubBlock;
 import ivorius.psychedelicraft.block.PSBlocks;
@@ -125,6 +126,14 @@ public final class PSItemModels {
     @SubscribeEvent
     public static void registerModels(ModelRegistryEvent event) {
         ModelLoader.setCustomStateMapper(PSBlocks.BUBBLE_COLUMN, block -> java.util.Collections.emptyMap());
+        ModelLoader.setCustomStateMapper(PSBlocks.KELP, new StateMap.Builder().ignore(KelpBlock.STAGE).build());
+        ModelLoader.setCustomStateMapper(PSBlocks.KELP_STALK, block -> {
+            java.util.Map<IBlockState, ModelResourceLocation> models = new java.util.HashMap<>();
+            for (IBlockState state : block.getBlockState().getValidStates()) {
+                models.put(state, new ModelResourceLocation(Psychedelicraft.id(KelpBlock.age(state) < 0 ? "kelp_stalk" : "kelp"), "normal"));
+            }
+            return models;
+        });
         PSItems.BAG_O_VOMIT.registerDisguise();
         for (Item item : PSItems.items()) {
             if (item == PSItems.MORNING_GLORY_LATTICE || item == PSItems.WINE_GRAPE_LATTICE) {

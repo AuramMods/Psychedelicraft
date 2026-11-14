@@ -1,0 +1,5 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "ingredients": [{"item": "psychedelicraft:dried_kelp_block"}],
+  "result": {"item": "psychedelicraft:dried_kelp", "count": 9}
+}

@@ -121,6 +121,9 @@ public final class PSBlocks {
     public static final Block COPPER_ORE = named("copper_ore", new CopperOreBlock());
     public static final BeeNestBlock BEE_NEST = named("bee_nest", new BeeNestBlock());
     public static final CampfireBlock CAMPFIRE = named("campfire", new CampfireBlock());
+    public static final KelpBlock KELP = named("kelp", new KelpBlock(false));
+    public static final KelpBlock KELP_STALK = named("kelp_stalk", new KelpBlock(true));
+    public static final Block DRIED_KELP_BLOCK = named("dried_kelp_block", new DriedKelpBlock());
     public static final BubbleColumnBlock BUBBLE_COLUMN = named("bubble_column", new BubbleColumnBlock());
 
     private PSBlocks() {
@@ -145,7 +148,8 @@ public final class PSBlocks {
                 JUNIPER_LEAVES, FRUITING_JUNIPER_LEAVES, JUNIPER_SAPLING, JUNIPER_PLANKS,
                 JUNIPER_STAIRS, JUNIPER_SLAB, JUNIPER_DOUBLE_SLAB, JUNIPER_FENCE, JUNIPER_FENCE_GATE,
                 JUNIPER_DOOR, JUNIPER_TRAPDOOR, POWERED_JUNIPER_TRAPDOOR, JUNIPER_BUTTON, JUNIPER_PRESSURE_PLATE,
-                JUNIPER_SIGN, JUNIPER_WALL_SIGN, JUNIPER_HANGING_SIGN, JUNIPER_WALL_HANGING_SIGN, BEE_NEST, BUBBLE_COLUMN, CAMPFIRE);
+                JUNIPER_SIGN, JUNIPER_WALL_SIGN, JUNIPER_HANGING_SIGN, JUNIPER_WALL_HANGING_SIGN, BEE_NEST, BUBBLE_COLUMN,
+                CAMPFIRE, KELP, KELP_STALK, DRIED_KELP_BLOCK);
         for (PottedPlantBlock pot : POTTED_PLANTS) {
             event.getRegistry().register(pot);
         }

@@ -1,5 +1,6 @@
 package ivorius.psychedelicraft.recipe;
 
+import ivorius.psychedelicraft.item.PSItems;
 import net.minecraft.init.Items;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
@@ -18,6 +19,7 @@ public final class CampfireRecipe {
         if (item == Items.PORKCHOP) return new ItemStack(Items.COOKED_PORKCHOP);
         if (item == Items.RABBIT) return new ItemStack(Items.COOKED_RABBIT);
         if (item == Items.POTATO) return new ItemStack(Items.BAKED_POTATO);
+        if (item == PSItems.KELP) return new ItemStack(PSItems.DRIED_KELP);
         if (item == Items.FISH && (stack.getMetadata() == 0 || stack.getMetadata() == 1)) {
             return new ItemStack(Items.COOKED_FISH, 1, stack.getMetadata());
         }

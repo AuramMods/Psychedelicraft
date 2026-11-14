@@ -54,7 +54,8 @@ public final class Waterlogging {
 
     public static boolean needsWaterTile(IBlockState state) {
         Block block = state.getBlock();
-        return block instanceof Waterloggable && !((Waterloggable) block).hasOwnWaterTile();
+        return block instanceof Waterloggable && !((Waterloggable) block).hasOwnWaterTile()
+                && !((Waterloggable) block).alwaysWaterlogged();
     }
 
     @Nullable
@@ -78,6 +79,7 @@ public final class Waterlogging {
 
     public static boolean isWet(IBlockAccess world, BlockPos pos, IBlockState state) {
         if (!supports(state)) return false;
+        if (((Waterloggable) state.getBlock()).alwaysWaterlogged()) return true;
         WaterloggedBlockEntity tile = tile(world, pos);
         return tile != null && tile.isWaterlogged();
     }
@@ -99,6 +101,12 @@ public final class Waterlogging {
 
     public static IBlockState fluidState(World world, BlockPos pos) {
         return fluidState((IBlockAccess) world, pos);
+    }
+
+    public static IBlockState submergedPlantState(IBlockState state) {
+        Block block = state.getBlock();
+        return block instanceof Waterloggable && ((Waterloggable) block).alwaysWaterlogged()
+                ? Blocks.WATER.getDefaultState() : state;
     }
 
     public static float liquidShapeHeight(World world, BlockPos pos, IBlockState fluidState) {

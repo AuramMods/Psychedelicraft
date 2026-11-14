@@ -93,6 +93,7 @@ public final class WaterloggingTransformer implements IClassTransformer {
                 keepSourceInBlock(type);
                 guardWaterOutlets(type);
                 allowVatInflow(type);
+                protectSubmergedPlants(type);
                 substituteFluidStates(method(type, "checkAdjacentBlock", "func_176371_a", "(" + WORLD + POS + "I)I"), 1);
                 substituteFluidStates(method(type, "updateTick", "func_180650_b",
                         "(" + WORLD + POS + STATE + "Ljava/util/Random;)V"), 1);
@@ -489,6 +490,17 @@ public final class WaterloggingTransformer implements IClassTransformer {
         hook.add(vanilla);
         hook.add(new FrameNode(Opcodes.F_SAME, 0, null, 0, null));
         settle.instructions.insert(hook);
+    }
+
+    private static void protectSubmergedPlants(ClassNode type) {
+        MethodNode flow = method(type, "canFlowInto", "func_176373_h", "(" + WORLD + POS + STATE + ")Z");
+        Type state = Type.getArgumentTypes(flow.desc)[2];
+        InsnList hook = new InsnList();
+        hook.add(new VarInsnNode(Opcodes.ALOAD, 3));
+        hook.add(new MethodInsnNode(Opcodes.INVOKESTATIC, HOOKS, "submergedPlantState",
+                Type.getMethodDescriptor(state, state), false));
+        hook.add(new VarInsnNode(Opcodes.ASTORE, 3));
+        flow.instructions.insert(hook);
     }
 
     private static void patchDispatcher(ClassNode type) {
