@@ -24,8 +24,8 @@ public final class FluidMachineContainer extends Container {
 
     public FluidMachineContainer(InventoryPlayer inventory, FluidMachineBlockEntity machine) {
         this.machine = machine;
-        addSlotToContainer(new SlotItemHandler(machine.getVessels(), FluidMachineBlockEntity.INPUT, 21, 20));
-        addSlotToContainer(new SlotItemHandler(machine.getVessels(), FluidMachineBlockEntity.OUTPUT, 123, 61));
+        addSlotToContainer(new VesselSlot(FluidMachineBlockEntity.INPUT, 21, 20));
+        addSlotToContainer(new VesselSlot(FluidMachineBlockEntity.OUTPUT, 123, 61));
         for (int y = 0; y < 3; y++) {
             for (int x = 0; x < 9; x++) {
                 addSlotToContainer(new Slot(inventory, x + y * 9 + 9, 8 + x * 18, 84 + y * 18));
@@ -33,6 +33,25 @@ public final class FluidMachineContainer extends Container {
         }
         for (int x = 0; x < 9; x++) {
             addSlotToContainer(new Slot(inventory, x, 8 + x * 18, 142));
+        }
+    }
+
+    private final class VesselSlot extends SlotItemHandler {
+        private final int index;
+
+        private VesselSlot(int index, int x, int y) {
+            super(machine.getVessels(), index, x, y);
+            this.index = index;
+        }
+
+        @Override
+        public boolean isItemValid(ItemStack stack) {
+            return machine.getVessels().isItemValid(index, stack);
+        }
+
+        @Override
+        public int getItemStackLimit(ItemStack stack) {
+            return isItemValid(stack) ? getSlotStackLimit() : 0;
         }
     }
 

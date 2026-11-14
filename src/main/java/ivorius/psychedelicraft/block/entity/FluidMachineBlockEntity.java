@@ -41,7 +41,15 @@ public abstract class FluidMachineBlockEntity extends TileEntity implements ITic
 
     private final ProcessingTank tank;
     private boolean syncPending;
-    private final ItemStackHandler vessels = new ItemStackHandler(2) {
+    private final int[] initialTransfer = new int[2];
+    private final int[] transferred = new int[2];
+    private final VesselSlots vessels = new VesselSlots();
+
+    private final class VesselSlots extends ItemStackHandler {
+        private VesselSlots() {
+            super(2);
+        }
+
         @Override
         public int getSlotLimit(int slot) {
             return 1;
@@ -60,9 +68,23 @@ public abstract class FluidMachineBlockEntity extends TileEntity implements ITic
 
         @Override
         protected void onContentsChanged(int slot) {
+            if (world == null || !world.isRemote) startTransfer(slot);
             changed();
         }
-    };
+
+        private void setTransferred(int slot, IFluidHandlerItem vessel, FluidStack moved) {
+            stacks.set(slot, vessel.getContainer());
+            transferred[slot] += Math.min(moved.amount, initialTransfer[slot] - transferred[slot]);
+            changed();
+        }
+
+        @Override
+        public void deserializeNBT(NBTTagCompound compound) {
+            NBTTagCompound fixedSlots = compound.copy();
+            fixedSlots.setInteger("Size", 2);
+            super.deserializeNBT(fixedSlots);
+        }
+    }
     private final IItemHandler input = automationSlots(INPUT, OUTPUT);
     private final IItemHandler output = automationSlots(OUTPUT, 2);
     private final IItemHandler both = automationSlots(INPUT, 2);
@@ -80,6 +102,10 @@ public abstract class FluidMachineBlockEntity extends TileEntity implements ITic
 
     public final ItemStackHandler getVessels() {
         return vessels;
+    }
+
+    public final float getVesselProgress(int slot) {
+        return initialTransfer[slot] > 0 ? (float) transferred[slot] / initialTransfer[slot] : 0;
     }
 
     @Override
@@ -149,13 +175,15 @@ public abstract class FluidMachineBlockEntity extends TileEntity implements ITic
     private boolean transferVessels() {
         boolean transferred = false;
         IFluidHandlerItem target = FluidVesselHandler.forTransfer(vessels.getStackInSlot(OUTPUT));
-        if (target != null && FluidUtil.tryFluidTransfer(target, tank, TRANSFER_RATE, true) != null) {
-            vessels.setStackInSlot(OUTPUT, target.getContainer());
+        FluidStack filled = target == null ? null : FluidUtil.tryFluidTransfer(target, tank, TRANSFER_RATE, true);
+        if (filled != null) {
+            vessels.setTransferred(OUTPUT, target, filled);
             transferred = true;
         }
         IFluidHandlerItem source = FluidVesselHandler.forTransfer(vessels.getStackInSlot(INPUT));
-        if (source != null && FluidUtil.tryFluidTransfer(tank, source, TRANSFER_RATE, true) != null) {
-            vessels.setStackInSlot(INPUT, source.getContainer());
+        FluidStack drained = source == null ? null : FluidUtil.tryFluidTransfer(tank, source, TRANSFER_RATE, true);
+        if (drained != null) {
+            vessels.setTransferred(INPUT, source, drained);
             transferred = true;
         }
         return transferred;
@@ -186,34 +214,37 @@ public abstract class FluidMachineBlockEntity extends TileEntity implements ITic
     }
 
     private static boolean hasRoom(IFluidHandlerItem vessel) {
-        for (IFluidTankProperties property : vessel.getTankProperties()) {
-            FluidStack contents = property.getContents();
-            if (property.canFill() && (contents == null || contents.amount < property.getCapacity())) return true;
-        }
-        return false;
+        return transferRoom(vessel) > 0;
     }
 
-    public static float fillRatio(ItemStack stack) {
-        IFluidHandlerItem vessel = FluidVesselHandler.forTransfer(stack);
-        if (vessel == null) return 0;
-        for (IFluidTankProperties property : vessel.getTankProperties()) {
-            FluidStack contents = property.getContents();
-            if (contents != null && property.getCapacity() > 0) return (float) contents.amount / property.getCapacity();
+    private void startTransfer(int slot) {
+        transferred[slot] = 0;
+        initialTransfer[slot] = 0;
+        IFluidHandlerItem vessel = FluidVesselHandler.forTransfer(vessels.getStackInSlot(slot));
+        if (vessel == null) return;
+        if (slot == INPUT) {
+            FluidStack available = vessel.drain(Integer.MAX_VALUE, false);
+            if (available != null) initialTransfer[slot] = available.amount;
+        } else {
+            initialTransfer[slot] = transferRoom(vessel);
         }
-        return 0;
+    }
+
+    private static int transferRoom(IFluidHandlerItem vessel) {
+        long room = 0;
+        for (IFluidTankProperties property : vessel.getTankProperties()) {
+            if (!property.canFill()) continue;
+            FluidStack contents = property.getContents();
+            room += Math.max(0, property.getCapacity() - (contents == null ? 0 : contents.amount));
+        }
+        return (int) Math.min(room, Integer.MAX_VALUE);
     }
 
     @Nullable
     private IItemHandler automation(@Nullable EnumFacing side) {
-        side = relativeSide(side);
         if (side == EnumFacing.EAST) return input;
         if (side == EnumFacing.WEST) return output;
         return side == null || side.getAxis().isVertical() ? both : null;
-    }
-
-    @Nullable
-    protected EnumFacing relativeSide(@Nullable EnumFacing side) {
-        return side;
     }
 
     @Override
@@ -239,6 +270,8 @@ public abstract class FluidMachineBlockEntity extends TileEntity implements ITic
         super.writeToNBT(compound);
         compound.setTag("tank", tank.writeToNBT(new NBTTagCompound()));
         compound.setTag("vessels", vessels.serializeNBT());
+        compound.setIntArray("initialTransfer", initialTransfer.clone());
+        compound.setIntArray("transferred", transferred.clone());
         return compound;
     }
 
@@ -247,6 +280,16 @@ public abstract class FluidMachineBlockEntity extends TileEntity implements ITic
         super.readFromNBT(compound);
         tank.readFromNBT(compound.getCompoundTag("tank"));
         vessels.deserializeNBT(compound.getCompoundTag("vessels"));
+        int[] initial = compound.getIntArray("initialTransfer");
+        int[] moved = compound.getIntArray("transferred");
+        for (int slot = INPUT; slot <= OUTPUT; slot++) {
+            if (slot < initial.length && slot < moved.length && !vessels.getStackInSlot(slot).isEmpty()) {
+                initialTransfer[slot] = Math.max(0, initial[slot]);
+                transferred[slot] = Math.max(0, Math.min(initialTransfer[slot], moved[slot]));
+            } else {
+                startTransfer(slot);
+            }
+        }
     }
 
     @Override

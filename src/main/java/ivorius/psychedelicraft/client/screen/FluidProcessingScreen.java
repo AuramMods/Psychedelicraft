@@ -116,12 +116,12 @@ public final class FluidProcessingScreen extends GuiContainer {
             drawTexturedModalRect(guiLeft + progressX, guiTop + progressY + unfilled, 233, unfilled, 23, 23 - unfilled);
         }
         ItemStack inputStack = machine.getVessels().getStackInSlot(FluidMachineBlockEntity.INPUT);
-        float input = 1 - FluidMachineBlockEntity.fillRatio(inputStack);
+        float input = machine.getVesselProgress(FluidMachineBlockEntity.INPUT);
         if (!inputStack.isEmpty() && input > 0 && input < 1) {
             int width = (int) (45 * input);
             drawTexturedModalRect(guiLeft + 20 + width, guiTop + 40, 176 + width, 0, 45 - width, 16);
         }
-        float output = FluidMachineBlockEntity.fillRatio(machine.getVessels().getStackInSlot(FluidMachineBlockEntity.OUTPUT));
+        float output = machine.getVesselProgress(FluidMachineBlockEntity.OUTPUT);
         if (output > 0 && output < 1) {
             drawTexturedModalRect(guiLeft + 68, guiTop + 60, 176, 17, (int) (53 * output), 20);
         }

@@ -1,9 +1,12 @@
 package ivorius.psychedelicraft.block.entity;
 
 import ivorius.psychedelicraft.fluid.PSFluids;
+import ivorius.psychedelicraft.fluid.FluidVesselHandler;
+import ivorius.psychedelicraft.item.PSItems;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.init.Blocks;
 import net.minecraft.init.Bootstrap;
+import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.profiler.Profiler;
 import net.minecraft.tileentity.TileEntity;
@@ -51,6 +54,27 @@ public class FluidProcessingBlockEntityTest {
         assertEquals(298, machine.getRemainingTicks());
     }
 
+    @Test
+    public void partialVesselProgressStartsAtTheAmountAvailableToTransfer() {
+        FlaskBlockEntity flask = new FlaskBlockEntity();
+        flask.setWorld(new ProcessingWorld());
+        flask.getTank().replace(new FluidStack(PSFluids.WHEAT, 100));
+        flask.getVessels().setStackInSlot(0, FluidVesselHandler.forCrafting(new ItemStack(PSItems.BOTTLE))
+                .craftContents(PSFluids.WHEAT, 75, null));
+        flask.getVessels().setStackInSlot(1, FluidVesselHandler.forCrafting(new ItemStack(PSItems.BOTTLE))
+                .craftContents(PSFluids.WHEAT, 1900, null));
+
+        assertEquals(0F, flask.getVesselProgress(0), 0F);
+        assertEquals(0F, flask.getVesselProgress(1), 0F);
+        flask.update();
+        assertEquals(2F / 3F, flask.getVesselProgress(0), 0.00001F);
+        assertEquals(0.5F, flask.getVesselProgress(1), 0F);
+        flask.update();
+        assertEquals(1F, flask.getVesselProgress(0), 0F);
+        assertEquals(1F, flask.getVesselProgress(1), 0F);
+        assertEquals(75, flask.getTank().getFluidAmount());
+    }
+
     private static final class Processor extends FluidProcessingBlockEntity {
         private Processor() {
             super(1000);
@@ -87,6 +111,11 @@ public class FluidProcessingBlockEntityTest {
         @Override
         public void markChunkDirty(BlockPos pos, TileEntity tile) {
             dirty = true;
+        }
+
+        @Override
+        public long getTotalWorldTime() {
+            return 1;
         }
     }
 }

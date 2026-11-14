@@ -1255,6 +1255,16 @@ sh run/production/background-qa/run.sh "$qa" game-background Overlay-QA \
 - The tested jar SHA-256 is `801490b4282ce75c695524fc207008d3bd5a79be59f63a00edb48985aeb4590d`. Evidence is under `run/production/runtime-qa-cycle137` in `build-production.log`, `runtime-baseline-verified.log`, `runtime-fixed-verified.log` and `runtime-reopen-verified.log`. Clients ran on Xvfb with zero master volume and OpenAL's `No Output` device.
 - Next, compare the pinned fluid machine vessel slots with their Forge transfer rates, partial remainders and hopper access.
 
+### Cycle 138 · Machine vessel progress and hopper faces
+
+- The pinned transfer loop handles the output first and moves up to 50 mB per slot per tick. The Forge loop already matched that behavior. The port now counts the volume moved against what was available in the input vessel or what fit in the output vessel when inserted. The screen uses those counters for both progress bars, and slot validation no longer temporarily replaces the held vessel. [Pinned transfer and inventory code](https://github.com/Sollace/Psychedelicraft/blob/319a4ea0160d6600cffcd5f5cc9e363ceaab44a1/src/main/java/ivorius/psychedelicraft/block/entity/FlaskBlockEntity.java) [Pinned screen](https://github.com/Sollace/Psychedelicraft/blob/319a4ea0160d6600cffcd5f5cc9e363ceaab44a1/src/main/java/ivorius/psychedelicraft/client/screen/FlaskScreen.java)
+- The counters save with the two slots and synchronize with the tank. Older Forge saves start each bar at zero using the volume still available to transfer. Barrels and distilleries now expose the same fixed east input and west output as the other machines. The pinned inventory checks for a horizontal-only facing property, which neither machine declares. Both vertical faces still expose both slots. Hoppers extract the drained input or the filled output.
+- The clean Java 8 build and reobfuscation succeeded. All 180 tests passed, including a regression for the relative progress of partially filled vessels.
+- In muted Forge 14.23.5.2864, a 75 mB input and an output with 100 mB of free space each moved 50 mB on the first tick. Their progress showed two-thirds and one-half and survived a tile NBT reload. A second tick finished the transfers, kept the tagged 75 mB in the tank, and made both vessels available for extraction. The fixture verified fixed sides for the horizontal barrel and distillery and used native hoppers to supply and retrieve a barrel bucket.
+- The vat regression passed all fourteen recipes, native hopper exchange at the rim, client shift-click in both directions, and a locked stew. The initial regression used an obsolete screen class. The rerun used the updated fixture from Cycle 56.
+- The tested jar SHA-256 is `280d6e39b3206651b37fd923663be977f440cb64c75e4c2984d12e45f2eed05f`. Evidence is under `run/production/runtime-qa-cycle138` in `build-production.log`, `build-tests.log`, `runtime-baseline.log`, `runtime-fixed.log` and `runtime-vat-verified.log`. Clients ran on Xvfb with zero master volume and OpenAL's `No Output` device.
+- Next, compare the pinned processing and transfer tooltips against the Forge machine screens, including live updates while a vessel is paused or swapped.
+
 Dedicated Forge startup and multiplayer on that server remain open pending EULA acceptance.
 
 ## Repository and branch survey

@@ -124,15 +124,6 @@ public final class DistilleryBlockEntity extends FluidProcessingBlockEntity {
     }
 
     @Override
-    @Nullable
-    protected EnumFacing relativeSide(@Nullable EnumFacing side) {
-        if (side == null || side.getAxis().isVertical() || world == null) return side;
-        EnumFacing facing = world.getBlockState(pos).getValue(DistilleryBlock.FACING);
-        return facing.getAxis().isVertical() ? side
-                : EnumFacing.getHorizontal((facing.getHorizontalIndex() - side.getHorizontalIndex()) & 3);
-    }
-
-    @Override
     public NBTTagCompound writeToNBT(NBTTagCompound compound) {
         super.writeToNBT(compound);
         compound.setInteger("outlet", outlet.ordinal());

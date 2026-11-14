@@ -4,17 +4,13 @@
 
 package ivorius.psychedelicraft.block.entity;
 
-import ivorius.psychedelicraft.block.BarrelBlock;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.init.SoundEvents;
 import net.minecraft.nbt.NBTTagCompound;
-import net.minecraft.util.EnumFacing;
 import net.minecraft.util.EnumHand;
 import net.minecraft.util.SoundCategory;
 import net.minecraft.util.math.MathHelper;
 import net.minecraftforge.fluids.Fluid;
-
-import javax.annotation.Nullable;
 
 public final class BarrelBlockEntity extends FluidProcessingBlockEntity {
     public static final int CAPACITY = 16000;
@@ -60,15 +56,6 @@ public final class BarrelBlockEntity extends FluidProcessingBlockEntity {
         previousTapAngle = tapAngle;
         tapAngle = MathHelper.clamp(tapAngle + (tapTicks > 0 ? 18 : -18), 0, 90);
         if (tapTicks > 0) tapTicks--;
-    }
-
-    @Override
-    @Nullable
-    protected EnumFacing relativeSide(@Nullable EnumFacing side) {
-        if (side == null || side.getAxis().isVertical() || world == null) return side;
-        EnumFacing facing = world.getBlockState(pos).getValue(BarrelBlock.FACING);
-        return facing.getAxis().isVertical() ? side
-                : EnumFacing.getHorizontal((facing.getHorizontalIndex() - side.getHorizontalIndex()) & 3);
     }
 
     @Override
