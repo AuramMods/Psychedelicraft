@@ -1574,6 +1574,15 @@ sh run/production/background-qa/run.sh "$qa" game-background Overlay-QA \
 - The Java 8 suite passed all 207 tests. Two muted Forge 2864 clients checked the prior and updated reobfuscated jars. The updated client verified saved support distance, the dry fruiting roll after decay, water release for both leaf varieties, a single berry drop and the placement distance.
 - The cycle jar SHA-256 is `0609dca2a14b6d681f443df4c9b6d6527adf511e12ddf307731ad9876b673495`. Packaged evidence is in `run/production/runtime-qa-cycle172/runtime-old-verified.log` and `runtime-new-verified.log`. The final suite output is in `run/production/runtime-qa-cycle173/test.log`.
 
+### Cycle 173 · CTM and Quark compatibility
+
+- The Divine Journey 2.23.4 profile uses Forge 2860. Its installed Psychedelicraft jar matched the cycle 171 reobfuscated build, including the SRG-mapped `World.func_180501_a` call. A minimal packaged launch reproduced the initial CTM 1.0.2.31 failure. CTM expects the first node of `Block.canRenderInLayer` to be a label, so the waterlogging hook now follows the original entry label.
+- The copied pack passed that transform and exposed a second failure in Quark's liquid patch. Quark instruments each return of `BlockDynamicLiquid.isBlocked` and reads a block variable that the previous vat early return bypassed. A private bridge checks the vat at the native call sites and lets Quark instrument the original method.
+- Quark RotN can still patch the original piston tile-entity check and placement calls. Psychedelicraft reads the state of the placed lattice to restore growth, since Quark's replacement placement call can return false after placing the block. The optional Quark detach hook leaves movable waterloggable tiles attached for the native source-state read, so crop age and persistence remain available before the move.
+- The Java 8 build ran `reobfJar` and passed all 207 tests. The reobfuscated candidate SHA-256 is `70fba36c580a8b402798960dd6526a45cb3f01e289abbd2be910dd02243dc9c6`. Muted Forge 2864 fixtures with CTM, Quark RotN and AutoRegLib verified crop growth, persistence, moving-tile NBT, extension, sticky-piston retraction and vat intake from native water, lava and tagged brews. Quark also logs a separate boat-render transform miss in that configuration.
+- The original CTM reproduction and runtime logs are under `run/production/runtime-qa-cycle173`. The build is in `build-compat.log`, the focused passes are in `runtime-combined-piston.log` and `runtime-combined-vat.log`, and copied-pack startup on Forge 2860 is in `runtime-game-dj2-compat.log`.
+- A muted copy of the full Divine Journey 2.23.4 profile loaded 255 Forge mods with this exact jar and reached the pack's title screen after dismissing GroovyScript's InWorldCrafting notice. The title screen capture is `screenshot/dj2-title.png` in the same directory. Full-pack gameplay remains untested.
+
 Dedicated Forge startup and multiplayer on that server remain open pending EULA acceptance.
 
 ## Repository and branch survey

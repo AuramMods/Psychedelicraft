@@ -32,6 +32,7 @@ public final class WaterloggingTransformer implements IClassTransformer {
     private static final String LIQUID = "net.minecraft.block.BlockLiquid";
     private static final String FLOWING = "net.minecraft.block.BlockDynamicLiquid";
     private static final String PISTON = "net.minecraft.block.BlockPistonBase";
+    private static final String QUARK_PISTONS = "vazkii.quark.automation.feature.PistonsMoveTEs";
     private static final String BLOCK = "net.minecraft.block.Block";
     private static final String ENTITY_CLASS = "net.minecraft.entity.Entity";
     private static final String WORLD_SERVER = "net.minecraft.world.WorldServer";
@@ -59,7 +60,7 @@ public final class WaterloggingTransformer implements IClassTransformer {
     public byte[] transform(String name, String transformedName, byte[] bytes) {
         if (bytes == null || !(DISPATCHER.equals(transformedName) || FLUID_RENDERER.equals(transformedName)
                 || LIQUID.equals(transformedName) || FLOWING.equals(transformedName)
-                || PISTON.equals(transformedName) || VIEWPOINT.equals(transformedName)
+                || PISTON.equals(transformedName) || QUARK_PISTONS.equals(transformedName) || VIEWPOINT.equals(transformedName)
                 || BLOCK.equals(transformedName) || ENTITY_CLASS.equals(transformedName) || WORLD_SERVER.equals(transformedName)
                 || WORLD_CLASS.equals(transformedName) || SHEARS.equals(transformedName)
                 || FARMLAND.equals(transformedName) || SUSPENDED.equals(transformedName)
@@ -98,6 +99,9 @@ public final class WaterloggingTransformer implements IClassTransformer {
                 break;
             case PISTON:
                 patchPiston(type);
+                break;
+            case QUARK_PISTONS:
+                preservePistonSourceGrowth(type);
                 break;
             case BLOCK:
                 patchBlock(type);
@@ -297,7 +301,10 @@ public final class WaterloggingTransformer implements IClassTransformer {
         hook.add(result);
         hook.add(vanilla);
         hook.add(new FrameNode(Opcodes.F_SAME, 0, null, 0, null));
-        method.instructions.insert(hook);
+        // CTM uses the original entry label of canRenderInLayer as a jump target.
+        AbstractInsnNode entry = method.instructions.getFirst();
+        while (entry.getOpcode() < 0) entry = entry.getNext();
+        method.instructions.insertBefore(entry, hook);
     }
 
     private static void delegateBlock(MethodNode method, String hook, int opcode) {
@@ -416,10 +423,26 @@ public final class WaterloggingTransformer implements IClassTransformer {
         String destination = "(" + WORLD + POS + STATE;
         MethodNode blocked = method(type, "isBlocked", "func_176372_g", destination + ")Z");
         MethodNode spread = method(type, "tryFlowInto", "func_176375_a", destination + "I)V");
+
+        // Keep the original isBlocked returns for transformers that read its Block local at each one.
+        MethodNode bridge = new MethodNode(Opcodes.ACC_PRIVATE | Opcodes.ACC_SYNTHETIC,
+                "psychedelicraft$isFlowBlocked", blocked.desc, null, null);
+        for (MethodNode caller : type.methods) {
+            for (AbstractInsnNode instruction : caller.instructions.toArray()) {
+                if (!matches(instruction, "isBlocked", "func_176372_g", destination + ")Z")) continue;
+                MethodInsnNode call = (MethodInsnNode) instruction;
+                if (type.name.equals(call.owner)) call.name = bridge.name;
+            }
+        }
+        for (int local = 0; local <= 3; local++) bridge.instructions.add(new VarInsnNode(Opcodes.ALOAD, local));
+        bridge.instructions.add(new MethodInsnNode(Opcodes.INVOKESPECIAL, type.name, blocked.name, blocked.desc, false));
+        bridge.instructions.add(new InsnNode(Opcodes.IRETURN));
         InsnList open = new InsnList();
         open.add(new InsnNode(Opcodes.ICONST_0));
         open.add(new InsnNode(Opcodes.IRETURN));
-        hookVatDestination(type, blocked, "canAcceptVanilla", open);
+        hookVatDestination(type, bridge, "canAcceptVanilla", open);
+        type.methods.add(bridge);
+
         InsnList filled = new InsnList();
         filled.add(new InsnNode(Opcodes.RETURN));
         hookVatDestination(type, spread, "fillIfVanillaVat", filled);
@@ -500,11 +523,30 @@ public final class WaterloggingTransformer implements IClassTransformer {
             if (!(instruction instanceof MethodInsnNode)) continue;
             MethodInsnNode call = (MethodInsnNode) instruction;
             if (!"hasTileEntity".equals(call.name) || !("(" + STATE + ")Z").equals(remapper.mapMethodDesc(call.desc))) continue;
-            push.instructions.set(call, new MethodInsnNode(Opcodes.INVOKESTATIC, HOOKS, "blocksPiston",
-                    "(L" + call.owner + ";" + call.desc.substring(1), false));
+            // Quark adjusts the result of hasTileEntity for other movable tile entities.
+            InsnList hook = new InsnList();
+            hook.add(new VarInsnNode(Opcodes.ALOAD, 0));
+            hook.add(new MethodInsnNode(Opcodes.INVOKESTATIC, HOOKS, "blocksPiston",
+                    "(Z" + call.desc.substring(1), false));
+            push.instructions.insert(call, hook);
             return;
         }
         throw new IllegalStateException("Could not locate Forge 1.12 piston tile check");
+    }
+
+    private static void preservePistonSourceGrowth(ClassNode type) {
+        // The native piston copies actual state after Quark detaches tiles. Leave crops attached for that read.
+        String detach = "(" + WORLD + "Lnet/minecraft/block/state/BlockPistonStructureHelper;" + FACING + "Z)V";
+        for (MethodNode method : type.methods) {
+            if (!"detachTileEntities".equals(method.name) || !detach.equals(method.desc)) continue;
+            for (AbstractInsnNode instruction : method.instructions.toArray()) {
+                if (!matches(instruction, "hasTileEntity", "hasTileEntity", "(" + STATE + ")Z")) continue;
+                MethodInsnNode call = (MethodInsnNode) instruction;
+                method.instructions.set(call, new MethodInsnNode(Opcodes.INVOKESTATIC, HOOKS, "canDetachForPiston",
+                        "(L" + call.owner + ";" + call.desc.substring(1), false));
+                return;
+            }
+        }
     }
 
     private static void substituteFluidStates(MethodNode method, int limit) {

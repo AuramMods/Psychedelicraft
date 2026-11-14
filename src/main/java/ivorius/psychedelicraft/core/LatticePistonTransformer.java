@@ -30,8 +30,8 @@ public final class LatticePistonTransformer implements IClassTransformer {
         new ClassReader(bytes).accept(type, 0);
         patchWrite(type);
         patchRead(type);
-        patchFinish(method(type, "update", "func_73660_a", "()V"));
-        patchFinish(method(type, "clearPistonTileEntity", "func_145866_f", "()V"));
+        patchFinish(type, method(type, "update", "func_73660_a", "()V"));
+        patchFinish(type, method(type, "clearPistonTileEntity", "func_145866_f", "()V"));
         ClassWriter writer = new ClassWriter(ClassWriter.COMPUTE_MAXS);
         type.accept(writer);
         return writer.toByteArray();
@@ -66,7 +66,7 @@ public final class LatticePistonTransformer implements IClassTransformer {
         throw new IllegalStateException("Could not locate the saved piston state assignment");
     }
 
-    private static void patchFinish(MethodNode finish) {
+    private static void patchFinish(ClassNode type, MethodNode finish) {
         FMLDeobfuscatingRemapper remapper = FMLDeobfuscatingRemapper.INSTANCE;
         for (AbstractInsnNode instruction : finish.instructions.toArray()) {
             if (!(instruction instanceof MethodInsnNode)) continue;
@@ -74,8 +74,16 @@ public final class LatticePistonTransformer implements IClassTransformer {
             String name = remapper.mapMethodName(call.owner, call.name, call.desc);
             if (!("setBlockState".equals(name) || "func_180501_a".equals(name))
                     || !PLACE.equals(remapper.mapMethodDesc(call.desc))) continue;
-            finish.instructions.set(call, new MethodInsnNode(Opcodes.INVOKESTATIC, HOOKS, "finish",
-                    "(L" + call.owner + ";" + call.desc.substring(1), false));
+
+            // Keep the placement call available to piston transformers and inspect the placed block afterward.
+            AbstractInsnNode discard = call.getNext();
+            while (discard != null && discard.getOpcode() < 0) discard = discard.getNext();
+            if (discard == null || discard.getOpcode() != Opcodes.POP) break;
+            InsnList restore = new InsnList();
+            restore.add(new VarInsnNode(Opcodes.ALOAD, 0));
+            restore.add(new MethodInsnNode(Opcodes.INVOKESTATIC, HOOKS, "restoreGrowth",
+                    "(L" + type.name + ";)V", false));
+            finish.instructions.insert(discard, restore);
             return;
         }
         throw new IllegalStateException("Could not locate the final piston block placement");

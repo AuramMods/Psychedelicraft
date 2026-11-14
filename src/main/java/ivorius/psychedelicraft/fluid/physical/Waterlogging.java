@@ -135,9 +135,14 @@ public final class Waterlogging {
         if (isWet(world, pos, state)) Blocks.WATER.randomDisplayTick(Blocks.WATER.getDefaultState(), world, pos, random);
     }
 
-    public static boolean blocksPiston(Block block, IBlockState state) {
-        return block.hasTileEntity(state)
-                && (!(block instanceof Waterloggable) || !((Waterloggable) block).canPistonMove());
+    public static boolean blocksPiston(boolean blocked, IBlockState state) {
+        Block block = state.getBlock();
+        if (!(block instanceof Waterloggable)) return blocked;
+        return block.hasTileEntity(state) && !((Waterloggable) block).canPistonMove();
+    }
+
+    public static boolean canDetachForPiston(Block block, IBlockState state) {
+        return block.hasTileEntity(state) && (!(block instanceof Waterloggable) || !((Waterloggable) block).canPistonMove());
     }
 
     public static void scheduleFlow(World world, BlockPos pos) {

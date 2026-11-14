@@ -3,6 +3,7 @@ package ivorius.psychedelicraft.block;
 import ivorius.psychedelicraft.block.entity.LatticeCropBlockEntity;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.tileentity.TileEntityPiston;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.world.World;
@@ -30,12 +31,13 @@ public final class LatticePiston {
                 .withProperty(LatticeCropBlock.PERSISTENT, tag.getBoolean(PERSISTENT));
     }
 
-    public static boolean finish(World world, BlockPos pos, IBlockState moving, int flags) {
-        if (!world.setBlockState(pos, moving, flags)) return false;
-        if (moving.getBlock() instanceof LatticeCropBlock) {
-            LatticeCropBlockEntity crop = LatticeCropBlock.getCrop(world, pos);
-            if (crop != null) crop.setGrowth(moving.getValue(LatticeCropBlock.AGE), moving.getValue(LatticeCropBlock.PERSISTENT));
-        }
-        return true;
+    public static void restoreGrowth(TileEntityPiston piston) {
+        IBlockState moving = piston.getPistonState();
+        if (!(moving.getBlock() instanceof LatticeCropBlock)) return;
+        World world = piston.getWorld();
+        BlockPos pos = piston.getPos();
+        if (world.getBlockState(pos).getBlock() != moving.getBlock()) return;
+        LatticeCropBlockEntity crop = LatticeCropBlock.getCrop(world, pos);
+        if (crop != null) crop.setGrowth(moving.getValue(LatticeCropBlock.AGE), moving.getValue(LatticeCropBlock.PERSISTENT));
     }
 }
