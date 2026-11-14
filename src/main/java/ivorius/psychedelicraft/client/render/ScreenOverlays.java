@@ -21,11 +21,11 @@ import net.minecraft.client.renderer.texture.TextureAtlasSprite;
 import net.minecraft.client.renderer.texture.TextureMap;
 import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
 import net.minecraft.entity.Entity;
+import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.init.Blocks;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.SoundCategory;
 import net.minecraft.util.math.MathHelper;
-import net.minecraft.util.math.RayTraceResult;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.util.text.TextComponentTranslation;
 import org.lwjgl.opengl.GL11;
@@ -78,11 +78,12 @@ final class ScreenOverlays {
 
         Entity camera = client.getRenderViewEntity();
         float sun = 0F;
-        if (PSConfig.visual.sunFlareIntensity > 0 && camera != null && client.world.provider.isSurfaceWorld()
-                && camera.rayTrace(100, 1F).typeOfHit == RayTraceResult.Type.MISS) {
-            Vec3d direction = sunInView(camera, client.world.getCelestialAngleRadians(1F), 1F);
-            ScaledResolution size = new ScaledResolution(client);
-            if (direction.z > 0) {
+        if (PSConfig.visual.sunFlareIntensity > 0 && camera != null && client.world.provider.hasSkyLight()
+                && !client.world.provider.isNether()) {
+            Vec3d direction = sunInView(client, camera, 1F);
+            Vec3d eyes = camera.getPositionEyes(1F);
+            if (direction.z > 0 && client.world.rayTraceBlocks(eyes, eyes.add(camera.getLook(1F).scale(100)), true, false, false) == null) {
+                ScaledResolution size = new ScaledResolution(client);
                 sun = (float) Math.max(0, 1 - Math.hypot(direction.x * size.getScaledWidth(),
                         direction.y * size.getScaledHeight()) / 170);
                 sun *= 1F - client.world.getRainStrength(1F);
@@ -152,17 +153,24 @@ final class ScreenOverlays {
         return value + MathHelper.clamp(target - value, -step, step);
     }
 
-    private static Vec3d sunInView(Entity camera, float angle, float partialTicks) {
+    private static Vec3d sunInView(Minecraft client, Entity camera, float partialTicks) {
         float yaw = camera.prevRotationYaw + (camera.rotationYaw - camera.prevRotationYaw) * partialTicks;
         float pitch = camera.prevRotationPitch + (camera.rotationPitch - camera.prevRotationPitch) * partialTicks;
+        float angle = client.world.getCelestialAngleRadians(partialTicks);
         Vec3d sun = new Vec3d(-MathHelper.sin(angle), MathHelper.cos(angle), 0);
-        return sun.rotateYaw((float) Math.toRadians(yaw)).rotatePitch((float) Math.toRadians(pitch));
+        Vec3d direction = sun.rotateYaw((float) Math.toRadians(yaw)).rotatePitch((float) Math.toRadians(pitch));
+        if (client.gameSettings.thirdPersonView == 2 && !client.gameSettings.debugCamEnable
+                && !(camera instanceof EntityLivingBase && ((EntityLivingBase) camera).isPlayerSleeping())) {
+            // Forge turns the front-facing camera 180 degrees around the view's vertical axis.
+            return new Vec3d(-direction.x, direction.y, -direction.z);
+        }
+        return direction;
     }
 
     private void drawFlare(Minecraft client, int width, int height, float partialTicks) {
         Entity camera = client.getRenderViewEntity();
         if (camera == null) return;
-        Vec3d sun = sunInView(camera, client.world.getCelestialAngleRadians(partialTicks), partialTicks);
+        Vec3d sun = sunInView(client, camera, partialTicks);
         if (sun.z <= 0) return;
         float intensity = PSConfig.visual.sunFlareIntensity;
         float size = Math.max(width, height);
