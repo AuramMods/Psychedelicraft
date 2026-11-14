@@ -1,6 +1,9 @@
 package ivorius.psychedelicraft.block;
 
 import ivorius.psychedelicraft.block.entity.CampfireBlockEntity;
+import ivorius.psychedelicraft.client.particle.CampfireSmoke;
+import ivorius.psychedelicraft.fluid.physical.Waterloggable;
+import ivorius.psychedelicraft.fluid.physical.Waterlogging;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockHorizontal;
 import net.minecraft.block.SoundType;
@@ -12,6 +15,7 @@ import net.minecraft.block.state.IBlockState;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.init.Blocks;
 import net.minecraft.init.Items;
 import net.minecraft.init.SoundEvents;
 import net.minecraft.item.ItemSpade;
@@ -22,7 +26,6 @@ import net.minecraft.util.DamageSource;
 import net.minecraft.util.BlockRenderLayer;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.util.EnumHand;
-import net.minecraft.util.EnumParticleTypes;
 import net.minecraft.util.Mirror;
 import net.minecraft.util.Rotation;
 import net.minecraft.util.SoundCategory;
@@ -37,11 +40,12 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 
-public final class CampfireBlock extends Block {
+public final class CampfireBlock extends Block implements Waterloggable {
     public static final PropertyBool LIT = PropertyBool.create("lit");
     public static final PropertyDirection FACING = BlockHorizontal.FACING;
     private static final AxisAlignedBB SHAPE = new AxisAlignedBB(0, 0, 0, 1, 7D / 16D, 1);
     private static final AxisAlignedBB SMOKE_COLUMN = new AxisAlignedBB(6D / 16D, 0, 6D / 16D, 10D / 16D, 1, 10D / 16D);
+    private static final int DOWSE_EVENT = 1;
 
     CampfireBlock() {
         super(Material.WOOD);
@@ -69,7 +73,8 @@ public final class CampfireBlock extends Block {
     @Override
     public IBlockState getStateForPlacement(World world, BlockPos pos, EnumFacing side, float x, float y, float z,
                                              int meta, EntityLivingBase placer, EnumHand hand) {
-        return getDefaultState().withProperty(FACING, placer.getHorizontalFacing());
+        return getDefaultState().withProperty(FACING, placer.getHorizontalFacing())
+                .withProperty(LIT, !Waterlogging.isWaterSource(world.getBlockState(pos)));
     }
 
     @Override
@@ -105,6 +110,21 @@ public final class CampfireBlock extends Block {
     @Override
     public TileEntity createTileEntity(World world, IBlockState state) {
         return new CampfireBlockEntity();
+    }
+
+    @Override
+    public boolean hasOwnWaterTile() {
+        return true;
+    }
+
+    @Override
+    public boolean canPistonMove() {
+        return false;
+    }
+
+    @Override
+    public void neighborChanged(IBlockState state, World world, BlockPos pos, Block block, BlockPos from) {
+        Waterlogging.scheduleIfWet(world, pos);
     }
 
     @Override
@@ -150,22 +170,43 @@ public final class CampfireBlock extends Block {
                                     EnumHand hand, EnumFacing side, float x, float y, float z) {
         ItemStack held = player.getHeldItem(hand);
         boolean lit = state.getValue(LIT);
-        if (!lit && held.getItem() == Items.FLINT_AND_STEEL) {
+        boolean fireCharge = held.getItem() == Items.FIRE_CHARGE;
+        if (!lit && (fireCharge || held.getItem() == Items.FLINT_AND_STEEL)) {
+            if (Waterlogging.isWet(world, pos, state)) return true;
             if (!world.isRemote && world.setBlockState(pos, state.withProperty(LIT, true), 3)) {
-                world.playSound(null, pos, SoundEvents.ITEM_FLINTANDSTEEL_USE, SoundCategory.BLOCKS, 1F, 1F);
-                if (!player.isCreative()) held.damageItem(1, player);
+                world.playSound(null, pos, fireCharge ? SoundEvents.ITEM_FIRECHARGE_USE : SoundEvents.ITEM_FLINTANDSTEEL_USE,
+                        SoundCategory.BLOCKS, 1F, 1F);
+                if (!player.isCreative()) {
+                    if (fireCharge) held.shrink(1);
+                    else held.damageItem(1, player);
+                }
             }
             return true;
         }
         if (lit && side == EnumFacing.UP && held.getItem() instanceof ItemSpade) {
-            if (!world.isRemote && world.setBlockState(pos, state.withProperty(LIT, false), 3)) {
-                world.playSound(null, pos, SoundEvents.BLOCK_FIRE_EXTINGUISH, SoundCategory.BLOCKS, 1F, 1F);
-                if (!player.isCreative()) held.damageItem(1, player);
-            }
+            if (!world.isRemote && dowse(world, pos, state) && !player.isCreative()) held.damageItem(1, player);
             return true;
         }
         TileEntity tile = world.getTileEntity(pos);
         return tile instanceof CampfireBlockEntity && ((CampfireBlockEntity) tile).placeFood(held, player.isCreative());
+    }
+
+    public static boolean dowse(World world, BlockPos pos, IBlockState state) {
+        if (!world.setBlockState(pos, state.withProperty(LIT, false), 3)) return false;
+        world.playSound(null, pos, SoundEvents.BLOCK_FIRE_EXTINGUISH, SoundCategory.BLOCKS, 1F, 1F);
+        world.addBlockEvent(pos, state.getBlock(), DOWSE_EVENT, isSignalFire(world, pos) ? 1 : 0);
+        return true;
+    }
+
+    @Override
+    public boolean eventReceived(IBlockState state, World world, BlockPos pos, int id, int param) {
+        if (id != DOWSE_EVENT) return super.eventReceived(state, world, pos, id, param);
+        if (world.isRemote) CampfireSmoke.spawn(world, pos, param != 0, 20, true);
+        return true;
+    }
+
+    public static boolean isSignalFire(IBlockAccess world, BlockPos pos) {
+        return world.getBlockState(pos.down()).getBlock() == Blocks.HAY_BLOCK;
     }
 
     @Override
@@ -178,10 +219,6 @@ public final class CampfireBlock extends Block {
     @SideOnly(Side.CLIENT)
     public void randomDisplayTick(IBlockState state, World world, BlockPos pos, Random random) {
         if (!state.getValue(LIT)) return;
-        if (random.nextInt(3) == 0) {
-            world.spawnParticle(EnumParticleTypes.SMOKE_LARGE, pos.getX() + 0.3 + random.nextDouble() * 0.4,
-                    pos.getY() + 0.55, pos.getZ() + 0.3 + random.nextDouble() * 0.4, 0, 0.06, 0);
-        }
         if (random.nextInt(10) == 0) {
             world.playSound(pos.getX() + 0.5, pos.getY() + 0.5, pos.getZ() + 0.5, SoundEvents.BLOCK_FIRE_AMBIENT,
                     SoundCategory.BLOCKS, 0.5F, 1F, false);

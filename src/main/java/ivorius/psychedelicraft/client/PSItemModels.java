@@ -1,6 +1,7 @@
 package ivorius.psychedelicraft.client;
 
 import ivorius.psychedelicraft.Psychedelicraft;
+import ivorius.psychedelicraft.client.particle.CampfireSmoke;
 import ivorius.psychedelicraft.item.HarmoniumItem;
 import ivorius.psychedelicraft.block.BarrelBlock;
 import ivorius.psychedelicraft.block.JuniperLeavesBlock;
@@ -108,6 +109,7 @@ public final class PSItemModels {
     @SubscribeEvent
     public static void stitchFluids(TextureStitchEvent.Pre event) {
         TankFluidAppearance.stitch(event.getMap());
+        CampfireSmoke.stitch(event.getMap());
         for (Fluid fluid : FluidRegistry.getRegisteredFluids().values()) {
             if (fluid.getStill() != null && Psychedelicraft.MOD_ID.equals(fluid.getStill().getResourceDomain())) {
                 event.getMap().registerSprite(fluid.getStill());

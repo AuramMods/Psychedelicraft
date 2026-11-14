@@ -93,6 +93,7 @@ public class WaterloggedBlockEntity extends TileEntity implements IFluidHandler 
 
     private void setWaterlogged(boolean wet) {
         waterlogged = wet;
+        onWaterloggedChanged(wet);
         markDirty();
         if (!world.captureBlockSnapshots) {
             IBlockState state = world.getBlockState(pos);
@@ -100,6 +101,9 @@ public class WaterloggedBlockEntity extends TileEntity implements IFluidHandler 
             world.notifyNeighborsOfStateChange(pos, state.getBlock(), false);
         }
         if (wet) Waterlogging.scheduleFlow(world, pos);
+    }
+
+    protected void onWaterloggedChanged(boolean wet) {
     }
 
     @Override

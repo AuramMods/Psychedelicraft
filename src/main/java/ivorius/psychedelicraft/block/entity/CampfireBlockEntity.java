@@ -1,24 +1,20 @@
 package ivorius.psychedelicraft.block.entity;
 
 import ivorius.psychedelicraft.block.CampfireBlock;
+import ivorius.psychedelicraft.client.particle.CampfireSmoke;
 import ivorius.psychedelicraft.recipe.CampfireRecipe;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.inventory.InventoryHelper;
 import net.minecraft.inventory.ItemStackHelper;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
-import net.minecraft.network.NetworkManager;
-import net.minecraft.network.play.server.SPacketUpdateTileEntity;
-import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.util.EnumParticleTypes;
 import net.minecraft.util.ITickable;
 import net.minecraft.util.NonNullList;
-import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.MathHelper;
-import net.minecraft.world.World;
 
-public final class CampfireBlockEntity extends TileEntity implements ITickable {
+public final class CampfireBlockEntity extends WaterloggedBlockEntity implements ITickable {
     public static final int SLOT_COUNT = 4;
     private final NonNullList<ItemStack> food = NonNullList.withSize(SLOT_COUNT, ItemStack.EMPTY);
     private final int[] progress = new int[SLOT_COUNT];
@@ -42,12 +38,25 @@ public final class CampfireBlockEntity extends TileEntity implements ITickable {
     }
 
     @Override
+    protected void onWaterloggedChanged(boolean wet) {
+        IBlockState state = world.getBlockState(pos);
+        if (wet && state.getBlock() instanceof CampfireBlock && state.getValue(CampfireBlock.LIT)) {
+            CampfireBlock.dowse(world, pos, state);
+        }
+    }
+
+    @Override
     public void update() {
         IBlockState state = world.getBlockState(pos);
         if (!(state.getBlock() instanceof CampfireBlock)) return;
-        boolean lit = state.getValue(CampfireBlock.LIT);
+        boolean lit = state.getValue(CampfireBlock.LIT) && !isWaterlogged();
         if (world.isRemote) {
-            if (lit) smokeFood(state.getValue(CampfireBlock.FACING));
+            if (lit) {
+                if (world.rand.nextFloat() < 0.11F) {
+                    CampfireSmoke.spawn(world, pos, CampfireBlock.isSignalFire(world, pos), 2 + world.rand.nextInt(2), false);
+                }
+                smokeFood(state.getValue(CampfireBlock.FACING));
+            }
             return;
         }
         boolean advanced = false;
@@ -128,26 +137,8 @@ public final class CampfireBlockEntity extends TileEntity implements ITickable {
 
     @Override
     public NBTTagCompound getUpdateTag() {
-        return ItemStackHelper.saveAllItems(super.getUpdateTag(), food);
-    }
-
-    @Override
-    public SPacketUpdateTileEntity getUpdatePacket() {
-        return new SPacketUpdateTileEntity(pos, 0, getUpdateTag());
-    }
-
-    @Override
-    public void handleUpdateTag(NBTTagCompound tag) {
-        readFood(tag);
-    }
-
-    @Override
-    public void onDataPacket(NetworkManager network, SPacketUpdateTileEntity packet) {
-        handleUpdateTag(packet.getNbtCompound());
-    }
-
-    @Override
-    public boolean shouldRefresh(World world, BlockPos pos, IBlockState oldState, IBlockState newState) {
-        return oldState.getBlock() != newState.getBlock();
+        NBTTagCompound tag = super.getUpdateTag();
+        tag.removeTag("CookingTimes");
+        return tag;
     }
 }
