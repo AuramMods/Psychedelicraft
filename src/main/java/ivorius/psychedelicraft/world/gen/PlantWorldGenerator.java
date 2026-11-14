@@ -15,6 +15,7 @@ import ivorius.psychedelicraft.block.VineStemBlock;
 import ivorius.psychedelicraft.config.PSConfig;
 import ivorius.psychedelicraft.fluid.physical.Waterlogging;
 import net.minecraft.block.Block;
+import net.minecraft.block.BlockBush;
 import net.minecraft.block.BlockDirt;
 import net.minecraft.block.BlockDoublePlant;
 import net.minecraft.block.BlockLeaves;
@@ -137,12 +138,17 @@ public final class PlantWorldGenerator {
         return new BlockPos.MutableBlockPos(column.getX(), top, column.getZ());
     }
 
-    static void placeLowPatch(World world, BlockPos surface, Random random, Block plant, int maxAge) {
+    static void placeLowPatch(World world, BlockPos surface, Random random, BlockBush plant, int maxAge) {
         for (int attempt = 0; attempt < LOW_ATTEMPTS; attempt++) {
             BlockPos pos = surface.add(offset(random, LOW_XZ_SPREAD), offset(random, LOW_Y_SPREAD),
                     offset(random, LOW_XZ_SPREAD));
-            if (insideWorld(world, pos) && world.isAirBlock(pos) && plant.canPlaceBlockAt(world, pos)) {
-                world.setBlockState(pos, plant.getStateFromMeta(random.nextInt(maxAge + 1)), 2);
+            if (!insideWorld(world, pos) || world.getBlockState(pos).getBlock() != Blocks.AIR) {
+                continue;
+            }
+            // The simple-block feature samples a state after the air filter and before testing survival.
+            IBlockState state = plant.getStateFromMeta(random.nextInt(maxAge + 1));
+            if (plant.canBlockStay(world, pos, state)) {
+                world.setBlockState(pos, state, 2);
             }
         }
     }
@@ -235,7 +241,7 @@ public final class PlantWorldGenerator {
                 (world, origin, random) -> placeTallPatch(world, origin, random, crop, waterRequired));
     }
 
-    private static Patch low(String name, Block plant, int maxAge, PSConfig.Feature options, Predicate<Biome> defaults) {
+    private static Patch low(String name, BlockBush plant, int maxAge, PSConfig.Feature options, Predicate<Biome> defaults) {
         return new Patch(name, LOW_RARITY, options, defaults,
                 (world, origin, random) -> placeLowPatch(world, origin, random, plant, maxAge));
     }
