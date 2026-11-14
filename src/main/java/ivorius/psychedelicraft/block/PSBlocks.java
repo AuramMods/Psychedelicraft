@@ -8,6 +8,7 @@ import ivorius.psychedelicraft.Psychedelicraft;
 import ivorius.psychedelicraft.block.TallCropBlock.Crop;
 import ivorius.psychedelicraft.block.entity.BarrelBlockEntity;
 import ivorius.psychedelicraft.block.entity.BeeNestBlockEntity;
+import ivorius.psychedelicraft.block.entity.BrushableBlockEntity;
 import ivorius.psychedelicraft.block.entity.CampfireBlockEntity;
 import ivorius.psychedelicraft.block.entity.BottleRackBlockEntity;
 import ivorius.psychedelicraft.block.entity.DistilleryBlockEntity;
@@ -141,6 +142,7 @@ public final class PSBlocks {
     public static final BlockCrops TORCHFLOWER_CROP = named("torchflower_crop", new TorchflowerCropBlock());
     public static final BlockBush PITCHER_CROP = named("pitcher_crop", new PitcherCropBlock());
     public static final Block PITCHER_PLANT = named("pitcher_plant", new PitcherPlantBlock());
+    public static final SuspiciousSandBlock SUSPICIOUS_SAND = named("suspicious_sand", new SuspiciousSandBlock());
     public static final BubbleColumnBlock BUBBLE_COLUMN = named("bubble_column", new BubbleColumnBlock());
 
     private PSBlocks() {
@@ -167,7 +169,8 @@ public final class PSBlocks {
                 JUNIPER_DOOR, JUNIPER_TRAPDOOR, POWERED_JUNIPER_TRAPDOOR, JUNIPER_BUTTON, JUNIPER_PRESSURE_PLATE,
                 JUNIPER_SIGN, JUNIPER_WALL_SIGN, JUNIPER_HANGING_SIGN, JUNIPER_WALL_HANGING_SIGN, BEE_NEST, BUBBLE_COLUMN,
                 CAMPFIRE, SOUL_CAMPFIRE, SOUL_SOIL, SOUL_FIRE, KELP, KELP_STALK, DRIED_KELP_BLOCK, SWEET_BERRY_BUSH,
-                TORCHFLOWER, CORNFLOWER, LILY_OF_THE_VALLEY, WITHER_ROSE, TORCHFLOWER_CROP, PITCHER_CROP, PITCHER_PLANT);
+                TORCHFLOWER, CORNFLOWER, LILY_OF_THE_VALLEY, WITHER_ROSE, TORCHFLOWER_CROP, PITCHER_CROP, PITCHER_PLANT,
+                SUSPICIOUS_SAND);
         for (PottedPlantBlock pot : POTTED_PLANTS) {
             event.getRegistry().register(pot);
         }
@@ -176,6 +179,7 @@ public final class PSBlocks {
             event.getRegistry().register(named(name.substring(name.indexOf(':') + 1), new PhysicalFluidBlock(fluid)));
         }
         GameRegistry.registerTileEntity(FluidAttributesTile.class, Psychedelicraft.id("fluid_attributes"));
+        GameRegistry.registerTileEntity(BrushableBlockEntity.class, Psychedelicraft.id("brushable_block"));
         GameRegistry.registerTileEntity(DryingTableBlockEntity.class, Psychedelicraft.id("drying_table"));
         GameRegistry.registerTileEntity(MashTubBlockEntity.class, Psychedelicraft.id("mash_tub"));
         GameRegistry.registerTileEntity(MashTubBlock.Edge.class, Psychedelicraft.id("mash_tub_edge"));

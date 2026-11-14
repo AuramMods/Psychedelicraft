@@ -43,6 +43,9 @@ public final class PSSounds {
     public static final SoundEvent MOOSHROOM_EAT = sound("entity.mooshroom.eat");
     public static final SoundEvent MOOSHROOM_MILK = sound("entity.mooshroom.milk");
     public static final SoundEvent MOOSHROOM_SUSPICIOUS_MILK = sound("entity.mooshroom.suspicious_milk");
+    public static final SoundEvent BRUSH_GENERIC = sound("item.brush.brushing.generic");
+    public static final SoundEvent BRUSH_SAND = sound("item.brush.brushing.sand");
+    public static final SoundEvent BRUSH_SAND_COMPLETE = sound("item.brush.brushing.sand.complete");
     public static final SoundEvent DRUG_GENERIC = sound("drug.generic");
 
     private PSSounds() {
@@ -61,6 +64,7 @@ public final class PSSounds {
                 BEE_NEST_ENTER, BEE_NEST_EXIT, BEE_NEST_WORK, BEE_NEST_SHEAR,
                 BEE_LOOP, BEE_LOOP_ANGRY, BEE_POLLINATE, BEE_STING, BEE_HURT, BEE_DEATH,
                 HONEY_DRINK, CROP_PLANT, DRUG_GENERIC, BERRY_BUSH_BREAK, BERRY_BUSH_PLACE, BERRY_BUSH_PICK,
-                MOOSHROOM_CONVERT, MOOSHROOM_EAT, MOOSHROOM_MILK, MOOSHROOM_SUSPICIOUS_MILK);
+                MOOSHROOM_CONVERT, MOOSHROOM_EAT, MOOSHROOM_MILK, MOOSHROOM_SUSPICIOUS_MILK,
+                BRUSH_GENERIC, BRUSH_SAND, BRUSH_SAND_COMPLETE);
     }
 }

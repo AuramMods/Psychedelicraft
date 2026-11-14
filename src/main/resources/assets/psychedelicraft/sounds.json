@@ -372,5 +372,65 @@
         "pitch": 1.1
       }
     ]
+  },
+  "item.brush.brushing.generic": {
+    "subtitle": "subtitle.psychedelicraft.item.brush.brushing.generic",
+    "sounds": [
+      {
+        "name": "psychedelicraft:brush/brushing_generic1",
+        "pitch": 0.8,
+        "volume": 0.4
+      },
+      {
+        "name": "psychedelicraft:brush/brushing_generic2",
+        "pitch": 0.8,
+        "volume": 0.4
+      },
+      {
+        "name": "psychedelicraft:brush/brushing_generic3",
+        "pitch": 0.8,
+        "volume": 0.4
+      },
+      {
+        "name": "psychedelicraft:brush/brushing_generic4",
+        "pitch": 0.8,
+        "volume": 0.4
+      }
+    ]
+  },
+  "item.brush.brushing.sand": {
+    "subtitle": "subtitle.psychedelicraft.item.brush.brushing.sand",
+    "sounds": [
+      {
+        "name": "psychedelicraft:brush/brushing_sand1",
+        "pitch": 0.6,
+        "volume": 0.6
+      },
+      {
+        "name": "psychedelicraft:brush/brushing_sand2",
+        "pitch": 0.6,
+        "volume": 0.6
+      },
+      {
+        "name": "psychedelicraft:brush/brushing_sand3",
+        "pitch": 0.6,
+        "volume": 0.6
+      },
+      {
+        "name": "psychedelicraft:brush/brushing_sand4",
+        "pitch": 0.6,
+        "volume": 0.6
+      }
+    ]
+  },
+  "item.brush.brushing.sand.complete": {
+    "subtitle": "subtitle.psychedelicraft.item.brush.brushing.sand.complete",
+    "sounds": [
+      "psychedelicraft:brush/brush_sand_complete1",
+      "psychedelicraft:brush/brush_sand_complete2",
+      "psychedelicraft:brush/brush_sand_complete3",
+      "psychedelicraft:brush/brush_sand_complete4",
+      "psychedelicraft:brush/brush_sand_complete5"
+    ]
   }
 }
