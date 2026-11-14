@@ -42,6 +42,7 @@ import net.minecraft.client.renderer.block.model.ItemCameraTransforms;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
 import net.minecraft.client.renderer.tileentity.TileEntityItemStackRenderer;
 import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
+import net.minecraft.client.renderer.vertex.VertexBuffer;
 import net.minecraft.client.shader.ShaderManager;
 import net.minecraft.entity.Entity;
 import net.minecraft.item.ItemStack;
@@ -197,6 +198,28 @@ public final class DrugRenderer {
         try (Scope scope = GEOMETRY.beginSky(Minecraft.getMinecraft(), hallucinations, textured)) {
             tessellator.draw();
         }
+    }
+
+    public static void drawCelestial(Tessellator tessellator) {
+        try (Scope scope = beginSkyMesh(Material.CELESTIAL)) {
+            tessellator.draw();
+        }
+    }
+
+    public static void drawSkyBuffer(VertexBuffer buffer, int mode, boolean stars) {
+        try (Scope scope = beginSkyMesh(stars ? Material.STARS : Material.SKY_PLANES)) {
+            buffer.drawArrays(mode);
+        }
+    }
+
+    public static void drawSkyList(int list, boolean stars) {
+        try (Scope scope = beginSkyMesh(stars ? Material.STARS : Material.SKY_PLANES)) {
+            GlStateManager.callList(list);
+        }
+    }
+
+    private static Scope beginSkyMesh(Material material) {
+        return GEOMETRY.beginSky(Minecraft.getMinecraft(), hallucinations, material);
     }
 
     public static void renderWorld(EntityRenderer renderer, float partialTicks, long finishTime) {

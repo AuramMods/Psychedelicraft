@@ -3,6 +3,7 @@ package ivorius.psychedelicraft.core;
 import com.google.common.io.ByteStreams;
 import ivorius.psychedelicraft.client.render.shader.WorldGeometryShader.Scope;
 import net.minecraft.client.renderer.EntityRenderer;
+import net.minecraft.client.renderer.RenderGlobal;
 import org.junit.Test;
 import org.objectweb.asm.ClassReader;
 import org.objectweb.asm.ClassWriter;
@@ -64,6 +65,42 @@ public class WorldGeometryTransformerTest {
             }
         }
         assertEquals(3, weatherDraws);
+    }
+
+    @Test
+    public void overworldSkyKeepsBothBufferPathsAndSeparatesCelestialDraws() throws Exception {
+        String name = RenderGlobal.class.getName();
+        ClassNode renderer = new ClassNode();
+        new ClassReader(new WorldGeometryTransformer().transform(name, name, classBytes(RenderGlobal.class)))
+                .accept(renderer, 0);
+
+        int bodies = 0;
+        int starBuffers = 0;
+        int starLists = 0;
+        int skyBuffers = 0;
+        int skyLists = 0;
+        for (MethodNode method : renderer.methods) {
+            if (!"renderSky".equals(method.name) || !"(FI)V".equals(method.desc)) continue;
+            for (AbstractInsnNode instruction : method.instructions.toArray()) {
+                if (!(instruction instanceof MethodInsnNode)) continue;
+                MethodInsnNode call = (MethodInsnNode) instruction;
+                boolean stars = call.getPrevious().getOpcode() == org.objectweb.asm.Opcodes.ICONST_1;
+                if ("drawCelestial".equals(call.name)) bodies++;
+                if ("drawSkyBuffer".equals(call.name)) {
+                    if (stars) starBuffers++;
+                    else skyBuffers++;
+                }
+                if ("drawSkyList".equals(call.name)) {
+                    if (stars) starLists++;
+                    else skyLists++;
+                }
+            }
+        }
+        assertEquals(2, bodies);
+        assertEquals(1, starBuffers);
+        assertEquals(1, starLists);
+        assertEquals(2, skyBuffers);
+        assertEquals(3, skyLists);
     }
 
     private static byte[] classBytes(Class<?> type) throws Exception {

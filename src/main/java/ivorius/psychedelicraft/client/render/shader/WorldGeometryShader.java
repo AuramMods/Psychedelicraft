@@ -68,8 +68,12 @@ public final class WorldGeometryShader implements IResourceManagerReloadListener
 
     @Nullable
     public Scope beginSky(Minecraft client, HallucinationManager hallucinations, boolean textured) {
-        return begin(client, client.player, hallucinations, null, textured ? Material.END_SKY : Material.SKY_GRADIENT,
-                0F, null, null);
+        return beginSky(client, hallucinations, textured ? Material.END_SKY : Material.SKY_GRADIENT);
+    }
+
+    @Nullable
+    public Scope beginSky(Minecraft client, HallucinationManager hallucinations, Material material) {
+        return begin(client, client.player, hallucinations, null, material, 0F, null, null);
     }
 
     @Nullable
@@ -81,7 +85,8 @@ public final class WorldGeometryShader implements IResourceManagerReloadListener
         boolean entity = material == Material.ENTITY || material == Material.ENTITY_GLINT
                 || material == Material.ENTITY_UNIFORM_PULSE || portal || riftCenter;
         boolean screen = material == Material.SCREEN;
-        boolean sky = material == Material.SKY_GRADIENT || material == Material.END_SKY;
+        boolean sky = material == Material.SKY_GRADIENT || material == Material.END_SKY
+                || material == Material.SKY_PLANES || material == Material.STARS || material == Material.CELESTIAL;
         boolean deform = player != null && drugs != null && (!entity || entityState.hasView());
         if (!deform && !screen && !riftCenter && (!sky || !entityState.hasView()) && zeroMatter == null) return null;
         float small = deform ? hallucinations.strength(Effect.SMALL_WAVES) * 0.5F : 0F;
@@ -89,7 +94,8 @@ public final class WorldGeometryShader implements IResourceManagerReloadListener
         float wiggle = deform ? hallucinations.strength(Effect.WIGGLE_WAVES) * 0.7F : 0F;
         float distant = deform ? hallucinations.strength(Effect.DISTANT_WORLD_DEFORMATION) : 0F;
         // The donor's glint, End portal and world border shaders read textures without vertex color.
-        float surface = (!deform && !screen && !sky) || material == Material.ENTITY_GLINT || portal
+        float surface = (!deform && !screen && material != Material.SKY_GRADIENT && material != Material.END_SKY)
+                || material == Material.ENTITY_GLINT || portal
                 || material == Material.WORLD_BORDER ? 0F
                 : MathHelper.clamp(hallucinations.strength(Effect.SURFACE_FRACTALS), 0F, 1F);
         float fracture = deform ? (float) drugs.getActiveValue(DrugType.LSD) * 0.06F : 0F;
@@ -113,13 +119,16 @@ public final class WorldGeometryShader implements IResourceManagerReloadListener
                 OpenGlHelper.glUseProgram(program.getProgram());
                 setSampler(program, "ColorSampler", 0);
                 setSampler(program, "LightmapSampler", 1);
-                boolean fog = !screen && !sky && material != Material.BLOCK_DAMAGE && material != Material.WORLD_BORDER;
+                boolean fog = !screen && (!sky || material == Material.SKY_PLANES)
+                        && material != Material.BLOCK_DAMAGE && material != Material.WORLD_BORDER;
                 upload(program, "FogMode", fog ? fogMode() : 0F);
                 upload(program, "RadialFog", fog && radialFog() ? 1F : 0F);
                 upload(program, "PulseShape", pulses == null ? 0F : material.pulseShape.resolve(client));
                 upload(program, "RiftCenter", riftCenter ? 1F : 0F);
                 upload(program, "SkyMode", material == Material.SKY_GRADIENT ? 1F : sky ? 2F : 0F);
-                upload(program, "Untextured", material == Material.SKY_GRADIENT || material == Material.BLOCK_OUTLINE ? 1F : 0F);
+                boolean untextured = material == Material.SKY_GRADIENT || material == Material.SKY_PLANES
+                        || material == Material.STARS || material == Material.BLOCK_OUTLINE;
+                upload(program, "Untextured", untextured ? 1F : 0F);
                 upload(program, "PortalTexGen", portal ? 1F : 0F);
                 if (entity) entityState.upload(program);
                 else {
@@ -260,6 +269,9 @@ public final class WorldGeometryShader implements IResourceManagerReloadListener
         WORLD_BORDER(0F, 1F, PulseShape.UNIFORM),
         SCREEN(0F, 1F, PulseShape.UNIFORM),
         SKY_GRADIENT(0F, 1F, PulseShape.UNIFORM),
+        SKY_PLANES(0F, 1F, PulseShape.MODEL),
+        STARS(0F, 1F, PulseShape.MODEL),
+        CELESTIAL(0F, 1F, PulseShape.UNIFORM),
         END_SKY(0F, 1F, PulseShape.UNIFORM),
         END_PORTAL(1F, 1F, PulseShape.UNIFORM),
         PARTICLES(1F, 1F, PulseShape.WORLD),

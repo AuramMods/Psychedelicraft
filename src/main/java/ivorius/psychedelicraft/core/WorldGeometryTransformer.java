@@ -29,6 +29,8 @@ public final class WorldGeometryTransformer implements IClassTransformer {
     private static final String ENTITY_RENDERER = "net.minecraft.client.renderer.EntityRenderer";
     private static final String PARTICLE_MANAGER = "net.minecraft.client.particle.ParticleManager";
     private static final String TESSELLATOR = "net/minecraft/client/renderer/Tessellator";
+    private static final String VERTEX_BUFFER = "net/minecraft/client/renderer/vertex/VertexBuffer";
+    private static final String GL_STATE = "net/minecraft/client/renderer/GlStateManager";
     private static final String RAY_TRACE = "Lnet/minecraft/util/math/RayTraceResult;";
     private static final String BILLBOARD_RENDER = "(Lnet/minecraft/client/renderer/BufferBuilder;"
             + "Lnet/minecraft/entity/Entity;FFFFFF)V";
@@ -47,7 +49,7 @@ public final class WorldGeometryTransformer implements IClassTransformer {
         new ClassReader(bytes).accept(type, 0);
         if (RENDER_GLOBAL.equals(transformedName)) {
             patchTerrain(method(type, "renderBlockLayer", "func_174982_a", LAYER_DRAW));
-            patchSkyDraw(method(type, "renderSky", "func_174976_a", "(FI)V"), false);
+            patchOverworldSky(method(type, "renderSky", "func_174976_a", "(FI)V"));
             patchSkyDraw(method(type, "renderSkyEnd", "func_180448_r", "()V"), true);
             patchBlockOverlays(type);
             patchTessellatorDraws(method(type, "renderClouds", "func_180447_b", VANILLA_CLOUD_DRAW), true);
@@ -153,6 +155,47 @@ public final class WorldGeometryTransformer implements IClassTransformer {
             return;
         }
         throw new IllegalStateException("Could not locate the sky draw in " + render.name);
+    }
+
+    private static void patchOverworldSky(MethodNode render) {
+        patchSkyDraw(render, false);
+        FMLDeobfuscatingRemapper remapper = FMLDeobfuscatingRemapper.INSTANCE;
+        // The sun and moon are the next two tessellator draws after the sunrise fan.
+        int celestial = 0;
+        boolean stars = false;
+        for (AbstractInsnNode instruction : render.instructions.toArray()) {
+            if (instruction instanceof FieldInsnNode && instruction.getOpcode() == Opcodes.GETFIELD) {
+                FieldInsnNode field = (FieldInsnNode) instruction;
+                if (!RENDER_GLOBAL.replace('.', '/').equals(remapper.map(field.owner))) continue;
+                String name = remapper.mapFieldName(field.owner, field.name, field.desc);
+                if (name.equals("starVBO") || name.equals("field_175013_s")
+                        || name.equals("starGLCallList") || name.equals("field_72772_v")) {
+                    stars = true;
+                } else if (name.equals("skyVBO") || name.equals("field_175012_t")
+                        || name.equals("sky2VBO") || name.equals("field_175011_u")
+                        || name.equals("glSkyList") || name.equals("field_72771_w")
+                        || name.equals("glSkyList2") || name.equals("field_72781_x")) {
+                    stars = false;
+                }
+            }
+            if (!(instruction instanceof MethodInsnNode)) continue;
+            MethodInsnNode draw = (MethodInsnNode) instruction;
+            if (celestial < 2 && isTessellatorDraw(draw)) {
+                render.instructions.set(draw, hook("drawCelestial", "(L" + draw.owner + ";)V"));
+                celestial++;
+                continue;
+            }
+            String owner = remapper.map(draw.owner);
+            String name = remapper.mapMethodName(draw.owner, draw.name, draw.desc);
+            if (!"(I)V".equals(draw.desc)) continue;
+            if (VERTEX_BUFFER.equals(owner) && (name.equals("drawArrays") || name.equals("func_177358_a"))) {
+                render.instructions.insertBefore(draw, new InsnNode(stars ? Opcodes.ICONST_1 : Opcodes.ICONST_0));
+                render.instructions.set(draw, hook("drawSkyBuffer", "(L" + draw.owner + ";IZ)V"));
+            } else if (GL_STATE.equals(owner) && (name.equals("callList") || name.equals("func_179148_o"))) {
+                render.instructions.insertBefore(draw, new InsnNode(stars ? Opcodes.ICONST_1 : Opcodes.ICONST_0));
+                render.instructions.set(draw, hook("drawSkyList", "(IZ)V"));
+            }
+        }
     }
 
     private static boolean isTessellatorDraw(AbstractInsnNode instruction) {
