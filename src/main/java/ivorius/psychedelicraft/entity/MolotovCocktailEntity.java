@@ -6,6 +6,7 @@ package ivorius.psychedelicraft.entity;
 
 import io.netty.buffer.ByteBuf;
 import ivorius.psychedelicraft.PSDamageTypes;
+import ivorius.psychedelicraft.block.CampfireBlock;
 import ivorius.psychedelicraft.fluid.BrewFluid;
 import ivorius.psychedelicraft.item.MolotovCocktailItem;
 import ivorius.psychedelicraft.item.PSItems;
@@ -135,7 +136,9 @@ public final class MolotovCocktailEntity extends EntityThrowable implements IEnt
         Vec3d end = start.addVector(motionX, motionY, motionZ);
         RayTraceResult hit = ProjectileBlockCollision.trace(this, start, end);
         hit = closestHit(start, hit == null ? end : hit.hitVec, hit);
-        if (hit != null && !ForgeEventFactory.onProjectileImpact(this, hit)) onImpact(hit);
+        if (hit != null && !CampfireBlock.afterProjectileImpact(this, hit, ForgeEventFactory.onProjectileImpact(this, hit))) {
+            onImpact(hit);
+        }
 
         doBlockCollisions();
         double x = posX + motionX;

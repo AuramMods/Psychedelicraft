@@ -12,9 +12,14 @@ import net.minecraft.block.properties.PropertyBool;
 import net.minecraft.block.properties.PropertyDirection;
 import net.minecraft.block.state.BlockStateContainer;
 import net.minecraft.block.state.IBlockState;
+import net.minecraft.enchantment.EnchantmentHelper;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.entity.projectile.EntityArrow;
+import net.minecraft.entity.projectile.EntityFireball;
+import net.minecraft.entity.projectile.EntityLlamaSpit;
+import net.minecraft.entity.projectile.EntityThrowable;
 import net.minecraft.init.Blocks;
 import net.minecraft.init.Items;
 import net.minecraft.init.SoundEvents;
@@ -31,10 +36,12 @@ import net.minecraft.util.Rotation;
 import net.minecraft.util.SoundCategory;
 import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.RayTraceResult;
 import net.minecraft.world.IBlockAccess;
 import net.minecraft.world.World;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
+import net.minecraftforge.event.ForgeEventFactory;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -210,9 +217,35 @@ public final class CampfireBlock extends Block implements Waterloggable {
     }
 
     @Override
-    public void onEntityWalk(World world, BlockPos pos, Entity entity) {
-        if (!world.isRemote && world.getBlockState(pos).getValue(LIT)) entity.attackEntityFrom(DamageSource.IN_FIRE, 1F);
-        super.onEntityWalk(world, pos, entity);
+    public void onEntityCollidedWithBlock(World world, BlockPos pos, IBlockState state, Entity entity) {
+        if (!world.isRemote && state.getValue(LIT) && entity instanceof EntityLivingBase
+                && !EnchantmentHelper.hasFrostWalkerEnchantment((EntityLivingBase) entity)) {
+            entity.attackEntityFrom(DamageSource.IN_FIRE, 1F);
+        }
+    }
+
+    public static boolean afterProjectileImpact(Entity projectile, RayTraceResult hit, boolean canceled) {
+        if (canceled || projectile.world.isRemote || hit.typeOfHit != RayTraceResult.Type.BLOCK || !projectile.isBurning()) {
+            return canceled;
+        }
+        World world = projectile.world;
+        BlockPos pos = hit.getBlockPos();
+        IBlockState state = world.getBlockState(pos);
+        if (state.getBlock() instanceof CampfireBlock && !state.getValue(LIT) && !Waterlogging.isWet(world, pos, state)) {
+            Entity owner = projectileOwner(projectile);
+            boolean permitted = owner instanceof EntityPlayer ? world.isBlockModifiable((EntityPlayer) owner, pos)
+                    : owner == null || ForgeEventFactory.getMobGriefingEvent(world, owner);
+            if (permitted) world.setBlockState(pos, state.withProperty(LIT, true), 3);
+        }
+        return false;
+    }
+
+    private static Entity projectileOwner(Entity projectile) {
+        if (projectile instanceof EntityArrow) return ((EntityArrow) projectile).shootingEntity;
+        if (projectile instanceof EntityFireball) return ((EntityFireball) projectile).shootingEntity;
+        if (projectile instanceof EntityThrowable) return ((EntityThrowable) projectile).getThrower();
+        if (projectile instanceof EntityLlamaSpit) return ((EntityLlamaSpit) projectile).owner;
+        return null;
     }
 
     @Override
