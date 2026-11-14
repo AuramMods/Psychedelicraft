@@ -71,11 +71,12 @@ public final class WorldGeometryShader implements IResourceManagerReloadListener
                         @Nullable DrugProperties drugs, Material material, float cloudY,
                         @Nullable BlockPos anchor, @Nullable ShaderManager zeroMatter) {
         boolean portal = material == Material.END_PORTAL;
-        boolean entity = material == Material.ENTITY || material == Material.ENTITY_GLINT || portal;
+        boolean riftCenter = material == Material.RIFT_CENTER;
+        boolean entity = material == Material.ENTITY || material == Material.ENTITY_GLINT || portal || riftCenter;
         boolean screen = material == Material.SCREEN;
         boolean sky = material == Material.SKY_GRADIENT || material == Material.END_SKY;
         boolean deform = player != null && drugs != null && (!entity || entityState.hasView());
-        if (!deform && !screen && (!sky || !entityState.hasView()) && zeroMatter == null) return null;
+        if (!deform && !screen && !riftCenter && (!sky || !entityState.hasView()) && zeroMatter == null) return null;
         float small = deform ? hallucinations.strength(Effect.SMALL_WAVES) * 0.5F : 0F;
         float big = deform ? hallucinations.strength(Effect.BIG_WAVES) * 0.6F : 0F;
         float wiggle = deform ? hallucinations.strength(Effect.WIGGLE_WAVES) * 0.7F : 0F;
@@ -89,7 +90,7 @@ public final class WorldGeometryShader implements IResourceManagerReloadListener
 
         ShaderManager program = zeroMatter;
         if (program == null) {
-            if (small <= 0F && big <= 0F && wiggle <= 0F && distant <= 0F
+            if (!riftCenter && small <= 0F && big <= 0F && wiggle <= 0F && distant <= 0F
                     && surface <= 0F && fracture <= 0F && pulses == null) return null;
             prepare(client);
             program = shader;
@@ -107,6 +108,7 @@ public final class WorldGeometryShader implements IResourceManagerReloadListener
                 boolean fog = !screen && !sky && material != Material.BLOCK_DAMAGE && material != Material.WORLD_BORDER;
                 upload(program, "FogMode", fog ? fogMode() : 0F);
                 upload(program, "RadialFog", fog && radialFog() ? 1F : 0F);
+                upload(program, "RiftCenter", riftCenter ? 1F : 0F);
                 upload(program, "SkyMode", material == Material.SKY_GRADIENT ? 1F : sky ? 2F : 0F);
                 upload(program, "Untextured", material == Material.SKY_GRADIENT || material == Material.BLOCK_OUTLINE ? 1F : 0F);
                 upload(program, "PortalTexGen", portal ? 1F : 0F);
@@ -115,6 +117,7 @@ public final class WorldGeometryShader implements IResourceManagerReloadListener
                     upload(program, "LightmapMode", material.lightmapMode);
                     if (sky) entityState.uploadView(program);
                 }
+                if (riftCenter) upload(program, "LightmapMode", 0F);
             } else if (deform) {
                 entityState.uploadView(program);
             }
@@ -230,6 +233,7 @@ public final class WorldGeometryShader implements IResourceManagerReloadListener
         PARTICLES(1F, 1F),
         ENTITY(1F, 1F),
         ENTITY_GLINT(1F, 1F),
+        RIFT_CENTER(0F, 1F),
         VANILLA_FAST_CLOUDS(0F, 1F / 8F),
         VANILLA_FANCY_CLOUDS(0F, 1F),
         FORGE_FAST_CLOUDS(2F, 1F / 8F),

@@ -8,6 +8,7 @@ uniform float SurfaceFractalStrength;
 uniform vec4 Pulses;
 uniform float FogMode;
 uniform float RadialFog;
+uniform float RiftCenter;
 uniform float EntityModel;
 uniform float Untextured;
 uniform float PortalTexGen;
@@ -51,14 +52,21 @@ void main() {
   float distanceToEye = RadialFog > 0.0 ? length(viewPosition) : abs(viewPosition.z);
   float fog = 1.0;
   if (FogMode == 1.0) {
-    fog = clamp((gl_Fog.end - distanceToEye) * gl_Fog.scale, 0.0, 1.0);
+    fog = RiftCenter > 0.0
+        ? 1.0 - smoothstep(gl_Fog.start, gl_Fog.end, length(viewPosition))
+        : clamp((gl_Fog.end - distanceToEye) * gl_Fog.scale, 0.0, 1.0);
   } else if (FogMode == 2.0) {
     fog = exp(-distanceToEye * gl_Fog.density);
   } else if (FogMode == 3.0) {
     float density = distanceToEye * gl_Fog.density;
     fog = exp(-density * density);
   }
-  color.rgb = mix(gl_Fog.color.rgb, color.rgb, fog);
+  if (RiftCenter > 0.0) {
+    if (base.a < 0.1) discard;
+    color *= fog;
+  } else {
+    color.rgb = mix(gl_Fog.color.rgb, color.rgb, fog);
+  }
 
   float pulse = max(0.0, sin((distanceToEye - WorldTicks) / 5.0) - 0.4) * Pulses.a;
   color.rgb = mix(color.rgb, (color.rgb + 1.0) * Pulses.rgb, pulse);

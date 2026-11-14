@@ -391,6 +391,13 @@ public final class DrugRenderer {
         return beginWorldModel(Material.ENTITY);
     }
 
+    @Nullable
+    public static Scope beginRiftCenter() {
+        Minecraft client = Minecraft.getMinecraft();
+        return GEOMETRY.begin(client, player, hallucinations, renderingWorld ? geometryDrugs(client) : null,
+                Material.RIFT_CENTER, 0F, null);
+    }
+
     public static Scope beginZeroMatter(ShaderManager program) {
         Minecraft client = Minecraft.getMinecraft();
         DrugProperties drugs = renderingWorld ? geometryDrugs(client) : null;
