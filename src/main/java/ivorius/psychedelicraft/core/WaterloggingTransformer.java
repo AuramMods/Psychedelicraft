@@ -31,6 +31,7 @@ public final class WaterloggingTransformer implements IClassTransformer {
     private static final String FLOWING = "net.minecraft.block.BlockDynamicLiquid";
     private static final String PISTON = "net.minecraft.block.BlockPistonBase";
     private static final String BLOCK = "net.minecraft.block.Block";
+    private static final String ENTITY_CLASS = "net.minecraft.entity.Entity";
     private static final String WORLD_SERVER = "net.minecraft.world.WorldServer";
     private static final String WORLD_CLASS = "net.minecraft.world.World";
     private static final String SHEARS = "net.minecraft.item.ItemShears";
@@ -55,7 +56,7 @@ public final class WaterloggingTransformer implements IClassTransformer {
         if (bytes == null || !(DISPATCHER.equals(transformedName) || FLUID_RENDERER.equals(transformedName)
                 || LIQUID.equals(transformedName) || FLOWING.equals(transformedName)
                 || PISTON.equals(transformedName) || VIEWPOINT.equals(transformedName)
-                || BLOCK.equals(transformedName) || WORLD_SERVER.equals(transformedName)
+                || BLOCK.equals(transformedName) || ENTITY_CLASS.equals(transformedName) || WORLD_SERVER.equals(transformedName)
                 || WORLD_CLASS.equals(transformedName) || SHEARS.equals(transformedName)
                 || FARMLAND.equals(transformedName) || SUSPENDED.equals(transformedName)
                 || WORLD_CLIENT.equals(transformedName))) return bytes;
@@ -97,6 +98,9 @@ public final class WaterloggingTransformer implements IClassTransformer {
             case BLOCK:
                 patchBlock(type);
                 break;
+            case ENTITY_CLASS:
+                patchPhysicalFluidEyes(type);
+                break;
             case WORLD_SERVER:
                 routeScheduledTicks(type);
                 break;
@@ -135,6 +139,25 @@ public final class WaterloggingTransformer implements IClassTransformer {
             return;
         }
         throw new IllegalStateException("Could not locate Forge 1.12 random display tick");
+    }
+
+    private static void patchPhysicalFluidEyes(ClassNode type) {
+        MethodNode method = method(type, "isInsideOfMaterial", "func_70055_a", "(" + MATERIAL + ")Z");
+        LabelNode vanilla = new LabelNode();
+        InsnList hook = new InsnList();
+        hook.add(new VarInsnNode(Opcodes.ALOAD, 0));
+        hook.add(new VarInsnNode(Opcodes.ALOAD, 1));
+        hook.add(new MethodInsnNode(Opcodes.INVOKESTATIC, HOOKS, "physicalFluidAtEyes",
+                Type.getMethodDescriptor(Type.getType(Boolean.class), Type.getObjectType(type.name),
+                        Type.getArgumentTypes(method.desc)[0]), false));
+        hook.add(new InsnNode(Opcodes.DUP));
+        hook.add(new JumpInsnNode(Opcodes.IFNULL, vanilla));
+        hook.add(new MethodInsnNode(Opcodes.INVOKEVIRTUAL, "java/lang/Boolean", "booleanValue", "()Z", false));
+        hook.add(new InsnNode(Opcodes.IRETURN));
+        hook.add(vanilla);
+        hook.add(new FrameNode(Opcodes.F_SAME1, 0, null, 1, new Object[] {"java/lang/Boolean"}));
+        hook.add(new InsnNode(Opcodes.POP));
+        method.instructions.insert(hook);
     }
 
     private static void patchBlock(ClassNode type) {

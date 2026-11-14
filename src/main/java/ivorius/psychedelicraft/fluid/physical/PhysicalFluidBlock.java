@@ -109,6 +109,12 @@ public final class PhysicalFluidBlock extends BlockFluidClassic {
     }
 
     @Override
+    public float getFilledPercentage(IBlockAccess world, BlockPos pos) {
+        IBlockState state = world.getBlockState(pos);
+        return state.getBlock() == this ? surfaceHeight(world, pos, state) : 0F;
+    }
+
+    @Override
     public IBlockState getStateAtViewpoint(IBlockState state, IBlockAccess world, BlockPos pos, Vec3d viewpoint) {
         return viewpoint.y < pos.getY() + (double) surfaceHeight(world, pos, state) ? state : Blocks.AIR.getDefaultState();
     }
@@ -337,24 +343,29 @@ public final class PhysicalFluidBlock extends BlockFluidClassic {
     public Boolean isEntityInsideMaterial(IBlockAccess world, BlockPos pos, IBlockState state, Entity entity,
                                            double y, Material material, boolean testingHead) {
         if (material != Material.WATER) return null;
-        return waterLike && (testingHead ? y < pos.getY() + getFilledPercentage(world, pos)
-                : intersectsFluid(world, pos, entity.getEntityBoundingBox()));
+        return waterLike && (testingHead ? y < pos.getY() + (double) surfaceHeight(world, pos, state)
+                : intersectsFluid(world, pos, state, entity.getEntityBoundingBox().shrink(0.001D)));
     }
 
     @Override
     @Nullable
     public Boolean isAABBInsideMaterial(World world, BlockPos pos, AxisAlignedBB box, Material material) {
-        return material == Material.WATER ? waterLike && intersectsFluid(world, pos, box) : null;
+        return material == Material.WATER ? waterLike && isAABBInsideLiquid(world, pos, box) : null;
+    }
+
+    @Override
+    public Boolean isAABBInsideLiquid(World world, BlockPos pos, AxisAlignedBB box) {
+        return intersectsFluid(world, pos, world.getBlockState(pos), box);
     }
 
     @Override
     public float getBlockLiquidHeight(World world, BlockPos pos, IBlockState state, Material material) {
-        return material == Material.WATER && waterLike ? getFilledPercentage(world, pos) : 0;
+        return material == Material.WATER && waterLike ? surfaceHeight(world, pos, state) : 0;
     }
 
-    private boolean intersectsFluid(IBlockAccess world, BlockPos pos, AxisAlignedBB box) {
+    private boolean intersectsFluid(IBlockAccess world, BlockPos pos, IBlockState state, AxisAlignedBB box) {
         return box.intersects(pos.getX(), pos.getY(), pos.getZ(),
-                pos.getX() + 1, pos.getY() + getFilledPercentage(world, pos), pos.getZ() + 1);
+                pos.getX() + 1, pos.getY() + (double) surfaceHeight(world, pos, state), pos.getZ() + 1);
     }
 
     @Override

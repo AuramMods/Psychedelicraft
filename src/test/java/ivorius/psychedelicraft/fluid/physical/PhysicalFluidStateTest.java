@@ -3,12 +3,15 @@ package ivorius.psychedelicraft.fluid.physical;
 import ivorius.psychedelicraft.fluid.BrewFluid;
 import ivorius.psychedelicraft.fluid.FluidContents;
 import ivorius.psychedelicraft.fluid.PSFluids;
+import net.minecraft.block.material.Material;
 import net.minecraft.block.state.IBlockState;
+import net.minecraft.entity.passive.EntityPig;
 import net.minecraft.init.Blocks;
 import net.minecraft.init.Bootstrap;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.profiler.Profiler;
 import net.minecraft.tileentity.TileEntity;
+import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
@@ -112,6 +115,38 @@ public class PhysicalFluidStateTest {
         assertSame(flow, coffee.getStateAtViewpoint(flow, world, cell, new Vec3d(0.5, 64.99, 0.5)));
         world.put(cell.up(), Blocks.WATER.getDefaultState(), null);
         assertSame(Blocks.AIR.getDefaultState(), coffee.getStateAtViewpoint(flow, world, cell, new Vec3d(0.5, 64.99, 0.5)));
+    }
+
+    @Test
+    public void contactAndBreathingUseTheFlowSurface() {
+        PhysicalFluidBlock coffee = new PhysicalFluidBlock(PSFluids.COFFEE);
+        PhysicalFluidBlock kava = new PhysicalFluidBlock(PSFluids.KAVA);
+        FluidWorld world = new FluidWorld();
+        BlockPos cell = new BlockPos(0, 64, 0);
+        IBlockState flow = coffee.getStateFromMeta(7);
+        world.put(cell, flow, null);
+        AxisAlignedBB below = new AxisAlignedBB(0.2, 64.05, 0.2, 0.8, 64.1, 0.8);
+        AxisAlignedBB above = below.offset(0, 0.11, 0);
+        assertEquals(1F / 9F, coffee.getFilledPercentage(world, cell), 0F);
+        assertTrue(coffee.isAABBInsideMaterial(world, cell, below, Material.WATER));
+        assertFalse(coffee.isAABBInsideMaterial(world, cell, above, Material.WATER));
+        assertFalse(coffee.isAABBInsideLiquid(world, cell, above));
+
+        EntityPig pig = new EntityPig(world);
+        pig.setPosition(0.5, 64.16 - pig.getEyeHeight(), 0.5);
+        assertTrue(Waterlogging.physicalFluidAtEyes(pig, Material.WATER));
+        pig.setPosition(0.5, 64.24 - pig.getEyeHeight(), 0.5);
+        assertFalse(Waterlogging.physicalFluidAtEyes(pig, Material.WATER));
+        world.put(cell.up(), coffee.getDefaultState(), null);
+        assertTrue(coffee.isAABBInsideMaterial(world, cell, above, Material.WATER));
+        pig.setPosition(0.5, 65.05 - pig.getEyeHeight(), 0.5);
+        assertTrue(Waterlogging.physicalFluidAtEyes(pig, Material.WATER));
+
+        world.put(cell, kava.getDefaultState(), null);
+        pig.setPosition(0.5, 64.3 - pig.getEyeHeight(), 0.5);
+        assertTrue(kava.isAABBInsideLiquid(world, cell, below));
+        assertFalse(kava.isAABBInsideMaterial(world, cell, below, Material.WATER));
+        assertFalse(Waterlogging.physicalFluidAtEyes(pig, Material.WATER));
     }
 
     private static final class FluidWorld extends World {

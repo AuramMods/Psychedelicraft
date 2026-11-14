@@ -13,6 +13,7 @@ import net.minecraft.dispenser.BehaviorDefaultDispenseItem;
 import net.minecraft.dispenser.IBehaviorDispenseItem;
 import net.minecraft.dispenser.IBlockSource;
 import net.minecraft.entity.Entity;
+import net.minecraft.entity.item.EntityBoat;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.init.Blocks;
 import net.minecraft.init.Items;
@@ -184,6 +185,22 @@ public final class Waterlogging {
 
     public static IBlockState flowDestination(World world, BlockPos to, BlockPos from) {
         return isOutletClosed(world, from, to) ? Blocks.BEDROCK.getDefaultState() : world.getBlockState(to);
+    }
+
+    @Nullable
+    public static Boolean physicalFluidAtEyes(Entity entity, Material material) {
+        if (material != Material.WATER || entity.getRidingEntity() instanceof EntityBoat) return null;
+        double eyeY = entity.posY + entity.getEyeHeight();
+        double sampleY = eyeY - (double) (1F / 9F);
+        World world = entity.world;
+        BlockPos sample = new BlockPos(entity.posX, sampleY, entity.posZ);
+        IBlockState fluid = fluidState(world, sample);
+        if (!(fluid.getBlock() instanceof PhysicalFluidBlock)) {
+            BlockPos eyes = new BlockPos(entity.posX, eyeY, entity.posZ);
+            if (!(world.getBlockState(eyes).getBlock() instanceof PhysicalFluidBlock)) return null;
+        }
+        return isWater(world, sample, fluid)
+                && sampleY < sample.getY() + (double) liquidShapeHeight(world, sample, fluid);
     }
 
     @Nullable

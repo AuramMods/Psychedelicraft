@@ -1172,6 +1172,15 @@ sh run/production/background-qa/run.sh "$qa" game-background Overlay-QA \
 - The tested production jar SHA-256 is `bea50d29afb009e9c80b51da6453f613909698a5b79850790afb4f7ef9079b79`. Evidence is under `run/production/runtime-qa-cycle128` in `build-production.log`, `build-fixture.log`, `runtime-baseline.log`, `runtime-fixed.log` and `runtime-contact.log`. Clients ran on Xvfb at zero master volume with OpenAL's `No Output` device.
 - Next, compare the fluid surface used for head immersion and body contact with the surface the camera and boats use, including shallow and stacked flows.
 
+### Cycle 129 · Physical fluid contact and breathing
+
+- Physical liquid height, body and box contact, and the generic liquid occupancy query now use the same surface as the camera and juniper boats. Body checks use the donor's 0.001-block inset before testing contact. Kava, agave and bath salts remain present for generic liquid checks and outside the water-tagged swimming paths. Existing vats and waterlogged blocks keep their own contact rules.
+- The pinned 1.20.1 entity samples water for breathing one ninth of a block below the eyes, including across a block boundary. Forge applies that sample at physical mod fluids and keeps its native logic for other water, boat riders and bubble columns. The camera continues to sample its own position.
+- The clean Java 8 build and reobfuscation passed all 172 tests. The new regression covers shallow and stacked fluid contact, a head sample in the cell below and separate liquid and water occupancy. The packaged jar passed the muted fluid-contact regression, including vat, farmland, drips, bubbles and buoyancy.
+- In Forge 14.23.5.2864, the previous jar marked a pig as swimming with its feet 0.16 blocks over the floor of a level-seven coffee channel. The rebuilt jar reported dry contact at that height, detected contact at 0.05 blocks, and detected stacked fluid through the top of the lower cell. A real living-entity update consumed an air point at the submerged eye sample, restored the air supply when the sample cleared the fluid, and preserved the supply with Water Breathing. Client eye checks agreed with the server. The passing fixture sampled the potion inside the liquid after an initial sample landed in the stone floor. The bubble-column regression still restored air, moved both hulls and ejected the chest-boat passenger.
+- The tested production jar SHA-256 is `a513478e8ac372fde6ff170673230a7244a89108d555bc5065fa968dcaac5cd0`. Evidence is under `run/production/runtime-qa-cycle129` in `build-production.log`, `build-fixture-final.log`, `runtime-baseline-verified.log`, `runtime-verified.log`, `runtime-contact.log` and `runtime-column.log`. Clients ran on Xvfb with zero master volume and OpenAL's `No Output` device.
+- Next, compare how the donor scales the current when entities wade through water-tagged mod fluids and when a flowing cell becomes part of a falling column.
+
 Dedicated Forge startup and multiplayer on that server remain open pending EULA acceptance.
 
 ## Repository and branch survey
