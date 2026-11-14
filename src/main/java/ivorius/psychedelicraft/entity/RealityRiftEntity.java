@@ -5,6 +5,7 @@
 package ivorius.psychedelicraft.entity;
 
 import ivorius.psychedelicraft.block.PSBlocks;
+import ivorius.psychedelicraft.client.particle.RealityRiftParticles;
 import ivorius.psychedelicraft.entity.drug.DrugCapability;
 import ivorius.psychedelicraft.entity.drug.DrugProperties;
 import ivorius.psychedelicraft.entity.drug.DrugType;
@@ -17,7 +18,6 @@ import net.minecraft.network.datasync.DataSerializers;
 import net.minecraft.network.datasync.EntityDataManager;
 import net.minecraft.util.DamageSource;
 import net.minecraft.util.EntitySelectors;
-import net.minecraft.util.EnumParticleTypes;
 import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.MathHelper;
@@ -107,7 +107,7 @@ public final class RealityRiftEntity extends Entity {
         super.onUpdate();
         motionX = motionY = motionZ = 0;
         if (world.isRemote) {
-            spawnParticles();
+            RealityRiftParticles.spawn(world, posX, posY, posZ, height, rand);
         } else {
             tickRift();
         }
@@ -177,26 +177,6 @@ public final class RealityRiftEntity extends Entity {
                 world.setBlockState(cursor, PSBlocks.GLITCH.getDefaultState());
             }
         }
-    }
-
-    private void spawnParticles() {
-        for (int count = rand.nextInt(3); count > 0; count--) {
-            float spread = rand.nextFloat() * rand.nextFloat();
-            world.spawnParticle(EnumParticleTypes.SMOKE_LARGE, posX + particleOffset(spread),
-                    posY + height * 0.5 + particleOffset(spread), posZ + particleOffset(spread), 0, 0, 0);
-        }
-        if (rand.nextBoolean()) {
-            float spread = rand.nextFloat() * rand.nextFloat();
-            world.spawnParticle(EnumParticleTypes.REDSTONE, posX + particleOffset(spread),
-                    posY + height * 0.5 + particleOffset(spread), posZ + particleOffset(spread), 1, 0.5, 0.5);
-        }
-        float spread = rand.nextFloat() * rand.nextFloat();
-        world.spawnParticle(EnumParticleTypes.ENCHANTMENT_TABLE, posX, posY + 1 + height * 0.5, posZ,
-                particleOffset(spread), particleOffset(spread) + height * 0.5, particleOffset(spread));
-    }
-
-    private float particleOffset(float spread) {
-        return (rand.nextFloat() * 8 - 4) * spread;
     }
 
     @Override
