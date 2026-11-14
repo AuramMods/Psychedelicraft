@@ -73,8 +73,8 @@ final class PlantBiomes {
         return biome == Biomes.ROOFED_FOREST || biome == Biomes.MUTATED_ROOFED_FOREST;
     }
 
-    static boolean jimsonweed(Biome biome) {
-        // Modern Jungle and Sparse Jungle include these legacy variants after biome renaming.
+    static boolean jungle(Biome biome) {
+        // The vanilla jungle tag also includes Bamboo Jungle, which has no legacy equivalent.
         return biome == Biomes.JUNGLE || biome == Biomes.JUNGLE_HILLS || biome == Biomes.MUTATED_JUNGLE
                 || biome == Biomes.JUNGLE_EDGE || biome == Biomes.MUTATED_JUNGLE_EDGE;
     }
@@ -96,10 +96,6 @@ final class PlantBiomes {
         return hills(biome) || forest(biome);
     }
 
-    private static boolean jungle(Biome biome) {
-        return BiomeDictionary.hasType(biome, BiomeDictionary.Type.JUNGLE);
-    }
-
     private static boolean forest(Biome biome) {
         // The vanilla tag includes these forest families after biome renaming. Grove has no legacy biome.
         return biome == Biomes.FOREST || biome == Biomes.FOREST_HILLS || biome == Biomes.MUTATED_FOREST
@@ -115,11 +111,14 @@ final class PlantBiomes {
     }
 
     private static boolean savanna(Biome biome) {
-        return BiomeDictionary.hasType(biome, BiomeDictionary.Type.SAVANNA);
+        return biome == Biomes.SAVANNA || biome == Biomes.SAVANNA_PLATEAU
+                || biome == Biomes.MUTATED_SAVANNA || biome == Biomes.MUTATED_SAVANNA_ROCK;
     }
 
     private static boolean badlands(Biome biome) {
-        return BiomeDictionary.hasType(biome, BiomeDictionary.Type.MESA);
+        return biome == Biomes.MESA || biome == Biomes.MESA_ROCK || biome == Biomes.MESA_CLEAR_ROCK
+                || biome == Biomes.MUTATED_MESA || biome == Biomes.MUTATED_MESA_ROCK
+                || biome == Biomes.MUTATED_MESA_CLEAR_ROCK;
     }
 
     private static boolean desert(Biome biome) {

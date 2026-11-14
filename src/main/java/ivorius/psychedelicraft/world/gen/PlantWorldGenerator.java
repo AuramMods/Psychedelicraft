@@ -53,7 +53,7 @@ public final class PlantWorldGenerator {
             tall("coca", PSBlocks.NATURAL_COCA, OPTIONS.coca, true),
             low("morning_glory", PSBlocks.MORNING_GLORY, VineStemBlock.MAX_AGE, OPTIONS.morningGlories, PlantBiomes::morningGlory),
             low("belladonna", PSBlocks.BELLADONNA, PSBlocks.BELLADONNA.maxAge(), OPTIONS.belladonna, PlantBiomes::belladonna),
-            low("jimsonweed", PSBlocks.JIMSONWEED, PSBlocks.JIMSONWEED.maxAge(), OPTIONS.jimsonweed, PlantBiomes::jimsonweed),
+            low("jimsonweed", PSBlocks.JIMSONWEED, PSBlocks.JIMSONWEED.maxAge(), OPTIONS.jimsonweed, PlantBiomes::jungle),
             low("tomato", PSBlocks.TOMATOES, PSBlocks.TOMATOES.maxAge(), OPTIONS.tomato, PlantBiomes::tomato),
             low("peyote", PSBlocks.PEYOTE, PSBlocks.PEYOTE.maxAge(), OPTIONS.peyote, PlantBiomes::peyote),
             low("agave", PSBlocks.AGAVE_PLANT, PSBlocks.AGAVE_PLANT.maxAge(), OPTIONS.peyote, PlantBiomes::agave)

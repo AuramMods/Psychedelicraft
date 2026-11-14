@@ -34,12 +34,12 @@ public class PlantBiomesTest {
         assertTrue(PlantBiomes.belladonna(Biomes.ROOFED_FOREST));
         assertTrue(PlantBiomes.belladonna(Biomes.MUTATED_ROOFED_FOREST));
         assertFalse(PlantBiomes.belladonna(Biomes.MUTATED_FOREST));
-        assertTrue(PlantBiomes.jimsonweed(Biomes.JUNGLE));
-        assertTrue(PlantBiomes.jimsonweed(Biomes.JUNGLE_HILLS));
-        assertTrue(PlantBiomes.jimsonweed(Biomes.MUTATED_JUNGLE));
-        assertTrue(PlantBiomes.jimsonweed(Biomes.JUNGLE_EDGE));
-        assertTrue(PlantBiomes.jimsonweed(Biomes.MUTATED_JUNGLE_EDGE));
-        assertFalse(PlantBiomes.jimsonweed(Biomes.PLAINS));
+        assertTrue(PlantBiomes.jungle(Biomes.JUNGLE));
+        assertTrue(PlantBiomes.jungle(Biomes.JUNGLE_HILLS));
+        assertTrue(PlantBiomes.jungle(Biomes.MUTATED_JUNGLE));
+        assertTrue(PlantBiomes.jungle(Biomes.JUNGLE_EDGE));
+        assertTrue(PlantBiomes.jungle(Biomes.MUTATED_JUNGLE_EDGE));
+        assertFalse(PlantBiomes.jungle(Biomes.PLAINS));
         assertTrue(PlantBiomes.tomato(Biomes.FOREST));
         assertTrue(PlantBiomes.tomato(Biomes.FOREST_HILLS));
         assertFalse(PlantBiomes.tomato(Biomes.MUTATED_FOREST));
@@ -112,6 +112,39 @@ public class PlantBiomesTest {
         options.included = new String[]{"#forge:FOREST"};
         assertTrue(PlantBiomes.allows(options, PlantBiomes::tallCrops, Biomes.MUTATED_REDWOOD_TAIGA));
         assertTrue(PlantBiomes.allows(options, PlantBiomes::juniper, Biomes.MUTATED_REDWOOD_TAIGA_HILLS));
+    }
+
+    @Test
+    public void badlandsTagIncludesEveryMesaVariant() {
+        PSConfig.Feature badlands = new PSConfig.Feature();
+        badlands.included = new String[]{"#minecraft:is_badlands"};
+        Biome[] mesas = {Biomes.MESA, Biomes.MESA_ROCK, Biomes.MESA_CLEAR_ROCK, Biomes.MUTATED_MESA,
+                Biomes.MUTATED_MESA_ROCK, Biomes.MUTATED_MESA_CLEAR_ROCK};
+        for (Biome biome : mesas) {
+            assertTrue(PlantBiomes.allows(badlands, ignored -> false, biome));
+            assertTrue(PlantBiomes.agave(biome));
+            assertTrue(PlantBiomes.peyote(biome));
+        }
+        assertFalse(PlantBiomes.allows(badlands, ignored -> false, Biomes.DESERT));
+    }
+
+    @Test
+    public void savannaAndDesertSelectorsMatchTheVanillaFamilies() {
+        PSConfig.Feature savanna = new PSConfig.Feature();
+        savanna.included = new String[]{"#minecraft:is_savanna"};
+        for (Biome biome : new Biome[]{Biomes.SAVANNA, Biomes.SAVANNA_PLATEAU,
+                Biomes.MUTATED_SAVANNA, Biomes.MUTATED_SAVANNA_ROCK}) {
+            assertTrue(PlantBiomes.allows(savanna, ignored -> false, biome));
+            assertTrue(PlantBiomes.peyote(biome));
+        }
+        assertFalse(PlantBiomes.allows(savanna, ignored -> false, Biomes.MESA));
+
+        PSConfig.Feature desert = new PSConfig.Feature();
+        desert.included = new String[]{"#minecraft:has_structure/desert_pyramid"};
+        for (Biome biome : new Biome[]{Biomes.DESERT, Biomes.DESERT_HILLS, Biomes.MUTATED_DESERT}) {
+            assertTrue(PlantBiomes.allows(desert, ignored -> false, biome));
+        }
+        assertFalse(PlantBiomes.allows(desert, ignored -> false, Biomes.SAVANNA));
     }
 
     @Test
