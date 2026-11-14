@@ -120,6 +120,7 @@ public final class VillagerCareers {
                 villager.tasks.addTask(7, new DealerBonemealTask(villager, preview));
                 villager.tasks.addTask(7, new VillagerWork(villager, preview));
                 villager.tasks.addTask(7, new AddictRestockTask(villager));
+                villager.tasks.addTask(7, new AddictStrollTask(villager));
                 villager.tasks.addTask(8, preview);
             }
         }

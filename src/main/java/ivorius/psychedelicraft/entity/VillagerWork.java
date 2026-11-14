@@ -11,7 +11,6 @@ import net.minecraft.block.state.IBlockState;
 import net.minecraft.entity.ai.EntityAIBase;
 import net.minecraft.entity.ai.RandomPositionGenerator;
 import net.minecraft.entity.passive.EntityVillager;
-import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.init.Blocks;
 import net.minecraft.init.Items;
 import net.minecraft.init.SoundEvents;
@@ -86,20 +85,10 @@ final class VillagerWork extends EntityAIBase {
     public boolean shouldExecute() {
         if (!canWork(villager)) return false;
         VillagerProfession profession = villager.getProfessionForge();
-        if (profession != VillagerCareers.DEALER && profession != VillagerCareers.UNEMPLOYED
-                && profession != VillagerCareers.ADDICT) return false;
+        if (profession != VillagerCareers.DEALER && profession != VillagerCareers.UNEMPLOYED) return false;
         long now = villager.world.getTotalWorldTime();
         if (now < nextTask) return false;
         nextTask = now + 40;
-
-        if (profession == VillagerCareers.ADDICT) {
-            EntityPlayer player = villager.world.getClosestPlayerToEntity(villager, 9);
-            if (player == null) return false;
-            wander = RandomPositionGenerator.findRandomTarget(villager, 8, 6);
-            nextTask = now + 180;
-            job = Job.WANDER;
-            return wander != null;
-        }
 
         BlockPos site = worksite(villager);
         if (site != null) {
@@ -172,7 +161,7 @@ final class VillagerWork extends EntityAIBase {
         return manhattan(villager.getPosition(), site) <= 9;
     }
 
-    private static int manhattan(BlockPos first, BlockPos second) {
+    static int manhattan(BlockPos first, BlockPos second) {
         return Math.abs(first.getX() - second.getX()) + Math.abs(first.getY() - second.getY())
                 + Math.abs(first.getZ() - second.getZ());
     }

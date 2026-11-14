@@ -21,7 +21,8 @@ final class VillagerTradePreview extends EntityAIBase {
     private static final int IDLE_TICKS = 40;
     private static final int MATCH_TICKS = 900;
     private static final int CYCLE_TICKS = 40;
-    private static final double MAX_DISTANCE_SQ = 17;
+    private static final double OFFER_DISTANCE_SQ = 17;
+    private static final double ADDICT_LOOK_DISTANCE = 8;
 
     private final EntityVillager villager;
     @Nullable
@@ -42,13 +43,14 @@ final class VillagerTradePreview extends EntityAIBase {
 
     @Override
     public boolean shouldExecute() {
-        long time = villager.world.getWorldTime() % 24000L;
-        if (!canPreview(time)) return false;
-        double range = villager.getProfessionForge() == VillagerCareers.ADDICT && time >= 2000 && time < 9000
-                ? Math.sqrt(MAX_DISTANCE_SQ) : 4;
-        target = villager.world.getClosestPlayer(villager.posX, villager.posY, villager.posZ, range,
-                entity -> entity.isEntityAlive() && !((EntityPlayer) entity).isSpectator()
-                        && villager.getEntitySenses().canSee(entity));
+        if (!canPreview()) return false;
+        boolean addictAtWork = addictAtWork();
+        target = villager.world.getClosestPlayer(villager.posX, villager.posY, villager.posZ,
+                addictAtWork ? Math.nextUp(ADDICT_LOOK_DISTANCE) : 4, entity -> {
+                    EntityPlayer player = (EntityPlayer) entity;
+                    return player.isEntityAlive() && !player.isSpectator() && villager.getEntitySenses().canSee(player)
+                            && (!addictAtWork || withinAddictLookRange(player));
+                });
         return target != null;
     }
 
@@ -61,12 +63,29 @@ final class VillagerTradePreview extends EntityAIBase {
     @Override
     public boolean shouldContinueExecuting() {
         return remaining > 0 && villager.world.getTotalWorldTime() <= endTime
-                && canPreview(villager.world.getWorldTime() % 24000L)
+                && canPreview()
                 && target != null && target.isEntityAlive() && !target.isSpectator()
-                && target.world == villager.world && villager.getDistanceSq(target) <= MAX_DISTANCE_SQ;
+                && target.world == villager.world
+                && (addictAtWork() ? withinAddictLookRange(target) && villager.getEntitySenses().canSee(target)
+                        : villager.getDistanceSq(target) <= OFFER_DISTANCE_SQ);
     }
 
-    private boolean canPreview(long time) {
+    private boolean addictAtWork() {
+        return villager.getProfessionForge() == VillagerCareers.ADDICT && VillagerWork.canWork(villager);
+    }
+
+    private boolean withinAddictLookRange(EntityPlayer player) {
+        // The donor's non-combat sensor has a 16-block range, reduced by invisibility and armor.
+        double range = ADDICT_LOOK_DISTANCE;
+        if (player.isInvisible()) {
+            double visibility = 0.7D * Math.max(0.1F, player.getArmorVisibility()) * (player.isSneaking() ? 0.8D : 1D);
+            range = Math.min(range, Math.max(2D, 16D * visibility));
+        }
+        return villager.getDistanceSq(player) <= range * range;
+    }
+
+    private boolean canPreview() {
+        long time = Math.floorMod(villager.world.getWorldTime(), 24000L);
         return time >= 10 && time < 12000 && villager.isEntityAlive() && !villager.isChild()
                 && !villager.isTrading() && !villager.isAIDisabled() && villager.hurtTime == 0
                 && (villager.getProfessionForge() == VillagerCareers.DEALER || villager.getProfessionForge() == VillagerCareers.ADDICT);
@@ -79,6 +98,13 @@ final class VillagerTradePreview extends EntityAIBase {
             return;
         }
         villager.getLookHelper().setLookPositionWithEntity(target, 30, villager.getVerticalFaceSpeed());
+        if (villager.getDistanceSq(target) > OFFER_DISTANCE_SQ) {
+            cost = ItemStack.EMPTY;
+            matches = Collections.emptyList();
+            display(ItemStack.EMPTY);
+            remaining = Math.min(remaining, IDLE_TICKS) - 1;
+            return;
+        }
         ItemStack held = target.getHeldItemMainhand();
         if (!ItemStack.areItemsEqual(cost, held)) {
             cost = held.copy();
