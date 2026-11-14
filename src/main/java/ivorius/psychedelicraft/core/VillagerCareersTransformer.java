@@ -51,7 +51,7 @@ public final class VillagerCareersTransformer implements IClassTransformer {
             patchRandomSpawns(type);
             if (VILLAGER.equals(transformedName)) {
                 prependHandler(type, "useRecipe", "func_70933_a", "(Lnet/minecraft/village/MerchantRecipe;)V", "useRecipe");
-                prependHandler(type, "updateEquipmentIfNeeded", "func_175445_a", "(Lnet/minecraft/entity/item/EntityItem;)V", "collectExtra");
+                prependHandler(type, "updateEquipmentIfNeeded", "func_175445_a", "(Lnet/minecraft/entity/item/EntityItem;)V", "collectDealerItem");
                 patchCustomer(type);
                 patchLightningConversion(type);
             }

@@ -384,7 +384,7 @@ final class VillagerWork extends EntityAIBase {
                 1F + (villager.getRNG().nextFloat() - villager.getRNG().nextFloat()) * 0.2F);
         ItemStack output = table.removeStackFromSlot(DryingRecipe.OUTPUT);
         if (!output.isEmpty()) {
-            ItemStack excess = villager.getVillagerInventory().addItem(output);
+            ItemStack excess = VillagerCareers.storeDealerItem(villager.getVillagerInventory(), output);
             if (!excess.isEmpty()) villager.entityDropItem(excess, 0F);
         }
         if (table.isEmpty()) loadBatch(villager.getVillagerInventory(), table);

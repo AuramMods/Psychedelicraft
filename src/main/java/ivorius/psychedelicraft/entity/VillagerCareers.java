@@ -21,6 +21,7 @@ import net.minecraft.entity.passive.EntityVillager;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.init.Items;
 import net.minecraft.init.SoundEvents;
+import net.minecraft.inventory.IInventory;
 import net.minecraft.item.EnumDyeColor;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
@@ -48,6 +49,8 @@ import net.minecraftforge.fml.common.registry.VillagerRegistry;
 import net.minecraftforge.fml.common.registry.VillagerRegistry.VillagerCareer;
 import net.minecraftforge.fml.common.registry.VillagerRegistry.VillagerProfession;
 import net.minecraftforge.fml.relauncher.ReflectionHelper;
+import net.minecraftforge.items.ItemHandlerHelper;
+import net.minecraftforge.items.wrapper.InvWrapper;
 
 import javax.annotation.Nullable;
 import java.lang.reflect.Field;
@@ -171,17 +174,30 @@ public final class VillagerCareers {
         }
     }
 
-    public static boolean collectExtra(EntityVillager villager, EntityItem entity) {
+    public static boolean collectDealerItem(EntityVillager villager, EntityItem entity) {
         if (villager.getProfessionForge() != DEALER) return false;
         ItemStack stack = entity.getItem();
         Item item = stack.getItem();
         if (!(VillagerWork.isSeed(item) || item == PSItems.CANNABIS_BUDS || item == PSItems.CANNABIS_LEAF
                 || item == PSItems.TOBACCO_LEAVES || item == PSItems.COCA_LEAVES || item == PSItems.PEYOTE
-                || item == Items.DYE && stack.getMetadata() == EnumDyeColor.WHITE.getDyeDamage())) return false;
-        ItemStack remainder = villager.getVillagerInventory().addItem(stack);
-        if (remainder.isEmpty()) entity.setDead();
-        else entity.setItem(remainder);
+                || item == Items.DYE && stack.getMetadata() == EnumDyeColor.WHITE.getDyeDamage()
+                || item == Items.BREAD || item == Items.POTATO || item == Items.CARROT || item == Items.WHEAT
+                || item == Items.WHEAT_SEEDS || item == Items.BEETROOT || item == Items.BEETROOT_SEEDS)) return false;
+        ItemStack remainder = storeDealerItem(villager.getVillagerInventory(), stack);
+        int collected = stack.getCount() - remainder.getCount();
+        if (collected == 0) return true;
+        if (remainder.isEmpty()) {
+            villager.onItemPickup(entity, collected);
+            entity.setDead();
+        } else {
+            Channel.showPartialPickup(villager, entity, collected);
+            entity.setItem(remainder);
+        }
         return true;
+    }
+
+    static ItemStack storeDealerItem(IInventory inventory, ItemStack stack) {
+        return ItemHandlerHelper.insertItemStacked(new InvWrapper(inventory), stack.copy(), false);
     }
 
     @SubscribeEvent

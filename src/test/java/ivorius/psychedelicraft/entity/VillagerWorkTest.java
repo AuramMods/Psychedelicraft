@@ -74,6 +74,44 @@ public class VillagerWorkTest {
     }
 
     @Test
+    public void fillsMatchingDealerStacksBeforeUsingFreeSlots() {
+        InventoryBasic inventory = new InventoryBasic("test", false, 4);
+        ItemStack other = new ItemStack(PSItems.TOBACCO_LEAVES, 62).setStackDisplayName("Other");
+        ItemStack batch = new ItemStack(PSItems.TOBACCO_LEAVES, 4).setStackDisplayName("Batch");
+        ItemStack existing = batch.copy();
+        existing.setCount(62);
+        inventory.setInventorySlotContents(0, other);
+        inventory.setInventorySlotContents(3, existing);
+
+        assertTrue(VillagerCareers.storeDealerItem(inventory, batch).isEmpty());
+        assertEquals(62, other.getCount());
+        assertEquals(64, inventory.getStackInSlot(3).getCount());
+        assertEquals(2, inventory.getStackInSlot(1).getCount());
+        assertEquals("Batch", inventory.getStackInSlot(1).getDisplayName());
+        assertTrue(inventory.getStackInSlot(2).isEmpty());
+        assertEquals(4, batch.getCount());
+    }
+
+    @Test
+    public void returnsOnlyTheRemainingTaggedOutputWhenInventoryIsFull() {
+        InventoryBasic inventory = new InventoryBasic("test", false, 2);
+        ItemStack other = new ItemStack(PSItems.DRIED_TOBACCO, 63).setStackDisplayName("Other");
+        ItemStack output = new ItemStack(PSItems.DRIED_TOBACCO, 3).setStackDisplayName("Batch");
+        ItemStack existing = output.copy();
+        existing.setCount(63);
+        inventory.setInventorySlotContents(0, other);
+        inventory.setInventorySlotContents(1, existing);
+
+        ItemStack remainder = VillagerCareers.storeDealerItem(inventory, output);
+        assertEquals(63, other.getCount());
+        assertEquals(64, inventory.getStackInSlot(1).getCount());
+        assertEquals(2, remainder.getCount());
+        assertEquals("Batch", remainder.getDisplayName());
+        assertEquals(3, output.getCount());
+        assertTrue(ItemStack.areItemStacksEqual(remainder, VillagerCareers.storeDealerItem(inventory, remainder)));
+    }
+
+    @Test
     public void previewMatchesBothCostsAndKeepsOfferStacksUntouched() {
         MerchantRecipeList offers = new MerchantRecipeList();
         ItemStack tagged = new ItemStack(PSItems.WINE_GRAPES, 3);

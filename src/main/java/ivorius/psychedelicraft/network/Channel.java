@@ -7,6 +7,7 @@ import ivorius.psychedelicraft.entity.drug.DrugCapability;
 import ivorius.psychedelicraft.entity.drug.DrugProperties;
 import ivorius.psychedelicraft.entity.drug.HallucinationType;
 import net.minecraft.entity.Entity;
+import net.minecraft.entity.item.EntityItem;
 import net.minecraft.entity.passive.EntityVillager;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
@@ -40,6 +41,7 @@ public final class Channel {
         network.registerMessage(MsgFluidBubbles.Handler.class, MsgFluidBubbles.class, 6, Side.CLIENT);
         network.registerMessage(MsgVillagerOfferPreview.Handler.class, MsgVillagerOfferPreview.class, 7, Side.CLIENT);
         network.registerMessage(MsgEntitySound.Handler.class, MsgEntitySound.class, 8, Side.CLIENT);
+        network.registerMessage(MsgPartialPickup.Handler.class, MsgPartialPickup.class, 9, Side.CLIENT);
     }
 
     public static void spawnSmoke(World world, Vec3d origin, Vec3d velocity, int color, float scale, int count) {
@@ -87,6 +89,10 @@ public final class Channel {
 
     public static void showVillagerOffer(EntityVillager villager, ItemStack item) {
         network.sendToAllTracking(new MsgVillagerOfferPreview(villager, item), villager);
+    }
+
+    public static void showPartialPickup(EntityVillager villager, EntityItem item, int count) {
+        network.sendToAllTracking(new MsgPartialPickup(villager, item, count), item);
     }
 
     public static void showVillagerOffer(EntityVillager villager, ItemStack item, EntityPlayerMP recipient) {
