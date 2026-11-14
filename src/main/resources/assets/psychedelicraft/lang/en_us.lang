@@ -610,3 +610,11 @@ subtitle.psychedelicraft.entity.drowned.step=Drowned steps
 subtitle.psychedelicraft.entity.drowned.swim=Drowned swims
 subtitle.psychedelicraft.entity.zombie.converted_to_drowned=Zombie converts to Drowned
 subtitle.psychedelicraft.entity.husk.converted_to_zombie=Husk converts to Zombie
+
+item.psychedelicraft.trident.name=Trident
+subtitle.psychedelicraft.entity.drowned.shoot=Drowned throws Trident
+subtitle.psychedelicraft.item.trident.throw=Trident clangs
+subtitle.psychedelicraft.item.trident.hit=Trident stabs
+subtitle.psychedelicraft.item.trident.hit_ground=Trident vibrates
+death.attack.trident=%1$s was impaled by %2$s
+death.attack.trident.item=%1$s was impaled by %2$s with %3$s

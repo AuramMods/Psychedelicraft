@@ -11,6 +11,7 @@ import org.objectweb.asm.tree.ClassNode;
 import org.objectweb.asm.tree.FieldInsnNode;
 import org.objectweb.asm.tree.InsnList;
 import org.objectweb.asm.tree.InsnNode;
+import org.objectweb.asm.tree.LdcInsnNode;
 import org.objectweb.asm.tree.MethodInsnNode;
 import org.objectweb.asm.tree.MethodNode;
 import org.objectweb.asm.tree.VarInsnNode;
@@ -20,6 +21,7 @@ import static ivorius.psychedelicraft.core.ClientEffectsTransformer.method;
 public final class CampfireProjectileTransformer implements IClassTransformer {
     private static final String HOOKS = "ivorius/psychedelicraft/block/CampfireBlock";
     private static final String PROJECTILES = "ivorius/psychedelicraft/entity/CampfireProjectile";
+    private static final String TRIDENT = "ivorius/psychedelicraft/entity/ThrownTridentEntity";
     private static final String HIT = "net/minecraft/util/math/RayTraceResult";
     private static final FMLDeobfuscatingRemapper REMAPPER = FMLDeobfuscatingRemapper.INSTANCE;
 
@@ -28,10 +30,11 @@ public final class CampfireProjectileTransformer implements IClassTransformer {
         if (bytes == null) return null;
         switch (transformedName) {
             case "net.minecraft.entity.projectile.EntityArrow":
+                return patchImpact(bytes, true);
             case "net.minecraft.entity.projectile.EntityFireball":
             case "net.minecraft.entity.projectile.EntityThrowable":
             case "net.minecraft.entity.projectile.EntityLlamaSpit":
-                return patchImpact(bytes);
+                return patchImpact(bytes, false);
             case "net.minecraft.entity.projectile.EntityFishHook":
                 return patchBobber(bytes);
             case "net.minecraft.entity.item.EntityFireworkRocket":
@@ -128,10 +131,39 @@ public final class CampfireProjectileTransformer implements IClassTransformer {
         return writer.toByteArray();
     }
 
-    private static byte[] patchImpact(byte[] bytes) {
+    private static void patchTrident(ClassNode type, MethodNode update) {
+        String arrow = "L" + type.name + ";";
+        boolean foundDrag = false;
+        for (AbstractInsnNode instruction : update.instructions.toArray()) {
+            if (!(instruction instanceof LdcInsnNode) || !Float.valueOf(0.6F).equals(((LdcInsnNode) instruction).cst)) continue;
+            InsnList hook = new InsnList();
+            hook.add(new VarInsnNode(Opcodes.ALOAD, 0));
+            hook.add(new MethodInsnNode(Opcodes.INVOKESTATIC, TRIDENT, "waterDrag", "(F" + arrow + ")F", false));
+            update.instructions.insert(instruction, hook);
+            foundDrag = true;
+        }
+        MethodNode impact = method(type, "onHit", "func_184549_a", "(L" + HIT + ";)V");
+        // The first two arrow-hit sounds belong to entity hits and deflections. The last belongs to embedding in a block.
+        FieldInsnNode groundSound = null;
+        for (AbstractInsnNode instruction : impact.instructions.toArray()) {
+            if (!(instruction instanceof FieldInsnNode) || instruction.getOpcode() != Opcodes.GETSTATIC) continue;
+            FieldInsnNode field = (FieldInsnNode) instruction;
+            String name = REMAPPER.mapFieldName(field.owner, field.name, field.desc);
+            if ("ENTITY_ARROW_HIT".equals(name) || "field_187731_t".equals(name)) groundSound = field;
+        }
+        if (!foundDrag || groundSound == null) throw new IllegalStateException("Could not locate arrow water drag or ground sound");
+        InsnList hook = new InsnList();
+        hook.add(new VarInsnNode(Opcodes.ALOAD, 0));
+        hook.add(new MethodInsnNode(Opcodes.INVOKESTATIC, TRIDENT, "groundSound",
+                "(" + groundSound.desc + arrow + ")" + groundSound.desc, false));
+        impact.instructions.insert(groundSound, hook);
+    }
+
+    private static byte[] patchImpact(byte[] bytes, boolean arrow) {
         ClassNode type = new ClassNode(Opcodes.ASM5);
         new ClassReader(bytes).accept(type, 0);
         MethodNode update = method(type, "onUpdate", "func_70071_h_", "()V");
+        if (arrow) patchTrident(type, update);
         for (AbstractInsnNode instruction : update.instructions.toArray()) {
             if (!(instruction instanceof MethodInsnNode)) continue;
             MethodInsnNode call = (MethodInsnNode) instruction;

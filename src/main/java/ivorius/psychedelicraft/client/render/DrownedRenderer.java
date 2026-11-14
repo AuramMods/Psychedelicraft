@@ -2,6 +2,7 @@ package ivorius.psychedelicraft.client.render;
 
 import ivorius.psychedelicraft.Psychedelicraft;
 import ivorius.psychedelicraft.entity.DrownedEntity;
+import ivorius.psychedelicraft.item.PSItems;
 import net.minecraft.client.model.ModelRenderer;
 import net.minecraft.client.model.ModelZombie;
 import net.minecraft.client.renderer.GlStateManager;
@@ -11,6 +12,7 @@ import net.minecraft.client.renderer.entity.layers.LayerBipedArmor;
 import net.minecraft.client.renderer.entity.layers.LayerRenderer;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityLivingBase;
+import net.minecraft.util.EnumHandSide;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.MathHelper;
 
@@ -89,6 +91,12 @@ public final class DrownedRenderer extends RenderBiped<DrownedEntity> {
         @Override
         public void setRotationAngles(float stride, float strideAmount, float age, float yaw, float pitch, float scale, Entity entity) {
             super.setRotationAngles(stride, strideAmount, age, yaw, pitch, scale, entity);
+            DrownedEntity drowned = (DrownedEntity) entity;
+            if (drowned.isArmsRaised() && drowned.getHeldItemMainhand().getItem() == PSItems.TRIDENT) {
+                ModelRenderer arm = drowned.getPrimaryHand() == EnumHandSide.RIGHT ? bipedRightArm : bipedLeftArm;
+                arm.rotateAngleX = arm.rotateAngleX * 0.5F - (float) Math.PI;
+                arm.rotateAngleY = 0;
+            }
             if (swim <= 0) return;
             float kick = swim * MathHelper.sin(age * 0.1F);
             float reach = (float) (-Math.PI * 4 / 5);

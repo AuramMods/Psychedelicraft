@@ -610,3 +610,11 @@ subtitle.psychedelicraft.entity.drowned.step=Utopiec chodzi
 subtitle.psychedelicraft.entity.drowned.swim=Utopiec pływa
 subtitle.psychedelicraft.entity.zombie.converted_to_drowned=Zombie staje się utopcem
 subtitle.psychedelicraft.entity.husk.converted_to_zombie=Posuch staje się zombie
+
+item.psychedelicraft.trident.name=Trójząb
+subtitle.psychedelicraft.entity.drowned.shoot=Utopiec rzuca trójzębem
+subtitle.psychedelicraft.item.trident.throw=Trójząb dzwoni
+subtitle.psychedelicraft.item.trident.hit=Trójząb dźga
+subtitle.psychedelicraft.item.trident.hit_ground=Trójząb wibruje
+death.attack.trident=Gracz %1$s został przebity przez gracza %2$s
+death.attack.trident.item=Gracz %1$s został przebity przez gracza %2$s za pomocą: %3$s

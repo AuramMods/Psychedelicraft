@@ -10,9 +10,11 @@ import net.minecraft.entity.EntitySpawnPlacementRegistry;
 import net.minecraft.entity.EnumCreatureType;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.IEntityLivingData;
+import net.minecraft.entity.IRangedAttackMob;
 import net.minecraft.entity.MoverType;
 import net.minecraft.entity.SharedMonsterAttributes;
 import net.minecraft.entity.ai.EntityAIBase;
+import net.minecraft.entity.ai.EntityAIAttackRanged;
 import net.minecraft.entity.ai.EntityAIHurtByTarget;
 import net.minecraft.entity.ai.EntityAIMoveToBlock;
 import net.minecraft.entity.ai.EntityAINearestAttackableTarget;
@@ -39,6 +41,7 @@ import net.minecraft.pathfinding.PathNavigateSwimmer;
 import net.minecraft.pathfinding.PathNodeType;
 import net.minecraft.pathfinding.PathPoint;
 import net.minecraft.util.DamageSource;
+import net.minecraft.util.EnumHand;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.SoundEvent;
 import net.minecraft.util.math.BlockPos;
@@ -55,7 +58,7 @@ import net.minecraftforge.fml.common.registry.ForgeRegistries;
 
 import javax.annotation.Nullable;
 
-public final class DrownedEntity extends EntityZombie {
+public final class DrownedEntity extends EntityZombie implements IRangedAttackMob {
     private static final ResourceLocation LOOT = Psychedelicraft.id("entities/drowned");
     private static final DataParameter<Boolean> SWIMMING = EntityDataManager.createKey(DrownedEntity.class, DataSerializers.BOOLEAN);
     private final PathNavigate groundNavigation;
@@ -131,10 +134,11 @@ public final class DrownedEntity extends EntityZombie {
     @Override
     protected void initEntityAI() {
         tasks.addTask(1, new FindWater());
+        tasks.addTask(2, new ThrowTrident());
         tasks.addTask(2, new EntityAIZombieAttack(this, 1, false) {
             @Override
             public boolean shouldExecute() {
-                return mayAttack(getAttackTarget()) && super.shouldExecute();
+                return getHeldItemMainhand().getItem() != PSItems.TRIDENT && mayAttack(getAttackTarget()) && super.shouldExecute();
             }
 
             @Override
@@ -236,8 +240,52 @@ public final class DrownedEntity extends EntityZombie {
 
     @Override
     protected void setEquipmentBasedOnDifficulty(DifficultyInstance difficulty) {
-        if (rand.nextFloat() > 0.9F && rand.nextInt(16) >= 10) {
-            setItemStackToSlot(EntityEquipmentSlot.MAINHAND, new ItemStack(Items.FISHING_ROD));
+        if (rand.nextFloat() > 0.9F) {
+            setItemStackToSlot(EntityEquipmentSlot.MAINHAND, new ItemStack(rand.nextInt(16) < 10 ? PSItems.TRIDENT : Items.FISHING_ROD));
+        }
+    }
+
+    @Override
+    public void attackEntityWithRangedAttack(EntityLivingBase target, float distanceFactor) {
+        ThrownTridentEntity projectile = new ThrownTridentEntity(world, this, new ItemStack(PSItems.TRIDENT));
+        double x = target.posX - posX;
+        double y = target.posY + target.height / 3 - projectile.posY;
+        double z = target.posZ - posZ;
+        projectile.shoot(x, y + Math.sqrt(x * x + z * z) * 0.2, z, 1.6F, 14 - world.getDifficulty().getDifficultyId() * 4);
+        if (world.spawnEntity(projectile)) playSound(PSSounds.DROWNED_SHOOT, 1, 1 / (rand.nextFloat() * 0.4F + 0.8F));
+    }
+
+    @Override
+    public void setSwingingArms(boolean swinging) {
+        setArmsRaised(swinging);
+    }
+
+    private final class ThrowTrident extends EntityAIAttackRanged {
+        private ThrowTrident() {
+            super(DrownedEntity.this, 1, 40, 10);
+        }
+
+        @Override
+        public boolean shouldExecute() {
+            return getHeldItemMainhand().getItem() == PSItems.TRIDENT && super.shouldExecute();
+        }
+
+        @Override
+        public boolean shouldContinueExecuting() {
+            return getHeldItemMainhand().getItem() == PSItems.TRIDENT && super.shouldContinueExecuting();
+        }
+
+        @Override
+        public void startExecuting() {
+            setSwingingArms(true);
+            setActiveHand(EnumHand.MAIN_HAND);
+        }
+
+        @Override
+        public void resetTask() {
+            super.resetTask();
+            resetActiveHand();
+            setSwingingArms(false);
         }
     }
 
