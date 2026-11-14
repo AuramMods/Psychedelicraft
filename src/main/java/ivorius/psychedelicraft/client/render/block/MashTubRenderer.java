@@ -15,8 +15,8 @@ import net.minecraft.client.renderer.texture.TextureAtlasSprite;
 import net.minecraft.client.renderer.texture.TextureMap;
 import net.minecraft.client.renderer.tileentity.TileEntitySpecialRenderer;
 import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
-import net.minecraft.init.Blocks;
 import net.minecraft.item.Item;
+import net.minecraft.item.ItemBlock;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.MathHelper;
@@ -38,10 +38,13 @@ public final class MashTubRenderer extends TileEntitySpecialRenderer<MashTubBloc
             height = vat.getFluidSurface();
             TankFluidAppearance appearance = TankFluidAppearance.of(fluid);
             drawSurface(appearance.sprite, appearance.color, x, y + height, z, anchor);
-        } else if (!vat.getSolidOutput().isEmpty()) {
-            TextureAtlasSprite sprite = Minecraft.getMinecraft().getBlockRendererDispatcher()
-                    .getModelForState(Blocks.DIRT.getDefaultState()).getParticleTexture();
-            drawSurface(sprite, 0xffffffff, x, y + 0.5, z, anchor);
+        } else {
+            ItemStack output = vat.getSolidOutput();
+            if (output.getItem() instanceof ItemBlock) {
+                TextureAtlasSprite sprite = Minecraft.getMinecraft().getRenderItem()
+                        .getItemModelWithOverrides(output, vat.getWorld(), null).getParticleTexture();
+                drawSurface(sprite, 0xffffffff, x, y + 0.5, z, anchor);
+            }
         }
         if (vat.getSuppliedIngredients().isEmpty()) return;
         Minecraft client = Minecraft.getMinecraft();
@@ -89,23 +92,20 @@ public final class MashTubRenderer extends TileEntitySpecialRenderer<MashTubBloc
         GlStateManager.tryBlendFuncSeparate(GlStateManager.SourceFactor.SRC_ALPHA, GlStateManager.DestFactor.ONE_MINUS_SRC_ALPHA,
                 GlStateManager.SourceFactor.ONE, GlStateManager.DestFactor.ZERO);
         GlStateManager.disableLighting();
-        Tessellator tessellator = Tessellator.getInstance();
-        BufferBuilder buffer = tessellator.getBuffer();
-        buffer.begin(GL11.GL_QUADS, DefaultVertexFormats.POSITION_TEX_COLOR);
-        for (int ix = 0; ix < 2; ix++) {
-            for (int iz = 0; iz < 2; iz++) {
-                double left = x - 0.4375 + ix * 0.9375;
-                double front = z - 0.4375 + iz * 0.9375;
-                double right = left + 0.9375;
-                double back = front + 0.9375;
-                buffer.pos(left, y, front).tex(sprite.getMinU(), sprite.getMinV()).color(red, green, blue, alpha).endVertex();
-                buffer.pos(left, y, back).tex(sprite.getMinU(), sprite.getMaxV()).color(red, green, blue, alpha).endVertex();
-                buffer.pos(right, y, back).tex(sprite.getMaxU(), sprite.getMaxV()).color(red, green, blue, alpha).endVertex();
-                buffer.pos(right, y, front).tex(sprite.getMaxU(), sprite.getMinV()).color(red, green, blue, alpha).endVertex();
-            }
+        try {
+            Tessellator tessellator = Tessellator.getInstance();
+            BufferBuilder buffer = tessellator.getBuffer();
+            buffer.begin(GL11.GL_QUADS, DefaultVertexFormats.POSITION_TEX_COLOR);
+            double left = x - 0.5, right = x + 1.5;
+            double front = z - 0.5, back = z + 1.5;
+            buffer.pos(left, y, front).tex(sprite.getMinU(), sprite.getMinV()).color(red, green, blue, alpha).endVertex();
+            buffer.pos(left, y, back).tex(sprite.getMinU(), sprite.getMaxV()).color(red, green, blue, alpha).endVertex();
+            buffer.pos(right, y, back).tex(sprite.getMaxU(), sprite.getMaxV()).color(red, green, blue, alpha).endVertex();
+            buffer.pos(right, y, front).tex(sprite.getMaxU(), sprite.getMinV()).color(red, green, blue, alpha).endVertex();
+            DrugRenderer.drawWorldQuads(tessellator, anchor);
+        } finally {
+            GlStateManager.enableLighting();
+            GlStateManager.disableBlend();
         }
-        DrugRenderer.drawWorldQuads(tessellator, anchor);
-        GlStateManager.enableLighting();
-        GlStateManager.disableBlend();
     }
 }

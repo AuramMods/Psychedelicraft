@@ -1291,6 +1291,14 @@ sh run/production/background-qa/run.sh "$qa" game-background Overlay-QA \
 - The tested jar SHA-256 is `b8e856c33128149b451931fb6b37db81c06c43c0697b4ca7c84cd9f6e2ad560f`. Evidence is under `run/production/runtime-qa-cycle141` in `build-production.log`, `runtime-baseline.log`, `runtime-verified.log` and the screenshots. The clients ran on Xvfb with zero master volume and OpenAL's `No Output` device.
 - Next, compare the in-world footprint and sprite mapping of the vat's liquid surface and hardened output with the pinned rendering.
 
+### Cycle 142 · Vat liquid and hardened output surfaces
+
+- Mapped the still sprite once across the donor's two-block square. The wooden basin masks the outer edge, and the liquid surface continues to use the current fill height. A dry vat now resolves the solid block item's baked particle sprite, including its variant. A wet vat shows its remaining liquid even when it holds uncollected dirt. [Pinned vat draws](https://github.com/Sollace/Psychedelicraft/blob/319a4ea0160d6600cffcd5f5cc9e363ceaab44a1/src/main/java/ivorius/psychedelicraft/client/render/blocks/MashTubBlockEntityRenderer.java) [Pinned face mapping](https://github.com/Sollace/Psychedelicraft/blob/319a4ea0160d6600cffcd5f5cc9e363ceaab44a1/src/main/java/ivorius/psychedelicraft/client/render/FluidBoxRenderer.java)
+- The clean Java 8 build and reobfuscation passed all 180 tests. The muted Forge 14.23.5.2864 fixture captured the submitted positions and UVs. The previous jar submitted 16 vertices for four repeats. The rebuilt jar submitted the four donor corners and mapped the full sprite across them. Water rendered at 0.45 and 0.9 blocks for 8,000 and 32,000 mB respectively.
+- A live 4,500 mB slurry batch produced one dirt and left 500 mB liquid visible. Draining the remainder showed the dirt at half a block, then right-clicking dropped exactly one dirt and cleared the render. Fixture-injected granite used its own particle sprite and an apple produced no surface. Screenshots compared the basin at matched camera positions and the separate ingredient motion regression passed again.
+- The tested jar SHA-256 is `61dd566723878fd39d176ffec96a9e20b836c49ba6f33f0006a67813a7bbcd16`. Evidence is under `run/production/runtime-qa-cycle142` in `build-production.log`, `runtime-baseline.log`, `runtime-fixed.log`, `runtime-motion.log`, `framebuffer-check.log` and the screenshots. All clients ran on Xvfb with zero master volume and OpenAL's `No Output` device.
+- Next, compare flask and distillery chamber UVs and the upper chamber threshold against the pinned renderer, including the 1.21.5 fix for the open centers.
+
 Dedicated Forge startup and multiplayer on that server remain open pending EULA acceptance.
 
 ## Repository and branch survey
