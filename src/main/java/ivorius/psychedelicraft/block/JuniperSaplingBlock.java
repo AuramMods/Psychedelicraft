@@ -13,6 +13,7 @@ import net.minecraft.block.IGrowable;
 import net.minecraft.block.SoundType;
 import net.minecraft.block.state.BlockStateContainer;
 import net.minecraft.block.state.IBlockState;
+import net.minecraft.init.Blocks;
 import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.IBlockAccess;
@@ -20,7 +21,7 @@ import net.minecraft.world.World;
 import net.minecraftforge.event.terraingen.TerrainGen;
 
 public final class JuniperSaplingBlock extends BlockBush implements IGrowable {
-    private static final AxisAlignedBB SHAPE = new AxisAlignedBB(0.1, 0, 0.1, 0.9, 0.8, 0.9);
+    private static final AxisAlignedBB SHAPE = new AxisAlignedBB(2 / 16.0, 0, 2 / 16.0, 14 / 16.0, 12 / 16.0, 14 / 16.0);
 
     JuniperSaplingBlock() {
         setDefaultState(blockState.getBaseState().withProperty(BlockSapling.STAGE, 0));
@@ -48,10 +49,17 @@ public final class JuniperSaplingBlock extends BlockBush implements IGrowable {
     }
 
     @Override
+    protected boolean canSustainBush(IBlockState state) {
+        return super.canSustainBush(state) || state.getBlock() == Blocks.MYCELIUM;
+    }
+
+    @Override
     public void updateTick(World world, BlockPos pos, IBlockState state, Random random) {
+        if (world.isRemote) return;
         super.updateTick(world, pos, state, random);
-        if (!world.isRemote && world.getBlockState(pos).getBlock() == this
-                && world.getLightFromNeighbors(pos.up()) >= 9 && random.nextInt(7) == 0) {
+        // Reading neighboring light must not pull in unloaded chunks.
+        if (world.getBlockState(pos).getBlock() == this && world.isAreaLoaded(pos, 1)
+                && world.getLight(pos.up(), false) >= 9 && random.nextInt(7) == 0) {
             grow(world, random, pos, state);
         }
     }
@@ -63,7 +71,7 @@ public final class JuniperSaplingBlock extends BlockBush implements IGrowable {
 
     @Override
     public boolean canUseBonemeal(World world, Random random, BlockPos pos, IBlockState state) {
-        return random.nextFloat() < 0.45F;
+        return world.rand.nextFloat() < 0.45D;
     }
 
     @Override

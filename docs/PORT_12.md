@@ -1583,6 +1583,14 @@ sh run/production/background-qa/run.sh "$qa" game-background Overlay-QA \
 - The original CTM reproduction and runtime logs are under `run/production/runtime-qa-cycle173`. The build is in `build-compat.log`, the focused passes are in `runtime-combined-piston.log` and `runtime-combined-vat.log`, and copied-pack startup on Forge 2860 is in `runtime-game-dj2-compat.log`.
 - A muted copy of the full Divine Journey 2.23.4 profile loaded 255 Forge mods with this exact jar and reached the pack's title screen after dismissing GroovyScript's InWorldCrafting notice. The title screen capture is `screenshot/dj2-title.png` in the same directory. Full-pack gameplay remains untested.
 
+### Cycle 174 · Juniper sapling placement and growth
+
+- Matched the pinned vanilla sapling's selection bounds and accepted mycelium, which belongs to the donor's dirt tag. The existing 1.12 dirt variants, grass and farmland remain eligible. Forge still handles other supporting blocks through its plant hook.
+- A natural growth tick requires a loaded one-block neighborhood, raw light of at least nine above the sapling and a one-in-seven roll. Bonemeal uses the world RNG and the donor's 45-percent threshold. A blocked or cancelled tree attempt preserves stage one.
+- The clean Java 8 build ran `reobfJar` and passed all 208 tests. The new regression checks an unloaded chunk edge, raw light levels eight and nine, and mycelium support. Muted Forge 2864 probes compared the old and new jar's selection bounds and mycelium placement, then verified natural stage advancement, both bonemeal stages, a physical obstruction and Forge event cancellation.
+- A fresh muted Forge client reopened the save and verified the grown tree and both stage-one saplings. The cycle jar SHA-256 is `273797d3f504b18985f9dc384ffd3e604007db9ebdd29be1c5506177e0a1fd49`. Evidence is under `run/production/runtime-qa-cycle174` in `build.log`, `runtime-baseline.log`, `runtime-final.log` and `runtime-reopen.log`. A separate start with that jar through the dedicated Forge launcher reached the EULA check and exited before opening a world. See `runtime-dedicated.log`.
+- Next, compare the honey acquisition equivalent and its native tree decoration and harvesting behavior.
+
 Dedicated Forge startup and multiplayer on that server remain open pending EULA acceptance.
 
 ## Repository and branch survey

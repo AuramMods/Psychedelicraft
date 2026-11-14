@@ -4,6 +4,7 @@ import ivorius.psychedelicraft.block.PSBlocks;
 import ivorius.psychedelicraft.block.JuniperLeavesBlock;
 import ivorius.psychedelicraft.block.TallCropBlock;
 import net.minecraft.block.Block;
+import net.minecraft.block.BlockSapling;
 import net.minecraft.block.material.Material;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.init.Blocks;
@@ -182,8 +183,42 @@ public class PlantPatchTest {
                 world.getBlockState(pos));
     }
 
+    @Test
+    public void juniperSaplingNeedsLoadedNeighborsAndLightToAdvance() {
+        PatchWorld world = new PatchWorld();
+        BlockPos pos = new BlockPos(15, 64, 8);
+        IBlockState sapling = PSBlocks.JUNIPER_SAPLING.getDefaultState();
+        world.setBlockState(pos.down(), Blocks.MYCELIUM.getDefaultState(), 2);
+        world.setBlockState(pos, sapling, 2);
+        Random successfulTick = new Random() {
+            @Override
+            public int nextInt(int bound) {
+                assertEquals(7, bound);
+                return 0;
+            }
+        };
+        assertTrue(PSBlocks.JUNIPER_SAPLING.canBlockStay(world, pos, sapling));
+
+        world.eastChunkLoaded = false;
+        world.light = 15;
+        PSBlocks.JUNIPER_SAPLING.updateTick(world, pos, sapling, successfulTick);
+        assertSame(sapling, world.getBlockState(pos));
+        assertEquals(0, world.lightReads);
+
+        world.eastChunkLoaded = true;
+        world.light = 8;
+        PSBlocks.JUNIPER_SAPLING.updateTick(world, pos, sapling, successfulTick);
+        assertSame(sapling, world.getBlockState(pos));
+        world.light = 9;
+        PSBlocks.JUNIPER_SAPLING.updateTick(world, pos, sapling, successfulTick);
+        assertSame(sapling.withProperty(BlockSapling.STAGE, 1), world.getBlockState(pos));
+    }
+
     private static final class PatchWorld extends World {
         private final Map<BlockPos, IBlockState> blocks = new HashMap<>();
+        private boolean eastChunkLoaded = true;
+        private int light;
+        private int lightReads;
 
         private PatchWorld() {
             super(null, null, new WorldProviderSurface(), new Profiler(), false);
@@ -206,13 +241,20 @@ public class PlantPatchTest {
         }
 
         @Override
+        public int getLight(BlockPos pos, boolean checkNeighbors) {
+            assertFalse(checkNeighbors);
+            lightReads++;
+            return light;
+        }
+
+        @Override
         protected IChunkProvider createChunkProvider() {
             return null;
         }
 
         @Override
         protected boolean isChunkLoaded(int x, int z, boolean allowEmpty) {
-            return true;
+            return x != 1 || eastChunkLoaded;
         }
     }
 }
