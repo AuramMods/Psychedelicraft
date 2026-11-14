@@ -3,6 +3,7 @@ package ivorius.psychedelicraft.world.gen;
 import ivorius.psychedelicraft.Psychedelicraft;
 import ivorius.psychedelicraft.block.PSBlocks;
 import ivorius.psychedelicraft.block.entity.BrushableBlockEntity;
+import ivorius.psychedelicraft.entity.DrownedEntity;
 import ivorius.psychedelicraft.fluid.physical.Waterlogging;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockFalling;
@@ -117,8 +118,18 @@ public final class WarmOceanRuinPiece extends StructureComponent {
         });
         template.getDataBlocks(origin, placement).forEach((pos, name) -> {
             if ("chest".equals(name)) placeChest(world, pos);
+            else if ("drowned".equals(name)) spawnDrowned(world, pos);
         });
         return true;
+    }
+
+    private void spawnDrowned(World world, BlockPos pos) {
+        DrownedEntity drowned = new DrownedEntity(world);
+        drowned.enablePersistence();
+        drowned.setLocationAndAngles(pos.getX() + 0.5, pos.getY(), pos.getZ() + 0.5, 0, 0);
+        drowned.onInitialSpawn(world.getDifficultyForLocation(pos), null);
+        world.spawnEntity(drowned);
+        world.setBlockState(pos, (pos.getY() > world.getSeaLevel() ? Blocks.AIR : Blocks.WATER).getDefaultState(), 2);
     }
 
     private void placeChest(World world, BlockPos pos) {

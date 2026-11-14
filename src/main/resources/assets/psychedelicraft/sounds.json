@@ -716,5 +716,131 @@
       }
     ],
     "subtitle": "subtitle.psychedelicraft.block.conduit.deactivate"
+  },
+  "entity.drowned.ambient": {
+    "sounds": [
+      {
+        "name": "psychedelicraft:mob/drowned/idle1",
+        "volume": 0.9
+      },
+      {
+        "name": "psychedelicraft:mob/drowned/idle2",
+        "volume": 0.9
+      },
+      {
+        "name": "psychedelicraft:mob/drowned/idle3",
+        "volume": 0.9
+      },
+      {
+        "name": "psychedelicraft:mob/drowned/idle4",
+        "volume": 0.9
+      },
+      {
+        "name": "psychedelicraft:mob/drowned/idle5",
+        "volume": 0.9
+      }
+    ],
+    "subtitle": "subtitle.psychedelicraft.entity.drowned.ambient"
+  },
+  "entity.drowned.ambient_water": {
+    "sounds": [
+      {
+        "name": "psychedelicraft:mob/drowned/water/idle1",
+        "volume": 0.9
+      },
+      {
+        "name": "psychedelicraft:mob/drowned/water/idle2",
+        "volume": 0.9
+      },
+      {
+        "name": "psychedelicraft:mob/drowned/water/idle3",
+        "volume": 0.9
+      },
+      {
+        "name": "psychedelicraft:mob/drowned/water/idle4",
+        "volume": 0.9
+      }
+    ],
+    "subtitle": "subtitle.psychedelicraft.entity.drowned.ambient_water"
+  },
+  "entity.drowned.death": {
+    "sounds": [
+      {
+        "name": "psychedelicraft:mob/drowned/death1",
+        "volume": 0.9
+      },
+      {
+        "name": "psychedelicraft:mob/drowned/death2",
+        "volume": 0.9
+      }
+    ],
+    "subtitle": "subtitle.psychedelicraft.entity.drowned.death"
+  },
+  "entity.drowned.death_water": {
+    "sounds": [
+      {
+        "name": "psychedelicraft:mob/drowned/water/death1",
+        "volume": 0.9
+      },
+      {
+        "name": "psychedelicraft:mob/drowned/water/death2",
+        "volume": 0.9
+      }
+    ],
+    "subtitle": "subtitle.psychedelicraft.entity.drowned.death"
+  },
+  "entity.drowned.hurt": {
+    "sounds": [
+      {
+        "name": "psychedelicraft:mob/drowned/hurt1",
+        "volume": 0.9
+      },
+      {
+        "name": "psychedelicraft:mob/drowned/hurt2",
+        "volume": 0.9
+      },
+      {
+        "name": "psychedelicraft:mob/drowned/hurt3",
+        "volume": 0.9
+      }
+    ],
+    "subtitle": "subtitle.psychedelicraft.entity.drowned.hurt"
+  },
+  "entity.drowned.hurt_water": {
+    "sounds": [
+      {
+        "name": "psychedelicraft:mob/drowned/water/hurt1",
+        "volume": 0.9
+      },
+      {
+        "name": "psychedelicraft:mob/drowned/water/hurt2",
+        "volume": 0.9
+      },
+      {
+        "name": "psychedelicraft:mob/drowned/water/hurt3",
+        "volume": 0.9
+      }
+    ],
+    "subtitle": "subtitle.psychedelicraft.entity.drowned.hurt"
+  },
+  "entity.drowned.step": {
+    "sounds": [
+      "psychedelicraft:mob/drowned/step1",
+      "psychedelicraft:mob/drowned/step2",
+      "psychedelicraft:mob/drowned/step3",
+      "psychedelicraft:mob/drowned/step4",
+      "psychedelicraft:mob/drowned/step5"
+    ],
+    "subtitle": "subtitle.psychedelicraft.entity.drowned.step"
+  },
+  "entity.drowned.swim": {
+    "sounds": [
+      "liquid/swim1",
+      "liquid/swim2",
+      "liquid/swim3",
+      "liquid/swim4",
+      "psychedelicraft:liquid/swim5"
+    ],
+    "subtitle": "subtitle.psychedelicraft.entity.drowned.swim"
   }
 }

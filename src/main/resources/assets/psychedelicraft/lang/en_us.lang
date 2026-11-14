@@ -600,3 +600,11 @@ subtitle.psychedelicraft.block.conduit.activate=Conduit activates
 subtitle.psychedelicraft.block.conduit.ambient=Conduit pulses
 subtitle.psychedelicraft.block.conduit.attack.target=Conduit attacks
 subtitle.psychedelicraft.block.conduit.deactivate=Conduit deactivates
+
+entity.psychedelicraft.drowned.name=Drowned
+subtitle.psychedelicraft.entity.drowned.ambient=Drowned gurgles
+subtitle.psychedelicraft.entity.drowned.ambient_water=Drowned gurgles
+subtitle.psychedelicraft.entity.drowned.death=Drowned dies
+subtitle.psychedelicraft.entity.drowned.hurt=Drowned hurts
+subtitle.psychedelicraft.entity.drowned.step=Drowned steps
+subtitle.psychedelicraft.entity.drowned.swim=Drowned swims

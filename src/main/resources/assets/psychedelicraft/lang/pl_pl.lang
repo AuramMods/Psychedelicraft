@@ -600,3 +600,11 @@ subtitle.psychedelicraft.block.conduit.activate=Przewodnia się włącza
 subtitle.psychedelicraft.block.conduit.ambient=Przewodnia pulsuje
 subtitle.psychedelicraft.block.conduit.attack.target=Przewodnia atakuje
 subtitle.psychedelicraft.block.conduit.deactivate=Przewodnia się wyłącza
+
+entity.psychedelicraft.drowned.name=Utopiec
+subtitle.psychedelicraft.entity.drowned.ambient=Utopiec bulgocze
+subtitle.psychedelicraft.entity.drowned.ambient_water=Utopiec bulgocze
+subtitle.psychedelicraft.entity.drowned.death=Utopiec ginie
+subtitle.psychedelicraft.entity.drowned.hurt=Utopiec cierpi
+subtitle.psychedelicraft.entity.drowned.step=Utopiec chodzi
+subtitle.psychedelicraft.entity.drowned.swim=Utopiec pływa

@@ -12,6 +12,7 @@ import org.junit.Test;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.Collection;
 import java.util.Collections;
 
 import static org.junit.Assert.assertEquals;
@@ -53,12 +54,14 @@ public class WarmOceanRuinTest {
     }
 
     @Test
-    public void allTwelveTemplatesContainOneChestMarkerAndKeepTheirFootprints() throws IOException {
-        for (int i = 1; i <= 8; i++) assertTemplate("warm_" + i, new BlockPos(6, 7, 7));
-        for (int i = 4; i <= 7; i++) assertTemplate("big_warm_" + i, new BlockPos(16, 16, 16));
+    public void allTwelveTemplatesKeepTheirFootprintsAndMarkers() throws IOException {
+        int[] smallGuardians = {0, 2, 1, 1, 1, 0, 0, 1};
+        int[] largeGuardians = {2, 4, 2, 2};
+        for (int i = 1; i <= 8; i++) assertTemplate("warm_" + i, new BlockPos(6, 7, 7), smallGuardians[i - 1]);
+        for (int i = 4; i <= 7; i++) assertTemplate("big_warm_" + i, new BlockPos(16, 16, 16), largeGuardians[i - 4]);
     }
 
-    private static void assertTemplate(String name, BlockPos size) throws IOException {
+    private static void assertTemplate(String name, BlockPos size, int guardians) throws IOException {
         String path = "/assets/psychedelicraft/structures/underwater_ruin/" + name + ".nbt";
         Template template = new Template();
         try (InputStream stream = WarmOceanRuinTest.class.getResourceAsStream(path)) {
@@ -66,6 +69,8 @@ public class WarmOceanRuinTest {
             template.read(CompressedStreamTools.readCompressed(stream));
         }
         assertEquals(size, template.getSize());
-        assertEquals(1, Collections.frequency(template.getDataBlocks(BlockPos.ORIGIN, new PlacementSettings()).values(), "chest"));
+        Collection<String> markers = template.getDataBlocks(BlockPos.ORIGIN, new PlacementSettings()).values();
+        assertEquals(name, 1, Collections.frequency(markers, "chest"));
+        assertEquals(name, guardians, Collections.frequency(markers, "drowned"));
     }
 }

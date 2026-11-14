@@ -68,6 +68,15 @@ public final class PSSounds {
     public static final SoundEvent CONDUIT_AMBIENT_SHORT = sound("block.conduit.ambient.short");
     public static final SoundEvent CONDUIT_ATTACK = sound("block.conduit.attack.target");
 
+    public static final SoundEvent DROWNED_AMBIENT = sound("entity.drowned.ambient");
+    public static final SoundEvent DROWNED_AMBIENT_WATER = sound("entity.drowned.ambient_water");
+    public static final SoundEvent DROWNED_DEATH = sound("entity.drowned.death");
+    public static final SoundEvent DROWNED_DEATH_WATER = sound("entity.drowned.death_water");
+    public static final SoundEvent DROWNED_HURT = sound("entity.drowned.hurt");
+    public static final SoundEvent DROWNED_HURT_WATER = sound("entity.drowned.hurt_water");
+    public static final SoundEvent DROWNED_STEP = sound("entity.drowned.step");
+    public static final SoundEvent DROWNED_SWIM = sound("entity.drowned.swim");
+
     private PSSounds() {
     }
 
@@ -88,6 +97,8 @@ public final class PSSounds {
                 BRUSH_GENERIC, BRUSH_SAND, BRUSH_SAND_COMPLETE, SNIFFER_EGG_CRACK, SNIFFER_EGG_HATCH, SNIFFER_EGG_PLOP,
                 SNIFFER_DEATH, SNIFFER_DIGGING, SNIFFER_DIGGING_STOP, SNIFFER_DROP_SEED, SNIFFER_EAT, SNIFFER_HAPPY,
                 SNIFFER_HURT, SNIFFER_IDLE, SNIFFER_SCENTING, SNIFFER_SEARCHING, SNIFFER_SNIFFING, SNIFFER_STEP,
-                CONDUIT_ACTIVATE, CONDUIT_DEACTIVATE, CONDUIT_AMBIENT, CONDUIT_AMBIENT_SHORT, CONDUIT_ATTACK);
+                CONDUIT_ACTIVATE, CONDUIT_DEACTIVATE, CONDUIT_AMBIENT, CONDUIT_AMBIENT_SHORT, CONDUIT_ATTACK,
+                DROWNED_AMBIENT, DROWNED_AMBIENT_WATER, DROWNED_DEATH, DROWNED_DEATH_WATER,
+                DROWNED_HURT, DROWNED_HURT_WATER, DROWNED_STEP, DROWNED_SWIM);
     }
 }

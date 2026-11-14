@@ -41,6 +41,13 @@ public final class PSEntities {
                         .name(Psychedelicraft.MOD_ID + ".sniffer")
                         .tracker(160, 3, true)
                         .egg(0x871f1a, 0x246c42)
+                        .build(),
+                EntityEntryBuilder.<DrownedEntity>create()
+                        .entity(DrownedEntity.class)
+                        .id(Psychedelicraft.id("drowned"), 6)
+                        .name(Psychedelicraft.MOD_ID + ".drowned")
+                        .tracker(128, 3, true)
+                        .egg(0x8ff1d7, 0x799c65)
                         .build());
     }
 
