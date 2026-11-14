@@ -1,5 +1,8 @@
 package ivorius.psychedelicraft.fluid.physical;
 
+import ivorius.psychedelicraft.block.MashTubBlock;
+import ivorius.psychedelicraft.block.PSBlocks;
+import ivorius.psychedelicraft.block.entity.MashTubBlockEntity;
 import ivorius.psychedelicraft.fluid.BrewFluid;
 import ivorius.psychedelicraft.fluid.FluidContents;
 import ivorius.psychedelicraft.fluid.PSFluids;
@@ -190,6 +193,31 @@ public class PhysicalFluidStateTest {
         assertEquals(0D, push.z, 0D);
         world.put(cell, Blocks.AIR.getDefaultState(), null);
         assertNull(PhysicalFluidCurrents.mixedPush(world, Material.WATER, pig));
+    }
+
+    @Test
+    public void vatBodyContactUsesFillStepsAndTheCenterBlock() {
+        FluidWorld world = new FluidWorld();
+        BlockPos center = new BlockPos(0, 64, 0);
+        MashTubBlockEntity vat = new MashTubBlockEntity();
+        vat.setPos(center);
+        world.put(center, PSBlocks.MASH_TUB.getDefaultState(), null);
+        world.tiles.put(center, vat);
+        world.put(center.east(), PSBlocks.MASH_TUB_EDGE.edgeState(1, 0), null);
+        EntityPig pig = new EntityPig(world);
+        pig.setPosition(0.5, 64.8, 0.5);
+        vat.getTank().replace(new FluidStack(PSFluids.AGAVE, 3999));
+        assertFalse(MashTubBlock.containsBody(world, pig, Material.WATER));
+        vat.getTank().replace(new FluidStack(PSFluids.AGAVE, 4000));
+        assertTrue(MashTubBlock.containsBody(world, pig, Material.WATER));
+        assertFalse(MashTubBlock.containsBody(world, pig, Material.LAVA));
+        pig.setPosition(1.5, 64.1, 0.5);
+        assertFalse(MashTubBlock.containsBody(world, pig, Material.WATER));
+        pig.setPosition(1.25, 64.1, 0.5);
+        assertTrue(MashTubBlock.containsBody(world, pig, Material.WATER));
+        vat.getTank().replace(new FluidStack(FluidRegistry.LAVA, 4000));
+        assertTrue(MashTubBlock.containsBody(world, pig, Material.LAVA));
+        assertFalse(MashTubBlock.containsBody(world, pig, Material.WATER));
     }
 
     private static final class FluidWorld extends World {

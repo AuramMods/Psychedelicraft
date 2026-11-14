@@ -53,6 +53,7 @@ public final class WaterloggingTransformer implements IClassTransformer {
     private static final String RANDOM = "Ljava/util/Random;";
     private static final String HOOKS = "ivorius/psychedelicraft/fluid/physical/Waterlogging";
     private static final String CURRENTS = "ivorius/psychedelicraft/fluid/physical/PhysicalFluidCurrents";
+    private static final String BODY_CONTACT = "ivorius/psychedelicraft/fluid/physical/FluidBodyContact";
 
     @Override
     public byte[] transform(String name, String transformedName, byte[] bytes) {
@@ -103,6 +104,7 @@ public final class WaterloggingTransformer implements IClassTransformer {
                 break;
             case ENTITY_CLASS:
                 patchPhysicalFluidEyes(type);
+                patchVatBodyContact(type);
                 break;
             case WORLD_SERVER:
                 routeScheduledTicks(type);
@@ -216,6 +218,27 @@ public final class WaterloggingTransformer implements IClassTransformer {
         finish.add(new MethodInsnNode(Opcodes.INVOKESTATIC, CURRENTS, "apply", Type.getMethodDescriptor(
                 Type.BOOLEAN_TYPE, Type.BOOLEAN_TYPE, args[2], vector), false));
         method.instructions.insertBefore(contactReturn, finish);
+    }
+
+    private static void patchVatBodyContact(ClassNode type) {
+        MethodNode water = method(type, "handleWaterMovement", "func_70072_I", "()Z");
+        MethodNode lava = method(type, "isInLava", "func_180799_ab", "()Z");
+        patchBodyContactCall(type, water, "handleMaterialAcceleration", "func_72918_a", "(" + AABB + MATERIAL + ENTITY + ")Z", "inWater");
+        patchBodyContactCall(type, lava, "isMaterialInBB", "func_72875_a", "(" + AABB + MATERIAL + ")Z", "inLava");
+    }
+
+    private static void patchBodyContactCall(ClassNode type, MethodNode method, String name, String srg, String descriptor, String hook) {
+        for (AbstractInsnNode instruction : method.instructions.toArray()) {
+            if (!matches(instruction, name, srg, descriptor)) continue;
+            MethodInsnNode call = (MethodInsnNode) instruction;
+            Type[] args = Type.getArgumentTypes(call.desc);
+            if (args.length == 2) method.instructions.insertBefore(call, new VarInsnNode(Opcodes.ALOAD, 0));
+            method.instructions.set(call, new MethodInsnNode(Opcodes.INVOKESTATIC, BODY_CONTACT, hook,
+                    Type.getMethodDescriptor(Type.BOOLEAN_TYPE, Type.getObjectType(call.owner), args[0], args[1],
+                            Type.getObjectType(type.name)), false));
+            return;
+        }
+        throw new IllegalStateException("Could not locate Forge entity body contact in " + method.name);
     }
 
     private static void patchBlock(ClassNode type) {

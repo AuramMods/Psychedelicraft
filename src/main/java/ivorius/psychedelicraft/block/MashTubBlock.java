@@ -129,41 +129,22 @@ public final class MashTubBlock extends BlockContainer {
         return fluid == null ? 0 : fluid.getFluid().getLuminosity(fluid);
     }
 
-    @Override
-    public Boolean isEntityInsideMaterial(IBlockAccess world, BlockPos pos, IBlockState state, Entity entity,
-                                          double y, Material material, boolean testingHead) {
-        // The donor's vat hook handles body contact. The containing block remains wood.
-        return !testingHead && (material == Material.WATER || material == Material.LAVA)
-                ? intersectsLiquid(world, pos, entity.getEntityBoundingBox(), material) : null;
-    }
-
-    @Override
-    public Boolean isAABBInsideMaterial(World world, BlockPos pos, AxisAlignedBB box, Material material) {
-        return material == Material.WATER || material == Material.LAVA ? intersectsLiquid(world, pos, box, material) : null;
-    }
-
-    @Override
-    public float getBlockLiquidHeight(World world, BlockPos pos, IBlockState state, Material material) {
-        MashTubBlockEntity vat = material == Material.WATER || material == Material.LAVA ? getVat(world, pos) : null;
-        return vat != null && matchesMaterial(vat.getTank().getFluid(), material) ? vat.getFluidSurface() : 0;
-    }
-
-    private static boolean intersectsLiquid(IBlockAccess world, BlockPos pos, AxisAlignedBB box, Material material) {
-        MashTubBlockEntity vat = getVat(world, pos);
-        if (vat == null) return false;
-        FluidStack fluid = vat.getTank().getFluid();
-        if (!matchesMaterial(fluid, material)) return false;
-        BlockPos center = vat.getPos();
-        return box.intersects(Math.max(pos.getX(), center.getX() - INNER_EDGE), center.getY() + 0.0625,
-                Math.max(pos.getZ(), center.getZ() - INNER_EDGE),
-                Math.min(pos.getX() + 1, center.getX() + 1 + INNER_EDGE), center.getY() + vat.getFluidSurface(),
-                Math.min(pos.getZ() + 1, center.getZ() + 1 + INNER_EDGE));
-    }
-
-    private static boolean matchesMaterial(@Nullable FluidStack fluid, Material material) {
-        if (fluid == null) return false;
-        if (material == Material.LAVA) return fluid.getFluid() == FluidRegistry.LAVA;
-        return fluid.getFluid() == FluidRegistry.WATER || fluid.getFluid() instanceof WorldFluid;
+    public static boolean containsBody(World world, Entity entity, Material material) {
+        if (material != Material.WATER && material != Material.LAVA) return false;
+        AxisAlignedBB box = entity.getEntityBoundingBox().shrink(0.001D);
+        BlockPos min = new BlockPos(box.minX, box.minY, box.minZ);
+        BlockPos max = new BlockPos(box.maxX, box.maxY, box.maxZ);
+        for (BlockPos pos : BlockPos.getAllInBoxMutable(min, max)) {
+            if (!world.isBlockLoaded(pos) || world.getBlockState(pos).getBlock() != PSBlocks.MASH_TUB) continue;
+            MashTubBlockEntity vat = getVat(world, pos);
+            if (vat == null) continue;
+            FluidStack fluid = vat.getTank().getFluid();
+            // Body contact starts at the first of the donor's eight fill levels.
+            if (fluid == null || fluid.amount * 8L < vat.getTank().getCapacity()) continue;
+            if (material == Material.LAVA ? fluid.getFluid() == FluidRegistry.LAVA
+                    : fluid.getFluid() == FluidRegistry.WATER || fluid.getFluid() instanceof WorldFluid) return true;
+        }
+        return false;
     }
 
     @Override
