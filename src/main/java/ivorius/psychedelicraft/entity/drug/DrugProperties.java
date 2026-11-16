@@ -4,11 +4,14 @@
 package ivorius.psychedelicraft.entity.drug;
 
 import ivorius.psychedelicraft.entity.drug.influence.DrugInfluence;
+import ivorius.psychedelicraft.entity.drug.type.HarmoniumDrug;
+import ivorius.psychedelicraft.Psychedelicraft;
 import ivorius.psychedelicraft.util.NbtSerialisable;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
 import net.minecraft.nbt.Tag;
 import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.InteractionHand;
 
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
@@ -19,6 +22,8 @@ public final class DrugProperties implements NbtSerialisable {
     private final Map<DrugType, Drug> drugs = new LinkedHashMap<>();
     private final List<DrugInfluence> influences = new ArrayList<>();
     private boolean dirty;
+    private boolean wakePending;
+    private final PeyoteFlight peyoteFlight = new PeyoteFlight();
 
     public void addToDrug(DrugType type, double value) {
         drugs.computeIfAbsent(type, DrugType::create).addToDesiredValue(value);
@@ -28,6 +33,28 @@ public final class DrugProperties implements NbtSerialisable {
     public void addInfluence(DrugInfluence influence) {
         influences.add(influence);
         dirty = true;
+    }
+
+    public void setDrugValue(DrugType type, double value) {
+        drugs.computeIfAbsent(type, DrugType::create).setDesiredValue(value);
+        dirty = true;
+    }
+
+    public void setDrugLocked(DrugType type, boolean locked) {
+        drugs.computeIfAbsent(type, DrugType::create).setLocked(locked);
+        dirty = true;
+    }
+
+    public void addToHarmonium(double value, int color) {
+        addToDrug(DrugType.HARMONIUM, value);
+        getHarmonium().mixColor(value, color);
+    }
+
+    public HarmoniumDrug getHarmonium() { return (HarmoniumDrug) drugs.get(DrugType.HARMONIUM); }
+
+    public void inhale(DrugInfluence influence, Player player, float nicotineSaturation) {
+        addInfluence(influence);
+        if (influence.drugType() == DrugType.TOBACCO) StomachFoodStats.restoreSaturation(player, nicotineSaturation);
     }
 
     public double getActiveValue(DrugType type) {
@@ -41,9 +68,60 @@ public final class DrugProperties implements NbtSerialisable {
         return total;
     }
 
+    public float getMultiplier(Drug.Modifier modifier) {
+        float total = 1;
+        for (Drug drug : drugs.values()) total *= modifier.get(drug);
+        return total;
+    }
+
+    public float blendStrength(float strength, Drug.Modifier modifier) {
+        for (Drug drug : drugs.values()) strength += (1 - strength) * modifier.get(drug);
+        return strength;
+    }
+
+    public float getDesaturation(float strength) { return blendStrength(strength, Drug::desaturationHallucinationStrength); }
+    public float getColorIntensification(float strength) { return blendStrength(strength, Drug::superSaturationHallucinationStrength); }
+
+    public void tick(int age) { tick(age, null); }
+
     public void tick(int age, Player player) {
+        if (player != null && wakePending && !player.isSleeping()) {
+            wakePending = false;
+            onAwoken(player);
+        }
+        if (player != null && player.level().getGameRules().getBoolean(Psychedelicraft.SLEEP_DEPRIVATION)) {
+            if (!drugs.containsKey(DrugType.SLEEP_DEPRIVATION)) addToDrug(DrugType.SLEEP_DEPRIVATION, 0);
+            if (age % 100 == 0) dirty = true;
+        }
         if (age % 5 == 0 && influences.removeIf(influence -> influence.update(this))) dirty = true;
         for (Drug drug : drugs.values()) drug.update(this, player);
+        if (player != null) {
+            if (!player.level().isClientSide) peyoteFlight.tick(player, getActiveValue(DrugType.PEYOTE));
+            if (player.isAlive()) {
+                if (player.level().isClientSide && player.isLocalPlayer()) {
+                    if (player.onGround() && player.getRandom().nextFloat() < getModifier(Drug::randomJumpChance)) player.jumpFromGround();
+                    if (!player.swinging && player.getRandom().nextFloat() < getModifier(Drug::randomSwingChance)) player.swing(InteractionHand.MAIN_HAND);
+                } else if (!player.level().isClientSide && player.getRandom().nextFloat() < getModifier(Drug::drowsiness)) {
+                    player.causeFoodExhaustion(0.05F);
+                }
+            }
+        }
+    }
+
+    void queueWakeUp() { wakePending = true; }
+    public void onAwoken() { onAwoken(null); }
+    private void onAwoken(Player player) {
+        for (Drug drug : new ArrayList<>(drugs.values())) drug.onWakeUp(this, player);
+        influences.clear();
+        dirty = true;
+    }
+
+    public String sleepWarning() {
+        for (Drug drug : drugs.values()) {
+            String warning = drug.sleepWarning();
+            if (warning != null) return warning;
+        }
+        return null;
     }
 
     public void markDirty() { dirty = true; }
@@ -62,6 +140,7 @@ public final class DrugProperties implements NbtSerialisable {
         ListTag pending = new ListTag();
         influences.forEach(influence -> pending.add(influence.toNbt()));
         tag.put("drugInfluences", pending);
+        if (peyoteFlight.isGranted()) tag.putBoolean("peyoteFlightGranted", true);
     }
 
     @Override
@@ -80,6 +159,7 @@ public final class DrugProperties implements NbtSerialisable {
         for (int i = 0; i < pending.size(); i++) {
             DrugInfluence.loadFromNbt(pending.getCompound(i)).ifPresent(influences::add);
         }
+        peyoteFlight.restoreGrant(tag.getBoolean("peyoteFlightGranted"));
         dirty = false;
     }
 }

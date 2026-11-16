@@ -6,7 +6,7 @@ Psychedelicraft
 ![Downloads](https://img.shields.io/github/downloads/Sollace/Psychedelicraft/total.svg?color=yellowgreen)
 ![License](https://img.shields.io/github/license/Sollace/Psychedelicraft)
 
-This branch is developing the Minecraft 1.20.1 Forge port. The initial mushroom slice is in progress. See the [1.20.1 port report](docs/PORT_1201.md) for migration coverage and verification.
+This branch is developing the Minecraft 1.20.1 Forge port. The effect registry, initial consumables and core gameplay hooks are implemented; the full content and audiovisual migration is in progress. See the [1.20.1 port report](docs/PORT_1201.md) for migration coverage and verification.
 
 The One And Only, accept no substitutes!
 
@@ -38,7 +38,7 @@ and you may use this mod in modpacks.
 Installation
 ============
 
-Use Minecraft **1.20.1**, **Java 17** and **Forge 47.4.28**. This branch currently contains an initial mushroom slice. The feature checklist tracks the remaining port.
+Use Minecraft **1.20.1**, **Java 17** and **Forge 47.4.28**. This branch currently contains the effect foundation and initial consumables. The feature checklist tracks the remaining port.
 
 Build with a Java 17 JDK.
 

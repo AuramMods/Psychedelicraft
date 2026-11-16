@@ -1,0 +1,89 @@
+/*
+ * Copyright (c) 2014, Lukas Tenbrink.
+ * Created by Sollace on Feb 6 2023.
+ */
+
+package ivorius.psychedelicraft.entity.drug.type;
+
+import javax.annotation.Nullable;
+
+import ivorius.psychedelicraft.PSDamageTypes;
+import ivorius.psychedelicraft.entity.drug.DrugProperties;
+import ivorius.psychedelicraft.entity.drug.DrugType;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.util.Mth;
+
+public final class LsdDrug extends SimpleDrug {
+    private final boolean harmful;
+
+    public LsdDrug(double decreaseSpeed, double decreaseSpeedPlus, boolean harmful) {
+        super(decreaseSpeed, decreaseSpeedPlus);
+        this.harmful = harmful;
+    }
+
+    @Override
+    public void update(DrugProperties properties, @Nullable Player player) {
+        if (harmful && getActiveValue() >= 0.99F) {
+            if (properties.getActiveValue(DrugType.CAFFEINE) > 0) {
+                properties.addToDrug(DrugType.CAFFEINE, -0.5);
+                scaleDesiredValue(0.5);
+            } else if (player != null && !player.level().isClientSide) {
+                player.hurt(PSDamageTypes.of(player, PSDamageTypes.STROKE), 1);
+            }
+        }
+        super.update(properties, player);
+    }
+
+    @Override
+    public float colorHallucinationStrength() {
+        return (float) Math.max(0, getActiveValue() - 0.6F) * 2.8F;
+    }
+
+    @Override
+    public float movementHallucinationStrength() {
+        return (float) Math.max(0, getActiveValue() - 0.6F) * 1.9F;
+    }
+
+    @Override
+    public float weightlessness() {
+        double active = getActiveValue();
+        return (float) active * (active > 0.6F ? 0.8F : 0.2F);
+    }
+
+    @Override
+    public float handTrembleStrength() {
+        return activeRamp(0.6F);
+    }
+
+    @Override
+    public float viewTrembleStrength() {
+        return activeRamp(0.8F);
+    }
+
+    @Override
+    public float soundVolumeModifier() {
+        float ramp = (Mth.clamp(ticksActive(), 50, 250) - 50) / 200F;
+        return 1 + (float) getActiveValue() * 1.75F * ramp;
+    }
+
+    @Override
+    public float superSaturationHallucinationStrength() {
+        return (float) getActiveValue() * 0.8F;
+    }
+
+    @Override
+    public float hungerSuppression() {
+        return (float) getActiveValue() * 0.2F;
+    }
+
+    @Override
+    public float extraBlockReach() {
+        double intensity = getActiveValue();
+        return (float) (Math.min(1, intensity / 0.01) + 6 * Math.pow(intensity, 1.75));
+    }
+
+    @Override
+    public float bloomStrength() {
+        return (float) getActiveValue() * 0.12F;
+    }
+}
