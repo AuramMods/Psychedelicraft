@@ -30,8 +30,11 @@ public class PortableFluidItem extends Item {
     @Override public InteractionResult onItemUseFirst(ItemStack stack,UseOnContext context){
         Player player=context.getPlayer();Level level=context.getLevel();
         if(player==null||level.isClientSide||!level.mayInteract(player,context.getClickedPos()))return InteractionResult.PASS;
+        var block=level.getBlockState(context.getClickedPos()).getBlock();
+        if(block instanceof ivorius.psychedelicraft.block.BarrelBlock||block instanceof ivorius.psychedelicraft.block.MashTubBlock||block instanceof ivorius.psychedelicraft.block.MashTubWallBlock)return InteractionResult.PASS;
         return FluidUtil.interactWithFluidHandler(player,context.getHand(),level,context.getClickedPos(),context.getClickedFace())?InteractionResult.SUCCESS:InteractionResult.PASS;
     }
+    @Override public InteractionResult useOn(UseOnContext context){return ivorius.psychedelicraft.block.PlacedDrinksBlock.placeOnBlock(context);}
     @Override public InteractionResultHolder<ItemStack> use(Level level,Player player,InteractionHand hand){
         ItemStack stack=player.getItemInHand(hand);if(serving(stack).isEmpty())return InteractionResultHolder.pass(stack);
         player.startUsingItem(hand);return InteractionResultHolder.consume(stack);

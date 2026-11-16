@@ -3,5 +3,25 @@
     "sounds": [
       "psychedelicraft:breath"
     ]
+  },
+  "block.bottle_rack.use": {
+    "subtitle": "subtitle.psychedelicraft.bottle_rack_use",
+    "sounds": [
+      {
+        "name": "minecraft:block.wood.place",
+        "type": "event"
+      }
+    ]
+  },
+  "block.placed_drink.set_down": {
+    "subtitle": "subtitles.block.generic.place",
+    "sounds": [
+      {
+        "name": "minecraft:block.glass.hit",
+        "type": "event",
+        "volume": 0.8,
+        "pitch": 1.4
+      }
+    ]
   }
 }

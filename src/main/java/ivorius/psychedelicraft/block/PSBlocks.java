@@ -36,6 +36,10 @@ public final class PSBlocks {
     public static final RegistryObject<BarrelBlock> DARK_OAK_BARREL=BLOCKS.register("dark_oak_barrel",()->new BarrelBlock(Blocks.DARK_OAK_PLANKS));
     public static final RegistryObject<MashTubBlock> MASH_TUB=BLOCKS.register("mash_tub",MashTubBlock::new);
     public static final RegistryObject<MashTubWallBlock> MASH_TUB_EDGE=BLOCKS.register("mash_tub_edge",MashTubWallBlock::new);
+    public static final RegistryObject<PlacedDrinksBlock> PLACED_DRINK=BLOCKS.register("placed_drink",PlacedDrinksBlock::new);
+    public static final RegistryObject<BottleRackBlock> BOTTLE_RACK=BLOCKS.register("bottle_rack",BottleRackBlock::new);
+    public static final RegistryObject<LabPropBlock> BUNSEN_BURNER=BLOCKS.register("bunsen_burner",LabPropBlock::new);
+    public static final RegistryObject<LabPropBlock.Tray> TRAY=BLOCKS.register("tray",LabPropBlock.Tray::new);
     private PSBlocks() {}
     private static BlockBehaviour.Properties plant() {
         return BlockBehaviour.Properties.of().noCollission().noOcclusion().instabreak().randomTicks().sound(SoundType.GRASS);

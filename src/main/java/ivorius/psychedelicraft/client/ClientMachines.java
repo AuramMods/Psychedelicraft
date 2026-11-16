@@ -6,6 +6,8 @@ import ivorius.psychedelicraft.client.render.blocks.DryingTableRenderer;
 import ivorius.psychedelicraft.client.render.blocks.FlaskRenderer;
 import ivorius.psychedelicraft.client.render.blocks.BarrelRenderer;
 import ivorius.psychedelicraft.client.render.blocks.MashTubRenderer;
+import ivorius.psychedelicraft.client.render.blocks.PlacedDrinksRenderer;
+import ivorius.psychedelicraft.client.render.blocks.BottleRackRenderer;
 import ivorius.psychedelicraft.client.screen.FluidMachineScreen;
 import ivorius.psychedelicraft.client.screen.DryingTableScreen;
 import ivorius.psychedelicraft.screen.PSMenus;
@@ -20,5 +22,5 @@ import net.minecraftforge.fml.event.lifecycle.FMLClientSetupEvent;
 public final class ClientMachines {
     private ClientMachines(){}
     @SubscribeEvent public static void setup(FMLClientSetupEvent event){event.enqueueWork(()->{MenuScreens.register(PSMenus.DRYING_TABLE.get(),DryingTableScreen::new);MenuScreens.register(PSMenus.FLUID_MACHINE.get(),FluidMachineScreen::new);});}
-    @SubscribeEvent public static void renderers(EntityRenderersEvent.RegisterRenderers event){event.registerBlockEntityRenderer(PSBlockEntities.DRYING_TABLE.get(),DryingTableRenderer::new);event.registerBlockEntityRenderer(PSBlockEntities.FLASK.get(),FlaskRenderer::new);event.registerBlockEntityRenderer(PSBlockEntities.DISTILLERY.get(),FlaskRenderer::new);event.registerBlockEntityRenderer(PSBlockEntities.BARREL.get(),BarrelRenderer::new);event.registerBlockEntityRenderer(PSBlockEntities.MASH_TUB.get(),MashTubRenderer::new);}
+    @SubscribeEvent public static void renderers(EntityRenderersEvent.RegisterRenderers event){event.registerBlockEntityRenderer(PSBlockEntities.DRYING_TABLE.get(),DryingTableRenderer::new);event.registerBlockEntityRenderer(PSBlockEntities.FLASK.get(),FlaskRenderer::new);event.registerBlockEntityRenderer(PSBlockEntities.DISTILLERY.get(),FlaskRenderer::new);event.registerBlockEntityRenderer(PSBlockEntities.BARREL.get(),BarrelRenderer::new);event.registerBlockEntityRenderer(PSBlockEntities.MASH_TUB.get(),MashTubRenderer::new);event.registerBlockEntityRenderer(PSBlockEntities.PLACED_DRINK.get(),PlacedDrinksRenderer::new);event.registerBlockEntityRenderer(PSBlockEntities.BOTTLE_RACK.get(),BottleRackRenderer::new);}
 }

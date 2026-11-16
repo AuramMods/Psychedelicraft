@@ -19,6 +19,7 @@ public final class SmokeableItem extends SmokingItem {
         super(uses,25,burnTime);this.color=color;this.nicotineSaturation=nicotineSaturation;this.influences=influences.clone();
     }
     SmokeableItem stackable(){freshStacks=true;return this;}
+    @Override public net.minecraft.world.InteractionResult useOn(net.minecraft.world.item.context.UseOnContext context){return ivorius.psychedelicraft.block.PlacedDrinksBlock.placeOnBlock(context);}
     @Override public int getMaxStackSize(ItemStack stack){return freshStacks&&!stack.isDamaged()?64:1;}
     @Override public ItemStack finishUsingItem(ItemStack stack,Level level,LivingEntity entity){
         if(level.isClientSide)return stack;

@@ -3,6 +3,8 @@
   "values": [
     "psychedelicraft:iron_drying_table",
     "psychedelicraft:flask",
-    "psychedelicraft:distillery"
+    "psychedelicraft:distillery",
+    "psychedelicraft:bunsen_burner",
+    "psychedelicraft:tray"
   ]
 }

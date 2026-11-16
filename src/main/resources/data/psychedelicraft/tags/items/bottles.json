@@ -1,6 +1,10 @@
 {
   "replace": false,
   "values": [
+    {
+      "id": "psychedelicraft:molotov_cocktail",
+      "required": false
+    },
     "psychedelicraft:bottle"
   ]
 }

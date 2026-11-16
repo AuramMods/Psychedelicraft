@@ -483,5 +483,7 @@
   "item.psychedelicraft.nautilus_shell": "Muszla łodzika",
   "item.psychedelicraft.trident": "Trójząb",
   "fluid.status.stew": "Maceracja",
-  "time.until.stew": "Maceracja zakończy się za %s"
+  "time.until.stew": "Maceracja zakończy się za %s",
+  "subtitle.psychedelicraft.bottle_rack_use": "Stojak na butelki stuka",
+  "block.psychedelicraft.placed_drink": "Ustawione napoje"
 }

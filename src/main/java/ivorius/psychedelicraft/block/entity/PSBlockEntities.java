@@ -16,5 +16,7 @@ public final class PSBlockEntities {
     public static final RegistryObject<BlockEntityType<BarrelBlockEntity>> BARREL=TYPES.register("barrel",()->BlockEntityType.Builder.of(BarrelBlockEntity::new,PSBlocks.OAK_BARREL.get(),PSBlocks.BIRCH_BARREL.get(),PSBlocks.SPRUCE_BARREL.get(),PSBlocks.ACACIA_BARREL.get(),PSBlocks.JUNGLE_BARREL.get(),PSBlocks.DARK_OAK_BARREL.get()).build(null));
     public static final RegistryObject<BlockEntityType<MashTubBlockEntity>> MASH_TUB=TYPES.register("mash_tub",()->BlockEntityType.Builder.of(MashTubBlockEntity::new,PSBlocks.MASH_TUB.get()).build(null));
     public static final RegistryObject<BlockEntityType<MashTubEdgeBlockEntity>> MASH_TUB_EDGE=TYPES.register("mash_tub_edge",()->BlockEntityType.Builder.of(MashTubEdgeBlockEntity::new,PSBlocks.MASH_TUB_EDGE.get()).build(null));
+    public static final RegistryObject<BlockEntityType<PlacedDrinkBlockEntity>> PLACED_DRINK=TYPES.register("placed_drink",()->BlockEntityType.Builder.of(PlacedDrinkBlockEntity::new,PSBlocks.PLACED_DRINK.get()).build(null));
+    public static final RegistryObject<BlockEntityType<BottleRackBlockEntity>> BOTTLE_RACK=TYPES.register("bottle_rack",()->BlockEntityType.Builder.of(BottleRackBlockEntity::new,PSBlocks.BOTTLE_RACK.get()).build(null));
     private PSBlockEntities(){}
 }
