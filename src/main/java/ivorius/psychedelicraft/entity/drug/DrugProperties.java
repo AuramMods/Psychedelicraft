@@ -23,6 +23,7 @@ public final class DrugProperties implements NbtSerialisable {
     private final List<DrugInfluence> influences = new ArrayList<>();
     private boolean dirty;
     private boolean wakePending;
+    private int smokeTicks,smokeColor;
     private final PeyoteFlight peyoteFlight = new PeyoteFlight();
 
     public void addToDrug(DrugType type, double value) {
@@ -55,6 +56,11 @@ public final class DrugProperties implements NbtSerialisable {
     public void inhale(DrugInfluence influence, Player player, float nicotineSaturation) {
         addInfluence(influence);
         if (influence.drugType() == DrugType.TOBACCO) StomachFoodStats.restoreSaturation(player, nicotineSaturation);
+    }
+
+    public boolean isBreathingSmoke(){return smokeTicks>0;}
+    public void startBreathingSmoke(Player player,int color){
+        smokeTicks=20+player.getRandom().nextInt(10);smokeColor=color&0xffffff;dirty=true;SmokeEffects.playBreath(player);
     }
 
     public double getActiveValue(DrugType type) {
@@ -106,6 +112,10 @@ public final class DrugProperties implements NbtSerialisable {
                 }
             }
         }
+        if(smokeTicks>0){
+            smokeTicks--;
+            if(smokeTicks>10&&player!=null&&!player.level().isClientSide)SmokeEffects.exhale(player,smokeColor);
+        }
     }
 
     void queueWakeUp() { wakePending = true; }
@@ -141,6 +151,7 @@ public final class DrugProperties implements NbtSerialisable {
         influences.forEach(influence -> pending.add(influence.toNbt()));
         tag.put("drugInfluences", pending);
         if (peyoteFlight.isGranted()) tag.putBoolean("peyoteFlightGranted", true);
+        if(smokeTicks>0){tag.putInt("smokeTicks",smokeTicks);tag.putInt("smokeColor",smokeColor);}
     }
 
     @Override
@@ -160,6 +171,7 @@ public final class DrugProperties implements NbtSerialisable {
             DrugInfluence.loadFromNbt(pending.getCompound(i)).ifPresent(influences::add);
         }
         peyoteFlight.restoreGrant(tag.getBoolean("peyoteFlightGranted"));
+        smokeTicks=Math.max(0,Math.min(29,tag.getInt("smokeTicks")));smokeColor=tag.getInt("smokeColor")&0xffffff;
         dirty = false;
     }
 }

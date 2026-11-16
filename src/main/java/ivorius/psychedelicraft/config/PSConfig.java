@@ -9,6 +9,7 @@ public final class PSConfig {
     public static final ForgeConfigSpec COMMON;
     public static final ForgeConfigSpec.IntValue DRYING_TABLE_TICKS;
     public static final ForgeConfigSpec.IntValue IRON_DRYING_TABLE_TICKS;
+    public static final ForgeConfigSpec.BooleanValue ENABLE_HARMONIUM;
     public static final Map<String,GenerationFeature> GENERATION = new LinkedHashMap<>();
     static {
         ForgeConfigSpec.Builder builder = new ForgeConfigSpec.Builder();
@@ -24,6 +25,7 @@ public final class PSConfig {
         }
         builder.pop();
         builder.push("balancing");
+        ENABLE_HARMONIUM=builder.define("enableHarmonium",true);
         DRYING_TABLE_TICKS=builder.comment("Ticks at maximum heat to finish a wooden drying-table batch.")
                 .defineInRange("dryingTableTickDuration",16*60*20,1,Integer.MAX_VALUE);
         IRON_DRYING_TABLE_TICKS=builder.comment("Ticks at maximum heat to finish an iron drying-table batch.")

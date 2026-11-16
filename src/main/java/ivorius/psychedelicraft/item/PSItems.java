@@ -9,6 +9,8 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.BlockItem;
+import net.minecraft.world.item.DyeColor;
+import ivorius.psychedelicraft.config.PSConfig;
 import net.minecraft.world.food.FoodProperties;
 import ivorius.psychedelicraft.block.PSBlocks;
 import net.minecraft.world.level.block.Block;
@@ -64,12 +66,29 @@ public final class PSItems {
 
     public static final RegistryObject<Item> DRYING_TABLE = ITEMS.register("drying_table",()->new BlockItem(PSBlocks.DRYING_TABLE.get(),new Item.Properties()));
     public static final RegistryObject<Item> IRON_DRYING_TABLE = ITEMS.register("iron_drying_table",()->new BlockItem(PSBlocks.IRON_DRYING_TABLE.get(),new Item.Properties()));
+    public static final RegistryObject<SmokeableItem> JOINT=ITEMS.register("joint",()->new SmokeableItem(2,20,0xe6e6e6,
+            new DrugInfluence(DrugType.CANNABIS,DrugInfluence.INHALED_DELAY,.002,.001,.20)).stackable());
+    public static final RegistryObject<SmokeableItem> PEYOTE_JOINT=ITEMS.register("peyote_joint",()->new SmokeableItem(2,20,0x80e666,
+            new DrugInfluence(DrugType.PEYOTE,DrugInfluence.INHALED_DELAY,.003,.0015,.4),
+            new DrugInfluence(DrugType.TOBACCO,DrugInfluence.IMMEDIATE,.1,.02,.1)).stackable());
+    public static final RegistryObject<SmokeableItem> CIGARETTE=ITEMS.register("cigarette",()->new SmokeableItem(1,50,0xffffff,
+            new DrugInfluence(DrugType.TOBACCO,DrugInfluence.IMMEDIATE,.1,.02,.7)));
+    public static final RegistryObject<SmokeableItem> CIGAR=ITEMS.register("cigar",()->new SmokeableItem(3,80,0x999980,4F,
+            new DrugInfluence(DrugType.TOBACCO,DrugInfluence.IMMEDIATE,.1,.02,.7)));
+    public static final RegistryObject<HarmoniumItem> HARMONIUM=ITEMS.register("harmonium",HarmoniumItem::new);
+    public static final RegistryObject<BongItem> SMOKING_PIPE=ITEMS.register("smoking_pipe",()->smokingTool(false));
+    public static final RegistryObject<BongItem> BONG=ITEMS.register("bong",()->smokingTool(true));
 
     public static final DeferredRegister<CreativeModeTab> TABS = DeferredRegister.create(Registries.CREATIVE_MODE_TAB,Psychedelicraft.MOD_ID);
     public static final RegistryObject<CreativeModeTab> MAIN_TAB = TABS.register("main", () -> CreativeModeTab.builder()
             .title(Component.translatable("itemGroup.psychedelicraft"))
             .icon(() -> new ItemStack(COFFEE_BEANS.get()))
-            .displayItems((parameters, output) -> ITEMS.getEntries().forEach(item -> output.accept(item.get()))).build());
+            .displayItems((parameters, output) -> ITEMS.getEntries().forEach(item -> {
+                if(item.get()!=HARMONIUM.get())output.accept(item.get());
+                else if(PSConfig.ENABLE_HARMONIUM.get())for(DyeColor dye:DyeColor.values()){
+                    ItemStack stack=new ItemStack(item.get());HarmoniumItem.setColor(stack,HarmoniumItem.packColor(dye.getTextureDiffuseColors()));output.accept(stack);
+                }
+            })).build());
 
     private PSItems() {}
     private static RegistryObject<Item> seed(String id, Supplier<? extends Block> block) {
@@ -80,5 +99,14 @@ public final class PSItems {
     }
     private static RegistryObject<Item> powder(String id, DrugType type) {
         return ITEMS.register(id, () -> new PowderItem(new DrugInfluence(type, DrugInfluence.IMMEDIATE, 0.002, 0.003, 0.35)));
+    }
+    private static BongItem smokingTool(boolean bong){
+        int delay=bong?DrugInfluence.IMMEDIATE:DrugInfluence.INHALED_DELAY;
+        return new BongItem(bong?128:50,bong?0:200,bong)
+                .consumes(DRIED_CANNABIS_BUDS.get(),new DrugInfluence(DrugType.CANNABIS,delay,.002,.001,bong?.2:.25))
+                .consumes(DRIED_TOBACCO.get(),new DrugInfluence(DrugType.TOBACCO,delay,.1,.02,bong?.6:.8))
+                .consumes(DRIED_BELLADONNA_LEAF.get(),new DrugInfluence(DrugType.ATROPINE,delay,.4,.1,bong?.4:.9))
+                .consumes(DRIED_JIMSONWEED_LEAF.get(),new DrugInfluence(DrugType.ATROPINE,delay,.5,.1,bong?.1:.2))
+                .consumes(HARMONIUM.get(),stack->DrugInfluence.harmonium(delay,bong?.9:.65,HarmoniumItem.getColor(stack)));
     }
 }

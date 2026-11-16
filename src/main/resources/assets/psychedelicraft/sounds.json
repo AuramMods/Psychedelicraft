@@ -1,0 +1,7 @@
+{
+  "entity.player.breath": {
+    "sounds": [
+      "psychedelicraft:breath"
+    ]
+  }
+}
