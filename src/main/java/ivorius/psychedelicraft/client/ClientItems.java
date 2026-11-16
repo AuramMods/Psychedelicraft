@@ -13,6 +13,8 @@ public final class ClientItems {
     private ClientItems() {}
     @SubscribeEvent public static void setup(FMLClientSetupEvent event) {
         event.enqueueWork(() -> {
+            ivorius.psychedelicraft.block.PSBlocks.BLOCKS.getEntries().forEach(block ->
+                    net.minecraft.client.renderer.ItemBlockRenderTypes.setRenderLayer(block.get(),net.minecraft.client.renderer.RenderType.cutout()));
             for (var item : java.util.List.of(PSItems.COCAINE_POWDER, PSItems.OBSIDIAN_DUST)) {
                 ItemProperties.register(item.get(), Psychedelicraft.id("using"),
                         (stack, level, entity, seed) -> entity != null && entity.isUsingItem() && entity.getUseItem() == stack ? 1 : 0);
