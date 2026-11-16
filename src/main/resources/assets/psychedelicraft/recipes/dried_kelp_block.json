@@ -1,6 +1,0 @@
-{
-  "type": "minecraft:crafting_shaped",
-  "pattern": ["KKK", "KKK", "KKK"],
-  "key": {"K": {"item": "psychedelicraft:dried_kelp"}},
-  "result": {"item": "psychedelicraft:dried_kelp_block"}
-}

@@ -6,7 +6,7 @@ Psychedelicraft
 ![Downloads](https://img.shields.io/github/downloads/Sollace/Psychedelicraft/total.svg?color=yellowgreen)
 ![License](https://img.shields.io/github/license/Sollace/Psychedelicraft)
 
-This branch is developing the Minecraft 1.12.2 Forge port. See the [port report](docs/PORT_12.md) for current feature coverage and test results.
+This branch is developing the Minecraft 1.20.1 Forge port. The initial mushroom slice is in progress. See the [1.20.1 port report](docs/PORT_1201.md) for migration coverage and verification.
 
 The One And Only, accept no substitutes!
 
@@ -38,37 +38,14 @@ and you may use this mod in modpacks.
 Installation
 ============
 
-Use Minecraft **1.12.2**, **Java 8**, and the tested Forge build **14.23.5.2864**. [Forge 14.23.5.2864 installer](https://maven.minecraftforge.net/net/minecraftforge/forge/1.12.2-14.23.5.2864/forge-1.12.2-14.23.5.2864-installer.jar)
+Use Minecraft **1.20.1**, **Java 17** and **Forge 47.4.28**. This branch currently contains an initial mushroom slice. The feature checklist tracks the remaining port.
 
-1. Run the Forge installer with **Install client** and select the resulting Forge profile in your launcher. Set that profile's game directory to the instance you want to mod.
-2. Copy `psychedelicraft-1.12.2-port.1.jar` into that instance's `mods` folder. The build below produces this jar. Start the Forge profile and confirm Psychedelicraft appears in **Mods**.
-3. Create a new 1.12.2 world. The port targets 1.12.2 saves.
-
-Psychedelicraft requires Forge only. For in-game recipe browsing, install the optional **Just Enough Items (JEI) 4.16.1.302 for 1.12.2** in the client's `mods` folder.
-
-For a dedicated server, run the same Forge installer with **Install server** in a new server directory. Copy the same Psychedelicraft jar into its `mods` folder and launch the Forge jar from that directory with Java 8.
-
-```sh
-java -jar forge-1.12.2-14.23.5.2864.jar nogui
-```
-
-Read and accept the Minecraft EULA in the generated `eula.txt` before starting the server again. Joining clients need the same Psychedelicraft build.
-
-Explosion drop decay follows the 1.20.1 defaults. `blockExplosionDropDecay` and `mobExplosionDropDecay` default to `true`, and `tntExplosionDropDecay` defaults to `false`. Use `/gamerule` to change them per world. These rules control drops from blocks destroyed by explosions.
-
-Contributing
-============
-
-Use a JDK 8 installation for Gradle. The wrapper builds against Forge `14.23.5.2864` with the `20171003-1.12` MCP mappings.
+Build with a Java 17 JDK.
 
 ```sh
 ./gradlew clean build
-./gradlew runClient
-./gradlew runServer
 ```
 
-On Windows, use `gradlew.bat`. The build runs the tests and writes the reobfuscated production jar to `build/libs/psychedelicraft-1.12.2-port.1.jar`. The development client uses `run/client` and the development server uses `run/server`.
+The reobfuscated production jar is `build/libs/psychedelicraft-1.20.1-port.1.jar`. Install the same jar on the Forge client and dedicated server in their `mods` directories. This port targets new 1.20.1 worlds.
 
-On Apple Silicon, run the client with an x86-64 JDK 8 under Rosetta. The macOS LWJGL 2 native library in this Minecraft version requires x86-64.
-
-If a fresh ForgeGradle development run fails in `NetworkRegistry.newChannel` at line 207, run `./gradlew resolveForgeSources` and retry the launch. The mapped sources let ForgeGradle recompile its development runtime. See the port report for the observed failure.
+Development runs use `./gradlew runClient` and `./gradlew runServer`. The background QA workflow is recorded in [the port report](docs/PORT_1201.md).

@@ -1,0 +1,21 @@
+modLoader="javafml"
+loaderVersion="[47,)"
+license="MIT"
+[[mods]]
+modId="psychedelicraft"
+version="${version}"
+displayName="Psychedelicraft"
+authors="Ivorius, TripleHeadedSheep, Sollace, AuramMods contributors"
+description="Psychedelicraft for Minecraft 1.20.1 Forge."
+[[dependencies.psychedelicraft]]
+modId="forge"
+mandatory=true
+versionRange="[47.4.28,48)"
+ordering="NONE"
+side="BOTH"
+[[dependencies.psychedelicraft]]
+modId="minecraft"
+mandatory=true
+versionRange="[1.20.1]"
+ordering="NONE"
+side="BOTH"

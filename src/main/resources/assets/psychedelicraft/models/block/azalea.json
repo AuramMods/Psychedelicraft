@@ -1,7 +1,0 @@
-{
-  "parent": "psychedelicraft:block/template_azalea",
-  "textures": {
-    "side": "psychedelicraft:blocks/azalea_side",
-    "top": "psychedelicraft:blocks/azalea_top"
-  }
-}

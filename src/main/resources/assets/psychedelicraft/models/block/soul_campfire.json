@@ -1,7 +1,0 @@
-{
-  "parent": "psychedelicraft:block/soul_campfire_base",
-  "textures": {
-    "fire": "psychedelicraft:blocks/soul_campfire_fire",
-    "lit_log": "psychedelicraft:blocks/soul_campfire_log_lit"
-  }
-}

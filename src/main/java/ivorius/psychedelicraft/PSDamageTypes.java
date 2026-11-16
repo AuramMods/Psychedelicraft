@@ -1,54 +1,19 @@
 package ivorius.psychedelicraft;
 
-import ivorius.psychedelicraft.entity.MolotovCocktailEntity;
-import net.minecraft.entity.Entity;
-import net.minecraft.entity.EntityLivingBase;
-import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.item.ItemStack;
-import net.minecraft.util.DamageSource;
-import net.minecraft.util.EntityDamageSourceIndirect;
-import net.minecraft.util.text.ITextComponent;
-import net.minecraft.util.text.TextComponentTranslation;
-import net.minecraft.world.Explosion;
-
-import javax.annotation.Nullable;
+import net.minecraft.core.registries.Registries;
+import net.minecraft.resources.ResourceKey;
+import net.minecraft.world.damagesource.DamageSource;
+import net.minecraft.world.damagesource.DamageType;
+import net.minecraft.world.entity.player.Player;
 
 public final class PSDamageTypes {
-    public static final DamageSource STROKE = new DamageSource("psychedelicraft.stroke").setDamageBypassesArmor();
-    public static final DamageSource ALCOHOL_POISONING = new DamageSource("psychedelicraft.alcohol_poisoning").setDamageBypassesArmor();
-    public static final DamageSource HEART_FAILURE = new DamageSource("psychedelicraft.heart_failure").setDamageBypassesArmor();
-    public static final DamageSource HEART_ATTACK = new DamageSource("psychedelicraft.heart_attack").setDamageBypassesArmor();
-    public static final DamageSource RESPIRATORY_FAILURE = new DamageSource("psychedelicraft.respiratory_failure").setDamageBypassesArmor();
-    public static final DamageSource KIDNEY_FAILURE = new DamageSource("psychedelicraft.kidney_failure").setDamageBypassesArmor();
-    public static final DamageSource IN_SLEEP = new DamageSource("psychedelicraft.in_sleep").setDamageBypassesArmor();
-    public static final DamageSource OVER_EATING = new DamageSource("psychedelicraft.over_eating").setDamageBypassesArmor();
-    public static final DamageSource SWEET_BERRY_BUSH = new DamageSource("psychedelicraft.sweet_berry_bush");
+    private static final ResourceKey<DamageType> HEART_ATTACK = ResourceKey.create(
+            Registries.DAMAGE_TYPE, Psychedelicraft.id("heart_attack"));
 
-    public static DamageSource molotov(Entity projectile, @Nullable EntityLivingBase owner, Entity target, ItemStack stack) {
-        String type = target == owner ? "psychedelicraft.self_molotov" : "psychedelicraft.molotov";
-        return new EntityDamageSourceIndirect(type, projectile, owner) {
-            @Override
-            public ITextComponent getDeathMessage(EntityLivingBase victim) {
-                String key = "death.attack." + damageType;
-                ITextComponent attacker = owner == null ? projectile.getDisplayName() : owner.getDisplayName();
-                return stack.hasDisplayName()
-                        ? new TextComponentTranslation(key + ".item", victim.getDisplayName(), attacker, stack.getTextComponent())
-                        : new TextComponentTranslation(key, victim.getDisplayName(), attacker);
-            }
-        }.setDamageBypassesArmor();
-    }
+    private PSDamageTypes() {}
 
-    public static DamageSource explosionDamage(Explosion explosion, @Nullable Entity exploder) {
-        if (!(exploder instanceof MolotovCocktailEntity)) return DamageSource.causeExplosionDamage(explosion);
-        EntityLivingBase owner = explosion.getExplosivePlacedBy();
-        return new EntityDamageSourceIndirect("thrown", exploder, owner) {
-            @Override
-            public boolean isDifficultyScaled() {
-                return owner != null && !(owner instanceof EntityPlayer);
-            }
-        }.setProjectile();
-    }
-
-    private PSDamageTypes() {
+    public static DamageSource heartAttack(Player player) {
+        return new DamageSource(player.level().registryAccess().registryOrThrow(Registries.DAMAGE_TYPE)
+                .getHolderOrThrow(HEART_ATTACK));
     }
 }

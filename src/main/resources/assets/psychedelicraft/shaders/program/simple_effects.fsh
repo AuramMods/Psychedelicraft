@@ -1,64 +1,103 @@
-#version 120
+#version 150
+
+
+vec3 getRotatedColor(vec3 color, float rot) {
+	vec3 returnColor = vec3(0);
+
+	for (int i = 0; i < 3; i++) {
+        float colorAffected = mod(float(i) + rot * 3.0, 3.0);
+
+        int col1 = int(floor(colorAffected));
+
+        returnColor[col1] += color[i] * (1.0 - (colorAffected - float(col1)));
+        returnColor[int(mod(float(col1 + 1), 3.0))] += color[i] * (colorAffected - float(col1));
+	}
+
+	return returnColor;
+}
+
+
+
+
+vec3 getIntensifiedColor(vec3 color) {
+    float s = 2.0;
+    float cR = 0.3086;
+    float cG = 0.6084;
+    float cB = 0.0820;
+
+    float rr = (1.0 - s) * cR + s;
+    float rg = (1.0 - s) * cG;
+    float rb = (1.0 - s) * cB;
+    float gr = (1.0 - s) * cR;
+    float gg = (1.0 - s) * cG + s;
+    float gb = (1.0 - s) * cB;
+    float br = (1.0 - s) * cR;
+    float bg = (1.0 - s) * cG;
+    float bb = (1.0 - s) * cB + s;
+
+    vec3 rVec = vec3(color.r * rr + color.g * rg + color.b * rb, color.r * gr + color.g * gg + color.b * gb, color.r * br + color.g * bg + color.b * bb);
+
+    return clamp(rVec * rVec * 10.0, 0.0, 1.0);
+}
+
+
+
+float getBrightness(vec3 color) {
+    float cR = 0.3086;
+    float cG = 0.6084;
+    float cB = 0.0820;
+
+    return (color.r * cR + color.g * cG + color.b * cB);
+}
+
+vec3 getDesaturatedColor(vec3 color) {
+    return vec3(getBrightness(color));
+}
+
+
+
+vec3 getInvertedColor(vec3 color) {
+    return vec3(1, 1, 1) - color;
+}
+
 
 uniform sampler2D DiffuseSampler;
-uniform sampler2D DepthSampler;
-uniform float Ticks;
-uniform vec4 ColorStrengths;
-uniform float Inversion;
-uniform vec4 WorldColor;
-varying vec2 texCoord;
 
-vec3 rotateColor(vec3 color, float phase) {
-    float offset = phase * 3.0;
-    if (offset < 1.0) {
-        return mix(color, color.brg, offset);
-    }
-    if (offset < 2.0) {
-        return mix(color.brg, color.gbr, offset - 1.0);
-    }
-    return mix(color.gbr, color, offset - 2.0);
-}
+in vec2 texCoord;
 
-float brightness(vec3 color) {
-    return dot(color, vec3(0.3086, 0.6084, 0.0820));
-}
+uniform float ticks;
 
-vec3 harmonize(vec3 color, float phase) {
-    vec3 distance = abs(color - WorldColor.rgb);
-    float strength = 3.0 * pow(clamp(distance.r + distance.g + distance.b, 0.0, 1.0), 16.0);
-    strength += (sin(phase * 0.1434234) - 0.4) * 0.8;
-    strength += (sin(phase * -0.12313) - 0.2) * 0.8;
-    strength += sin(phase * -0.051233) * 0.2 * sin(Ticks * 0.1321334);
-    strength = clamp(strength, 0.0, 3.0);
-    // The animated palette can exceed white. Reflect its complement at zero so
-    // a peak on all three channels cannot turn the contrast pass solid black.
-    vec3 complement = abs(vec3(1.0) - WorldColor.rgb);
-    vec3 tint = strength < 1.0 ? mix(WorldColor.rgb, vec3(0.5), strength)
-            : mix(vec3(0.5), complement, (strength - 1.0) * 0.5);
-    return mix(color, tint, WorldColor.a);
-}
+uniform float slowColorRotation;
+uniform float quickColorRotation;
+uniform float colorIntensification;
+uniform float desaturation;
+uniform float inversion;
+
+out vec4 fragColor;
 
 void main() {
-    vec4 texel = texture2D(DiffuseSampler, texCoord);
-    vec3 color = texel.rgb;
-    if (ColorStrengths.x > 0.0) {
-        color = mix(color, rotateColor(color, mod(Ticks, 300.0) / 300.0), ColorStrengths.x / 2.0);
-    }
-    if (ColorStrengths.y > 0.0) {
-        color = mix(color, rotateColor(color, mod(Ticks, 50.0) / 50.0), clamp(ColorStrengths.y * 1.5, 0.0, 1.0));
-    }
-    if (ColorStrengths.z > 0.0) {
-        vec3 intense = color * 2.0 - vec3(brightness(color));
-        color = mix(color, clamp(intense * intense * 10.0, 0.0, 1.0), ColorStrengths.z);
-    }
-    if (ColorStrengths.w > 0.0) {
-        color = mix(color, vec3(brightness(color)), ColorStrengths.w);
-    }
-    if (Inversion > 0.0) {
-        color = mix(color, vec3(1.0) - color, Inversion);
-    }
-    if (WorldColor.a > 0.0) {
-        color = harmonize(color, texture2D(DepthSampler, texCoord).r - Ticks);
-    }
-    gl_FragColor = vec4(color, texel.a);
+  vec4 texel = texture(DiffuseSampler, texCoord);
+  vec3 outcolor = texel.rgb;
+
+  if (slowColorRotation > 0.0) {
+    outcolor = mix(outcolor, getRotatedColor(outcolor, mod(ticks, 300.0) / 300.0), slowColorRotation / 2.0);
+  }
+
+  if (quickColorRotation > 0.0) {
+     outcolor = mix(outcolor, getRotatedColor(outcolor, mod(ticks/* + fogFragCoord[0]*/, 50.0) / 50.0), clamp(quickColorRotation * 1.5, 0.0, 1.0));
+  }
+
+  if (colorIntensification != 0.0) {
+    outcolor = mix(outcolor, getIntensifiedColor(outcolor), colorIntensification);
+  }
+
+  if (desaturation != 0.0) {
+    outcolor = mix(outcolor, getDesaturatedColor(outcolor), desaturation);
+  }
+
+  if (inversion > 0) {
+    outcolor = mix(outcolor, getInvertedColor(outcolor), inversion);
+  }
+
+  fragColor = vec4(outcolor, texel.a);
 }

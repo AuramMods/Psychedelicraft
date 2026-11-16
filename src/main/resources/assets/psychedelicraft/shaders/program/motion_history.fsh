@@ -1,9 +1,0 @@
-#version 120
-
-uniform sampler2D DiffuseSampler;
-uniform float Opacity;
-varying vec2 texCoord;
-
-void main() {
-    gl_FragColor = vec4(texture2D(DiffuseSampler, texCoord).rgb, Opacity);
-}

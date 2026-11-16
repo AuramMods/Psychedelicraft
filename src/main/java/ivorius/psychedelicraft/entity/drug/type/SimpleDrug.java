@@ -7,9 +7,9 @@ package ivorius.psychedelicraft.entity.drug.type;
 import ivorius.psychedelicraft.PSDamageTypes;
 import ivorius.psychedelicraft.entity.drug.Drug;
 import ivorius.psychedelicraft.entity.drug.DrugProperties;
-import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.nbt.NBTTagCompound;
-import net.minecraft.util.math.MathHelper;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.util.Mth;
 
 import javax.annotation.Nullable;
 
@@ -41,12 +41,12 @@ public class SimpleDrug implements Drug {
     }
 
     protected final float activeRamp(float start) {
-        return MathHelper.clamp(((float) active - start) / (1F - start), 0F, 1F);
+        return Mth.clamp(((float) active - start) / (1F - start), 0F, 1F);
     }
 
     @Override
     public void setDesiredValue(double value) {
-        desired = MathHelper.clamp(value, 0, 1);
+        desired = Mth.clamp(value, 0, 1);
     }
 
     @Override
@@ -75,14 +75,14 @@ public class SimpleDrug implements Drug {
     }
 
     @Override
-    public void update(DrugProperties properties, @Nullable EntityPlayer player) {
+    public void update(DrugProperties properties, @Nullable Player player) {
         advance(properties, player);
     }
 
-    private void advance(@Nullable DrugProperties properties, @Nullable EntityPlayer player) {
+    private void advance(@Nullable DrugProperties properties, @Nullable Player player) {
         ticksActive = active > 0 ? ticksActive + 1 : 0;
-        if (ticksActive > 0 && player != null && !player.world.isRemote && player.isEntityAlive() && heartbeatSpeed() > 3F) {
-            player.attackEntityFrom(PSDamageTypes.HEART_ATTACK, Integer.MAX_VALUE);
+        if (ticksActive > 0 && player != null && !player.level().isClientSide && player.isAlive() && heartbeatSpeed() > 3F) {
+            player.hurt(PSDamageTypes.heartAttack(player), Integer.MAX_VALUE);
             if (!locked) {
                 reset();
                 properties.markDirty();
@@ -91,7 +91,7 @@ public class SimpleDrug implements Drug {
         if (!locked) {
             desired = desired * decreaseSpeed - decreaseSpeedPlus;
         }
-        desired = MathHelper.clamp(desired, 0, maximumActiveValue());
+        desired = Mth.clamp(desired, 0, maximumActiveValue());
 
         double interpolated = active + (desired - active) * 0.05;
         if (interpolated > desired) {
@@ -109,22 +109,22 @@ public class SimpleDrug implements Drug {
     }
 
     @Override
-    public void toNbt(NBTTagCompound tag) {
-        tag.setDouble("effect", desired);
-        tag.setDouble("effectActive", active);
-        tag.setBoolean("locked", locked);
-        tag.setInteger("ticksActive", ticksActive);
+    public void toNbt(CompoundTag tag) {
+        tag.putDouble("effect", desired);
+        tag.putDouble("effectActive", active);
+        tag.putBoolean("locked", locked);
+        tag.putInt("ticksActive", ticksActive);
     }
 
     @Override
-    public void fromNbt(NBTTagCompound tag) {
+    public void fromNbt(CompoundTag tag) {
         desired = tag.getDouble("effect");
         if (!Double.isFinite(desired)) {
             desired = 0;
         }
         double savedActive = tag.getDouble("effectActive");
-        active = Double.isFinite(savedActive) ? MathHelper.clamp(savedActive, 0, maximumActiveValue()) : 0;
+        active = Double.isFinite(savedActive) ? Mth.clamp(savedActive, 0, maximumActiveValue()) : 0;
         locked = tag.getBoolean("locked");
-        ticksActive = Math.max(0, tag.getInteger("ticksActive"));
+        ticksActive = Math.max(0, tag.getInt("ticksActive"));
     }
 }

@@ -1,89 +1,36 @@
-buildscript {
-    repositories {
-        maven { url = 'https://maven.minecraftforge.net/' }
-        mavenCentral()
-    }
-    dependencies {
-        classpath 'net.minecraftforge.gradle:ForgeGradle:3.0.197'
-    }
+plugins {
+    id 'java'
+    id 'net.minecraftforge.gradle' version '6.0.54'
 }
-
-apply plugin: 'net.minecraftforge.gradle'
 
 group = 'ivorius'
-version = '1.12.2-port.1'
-archivesBaseName = 'psychedelicraft'
-sourceCompatibility = targetCompatibility = '1.8'
-
-def forgeVersion = '1.12.2-14.23.5.2864'
-def mappingChannel = 'snapshot'
-def mappingVersion = '20171003-1.12'
-
-sourceSets {
-    main {
-        // Forge 1.12 discovers an exploded mod from a single output directory.
-        def modOutput = file("$buildDir/sourceSets/main")
-        output.resourcesDir = modOutput
-        java.outputDir = modOutput
-    }
-}
+version = '1.20.1-port.1'
+base { archivesName = 'psychedelicraft' }
+java.toolchain.languageVersion = JavaLanguageVersion.of(17)
 
 minecraft {
-    mappings channel: mappingChannel, version: mappingVersion
-
+    mappings channel: 'official', version: '1.20.1'
+    copyIdeResources = true
     runs {
-        client {
-            workingDirectory file('run/client')
-            property 'fml.coreMods.load', 'ivorius.psychedelicraft.core.PsychedelicraftCore'
+        configureEach {
+            workingDirectory project.file('run/development')
+            mods { psychedelicraft { source sourceSets.main } }
         }
-        server {
-            workingDirectory file('run/server')
-            property 'fml.coreMods.load', 'ivorius.psychedelicraft.core.PsychedelicraftCore'
-            args 'nogui'
-        }
+        client {}
+        server { args '--nogui' }
     }
 }
 
-repositories {
-    maven {
-        url = 'https://maven.blamejared.com/'
-        content { includeModule 'mezz.jei', 'jei_1.12.2' }
-    }
-}
-
+repositories { mavenCentral() }
 dependencies {
-    minecraft "net.minecraftforge:forge:${forgeVersion}"
-    compileOnly fg.deobf('mezz.jei:jei_1.12.2:4.16.1.302:api')
+    minecraft 'net.minecraftforge:forge:1.20.1-47.4.28'
     testImplementation 'junit:junit:4.13.2'
 }
 
-tasks.register('resolveForgeSources') {
-    group = 'forgegradle runs'
-    description = 'Generate mapped Forge sources for a source-based development runtime.'
-    doLast {
-        def dependency = dependencies.create(
-                "net.minecraftforge:forge:${forgeVersion}_mapped_${mappingChannel}_${mappingVersion}:sources@jar")
-        def sources = configurations.detachedConfiguration(dependency)
-        sources.transitive = false
-        logger.lifecycle("Mapped Forge sources: ${sources.singleFile}")
-    }
-}
-
-tasks.withType(JavaCompile).configureEach {
-    options.encoding = 'UTF-8'
-}
-
+tasks.withType(JavaCompile).configureEach { options.encoding = 'UTF-8' }
 processResources {
     inputs.property 'version', project.version
-    filesMatching(['mcmod.info', 'version.properties']) {
-        expand version: project.version
-    }
+    filesMatching('META-INF/mods.toml') { expand version: project.version }
     from 'LICENSE'
 }
-
-jar {
-    manifest.attributes('FMLCorePlugin': 'ivorius.psychedelicraft.core.PsychedelicraftCore',
-            'FMLCorePluginContainsFMLMod': 'true')
-}
-
 jar.finalizedBy('reobfJar')

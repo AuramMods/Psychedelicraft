@@ -1,6 +1,0 @@
-{
-  "parent": "minecraft:item/generated",
-  "textures": {
-    "layer0": "psychedelicraft:items/angler_pottery_sherd"
-  }
-}

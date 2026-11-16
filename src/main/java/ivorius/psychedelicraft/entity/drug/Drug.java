@@ -7,18 +7,18 @@ package ivorius.psychedelicraft.entity.drug;
 import javax.annotation.Nullable;
 
 import ivorius.psychedelicraft.util.NbtSerialisable;
-import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.world.entity.player.Player;
 
 public interface Drug extends NbtSerialisable {
     void update();
 
-    default void update(DrugProperties properties, @Nullable EntityPlayer player) {
+    default void update(DrugProperties properties, @Nullable Player player) {
         update();
     }
 
     void reset();
 
-    default void onWakeUp(DrugProperties properties, @Nullable EntityPlayer player) {
+    default void onWakeUp(DrugProperties properties, @Nullable Player player) {
         reset();
     }
 

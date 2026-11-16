@@ -1,9 +1,0 @@
-{
-  "type": "forge:ore_shaped",
-  "pattern": ["I#I", "#I#", "I#I"],
-  "key": {
-    "#": { "type": "forge:ore_dict", "ore": "plankWood" },
-    "I": { "item": "minecraft:stick" }
-  },
-  "result": { "item": "psychedelicraft:bottle_rack" }
-}

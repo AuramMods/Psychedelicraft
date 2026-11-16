@@ -1,171 +1,66 @@
 package ivorius.psychedelicraft.entity.drug;
 
 import ivorius.psychedelicraft.Psychedelicraft;
-import ivorius.psychedelicraft.PSDamageTypes;
-import ivorius.psychedelicraft.advancement.PSCriteria;
-import ivorius.psychedelicraft.config.PSConfig;
-import ivorius.psychedelicraft.entity.RealityRiftEntity;
-import ivorius.psychedelicraft.network.Channel;
-import ivorius.psychedelicraft.entity.drug.type.SleepDeprivationDrug;
-import net.minecraft.entity.Entity;
-import net.minecraft.entity.SharedMonsterAttributes;
-import net.minecraft.entity.ai.attributes.AttributeModifier;
-import net.minecraft.entity.ai.attributes.IAttributeInstance;
-import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.entity.player.EntityPlayerMP;
-import net.minecraft.util.DamageSource;
-import net.minecraft.util.text.TextComponentTranslation;
-import net.minecraft.world.GameRules;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.player.Player;
 import net.minecraftforge.event.AttachCapabilitiesEvent;
-import net.minecraftforge.event.entity.living.LivingHurtEvent;
 import net.minecraftforge.event.entity.player.PlayerEvent;
-import net.minecraftforge.event.entity.player.PlayerWakeUpEvent;
-import net.minecraftforge.event.entity.player.PlayerSleepInBedEvent;
-import net.minecraftforge.event.world.WorldEvent;
+import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
-import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
-import net.minecraftforge.fml.common.gameevent.TickEvent;
-
-import java.util.UUID;
+import net.minecraftforge.event.TickEvent;
 
 @Mod.EventBusSubscriber(modid = Psychedelicraft.MOD_ID)
 public final class DrugEvents {
-    private static final UUID ATTRIBUTE_MODIFIER = UUID.fromString("624dc5e6-4166-4931-8ed3-f6ab68ae76ef");
-    private DrugEvents() {
-    }
+    private DrugEvents() {}
 
     @SubscribeEvent
     public static void attach(AttachCapabilitiesEvent<Entity> event) {
-        if (event.getObject() instanceof EntityPlayer) {
-            event.addCapability(Psychedelicraft.id("drug_properties"), new DrugCapability());
+        if (event.getObject() instanceof Player) {
+            DrugCapability provider = new DrugCapability();
+            event.addCapability(Psychedelicraft.id("drug_properties"), provider);
+            event.addListener(provider::invalidate);
         }
     }
 
     @SubscribeEvent
     public static void tick(TickEvent.PlayerTickEvent event) {
-        if (event.phase != TickEvent.Phase.END) {
-            return;
-        }
+        if (event.phase != TickEvent.Phase.END) return;
         DrugProperties properties = DrugCapability.get(event.player);
-        if (properties != null) {
-            properties.tick(event.player.ticksExisted, event.player);
-            if (!event.player.world.isRemote) {
-                PSCriteria.drugsChanged(event.player, properties);
-                float speed = properties.getMultiplier(Drug::speedModifier);
-                updateModifier(event.player.getEntityAttribute(SharedMonsterAttributes.MOVEMENT_SPEED), speed - 1.0, 2);
-                updateModifier(event.player.getEntityAttribute(SharedMonsterAttributes.ATTACK_SPEED), speed - 1.0, 2);
-                updateModifier(event.player.getEntityAttribute(SharedMonsterAttributes.ATTACK_DAMAGE),
-                        properties.getMultiplier(Drug::attackDamageModifier) - 1.0, 2);
-                updateModifier(event.player.getEntityAttribute(EntityPlayer.REACH_DISTANCE),
-                        properties.getModifier(Drug::extraBlockReach), 0);
-                MushroomGrowth.tick(event.player, properties);
-                int riftSpawnInterval = PSConfig.balancing.randomTicksUntilRiftSpawn;
-                if (riftSpawnInterval > 0 && event.player.getRNG().nextInt(riftSpawnInterval) == 0) {
-                    RealityRiftEntity.spawnNear(event.player);
-                }
-            }
-            if (properties.takeDirty() && event.player instanceof EntityPlayerMP) {
-                Channel.sync((EntityPlayerMP) event.player, properties);
-            }
-        }
-    }
-
-    private static void updateModifier(IAttributeInstance attribute, double amount, int operation) {
-        AttributeModifier previous = attribute.getModifier(ATTRIBUTE_MODIFIER);
-        if (previous != null && Math.abs(previous.getAmount() - amount) < 0.0001) return;
-        if (previous != null) attribute.removeModifier(previous);
-        if (Math.abs(amount) >= 0.0001) {
-            attribute.applyModifier(new AttributeModifier(ATTRIBUTE_MODIFIER, "Psychedelicraft effects", amount, operation).setSaved(false));
+        properties.tick(event.player.tickCount, event.player);
+        if (event.player instanceof ServerPlayer player && (properties.takeDirty() || player.tickCount % 20 == 0)) {
+            DrugNetwork.sync(player);
         }
     }
 
     @SubscribeEvent
-    public static void breakSpeed(PlayerEvent.BreakSpeed event) {
-        DrugProperties properties = DrugCapability.get(event.getEntityPlayer());
-        if (properties != null) event.setNewSpeed(event.getNewSpeed() * properties.getMultiplier(Drug::digSpeedModifier));
-    }
+    public static void login(PlayerEvent.PlayerLoggedInEvent event) { sync(event.getEntity()); }
 
     @SubscribeEvent
-    public static void incomingDamage(LivingHurtEvent event) {
-        DamageSource source = event.getSource();
-        if (!(event.getEntityLiving() instanceof EntityPlayer) || event.getEntityLiving().world.isRemote
-                || source.isDamageAbsolute() || source == DamageSource.OUT_OF_WORLD || source == PSDamageTypes.ALCOHOL_POISONING) return;
-        DrugProperties properties = DrugCapability.get((EntityPlayer) event.getEntityLiving());
-        if (properties != null) event.setAmount(event.getAmount() * properties.getMultiplier(Drug::incomingDamageModifier));
-    }
+    public static void changedDimension(PlayerEvent.PlayerChangedDimensionEvent event) { sync(event.getEntity()); }
 
     @SubscribeEvent
-    public static void trySleep(PlayerSleepInBedEvent event) {
-        EntityPlayer player = event.getEntityPlayer();
-        if (player.world.isRemote || event.getResultStatus() != null) return;
-        DrugProperties properties = DrugCapability.get(player);
-        String warning = properties == null ? null : properties.sleepWarning();
-        if (warning != null) {
-            event.setResult(EntityPlayer.SleepResult.OTHER_PROBLEM);
-            player.sendStatusMessage(new TextComponentTranslation(warning), true);
+    public static void respawn(PlayerEvent.PlayerRespawnEvent event) { sync(event.getEntity()); }
+
+    @SubscribeEvent
+    public static void tracking(PlayerEvent.StartTracking event) {
+        if (event.getTarget() instanceof ServerPlayer subject && event.getEntity() instanceof ServerPlayer recipient) {
+            DrugNetwork.syncTo(subject, recipient);
         }
     }
 
     @SubscribeEvent
-    public static void registerGameRules(WorldEvent.Load event) {
-        registerGameRules(event.getWorld().getGameRules());
-    }
-
-    static void registerGameRules(GameRules rules) {
-        String name = SleepDeprivationDrug.GAME_RULE;
-        // Minecraft saves custom game rules without their types.
-        if (!rules.areSameType(name, GameRules.ValueType.BOOLEAN_VALUE)) {
-            rules.addGameRule(name, Boolean.toString(rules.getBoolean(name)), GameRules.ValueType.BOOLEAN_VALUE);
+    public static void clone(PlayerEvent.Clone event) {
+        if (event.isWasDeath()) return;
+        event.getOriginal().reviveCaps();
+        try {
+            DrugCapability.get(event.getEntity()).fromNbt(DrugCapability.get(event.getOriginal()).toNbt());
+        } finally {
+            event.getOriginal().invalidateCaps();
         }
     }
 
-    @SubscribeEvent
-    public static void clonePlayer(PlayerEvent.Clone event) {
-        if (!event.isWasDeath()) {
-            DrugProperties previous = DrugCapability.get(event.getOriginal());
-            DrugProperties current = DrugCapability.get(event.getEntityPlayer());
-            if (previous != null && current != null) {
-                current.fromNbt(previous.toNbt());
-            }
-        }
-    }
-
-    @SubscribeEvent
-    public static void wakeUp(PlayerWakeUpEvent event) {
-        if (!event.getEntityPlayer().world.isRemote) {
-            DrugProperties properties = DrugCapability.get(event.getEntityPlayer());
-            if (properties != null) {
-                properties.queueWakeUp();
-            }
-        }
-    }
-
-    @SubscribeEvent
-    public static void login(net.minecraftforge.fml.common.gameevent.PlayerEvent.PlayerLoggedInEvent event) {
-        syncOwner(event.player);
-    }
-
-    @SubscribeEvent
-    public static void changeDimension(net.minecraftforge.fml.common.gameevent.PlayerEvent.PlayerChangedDimensionEvent event) {
-        syncOwner(event.player);
-    }
-
-    @SubscribeEvent
-    public static void respawn(net.minecraftforge.fml.common.gameevent.PlayerEvent.PlayerRespawnEvent event) {
-        syncOwner(event.player);
-    }
-
-    @SubscribeEvent
-    public static void startTracking(PlayerEvent.StartTracking event) {
-        if (event.getEntityPlayer() instanceof EntityPlayerMP && event.getTarget() instanceof EntityPlayerMP) {
-            Channel.syncTo((EntityPlayerMP) event.getTarget(), (EntityPlayerMP) event.getEntityPlayer());
-        }
-    }
-
-    private static void syncOwner(EntityPlayer player) {
-        if (player instanceof EntityPlayerMP) {
-            EntityPlayerMP serverPlayer = (EntityPlayerMP) player;
-            Channel.syncTo(serverPlayer, serverPlayer);
-        }
+    private static void sync(Player player) {
+        if (player instanceof ServerPlayer serverPlayer) DrugNetwork.sync(serverPlayer);
     }
 }

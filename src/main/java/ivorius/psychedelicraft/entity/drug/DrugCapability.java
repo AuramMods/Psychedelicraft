@@ -1,61 +1,35 @@
 package ivorius.psychedelicraft.entity.drug;
 
-import javax.annotation.Nullable;
-
-import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.nbt.NBTBase;
-import net.minecraft.nbt.NBTTagCompound;
-import net.minecraft.util.EnumFacing;
+import net.minecraft.core.Direction;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.world.entity.player.Player;
 import net.minecraftforge.common.capabilities.Capability;
-import net.minecraftforge.common.capabilities.CapabilityInject;
 import net.minecraftforge.common.capabilities.CapabilityManager;
+import net.minecraftforge.common.capabilities.CapabilityToken;
 import net.minecraftforge.common.capabilities.ICapabilitySerializable;
+import net.minecraftforge.common.util.LazyOptional;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
-public final class DrugCapability implements ICapabilitySerializable<NBTTagCompound> {
-    @CapabilityInject(DrugProperties.class)
-    private static Capability<DrugProperties> capability = null;
-
+public final class DrugCapability implements ICapabilitySerializable<CompoundTag> {
+    public static final Capability<DrugProperties> TYPE = CapabilityManager.get(new CapabilityToken<>() {});
     private final DrugProperties properties = new DrugProperties();
+    private final LazyOptional<DrugProperties> optional = LazyOptional.of(() -> properties);
 
-    public static void register() {
-        CapabilityManager.INSTANCE.register(DrugProperties.class, new Capability.IStorage<DrugProperties>() {
-            @Override
-            public NBTBase writeNBT(Capability<DrugProperties> cap, DrugProperties instance, EnumFacing side) {
-                return instance.toNbt();
-            }
-
-            @Override
-            public void readNBT(Capability<DrugProperties> cap, DrugProperties instance, EnumFacing side, NBTBase nbt) {
-                if (nbt instanceof NBTTagCompound) {
-                    instance.fromNbt((NBTTagCompound) nbt);
-                }
-            }
-        }, DrugProperties::new);
+    public static DrugProperties get(Player player) {
+        return player.getCapability(TYPE).orElseThrow(() -> new IllegalStateException("Missing player drug capability"));
     }
 
-    @Nullable
-    public static DrugProperties get(EntityPlayer player) {
-        return player.getCapability(capability, null);
+    public void invalidate() { optional.invalidate(); }
+
+    @Override
+    public <T> @NotNull LazyOptional<T> getCapability(@NotNull Capability<T> capability, @Nullable Direction direction) {
+        return TYPE.orEmpty(capability, optional);
     }
 
     @Override
-    public boolean hasCapability(Capability<?> query, @Nullable EnumFacing side) {
-        return query == capability;
-    }
+    public CompoundTag serializeNBT() { return properties.toNbt(); }
 
     @Override
-    @Nullable
-    public <T> T getCapability(Capability<T> query, @Nullable EnumFacing side) {
-        return hasCapability(query, side) ? capability.cast(properties) : null;
-    }
-
-    @Override
-    public NBTTagCompound serializeNBT() {
-        return properties.toNbt();
-    }
-
-    @Override
-    public void deserializeNBT(NBTTagCompound nbt) {
-        properties.fromNbt(nbt);
-    }
+    public void deserializeNBT(CompoundTag tag) { properties.fromNbt(tag); }
 }
