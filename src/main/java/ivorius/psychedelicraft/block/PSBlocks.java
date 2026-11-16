@@ -34,6 +34,8 @@ public final class PSBlocks {
     public static final RegistryObject<BarrelBlock> ACACIA_BARREL=BLOCKS.register("acacia_barrel",()->new BarrelBlock(Blocks.ACACIA_PLANKS));
     public static final RegistryObject<BarrelBlock> JUNGLE_BARREL=BLOCKS.register("jungle_barrel",()->new BarrelBlock(Blocks.JUNGLE_PLANKS));
     public static final RegistryObject<BarrelBlock> DARK_OAK_BARREL=BLOCKS.register("dark_oak_barrel",()->new BarrelBlock(Blocks.DARK_OAK_PLANKS));
+    public static final RegistryObject<MashTubBlock> MASH_TUB=BLOCKS.register("mash_tub",MashTubBlock::new);
+    public static final RegistryObject<MashTubWallBlock> MASH_TUB_EDGE=BLOCKS.register("mash_tub_edge",MashTubWallBlock::new);
     private PSBlocks() {}
     private static BlockBehaviour.Properties plant() {
         return BlockBehaviour.Properties.of().noCollission().noOcclusion().instabreak().randomTicks().sound(SoundType.GRASS);

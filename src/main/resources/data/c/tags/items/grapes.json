@@ -1,0 +1,13 @@
+{
+  "replace": false,
+  "values": [
+    {
+      "id": "psychedelicraft:wine_grapes",
+      "required": false
+    },
+    {
+      "id": "#forge:fruits/grape",
+      "required": false
+    }
+  ]
+}

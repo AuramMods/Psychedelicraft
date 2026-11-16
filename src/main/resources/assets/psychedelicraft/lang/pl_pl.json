@@ -481,5 +481,7 @@
   "item.psychedelicraft.heart_of_the_sea": "Serce oceanu",
   "item.psychedelicraft.buried_treasure_map": "Mapa zakopanego skarbu",
   "item.psychedelicraft.nautilus_shell": "Muszla łodzika",
-  "item.psychedelicraft.trident": "Trójząb"
+  "item.psychedelicraft.trident": "Trójząb",
+  "fluid.status.stew": "Maceracja",
+  "time.until.stew": "Maceracja zakończy się za %s"
 }

@@ -30,7 +30,7 @@ public abstract class FluidProcessingBlockEntity extends FluidMachineBlockEntity
         return stage;
     }
 
-    public final int getRemainingTicks() {
+    public int getRemainingTicks() {
         return Math.max(0, duration - elapsed);
     }
 

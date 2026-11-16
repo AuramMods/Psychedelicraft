@@ -2,6 +2,7 @@ package ivorius.psychedelicraft.client;
 
 import ivorius.psychedelicraft.Psychedelicraft;
 import ivorius.psychedelicraft.client.particle.ExhaledSmokeParticle;
+import ivorius.psychedelicraft.client.particle.BubbleParticle;
 import ivorius.psychedelicraft.particle.PSParticles;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.client.event.RegisterParticleProvidersEvent;
@@ -12,6 +13,7 @@ import net.minecraftforge.fml.common.Mod;
 public final class ClientParticles {
     private ClientParticles(){}
     @SubscribeEvent public static void register(RegisterParticleProvidersEvent event){
+        event.registerSpriteSet(PSParticles.BUBBLE.get(),sprites->(effect,level,x,y,z,vx,vy,vz)->new BubbleParticle(effect,sprites,level,x,y,z,vx,vy,vz));
         event.registerSpriteSet(PSParticles.EXHALED_SMOKE.get(),sprites->(effect,level,x,y,z,vx,vy,vz)->new ExhaledSmokeParticle(effect,sprites,level,x,y,z,vx,vy,vz));
     }
 }

@@ -13,5 +13,8 @@ public final class PSParticles {
     public static final RegistryObject<ParticleType<DustParticleOptions>> EXHALED_SMOKE=TYPES.register("exhaled_smoke",()->new ParticleType<>(false,SmokeParticleOptions.DESERIALIZER){
         @Override public Codec<DustParticleOptions> codec(){return SmokeParticleOptions.CODEC;}
     });
+    public static final RegistryObject<ParticleType<DustParticleOptions>> BUBBLE=TYPES.register("bubble",()->new ParticleType<>(false,BubbleParticleOptions.DESERIALIZER){
+        @Override public Codec<DustParticleOptions> codec(){return BubbleParticleOptions.CODEC;}
+    });
     private PSParticles(){}
 }

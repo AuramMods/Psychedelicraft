@@ -1,6 +1,7 @@
 /* Copyright (c) 2014, Lukas Tenbrink. */
 package ivorius.psychedelicraft.block.entity;
 import ivorius.psychedelicraft.block.DistilleryBlock;
+import ivorius.psychedelicraft.block.MashTubBlock;
 import ivorius.psychedelicraft.fluid.*;
 import net.minecraft.core.*;
 import net.minecraft.core.particles.ParticleTypes;
@@ -44,6 +45,7 @@ public final class DistilleryBlockEntity extends FluidProcessingBlockEntity {
     private ProcessingTank findOutput(){
         Direction side=getBlockState().getValue(DistilleryBlock.FACING);
         if(!side.getAxis().isHorizontal()||!DistilleryBlock.canConnectTo(level,worldPosition,side))return null;
+        var vat=MashTubBlock.getVat(level,worldPosition.relative(side));if(vat!=null)return vat.getTank();
         return level.getBlockEntity(worldPosition.relative(side)) instanceof FluidMachineBlockEntity machine&&!machine.isRemoved()?machine.getTank():null;
     }
     private void steam(){((ServerLevel)level).sendParticles(ParticleTypes.CLOUD,worldPosition.getX()+(level.random.nextDouble()+level.random.nextDouble())*.5,worldPosition.getY()+.6,worldPosition.getZ()+(level.random.nextDouble()+level.random.nextDouble())*.5,2,0,0,0,0);}

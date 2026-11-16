@@ -490,5 +490,7 @@
   "item.psychedelicraft.heart_of_the_sea": "Heart of the Sea",
   "item.psychedelicraft.buried_treasure_map": "Buried Treasure Map",
   "item.psychedelicraft.nautilus_shell": "Nautilus Shell",
-  "item.psychedelicraft.trident": "Trident"
+  "item.psychedelicraft.trident": "Trident",
+  "fluid.status.stew": "Stewing",
+  "time.until.stew": "Stew ready in %s"
 }

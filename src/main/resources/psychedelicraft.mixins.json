@@ -4,6 +4,11 @@
   "package": "ivorius.psychedelicraft.mixin",
   "compatibilityLevel": "JAVA_17",
   "refmap": "psychedelicraft.refmap.json",
-  "mixins": ["AbstractFurnaceBlockEntityMixin"],
-  "injectors": {"defaultRequire": 1}
+  "mixins": [
+    "AbstractFurnaceBlockEntityMixin",
+    "EntityMashTubFluidMixin"
+  ],
+  "injectors": {
+    "defaultRequire": 1
+  }
 }

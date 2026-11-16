@@ -39,7 +39,7 @@ public abstract class FluidMachineBlockEntity extends BlockEntity implements Wor
     public final ContainerData data=new ContainerData(){
         @Override public int get(int index){
             FluidProcessingBlockEntity processor=FluidMachineBlockEntity.this instanceof FluidProcessingBlockEntity p?p:null;
-            return switch(index){case 0->tank.getFluidAmount();case 1->tank.getCapacity();case 2->processor==null?0:processor.getStage().ordinal();case 3->processor==null?0:(int)(processor.getProcessingProgress()*1000);
+            return switch(index){case 0->tank.getFluidAmount();case 1->tank.getCapacity();case 2->processor instanceof MashTubBlockEntity vat&&vat.isStewing()?BrewProcess.values().length:processor==null?0:processor.getStage().ordinal();case 3->processor==null?0:(int)(processor.getProcessingProgress()*1000);
                 case 4->processor==null?0:processor.getRemainingTicks()&65535;case 5->processor==null?0:processor.getRemainingTicks()>>>16;
                 case 6->(int)(getVesselProgress(INPUT)*1000);case 7->(int)(getVesselProgress(OUTPUT)*1000);case 8->FluidMachineBlockEntity.this instanceof DistilleryBlockEntity d?d.getOutlet().ordinal():0;default->0;};
         }

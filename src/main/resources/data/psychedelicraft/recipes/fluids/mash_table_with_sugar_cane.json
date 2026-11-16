@@ -1,0 +1,19 @@
+{
+  "type": "psychedelicraft:mashing",
+  "stew_time": 0,
+  "base_fluid": {
+    "fluid": "minecraft:water"
+  },
+  "ingredients": [
+    { "item": "minecraft:sugar_cane" },
+    { "item": "minecraft:sugar_cane" },
+    { "item": "minecraft:sugar_cane" },
+    { "item": "minecraft:sugar_cane" },
+    { "item": "minecraft:sugar_cane" },
+    { "item": "minecraft:sugar_cane" },
+    { "item": "minecraft:sugar_cane" }
+  ],
+  "result": {
+    "fluid": "psychedelicraft:sugar_cane"
+  }
+}

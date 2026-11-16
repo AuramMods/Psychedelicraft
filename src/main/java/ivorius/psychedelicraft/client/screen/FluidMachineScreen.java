@@ -18,7 +18,7 @@ import java.util.*;
 public final class FluidMachineScreen extends AbstractContainerScreen<FluidMachineMenu>{
     public FluidMachineScreen(FluidMachineMenu menu,Inventory inventory,Component title){super(menu,inventory,title);}
     private FluidMachineBlockEntity machine(){return minecraft.level!=null&&minecraft.level.getBlockEntity(menu.getPosition()) instanceof FluidMachineBlockEntity entity?entity:null;}
-    private ResourceLocation texture(){var entity=machine();return Psychedelicraft.id("textures/gui/"+(entity instanceof DistilleryBlockEntity?"distillery":entity instanceof BarrelBlockEntity?"barrel":"flask")+".png");}
+    private ResourceLocation texture(){var entity=machine();return Psychedelicraft.id("textures/gui/"+(entity instanceof MashTubBlockEntity?"wooden_vat":entity instanceof DistilleryBlockEntity?"distillery":entity instanceof BarrelBlockEntity?"barrel":"flask")+".png");}
     @Override protected void init(){super.init();titleLabelX=83-font.width(title)/2;titleLabelY=10;}
     @Override protected void renderBg(GuiGraphics graphics,float partial,int mouseX,int mouseY){
         var texture=texture();graphics.setColor(1,1,1,1);graphics.blit(texture,leftPos+30,topPos+20,0,imageHeight,110,50);
@@ -31,8 +31,8 @@ public final class FluidMachineScreen extends AbstractContainerScreen<FluidMachi
             graphics.disableScissor();
         }
         graphics.blit(texture,leftPos,topPos,0,0,imageWidth,imageHeight);float progress=menu.getProgress();
-        if(machine instanceof DistilleryBlockEntity||progress>0&&progress<1){int y=machine instanceof DistilleryBlockEntity?14:20;
-            graphics.blit(texture,leftPos+110,topPos+y,233,22,23,22);int unfilled=(int)(22*(1-progress));graphics.blit(texture,leftPos+110,topPos+y+unfilled,233,unfilled,23,23-unfilled);
+        if(machine instanceof DistilleryBlockEntity||progress>0&&progress<1){int y=machine instanceof DistilleryBlockEntity||machine instanceof MashTubBlockEntity?14:20;int x=machine instanceof MashTubBlockEntity?140:110;
+            graphics.blit(texture,leftPos+x,topPos+y,233,22,23,22);int unfilled=(int)(22*(1-progress));graphics.blit(texture,leftPos+x,topPos+y+unfilled,233,unfilled,23,23-unfilled);
         }
         float input=menu.getVesselProgress(0),output=menu.getVesselProgress(1);
         if(!menu.getSlot(0).getItem().isEmpty()&&input>0&&input<1){int width=(int)(45*input);graphics.blit(texture,leftPos+20+width,topPos+40,176+width,0,45-width,16);}
@@ -46,8 +46,9 @@ public final class FluidMachineScreen extends AbstractContainerScreen<FluidMachi
         List<Component> result=new ArrayList<>();var machine=machine();FluidStack fluid=machine==null?FluidStack.EMPTY:machine.getTank().getFluid();boolean brew=!fluid.isEmpty()&&PSFluids.brew(fluid.getFluid())!=null;
         result.add(fluid.isEmpty()?Component.translatable("fluid.psychedelicraft.empty"):PSFluids.displayName(fluid));
         if(!fluid.isEmpty()){result.add(Component.translatable("psychedelicraft.container.levels",menu.getFluidAmount(),menu.getCapacity()).withStyle(ChatFormatting.GRAY));if(brew)BrewProfile.appendAttributes(fluid,result);}
-        BrewProcess stage=menu.getStage();if(machine instanceof FluidProcessingBlockEntity&&(brew||stage!=BrewProcess.IDLE))result.add(Component.translatable("fluid.status",Component.translatable("fluid.status."+stage.key())));
-        if(stage!=BrewProcess.IDLE)result.add(Component.translatable("time.until."+stage.key(),countdown(menu.getRemainingTicks())));
+        BrewProcess stage=menu.getStage();if(menu.isStewing()){result.add(Component.translatable("fluid.status",Component.translatable("fluid.status.stew")));result.add(Component.translatable("time.until.stew",countdown(menu.getRemainingTicks())));}
+        else if(machine instanceof FluidProcessingBlockEntity&&(brew||stage!=BrewProcess.IDLE))result.add(Component.translatable("fluid.status",Component.translatable("fluid.status."+stage.key())));
+        if(!menu.isStewing()&&stage!=BrewProcess.IDLE)result.add(Component.translatable("time.until."+stage.key(),countdown(menu.getRemainingTicks())));
         if(brew){boolean fermented=BrewProfile.stage(fluid,BrewProfile.FERMENTATION,2)>0;
             if(machine instanceof DistilleryBlockEntity){result.add(requirement(fermented,"psychedelicraft.processing.fermented","psychedelicraft.distillery.requires_fermentation"));result.add(requirement(BrewProfile.stage(fluid,BrewProfile.MATURATION,16)==0,"psychedelicraft.distillery.unaged","psychedelicraft.distillery.requires_unaged"));}
             else if(machine instanceof BarrelBlockEntity)result.add(requirement(fermented,"psychedelicraft.processing.fermented","psychedelicraft.barrel.requires_fermentation"));

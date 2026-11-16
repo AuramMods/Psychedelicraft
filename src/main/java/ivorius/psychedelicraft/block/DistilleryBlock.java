@@ -26,6 +26,6 @@ public final class DistilleryBlock extends FluidMachineBlock {
     private static Direction findOutput(Level world,BlockPos pos){for(Direction side:Direction.Plane.HORIZONTAL)if(canConnectTo(world,pos,side))return side;return Direction.UP;}
     public static boolean canConnectTo(Level world,BlockPos pos,Direction side){
         BlockPos destination=pos.relative(side);if(!world.hasChunkAt(destination))return false;BlockState state=world.getBlockState(destination);
-        return state.getBlock() instanceof DistilleryBlock?state.getValue(FACING)!=side.getOpposite():state.getBlock() instanceof FluidMachineBlock;
+        return state.getBlock() instanceof DistilleryBlock?state.getValue(FACING)!=side.getOpposite():state.getBlock() instanceof FluidMachineBlock||state.getBlock() instanceof MashTubWallBlock;
     }
 }

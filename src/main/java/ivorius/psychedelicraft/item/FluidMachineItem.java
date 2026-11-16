@@ -12,7 +12,7 @@ import net.minecraftforge.fluids.FluidStack;
 import org.jetbrains.annotations.Nullable;
 import java.util.List;
 
-public final class FluidMachineItem extends BlockItem {
+public class FluidMachineItem extends BlockItem {
     private final int capacity;
     public FluidMachineItem(Block block,int capacity){super(block,new Item.Properties().stacksTo(16));this.capacity=capacity;}
     public int getCapacity(){return capacity;}

@@ -23,6 +23,8 @@ public final class PSRecipes {
     public static final RegistryObject<RecipeSerializer<HeatingRecipe>> HEATING=SERIALIZERS.register("smelting_receptical",HeatingRecipe.Serializer::new);
     public static final RegistryObject<RecipeSerializer<BottleRecipe>> BOTTLE=SERIALIZERS.register("crafting_shaped",BottleRecipe.Serializer::new);
     public static final RegistryObject<RecipeSerializer<DistilleryRecipe>> DISTILLERY=SERIALIZERS.register("distillery",DistilleryRecipe.Serializer::new);
+    public static final RegistryObject<RecipeType<MashingRecipe>> MASHING_TYPE=TYPES.register("mashing",()->new RecipeType<>(){@Override public String toString(){return "psychedelicraft:mashing";}});
+    public static final RegistryObject<RecipeSerializer<MashingRecipe>> MASHING=SERIALIZERS.register("mashing",MashingRecipe.Serializer::new);
     private PSRecipes(){}
     public static void register(IEventBus bus){TYPES.register(bus);SERIALIZERS.register(bus);}
 }

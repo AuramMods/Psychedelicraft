@@ -17,6 +17,7 @@ public final class FluidMachineMenu extends AbstractContainerMenu {
         super(PSMenus.FLUID_MACHINE.get(),id);checkContainerSize(machine,2);checkContainerDataCount(data,9);this.machine=machine;this.data=data;this.position=position;
         for(int slot=0;slot<2;slot++){final int index=slot;addSlot(new Slot(machine,slot,slot==0?21:123,slot==0?20:61){
             @Override public int getMaxStackSize(){return 1;}
+            @Override public void onTake(Player player,ItemStack stack){super.onTake(player,stack);if(index==1&&machine instanceof ivorius.psychedelicraft.block.entity.MashTubBlockEntity)ivorius.psychedelicraft.advancement.PSCriteria.tookMash(player,stack);}
             @Override public boolean mayPlace(ItemStack stack){return ivorius.psychedelicraft.block.entity.FluidMachineBlockEntity.acceptsVessel(index,stack)&&machine.canPlaceItem(index,stack);}
         });}
         for(int row=0;row<3;row++)for(int x=0;x<9;x++)addSlot(new Slot(inventory,9+row*9+x,8+x*18,84+row*18));
@@ -25,6 +26,7 @@ public final class FluidMachineMenu extends AbstractContainerMenu {
     public BlockPos getPosition(){return position;}
     public int getFluidAmount(){return data.get(0);}
     public int getCapacity(){return data.get(1);}
+    public boolean isStewing(){return data.get(2)==BrewProcess.values().length;}
     public BrewProcess getStage(){return BrewProcess.fromId(data.get(2));}
     public float getProgress(){return data.get(3)/1000F;}
     public int getRemainingTicks(){return data.get(4)&65535|data.get(5)<<16;}
