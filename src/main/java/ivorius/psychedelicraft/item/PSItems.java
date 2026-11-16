@@ -62,6 +62,9 @@ public final class PSItems {
     public static final RegistryObject<Item> BELLADONNA_BERRIES = ITEMS.register("belladonna_berries", () -> new EdibleItem(1, 1.5F, new DrugInfluence(DrugType.ATROPINE, DrugInfluence.INGESTED_DELAY, 0.005, 0.003, 0.5)));
     public static final RegistryObject<Item> TOMATO = ITEMS.register("tomato", () -> new Item(new Item.Properties().food(new FoodProperties.Builder().nutrition(1).saturationMod(1.9F).alwaysEat().build())));
 
+    public static final RegistryObject<Item> DRYING_TABLE = ITEMS.register("drying_table",()->new BlockItem(PSBlocks.DRYING_TABLE.get(),new Item.Properties()));
+    public static final RegistryObject<Item> IRON_DRYING_TABLE = ITEMS.register("iron_drying_table",()->new BlockItem(PSBlocks.IRON_DRYING_TABLE.get(),new Item.Properties()));
+
     public static final DeferredRegister<CreativeModeTab> TABS = DeferredRegister.create(Registries.CREATIVE_MODE_TAB,Psychedelicraft.MOD_ID);
     public static final RegistryObject<CreativeModeTab> MAIN_TAB = TABS.register("main", () -> CreativeModeTab.builder()
             .title(Component.translatable("itemGroup.psychedelicraft"))

@@ -21,6 +21,10 @@ public final class PSBlocks {
     public static final RegistryObject<NightshadeBlock> JIMSONWEED=BLOCKS.register("jimsonweed",()->new NightshadeBlock(plant(),()->PSItems.JIMSONWEED_SEED_POD.get(),()->PSItems.JIMSONWEED_LEAF.get()));
     public static final RegistryObject<NightshadeBlock> BELLADONNA=BLOCKS.register("belladonna",()->new NightshadeBlock(plant(),()->PSItems.BELLADONNA_BERRIES.get(),()->PSItems.BELLADONNA_LEAF.get()));
     public static final RegistryObject<NightshadeBlock> TOMATOES=BLOCKS.register("tomatoes",()->new NightshadeBlock(plant(),()->PSItems.TOMATO.get(),()->PSItems.TOMATO_LEAF.get()));
+    public static final RegistryObject<DryingTableBlock> DRYING_TABLE=BLOCKS.register("drying_table",()->new DryingTableBlock(
+            BlockBehaviour.Properties.of().strength(2).sound(SoundType.WOOD).ignitedByLava()));
+    public static final RegistryObject<DryingTableBlock> IRON_DRYING_TABLE=BLOCKS.register("iron_drying_table",()->new DryingTableBlock(
+            BlockBehaviour.Properties.of().strength(5).sound(SoundType.METAL)));
     private PSBlocks() {}
     private static BlockBehaviour.Properties plant() {
         return BlockBehaviour.Properties.of().noCollission().noOcclusion().instabreak().randomTicks().sound(SoundType.GRASS);

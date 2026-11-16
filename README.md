@@ -6,7 +6,7 @@ Psychedelicraft
 ![Downloads](https://img.shields.io/github/downloads/Sollace/Psychedelicraft/total.svg?color=yellowgreen)
 ![License](https://img.shields.io/github/license/Sollace/Psychedelicraft)
 
-This branch is developing the Minecraft 1.20.1 Forge port. The effect registry, initial consumables, ten crop blocks and core gameplay hooks are implemented; the full content and audiovisual migration is in progress. See the [1.20.1 port report](docs/PORT_1201.md) for migration coverage and verification.
+This branch is developing the Minecraft 1.20.1 Forge port. The effect registry, initial consumables, ten crop blocks, drying tables and core gameplay hooks are implemented; the full content and audiovisual migration is in progress. See the [1.20.1 port report](docs/PORT_1201.md) for migration coverage and verification.
 
 The One And Only, accept no substitutes!
 
@@ -38,7 +38,7 @@ and you may use this mod in modpacks.
 Installation
 ============
 
-Use Minecraft **1.20.1**, **Java 17** and **Forge 47.4.28**. This branch currently contains the effect foundation, initial consumables, primary crops and coffee roasting. The feature checklist tracks the remaining port.
+Use Minecraft **1.20.1**, **Java 17** and **Forge 47.4.28**. This branch currently contains the effect foundation, initial consumables, primary crops, coffee roasting and drying-table processing/automation. The feature checklist tracks the remaining port.
 
 Build with a Java 17 JDK.
 
@@ -47,5 +47,7 @@ Build with a Java 17 JDK.
 ```
 
 The reobfuscated production jar is `build/libs/psychedelicraft-1.20.1-port.1.jar`. Install the same jar on the Forge client and dedicated server in their `mods` directories. This port targets new 1.20.1 worlds.
+
+Run the unit and headless Forge GameTest suites with `./gradlew build runGameTestServer`.
 
 Development runs use `./gradlew runClient` and `./gradlew runServer`. The background QA workflow is recorded in [the port report](docs/PORT_1201.md).

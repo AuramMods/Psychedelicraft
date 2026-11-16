@@ -8,6 +8,13 @@ version = '1.20.1-port.1'
 base { archivesName = 'psychedelicraft' }
 java.toolchain.languageVersion = JavaLanguageVersion.of(17)
 
+sourceSets {
+    gameTest {
+        compileClasspath += sourceSets.main.output + sourceSets.main.compileClasspath
+        runtimeClasspath += sourceSets.main.output + sourceSets.main.runtimeClasspath
+    }
+}
+
 minecraft {
     mappings channel: 'official', version: '1.20.1'
     accessTransformer = file('src/main/resources/META-INF/accesstransformer.cfg')
@@ -19,6 +26,11 @@ minecraft {
         }
         client {}
         server { args '--nogui' }
+        gameTestServer {
+            workingDirectory project.file('run/gametest')
+            property 'forge.enabledGameTestNamespaces', 'psychedelicrafttests'
+            mods { psychedelicrafttests { source sourceSets.gameTest } }
+        }
     }
 }
 
@@ -35,3 +47,4 @@ processResources {
     from 'LICENSE'
 }
 jar.finalizedBy('reobfJar')
+build.dependsOn(gameTestClasses)

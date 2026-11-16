@@ -1,0 +1,13 @@
+modLoader="javafml"
+loaderVersion="[47,)"
+license="MIT"
+[[mods]]
+modId="psychedelicrafttests"
+version="1"
+displayName="Psychedelicraft GameTests"
+[[dependencies.psychedelicrafttests]]
+modId="psychedelicraft"
+mandatory=true
+versionRange="[0,)"
+ordering="AFTER"
+side="BOTH"

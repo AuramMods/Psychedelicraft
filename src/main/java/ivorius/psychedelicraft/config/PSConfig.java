@@ -7,6 +7,8 @@ import java.util.Map;
 
 public final class PSConfig {
     public static final ForgeConfigSpec COMMON;
+    public static final ForgeConfigSpec.IntValue DRYING_TABLE_TICKS;
+    public static final ForgeConfigSpec.IntValue IRON_DRYING_TABLE_TICKS;
     public static final Map<String,GenerationFeature> GENERATION = new LinkedHashMap<>();
     static {
         ForgeConfigSpec.Builder builder = new ForgeConfigSpec.Builder();
@@ -20,6 +22,12 @@ public final class PSConfig {
                             .defineListAllowEmpty("excluded",List.of(),value -> value instanceof String)));
             builder.pop();
         }
+        builder.pop();
+        builder.push("balancing");
+        DRYING_TABLE_TICKS=builder.comment("Ticks at maximum heat to finish a wooden drying-table batch.")
+                .defineInRange("dryingTableTickDuration",16*60*20,1,Integer.MAX_VALUE);
+        IRON_DRYING_TABLE_TICKS=builder.comment("Ticks at maximum heat to finish an iron drying-table batch.")
+                .defineInRange("ironDryingTableTickDuration",12*60*20,1,Integer.MAX_VALUE);
         builder.pop();
         COMMON=builder.build();
     }
