@@ -18,6 +18,10 @@ public final class PSRecipes {
     });
     public static final RegistryObject<RecipeSerializer<DryingRecipe>> DRYING=SERIALIZERS.register("drying",DryingRecipe.Serializer::new);
     public static final RegistryObject<RecipeSerializer<HarmoniumDyeRecipe>> HARMONIUM_DYE=SERIALIZERS.register("dye_harmonium",()->new SimpleCraftingRecipeSerializer<>(HarmoniumDyeRecipe::new));
+    public static final RegistryObject<RecipeSerializer<FillReceptacleRecipe>> FILL_RECEPTACLE=SERIALIZERS.register("fill_receptical",FillReceptacleRecipe.Serializer::new);
+    public static final RegistryObject<RecipeSerializer<PouringRecipe>> POURING=SERIALIZERS.register("pour_drink",()->new SimpleCraftingRecipeSerializer<>(PouringRecipe::new));
+    public static final RegistryObject<RecipeSerializer<HeatingRecipe>> HEATING=SERIALIZERS.register("smelting_receptical",HeatingRecipe.Serializer::new);
+    public static final RegistryObject<RecipeSerializer<BottleRecipe>> BOTTLE=SERIALIZERS.register("crafting_shaped",BottleRecipe.Serializer::new);
     private PSRecipes(){}
     public static void register(IEventBus bus){TYPES.register(bus);SERIALIZERS.register(bus);}
 }

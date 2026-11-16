@@ -1,0 +1,16 @@
+{
+  "type": "psychedelicraft:smelting_receptical",
+  "cookingtime": 200,
+  "experience": 0.2,
+  "input": {
+    "fluid": "psychedelicraft:coffee"
+  },
+  "result": {
+    "attributes": {
+      "warmth": {
+        "type": "add",
+        "value": 1
+      }
+    }
+  }
+}

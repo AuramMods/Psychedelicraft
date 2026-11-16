@@ -78,19 +78,30 @@ public final class PSItems {
     public static final RegistryObject<HarmoniumItem> HARMONIUM=ITEMS.register("harmonium",HarmoniumItem::new);
     public static final RegistryObject<BongItem> SMOKING_PIPE=ITEMS.register("smoking_pipe",()->smokingTool(false));
     public static final RegistryObject<BongItem> BONG=ITEMS.register("bong",()->smokingTool(true));
+    public static final RegistryObject<PortableFluidItem> WOODEN_MUG=vessel("wooden_mug",ivorius.psychedelicraft.fluid.FluidVessel.MUG);
+    public static final RegistryObject<PortableFluidItem> STONE_CUP=vessel("stone_cup",ivorius.psychedelicraft.fluid.FluidVessel.CUP);
+    public static final RegistryObject<PortableFluidItem> GLASS_CHALICE=vessel("glass_chalice",ivorius.psychedelicraft.fluid.FluidVessel.CHALICE);
+    public static final RegistryObject<PortableFluidItem> SHOT_GLASS=vessel("shot_glass",ivorius.psychedelicraft.fluid.FluidVessel.SHOT_GLASS);
+    public static final RegistryObject<PortableFluidItem> BOTTLE=vessel("bottle",ivorius.psychedelicraft.fluid.FluidVessel.BOTTLE);
+    public static final RegistryObject<PortableFluidItem> SYRINGE=vessel("syringe",ivorius.psychedelicraft.fluid.FluidVessel.SYRINGE);
+    public static final RegistryObject<PortableFluidItem> FILLED_BOWL=vessel("filled_bowl",ivorius.psychedelicraft.fluid.FluidVessel.BOWL);
+    public static final RegistryObject<PortableFluidItem> FILLED_GLASS_BOTTLE=vessel("filled_glass_bottle",ivorius.psychedelicraft.fluid.FluidVessel.GLASS_BOTTLE);
+    public static final RegistryObject<PortableFluidItem> FILLED_BUCKET=vessel("filled_bucket",ivorius.psychedelicraft.fluid.FluidVessel.BUCKET);
 
     public static final DeferredRegister<CreativeModeTab> TABS = DeferredRegister.create(Registries.CREATIVE_MODE_TAB,Psychedelicraft.MOD_ID);
     public static final RegistryObject<CreativeModeTab> MAIN_TAB = TABS.register("main", () -> CreativeModeTab.builder()
             .title(Component.translatable("itemGroup.psychedelicraft"))
             .icon(() -> new ItemStack(COFFEE_BEANS.get()))
             .displayItems((parameters, output) -> ITEMS.getEntries().forEach(item -> {
-                if(item.get()!=HARMONIUM.get())output.accept(item.get());
+                if(item.get() instanceof PortableFluidItem vessel)VesselCreativeItems.add(vessel,output::accept);
+                else if(item.get()!=HARMONIUM.get())output.accept(item.get());
                 else if(PSConfig.ENABLE_HARMONIUM.get())for(DyeColor dye:DyeColor.values()){
                     ItemStack stack=new ItemStack(item.get());HarmoniumItem.setColor(stack,HarmoniumItem.packColor(dye.getTextureDiffuseColors()));output.accept(stack);
                 }
             })).build());
 
     private PSItems() {}
+    private static RegistryObject<PortableFluidItem> vessel(String id,ivorius.psychedelicraft.fluid.FluidVessel vessel){return ITEMS.register(id,()->new PortableFluidItem(vessel));}
     private static RegistryObject<Item> seed(String id, Supplier<? extends Block> block) {
         return ITEMS.register(id, () -> new CropSeedItem(block.get()));
     }
