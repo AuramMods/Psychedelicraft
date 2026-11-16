@@ -3,6 +3,7 @@ package ivorius.psychedelicraft.block;
 import ivorius.psychedelicraft.Psychedelicraft;
 import ivorius.psychedelicraft.item.PSItems;
 import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.SoundType;
 import net.minecraft.world.level.block.state.BlockBehaviour;
 import net.minecraftforge.registries.DeferredRegister;
@@ -25,6 +26,14 @@ public final class PSBlocks {
             BlockBehaviour.Properties.of().strength(2).sound(SoundType.WOOD).ignitedByLava()));
     public static final RegistryObject<DryingTableBlock> IRON_DRYING_TABLE=BLOCKS.register("iron_drying_table",()->new DryingTableBlock(
             BlockBehaviour.Properties.of().strength(5).sound(SoundType.METAL)));
+    public static final RegistryObject<FlaskBlock> FLASK=BLOCKS.register("flask",FlaskBlock::new);
+    public static final RegistryObject<DistilleryBlock> DISTILLERY=BLOCKS.register("distillery",DistilleryBlock::new);
+    public static final RegistryObject<BarrelBlock> OAK_BARREL=BLOCKS.register("oak_barrel",()->new BarrelBlock(Blocks.OAK_PLANKS));
+    public static final RegistryObject<BarrelBlock> BIRCH_BARREL=BLOCKS.register("birch_barrel",()->new BarrelBlock(Blocks.BIRCH_PLANKS));
+    public static final RegistryObject<BarrelBlock> SPRUCE_BARREL=BLOCKS.register("spruce_barrel",()->new BarrelBlock(Blocks.SPRUCE_PLANKS));
+    public static final RegistryObject<BarrelBlock> ACACIA_BARREL=BLOCKS.register("acacia_barrel",()->new BarrelBlock(Blocks.ACACIA_PLANKS));
+    public static final RegistryObject<BarrelBlock> JUNGLE_BARREL=BLOCKS.register("jungle_barrel",()->new BarrelBlock(Blocks.JUNGLE_PLANKS));
+    public static final RegistryObject<BarrelBlock> DARK_OAK_BARREL=BLOCKS.register("dark_oak_barrel",()->new BarrelBlock(Blocks.DARK_OAK_PLANKS));
     private PSBlocks() {}
     private static BlockBehaviour.Properties plant() {
         return BlockBehaviour.Properties.of().noCollission().noOcclusion().instabreak().randomTicks().sound(SoundType.GRASS);

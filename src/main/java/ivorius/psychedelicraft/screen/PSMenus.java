@@ -10,5 +10,6 @@ import net.minecraftforge.registries.RegistryObject;
 public final class PSMenus {
     public static final DeferredRegister<MenuType<?>> MENUS=DeferredRegister.create(ForgeRegistries.MENU_TYPES,Psychedelicraft.MOD_ID);
     public static final RegistryObject<MenuType<DryingTableMenu>> DRYING_TABLE=MENUS.register("drying_table",()->IForgeMenuType.create(DryingTableMenu::new));
+    public static final RegistryObject<MenuType<FluidMachineMenu>> FLUID_MACHINE=MENUS.register("fluid_machine",()->IForgeMenuType.create(FluidMachineMenu::new));
     private PSMenus(){}
 }

@@ -11,5 +11,8 @@ public final class PSBlockEntities {
     public static final DeferredRegister<BlockEntityType<?>> TYPES=DeferredRegister.create(ForgeRegistries.BLOCK_ENTITY_TYPES,Psychedelicraft.MOD_ID);
     public static final RegistryObject<BlockEntityType<DryingTableBlockEntity>> DRYING_TABLE=TYPES.register("drying_table",()->
             BlockEntityType.Builder.of(DryingTableBlockEntity::new,PSBlocks.DRYING_TABLE.get(),PSBlocks.IRON_DRYING_TABLE.get()).build(null));
+    public static final RegistryObject<BlockEntityType<FlaskBlockEntity>> FLASK=TYPES.register("flask",()->BlockEntityType.Builder.of(FlaskBlockEntity::new,PSBlocks.FLASK.get()).build(null));
+    public static final RegistryObject<BlockEntityType<DistilleryBlockEntity>> DISTILLERY=TYPES.register("distillery",()->BlockEntityType.Builder.of(DistilleryBlockEntity::new,PSBlocks.DISTILLERY.get()).build(null));
+    public static final RegistryObject<BlockEntityType<BarrelBlockEntity>> BARREL=TYPES.register("barrel",()->BlockEntityType.Builder.of(BarrelBlockEntity::new,PSBlocks.OAK_BARREL.get(),PSBlocks.BIRCH_BARREL.get(),PSBlocks.SPRUCE_BARREL.get(),PSBlocks.ACACIA_BARREL.get(),PSBlocks.JUNGLE_BARREL.get(),PSBlocks.DARK_OAK_BARREL.get()).build(null));
     private PSBlockEntities(){}
 }

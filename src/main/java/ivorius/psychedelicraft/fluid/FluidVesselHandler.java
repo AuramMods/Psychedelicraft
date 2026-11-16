@@ -4,6 +4,7 @@ package ivorius.psychedelicraft.fluid;
 import ivorius.psychedelicraft.Psychedelicraft;
 import ivorius.psychedelicraft.item.PSItems;
 import ivorius.psychedelicraft.item.PortableFluidItem;
+import ivorius.psychedelicraft.item.FluidMachineItem;
 import net.minecraft.core.Direction;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.Tag;
@@ -27,6 +28,7 @@ public final class FluidVesselHandler extends FluidHandlerItemStack {
     private final FluidVessel vessel;
     private final LazyOptional<IFluidHandlerItem> capability=LazyOptional.of(()->this);
     public FluidVesselHandler(ItemStack stack,FluidVessel vessel){super(stack,vessel.capacity);this.vessel=vessel;}
+    public FluidVesselHandler(ItemStack stack,int capacity){super(stack,capacity);vessel=null;}
     public void invalidate(){capability.invalidate();}
     @SubscribeEvent public static void attach(AttachCapabilitiesEvent<ItemStack> event){
         Item item=event.getObject().getItem();
@@ -37,6 +39,7 @@ public final class FluidVesselHandler extends FluidHandlerItemStack {
     }
     public static @Nullable FluidVesselHandler forCrafting(ItemStack stack){
         if(stack.isEmpty())return null;Item item=stack.getItem();FluidVessel vessel;
+        if(item instanceof FluidMachineItem machine){ItemStack single=stack.copy();single.setCount(1);return new FluidVesselHandler(single,machine.getCapacity());}
         if(item instanceof PortableFluidItem portable)vessel=portable.getVessel();
         else if(item==Items.BUCKET||item==Items.WATER_BUCKET||item==Items.LAVA_BUCKET||item==Items.MILK_BUCKET)vessel=FluidVessel.BUCKET;
         else if(item==Items.BOWL)vessel=FluidVessel.BOWL;
@@ -62,8 +65,8 @@ public final class FluidVesselHandler extends FluidHandlerItemStack {
         return FluidStack.EMPTY;
     }
     private static boolean isWaterBottle(ItemStack stack){return stack.is(Items.POTION)&&PotionUtils.getPotion(stack)==Potions.WATER&&PotionUtils.getMobEffects(stack).isEmpty();}
-    @Override public FluidStack getFluid(){return contents(container,vessel);}
-    @Override public boolean canFillFluidType(FluidStack fluid){return vessel.accepts(fluid.getFluid());}
+    @Override public FluidStack getFluid(){return vessel==null?(container.isEmpty()?FluidStack.EMPTY:FluidContents.read(container.getTag()==null?new CompoundTag():container.getTag().getCompound(CONTENTS),capacity)):contents(container,vessel);}
+    @Override public boolean canFillFluidType(FluidStack fluid){return vessel==null||vessel.accepts(fluid.getFluid());}
     @Override public boolean isFluidValid(int tank,FluidStack fluid){return tank==0&&!fluid.isEmpty()&&canFillFluidType(fluid);}
     @Override public int fill(FluidStack resource,FluidAction action){return super.fill(FluidContents.normalize(resource),action);}
     @Override public FluidStack drain(FluidStack resource,FluidAction action){return super.drain(FluidContents.normalize(resource),action);}
@@ -79,7 +82,7 @@ public final class FluidVesselHandler extends FluidHandlerItemStack {
     }
     @Override protected void setFluid(FluidStack supplied){
         FluidStack stack=FluidContents.normalize(supplied);if(stack.isEmpty()){setContainerToEmpty();return;}Fluid fluid=stack.getFluid();
-        if(stack.getAmount()==capacity&&!stack.hasTag()){
+        if(vessel!=null&&stack.getAmount()==capacity&&!stack.hasTag()){
             if(vessel==FluidVessel.BUCKET){
                 if(fluid==Fluids.WATER){replace(Items.WATER_BUCKET);return;}if(fluid==Fluids.LAVA){replace(Items.LAVA_BUCKET);return;}
                 if(fluid==PSFluids.MILK.get()){replace(Items.MILK_BUCKET);return;}
@@ -89,9 +92,9 @@ public final class FluidVesselHandler extends FluidHandlerItemStack {
                 if(fluid==Fluids.WATER){replace(Items.POTION);PotionUtils.setPotion(container,Potions.WATER);return;}
             }
         }
-        replace(vessel.taggedItem(container));container.getOrCreateTag().put(CONTENTS,FluidContents.write(stack));
+        replace(vessel==null?container.getItem():vessel.taggedItem(container));container.getOrCreateTag().put(CONTENTS,FluidContents.write(stack));
     }
-    @Override protected void setContainerToEmpty(){Item empty=vessel.emptyItem();replace(empty==null?container.getItem():empty);}
+    @Override protected void setContainerToEmpty(){Item empty=vessel==null?null:vessel.emptyItem();replace(empty==null?container.getItem():empty);}
     private void replace(Item item){
         Item old=container.getItem();CompoundTag tag=container.getTag()==null?null:container.getTag().copy();
         if(old!=item){

@@ -88,6 +88,15 @@ public final class PSItems {
     public static final RegistryObject<PortableFluidItem> FILLED_GLASS_BOTTLE=vessel("filled_glass_bottle",ivorius.psychedelicraft.fluid.FluidVessel.GLASS_BOTTLE);
     public static final RegistryObject<PortableFluidItem> FILLED_BUCKET=vessel("filled_bucket",ivorius.psychedelicraft.fluid.FluidVessel.BUCKET);
 
+    public static final RegistryObject<FluidMachineItem> FLASK=ITEMS.register("flask",()->new FluidMachineItem(PSBlocks.FLASK.get(),8000));
+    public static final RegistryObject<FluidMachineItem> DISTILLERY=ITEMS.register("distillery",()->new FluidMachineItem(PSBlocks.DISTILLERY.get(),8000));
+    public static final RegistryObject<FluidMachineItem> OAK_BARREL=ITEMS.register("oak_barrel",()->new FluidMachineItem(PSBlocks.OAK_BARREL.get(),16000));
+    public static final RegistryObject<FluidMachineItem> BIRCH_BARREL=ITEMS.register("birch_barrel",()->new FluidMachineItem(PSBlocks.BIRCH_BARREL.get(),16000));
+    public static final RegistryObject<FluidMachineItem> SPRUCE_BARREL=ITEMS.register("spruce_barrel",()->new FluidMachineItem(PSBlocks.SPRUCE_BARREL.get(),16000));
+    public static final RegistryObject<FluidMachineItem> ACACIA_BARREL=ITEMS.register("acacia_barrel",()->new FluidMachineItem(PSBlocks.ACACIA_BARREL.get(),16000));
+    public static final RegistryObject<FluidMachineItem> JUNGLE_BARREL=ITEMS.register("jungle_barrel",()->new FluidMachineItem(PSBlocks.JUNGLE_BARREL.get(),16000));
+    public static final RegistryObject<FluidMachineItem> DARK_OAK_BARREL=ITEMS.register("dark_oak_barrel",()->new FluidMachineItem(PSBlocks.DARK_OAK_BARREL.get(),16000));
+
     public static final DeferredRegister<CreativeModeTab> TABS = DeferredRegister.create(Registries.CREATIVE_MODE_TAB,Psychedelicraft.MOD_ID);
     public static final RegistryObject<CreativeModeTab> MAIN_TAB = TABS.register("main", () -> CreativeModeTab.builder()
             .title(Component.translatable("itemGroup.psychedelicraft"))

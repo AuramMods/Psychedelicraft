@@ -12,6 +12,7 @@ public final class PSConfig {
     public static final ForgeConfigSpec.BooleanValue ENABLE_HARMONIUM;
     public static final Map<String,FluidTickConfig> FLUID_TICKS=new LinkedHashMap<>();
     public static final ForgeConfigSpec.IntValue FLOWER_EXTRACT_DISTILLATION_TICKS;
+    public static final ForgeConfigSpec.IntValue SLURRY_HARDENING_TICKS;
     public static final Map<String,GenerationFeature> GENERATION = new LinkedHashMap<>();
     static {
         ForgeConfigSpec.Builder builder = new ForgeConfigSpec.Builder();
@@ -32,6 +33,7 @@ public final class PSConfig {
                 .defineInRange("dryingTableTickDuration",16*60*20,1,Integer.MAX_VALUE);
         IRON_DRYING_TABLE_TICKS=builder.comment("Ticks at maximum heat to finish an iron drying-table batch.")
                 .defineInRange("ironDryingTableTickDuration",12*60*20,1,Integer.MAX_VALUE);
+        SLURRY_HARDENING_TICKS=builder.defineInRange("slurryHardeningTime",30*60*20,1,Integer.MAX_VALUE);
         builder.push("fluidAttributes");
         for(String name:List.of("wheatHop","wheat","potato","tomato","redGrapes","rice","juniper","honey","sugarCane","corn","apple","pineapple","banana","milk","agave")){
             builder.push(name);

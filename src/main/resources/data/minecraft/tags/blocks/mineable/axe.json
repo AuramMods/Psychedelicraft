@@ -1,6 +1,12 @@
 {
   "replace": false,
   "values": [
-    "psychedelicraft:drying_table"
+    "psychedelicraft:drying_table",
+    "psychedelicraft:oak_barrel",
+    "psychedelicraft:birch_barrel",
+    "psychedelicraft:spruce_barrel",
+    "psychedelicraft:acacia_barrel",
+    "psychedelicraft:jungle_barrel",
+    "psychedelicraft:dark_oak_barrel"
   ]
 }
