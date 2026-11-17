@@ -1,0 +1,7 @@
+modLoader="javafml"
+loaderVersion="[47,)"
+license="MIT"
+[[mods]]
+modId="psregistryaudit"
+version="1"
+displayName="Psychedelicraft Registration Audit (QA only)"
