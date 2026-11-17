@@ -36,6 +36,7 @@ public final class PSItems {
     public static final RegistryObject<Item> JOLLY_RANCHER = edible("jolly_rancher", 0, DrugType.SUGAR, DrugInfluence.INGESTED_DELAY, 0.005, 0.003, 0.05);
     public static final RegistryObject<Item> COCAINE_POWDER = powder("cocaine_powder", DrugType.COCAINE);
     public static final RegistryObject<Item> OBSIDIAN_DUST = powder("obsidian_dust", DrugType.BATH_SALTS);
+    public static final RegistryObject<Item> OBSIDIAN_BOTTLE = ITEMS.register("obsidian_bottle",()->new Item(new Item.Properties().stacksTo(16)));
 
     public static final RegistryObject<Item> CANNABIS_SEEDS = seed("cannabis_seeds", PSBlocks.CANNABIS);
     public static final RegistryObject<Item> HOP_SEEDS = seed("hop_seeds", PSBlocks.HOP);

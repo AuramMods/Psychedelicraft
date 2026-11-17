@@ -56,6 +56,10 @@ JEI is optional. The integration is tested with **JEI 15.74.0.234 for Forge 1.20
 
 JEI's common and Forge API dependencies are pinned to `15.74.0.234` from [the official Maven repository](https://maven.blamejared.com/mezz/jei/). They are compile-only and are not bundled in the production jar. To include JEI in a developer client, run `./gradlew -PwithJei runClient`; installed clients can add the separate Forge JEI jar to `mods`. The optional dependency range is JEI 15.19 or newer within major version 15; the exact tested version above is recommended.
 
+For multiplayer with the tested JEI version, install that JEI jar on the dedicated server too. Its bundled MezzConfig `0.6.10` configuration channel rejected a client-only installation during the packaged test. Psychedelicraft itself still runs without JEI; this connection limitation belongs to the tested optional dependency.
+
+Hash muffins use six dried cannabis leaves, two wheat and light blue dye. Pour a lava bucket into glass bottles to obtain 125 mB servings, then craft a full lava glass with a water bucket to make an obsidian bottle. This incorporates the glass and returns the empty bucket. Crush the solid bottle into obsidian dust for the bath-salts syringe recipe, or compact nine dust into one obsidian block.
+
 Decorative flower pots accept cannabis, hop, tobacco and coca seeds, or coffea cherries. Use the planting item on an empty vanilla flower pot, then use an empty hand to recover it. Morning glory and juniper saplings also retain their native pot forms.
 
 The 24 mod advancements track plant/material acquisition, drying equipment, smoking items, mash withdrawal, distinct brewed drinks, villager feeding, hangovers and the original sixteen-drug challenge. Brew criteria inspect the actual served contents, including maturation and vinegar state. Minecraft supplies its native trident and Channeling advancements.

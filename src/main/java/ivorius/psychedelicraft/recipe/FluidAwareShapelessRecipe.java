@@ -61,7 +61,8 @@ public final class FluidAwareShapelessRecipe extends CustomRecipe {
     @Override public RecipeSerializer<?> getSerializer() { return PSRecipes.SHAPELESS_FLUID.get(); }
 
     /** A null fluid means an ordinary ingredient; an empty vessel means any fluid-capable item. */
-    public record Input(Ingredient vessel, Fluid fluid, int amount, CompoundTag attributes) implements Predicate<ItemStack> {
+    public record Input(Ingredient vessel, Fluid fluid, int amount, CompoundTag attributes, boolean consumeContainer) implements Predicate<ItemStack> {
+        public Input(Ingredient vessel,Fluid fluid,int amount,CompoundTag attributes){this(vessel,fluid,amount,attributes,false);}
         public Input { attributes = attributes.copy(); }
         @Override public CompoundTag attributes() { return attributes.copy(); }
         @Override public boolean test(ItemStack stack) {
@@ -82,6 +83,8 @@ public final class FluidAwareShapelessRecipe extends CustomRecipe {
             return FluidStack.EMPTY;
         }
         public ItemStack remainder(ItemStack stack) {
+            // Some products incorporate the vessel itself (lava glass -> solid obsidian bottle).
+            if (consumeContainer) return ItemStack.EMPTY;
             if (fluid == null || amount <= 0) return stack.getCraftingRemainingItem();
             var handler = FluidVesselHandler.forTransfer(stack);
             if (handler == null) return ItemStack.EMPTY;
@@ -105,9 +108,11 @@ public final class FluidAwareShapelessRecipe extends CustomRecipe {
             return Ingredient.of(samples.stream());
         }
         static Input parse(JsonElement element) {
-            if (!element.isJsonObject() || !element.getAsJsonObject().has("fluid")) return new Input(Ingredient.fromJson(element), null, 0, new CompoundTag());
+            if (!element.isJsonObject() || !element.getAsJsonObject().has("fluid")) return new Input(Ingredient.fromJson(element), null, 0, new CompoundTag(),
+                    element.isJsonObject() && GsonHelper.getAsBoolean(element.getAsJsonObject(),"consume_container",false));
             JsonObject json = element.getAsJsonObject();
-            Ingredient vessel = json.size() > 1 ? Ingredient.fromJson(element) : Ingredient.EMPTY;
+            JsonObject vesselSpec=json.deepCopy();vesselSpec.remove("fluid");vesselSpec.remove("consume_container");
+            Ingredient vessel = vesselSpec.size() > 0 ? Ingredient.fromJson(vesselSpec) : Ingredient.EMPTY;
             JsonElement spec = json.get("fluid");
             JsonObject value = spec.isJsonObject() ? spec.getAsJsonObject() : new JsonObject();
             String id = spec.isJsonObject() ? GsonHelper.getAsString(value, "fluid") : spec.getAsString();
@@ -117,7 +122,7 @@ public final class FluidAwareShapelessRecipe extends CustomRecipe {
             if (value.has("attributes")) try {
                 JsonElement tag = value.get("attributes"); attributes = TagParser.parseTag(tag.isJsonPrimitive() ? tag.getAsString() : tag.toString());
             } catch (Exception error) { throw new JsonSyntaxException("Invalid crafting fluid attributes", error); }
-            return new Input(vessel, fluid, GsonHelper.getAsInt(value, "level", -1), attributes);
+            return new Input(vessel, fluid, GsonHelper.getAsInt(value, "level", -1), attributes,GsonHelper.getAsBoolean(json,"consume_container",false));
         }
     }
     public static final class Serializer implements RecipeSerializer<FluidAwareShapelessRecipe> {
@@ -135,7 +140,7 @@ public final class FluidAwareShapelessRecipe extends CustomRecipe {
             for (int i = 0; i < count; i++) {
                 Ingredient vessel = Ingredient.fromNetwork(buffer);
                 Fluid fluid = buffer.readBoolean() ? Objects.requireNonNull(PSFluids.resolve(buffer.readResourceLocation().toString())) : null;
-                inputs.add(new Input(vessel, fluid, buffer.readVarInt(), Objects.requireNonNullElseGet(buffer.readNbt(), CompoundTag::new)));
+                inputs.add(new Input(vessel, fluid, buffer.readVarInt(), Objects.requireNonNullElseGet(buffer.readNbt(), CompoundTag::new),buffer.readBoolean()));
             }
             return new FluidAwareShapelessRecipe(id, group, category, output, inputs);
         }
@@ -145,6 +150,7 @@ public final class FluidAwareShapelessRecipe extends CustomRecipe {
                 input.vessel.toNetwork(buffer); buffer.writeBoolean(input.fluid != null);
                 if (input.fluid != null) buffer.writeResourceLocation(new ResourceLocation(PSFluids.id(input.fluid)));
                 buffer.writeVarInt(input.amount); buffer.writeNbt(input.attributes);
+                buffer.writeBoolean(input.consumeContainer);
             }
         }
     }

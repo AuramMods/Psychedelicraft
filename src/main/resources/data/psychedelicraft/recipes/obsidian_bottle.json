@@ -1,0 +1,19 @@
+{
+  "type": "psychedelicraft:shapeless_fluid",
+  "ingredients": [
+    {
+      "item": "psychedelicraft:filled_glass_bottle",
+      "fluid": {
+        "fluid": "minecraft:lava",
+        "level": 125
+      },
+      "consume_container": true
+    },
+    {
+      "item": "minecraft:water_bucket"
+    }
+  ],
+  "result": {
+    "item": "psychedelicraft:obsidian_bottle"
+  }
+}
