@@ -20,6 +20,7 @@ public final class PSRecipes {
     public static final RegistryObject<RecipeSerializer<HarmoniumDyeRecipe>> HARMONIUM_DYE=SERIALIZERS.register("dye_harmonium",()->new SimpleCraftingRecipeSerializer<>(HarmoniumDyeRecipe::new));
     public static final RegistryObject<RecipeSerializer<FillReceptacleRecipe>> FILL_RECEPTACLE=SERIALIZERS.register("fill_receptical",FillReceptacleRecipe.Serializer::new);
     public static final RegistryObject<RecipeSerializer<FluidAwareShapelessRecipe>> SHAPELESS_FLUID=SERIALIZERS.register("shapeless_fluid",FluidAwareShapelessRecipe.Serializer::new);
+    public static final RegistryObject<RecipeSerializer<ChangeReceptacleRecipe>> CHANGE_RECEPTACLE=SERIALIZERS.register("change_receptical",ChangeReceptacleRecipe.Serializer::new);
     public static final RegistryObject<RecipeSerializer<PouringRecipe>> POURING=SERIALIZERS.register("pour_drink",()->new SimpleCraftingRecipeSerializer<>(PouringRecipe::new));
     public static final RegistryObject<RecipeSerializer<HeatingRecipe>> HEATING=SERIALIZERS.register("smelting_receptical",HeatingRecipe.Serializer::new);
     public static final RegistryObject<RecipeSerializer<BottleRecipe>> BOTTLE=SERIALIZERS.register("crafting_shaped",BottleRecipe.Serializer::new);

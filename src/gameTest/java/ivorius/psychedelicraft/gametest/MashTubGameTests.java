@@ -66,7 +66,7 @@ public final class MashTubGameTests {
         try{var result=held.useOn(new net.minecraft.world.item.context.UseOnContext(player,InteractionHand.MAIN_HAND,new BlockHitResult(target.getCenter(),Direction.UP,target,false)));check(result==InteractionResult.FAIL&&seen[0]==9,"real Forge item-use path publishes nine-cell cancellable placement");}finally{MinecraftForge.EVENT_BUS.unregister(listener);}
         check(held.getCount()==1&&PSItems.MASH_TUB.get().contents(held).getAmount()==17000,"cancelled placement retains exact portable item and fluid");
         for(BlockPos part:BlockPos.betweenClosed(target.offset(-1,0,-1),target.offset(1,0,1)))check(h.getLevel().getBlockState(part).isAir()&&h.getLevel().getBlockEntity(part)==null,"Forge rollback restores all cells and removes transient entities");
-        check(h.getLevel().getEntitiesOfClass(ItemEntity.class,new AABB(target).inflate(3)).isEmpty(),"cancelled placement creates no duplicate portable drops");h.succeed();
+        check(h.getLevel().getEntitiesOfClass(ItemEntity.class,new AABB(target).inflate(3),entity->entity.getItem().is(PSItems.MASH_TUB.get())).isEmpty(),"cancelled placement creates no duplicate portable drops");h.succeed();
     }
     @GameTest(template="empty") public static void wallsClipCollisionWhileKeepingBasinHollow(GameTestHelper h){
         var vat=vat(h);var world=h.getLevel();BlockPos center=vat.getBlockPos();

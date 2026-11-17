@@ -10,6 +10,7 @@ public final class PSConfig {
     public static final ForgeConfigSpec.IntValue DRYING_TABLE_TICKS;
     public static final ForgeConfigSpec.IntValue IRON_DRYING_TABLE_TICKS;
     public static final ForgeConfigSpec.BooleanValue ENABLE_HARMONIUM;
+    public static final ForgeConfigSpec.BooleanValue DISABLE_MOLOTOVS;
     public static final Map<String,FluidTickConfig> FLUID_TICKS=new LinkedHashMap<>();
     public static final ForgeConfigSpec.IntValue FLOWER_EXTRACT_DISTILLATION_TICKS;
     public static final ForgeConfigSpec.IntValue SLURRY_HARDENING_TICKS;
@@ -29,6 +30,7 @@ public final class PSConfig {
         builder.pop();
         builder.push("balancing");
         ENABLE_HARMONIUM=builder.define("enableHarmonium",true);
+        DISABLE_MOLOTOVS=builder.comment("Hide molotovs in the creative catalog, matching the accepted setting.").define("disableMolotovs",false);
         DRYING_TABLE_TICKS=builder.comment("Ticks at maximum heat to finish a wooden drying-table batch.")
                 .defineInRange("dryingTableTickDuration",16*60*20,1,Integer.MAX_VALUE);
         IRON_DRYING_TABLE_TICKS=builder.comment("Ticks at maximum heat to finish an iron drying-table batch.")

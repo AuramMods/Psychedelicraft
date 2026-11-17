@@ -11,6 +11,7 @@ import java.util.function.Consumer;
 public final class VesselCreativeItems {
     private VesselCreativeItems(){}
     public static void add(PortableFluidItem item,Consumer<ItemStack> output){
+        if(item instanceof MolotovCocktailItem&&ivorius.psychedelicraft.config.PSConfig.DISABLE_MOLOTOVS.get())return;
         FluidVessel vessel=item.getVessel();
         output.accept(new ItemStack(vessel.emptyItem()==null?item:vessel.emptyItem()));
         Consumer<FluidStack> filled=fluid->{

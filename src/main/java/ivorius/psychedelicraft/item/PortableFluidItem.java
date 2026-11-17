@@ -22,7 +22,8 @@ import java.util.List;
 
 public class PortableFluidItem extends Item {
     private final FluidVessel vessel;
-    public PortableFluidItem(FluidVessel vessel){super(new Item.Properties().stacksTo(vessel==FluidVessel.BOTTLE?16:1));this.vessel=vessel;}
+    public PortableFluidItem(FluidVessel vessel){this(vessel,new Item.Properties().stacksTo(vessel==FluidVessel.BOTTLE?16:1));}
+    protected PortableFluidItem(FluidVessel vessel,Item.Properties properties){super(properties);this.vessel=vessel;}
     public FluidVessel getVessel(){return vessel;}
     public FluidStack contents(ItemStack stack){return FluidVesselHandler.contents(stack,vessel);}
     @Override public ICapabilityProvider initCapabilities(ItemStack stack,@Nullable CompoundTag tag){return new FluidVesselHandler(stack,vessel);}

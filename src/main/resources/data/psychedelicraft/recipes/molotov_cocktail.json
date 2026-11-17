@@ -1,0 +1,18 @@
+{
+  "type": "psychedelicraft:crafting_shaped",
+  "pattern": [
+    "P#"
+  ],
+  "key": {
+    "#": {
+      "tag": "forge:glass"
+    },
+    "P": {
+      "item": "minecraft:paper"
+    }
+  },
+  "result": {
+    "item": "psychedelicraft:molotov_cocktail",
+    "count": 4
+  }
+}

@@ -16,6 +16,16 @@ public final class PSDamageTypes {
     public static final ResourceKey<DamageType> IN_SLEEP = key("in_sleep");
     public static final ResourceKey<DamageType> OVER_EATING = key("over_eating");
 
+    public static final ResourceKey<DamageType> MOLOTOV=key("molotov"),SELF_MOLOTOV=key("self_molotov");
+    public static DamageSource molotov(net.minecraft.world.entity.Entity projectile,net.minecraft.world.entity.Entity owner,net.minecraft.world.entity.Entity target,net.minecraft.world.item.ItemStack stack){
+        var type=target==owner?SELF_MOLOTOV:MOLOTOV;var item=stack.copy();
+        return new DamageSource(projectile.level().registryAccess().registryOrThrow(Registries.DAMAGE_TYPE).getHolderOrThrow(type),projectile,owner){
+            @Override public net.minecraft.network.chat.Component getLocalizedDeathMessage(net.minecraft.world.entity.LivingEntity victim){
+                String key="death.attack."+getMsgId();var attacker=owner==null?projectile.getDisplayName():owner.getDisplayName();
+                return item.hasCustomHoverName()?net.minecraft.network.chat.Component.translatable(key+".item",victim.getDisplayName(),attacker,item.getDisplayName()):net.minecraft.network.chat.Component.translatable(key,victim.getDisplayName(),attacker);
+            }
+        };
+    }
     private PSDamageTypes() {}
 
     public static DamageSource heartAttack(Player player) {

@@ -27,9 +27,14 @@ public abstract class WorldFluid extends ForgeFlowingFluid {
         var attributes=contents.getOrCreateTag();if(warmth==1)attributes.remove("warmth");else attributes.putInt("warmth",warmth-1);
         family.block.get().setFluid(level,pos,state,attributes);
     }
+    @Override public net.minecraft.core.particles.ParticleOptions getDripParticle(){return net.minecraft.core.particles.ParticleTypes.DRIPPING_WATER;}
     @Override public void animateTick(Level level,BlockPos pos,FluidState state,RandomSource random){
         var water=state.isSource()?Fluids.WATER.getSource(state.getValue(FALLING)):Fluids.FLOWING_WATER.getFlowing(state.getAmount(),state.getValue(FALLING));
         water.animateTick(level,pos,random);
+        if(family==PSFluids.SLURRY){
+            for(int i=0;i<5;i++)level.addParticle(new ivorius.psychedelicraft.particle.BubbleParticleOptions(PSFluids.color(family.block.get().contents(level,pos)),1),pos.getX()+.5+random.triangle(0,.5),pos.getY()+state.getHeight(level,pos),pos.getZ()+.5+random.triangle(0,.5),0,0,0);
+            level.playLocalSound(pos.getX()+.5,pos.getY()+.5,pos.getZ()+.5,net.minecraft.sounds.SoundEvents.BUBBLE_COLUMN_BUBBLE_POP,net.minecraft.sounds.SoundSource.BLOCKS,.5F+random.nextFloat(),.3F+random.nextFloat(),true);
+        }
     }
     public static final class Source extends WorldFluid {
         public Source(PSFluids.Family family){super(family);}
