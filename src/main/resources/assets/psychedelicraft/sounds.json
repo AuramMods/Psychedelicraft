@@ -46,5 +46,10 @@
     "sounds": [
       "psychedelicraft:rift_jar/jar_open"
     ]
+  },
+  "entity.player.heartbeat": {
+    "sounds": [
+      "psychedelicraft:heart_beat"
+    ]
   }
 }

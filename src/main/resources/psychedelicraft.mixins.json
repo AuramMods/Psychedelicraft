@@ -26,6 +26,7 @@
   "client": [
     "client.AddictRendererMixin",
     "client.BlendModeAccessor",
+    "client.ShaderBlendAccessor",
     "client.CoreProgramMixin",
     "client.GeometryShaderMixin",
     "client.GameGeometryMixin",

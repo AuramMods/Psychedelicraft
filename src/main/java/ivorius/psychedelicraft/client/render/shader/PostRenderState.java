@@ -12,7 +12,7 @@ import java.nio.ByteBuffer;
 import org.lwjgl.BufferUtils;
 
 /** Restore the native render caches together with the actual GL bindings. */
-final class PostRenderState implements AutoCloseable {
+public final class PostRenderState implements AutoCloseable {
     private final int program=GL11.glGetInteger(GL20.GL_CURRENT_PROGRAM),activeTexture=GL11.glGetInteger(GL13.GL_ACTIVE_TEXTURE);
     private final int read=GL11.glGetInteger(GL30.GL_READ_FRAMEBUFFER_BINDING),draw=GL11.glGetInteger(GL30.GL_DRAW_FRAMEBUFFER_BINDING);
     private final int vao=GL11.glGetInteger(GL30.GL_VERTEX_ARRAY_BINDING),arrayBuffer=GL11.glGetInteger(GL15.GL_ARRAY_BUFFER_BINDING);
@@ -27,7 +27,7 @@ final class PostRenderState implements AutoCloseable {
     private final VertexSorting sorting=RenderSystem.getVertexSorting();
     private final ShaderInstance shader=RenderSystem.getShader();
     private final BlendMode lastBlend=BlendModeAccessor.psychedelicraft$getLastApplied();
-    PostRenderState(){
+    public PostRenderState(){
         GL11.glGetIntegerv(GL11.GL_VIEWPORT,viewport);GL11.glGetIntegerv(GL11.GL_SCISSOR_BOX,scissorBox);GL11.glGetFloatv(GL11.GL_COLOR_CLEAR_VALUE,clearColor);GL11.glGetBooleanv(GL11.GL_COLOR_WRITEMASK,colorMask);
         for(int i=0;i<textures.length;i++){GlStateManager._activeTexture(GL13.GL_TEXTURE0+i);textures[i]=GL11.glGetInteger(GL11.GL_TEXTURE_BINDING_2D);shaderTextures[i]=RenderSystem.getShaderTexture(i);}GlStateManager._activeTexture(activeTexture);
         RenderSystem.getModelViewStack().pushPose();

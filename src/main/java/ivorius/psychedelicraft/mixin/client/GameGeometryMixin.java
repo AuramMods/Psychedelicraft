@@ -19,7 +19,7 @@ abstract class GameGeometryMixin {
     @Inject(method="renderLevel",at=@At("HEAD"))
     private void psychedelicraft$beginWorld(float partial,long finish,PoseStack pose,CallbackInfo ci){GeometryEffects.beginFrame(partial);psychedelicraft$worldScope=RenderPhase.WORLD.enter();}
     @Inject(method="renderLevel",at=@At("RETURN"))
-    private void psychedelicraft$endWorld(float partial,long finish,PoseStack pose,CallbackInfo ci){psychedelicraft$worldScope.close();}
+    private void psychedelicraft$endWorld(float partial,long finish,PoseStack pose,CallbackInfo ci){try{ClientEffects.completeWorld(partial);}finally{psychedelicraft$worldScope.close();}}
     @Inject(method="renderLevel",at=@At(value="INVOKE",target="Lcom/mojang/blaze3d/vertex/PoseStack$Pose;normal()Lorg/joml/Matrix3f;"))
     private void psychedelicraft$camera(float partial,long finish,PoseStack pose,CallbackInfo ci){ClientEffects.camera().view(pose,((GameRenderer)(Object)this).getMainCamera(),partial);}
     @Inject(method="renderItemInHand",at=@At("HEAD"))

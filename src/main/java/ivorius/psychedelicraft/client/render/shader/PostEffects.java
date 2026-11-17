@@ -31,9 +31,22 @@ public final class PostEffects {
     private ShaderResources resources;
     private int width,height;
     private boolean stencil,failed;
+    private boolean worldDepthCaptured;
     private Throwable lastFailure;
     private long resourceGeneration;
     private record Key(String name,RenderTarget in,RenderTarget out){}
+
+    public void beginFrame(){worldDepthCaptured=false;}
+
+    /** Preserve scene depth before the native first-person pass clears the main depth buffer. */
+    public void captureWorldDepth(Minecraft client,HallucinationManager h,EnvironmentEffects environment){
+        worldDepthCaptured=false;
+        if(failed||!PSClientConfig.SHADERS_2D.get())return;
+        var drugs=DrugCapability.get(client.player);
+        if(h.contrastColor(drugs.getHarmonium())==null&&PSClientConfig.BLUR_NEAR.get()<=0&&PSClientConfig.BLUR_FAR.get()<=0
+                &&environment.heatDistortion()<=0&&environment.waterDistortion((float)drugs.getActiveValue(DrugType.PEYOTE))<=0&&drugs.getActiveValue(DrugType.ZERO)<=0)return;
+        try(var state=new PostRenderState()){prepare(client,true);depth.copyDepthFrom(main);worldDepthCaptured=true;}
+    }
 
     public void render(Minecraft client,float partial,Matrix4f projection,HallucinationManager h,EnvironmentEffects environment,float pauseProgress){
         lastPasses.clear();if(failed)return;
@@ -55,7 +68,7 @@ public final class PostEffects {
             if(!post)return;
             boolean needsDepth=contrast!=null||focus||heat>0||water>0||digital>0;
             prepare(client,needsDepth);
-            if(needsDepth)depth.copyDepthFrom(main);
+            if(needsDepth&&!worldDepthCaptured)depth.copyDepthFrom(main);
             RenderTarget current=main;
             if(heat>0)current=distort(current,heat,ticks*.15F,partial);
             if(water>0)current=distort(current,water,ticks*.03F,partial);
@@ -113,6 +126,6 @@ public final class PostEffects {
     }
     private static void texture(PostPass pass,String sampler,ResourceLocation location,int width,int height){pass.addAuxAsset(sampler,()->Minecraft.getInstance().getTextureManager().getTexture(location).getId(),width,height);}
     private static void set(EffectInstance effect,String name,float... values){AbstractUniform uniform=effect.safeGetUniform(name);switch(values.length){case 1->uniform.set(values[0]);case 2->uniform.set(values[0],values[1]);case 3->uniform.set(values[0],values[1],values[2]);case 4->uniform.set(values[0],values[1],values[2],values[3]);default->throw new IllegalArgumentException(name);}}
-    private void releaseResources(){passes.values().forEach(PostPass::close);passes.clear();if(a!=null)a.destroyBuffers();if(b!=null)b.destroyBuffers();if(depth!=null)depth.destroyBuffers();a=b=depth=main=null;width=height=0;resources=null;}
+    private void releaseResources(){passes.values().forEach(PostPass::close);passes.clear();if(a!=null)a.destroyBuffers();if(b!=null)b.destroyBuffers();if(depth!=null)depth.destroyBuffers();a=b=depth=main=null;width=height=0;resources=null;worldDepthCaptured=false;}
     public void release(){RenderSystem.assertOnRenderThread();try(var state=new PostRenderState()){releaseResources();history.release();}failed=false;lastFailure=null;lastPasses.clear();}
 }

@@ -2,6 +2,7 @@ package ivorius.psychedelicraft.client;
 
 import ivorius.psychedelicraft.Psychedelicraft;
 import ivorius.psychedelicraft.client.render.CameraEffects;
+import ivorius.psychedelicraft.client.render.ScreenOverlays;
 import ivorius.psychedelicraft.entity.drug.DrugCapability;
 import ivorius.psychedelicraft.entity.drug.DrugNetwork.Snapshot;
 import ivorius.psychedelicraft.entity.drug.DrugProperties;
@@ -32,6 +33,8 @@ public final class ClientEffects {
     private static HallucinationManager hallucinations=new HallucinationManager();
     private static EnvironmentEffects environment=new EnvironmentEffects();
     private static CameraEffects camera=new CameraEffects();
+    private static ScreenOverlays overlays=new ScreenOverlays();
+    private static org.joml.Matrix4f worldProjection;
     private static net.minecraft.client.multiplayer.ClientLevel visualLevel;
     private static Player visualPlayer;
     private static float pauseProgress;
@@ -46,7 +49,7 @@ public final class ClientEffects {
     }
 
     @SubscribeEvent
-    public static void frame(TickEvent.RenderTickEvent event){if(event.phase==TickEvent.Phase.START)ivorius.psychedelicraft.client.render.RenderPhase.reset();}
+    public static void frame(TickEvent.RenderTickEvent event){if(event.phase==TickEvent.Phase.START){ivorius.psychedelicraft.client.render.RenderPhase.reset();worldProjection=null;post.beginFrame();}}
 
     @SubscribeEvent
     public static void tick(TickEvent.ClientTickEvent event) {
@@ -67,6 +70,7 @@ public final class ClientEffects {
             }
         }
         camera.tick(client);
+        if(!client.isPaused())overlays.tick(client,DrugCapability.get(client.player));
     }
 
     @SubscribeEvent
@@ -76,14 +80,24 @@ public final class ClientEffects {
         visualLevel=null;visualPlayer=null;
     }
 
-    @SubscribeEvent
+    @SubscribeEvent(priority=net.minecraftforge.eventbus.api.EventPriority.LOWEST)
     public static void world(RenderLevelStageEvent event){
         if(event.getStage()!=RenderLevelStageEvent.Stage.AFTER_LEVEL)return;
         var client=Minecraft.getInstance();if(client.player==null||client.level==null)return;
-        try(var phase=ivorius.psychedelicraft.client.render.RenderPhase.POST.enter()){post.render(client,event.getPartialTick(),event.getProjectionMatrix(),hallucinations,environment,pauseProgress);}
+        worldProjection=new org.joml.Matrix4f(event.getProjectionMatrix());
+        try(var phase=ivorius.psychedelicraft.client.render.RenderPhase.POST.enter()){post.captureWorldDepth(client,hallucinations,environment);}
     }
 
-    private static void resetVisuals(){post.release();hallucinations=new HallucinationManager();environment=new EnvironmentEffects();camera=new CameraEffects();pauseProgress=0;}
+    /** GameRenderer's return is after hands; Forge's AFTER_LEVEL event is before them. */
+    public static void completeWorld(float partial){
+        var client=Minecraft.getInstance();if(client.player==null||client.level==null||worldProjection==null)return;
+        try(var phase=ivorius.psychedelicraft.client.render.RenderPhase.POST.enter()){
+            overlays.render(client,DrugCapability.get(client.player),environment,partial);
+            post.render(client,partial,worldProjection,hallucinations,environment,pauseProgress);
+        }finally{worldProjection=null;}
+    }
+
+    private static void resetVisuals(){post.release();hallucinations=new HallucinationManager();environment=new EnvironmentEffects();camera=new CameraEffects();overlays=new ScreenOverlays();worldProjection=null;pauseProgress=0;}
 
     @Mod.EventBusSubscriber(modid = Psychedelicraft.MOD_ID, value = Dist.CLIENT, bus = Mod.EventBusSubscriber.Bus.MOD)
     public static final class Resources {
