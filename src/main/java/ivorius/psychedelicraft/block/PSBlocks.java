@@ -46,6 +46,11 @@ public final class PSBlocks {
     public static final RegistryObject<VineStemBlock> MORNING_GLORY=BLOCKS.register("morning_glory",()->new VineStemBlock(plant()));
     public static final RegistryObject<net.minecraft.world.level.block.FlowerPotBlock> POTTED_MORNING_GLORY=BLOCKS.register("potted_morning_glory",()->new net.minecraft.world.level.block.FlowerPotBlock(
             ()->(net.minecraft.world.level.block.FlowerPotBlock)Blocks.FLOWER_POT,MORNING_GLORY,BlockBehaviour.Properties.copy(Blocks.POTTED_POPPY)));
+    public static final RegistryObject<net.minecraft.world.level.block.FlowerPotBlock> POTTED_CANNABIS=potted("potted_cannabis",CANNABIS);
+    public static final RegistryObject<net.minecraft.world.level.block.FlowerPotBlock> POTTED_HOP=potted("potted_hop",HOP);
+    public static final RegistryObject<net.minecraft.world.level.block.FlowerPotBlock> POTTED_TOBACCO=potted("potted_tobacco",TOBACCO);
+    public static final RegistryObject<net.minecraft.world.level.block.FlowerPotBlock> POTTED_COCA=potted("potted_coca",COCA);
+    public static final RegistryObject<net.minecraft.world.level.block.FlowerPotBlock> POTTED_COFFEA=potted("potted_coffea",COFFEA);
     private static BlockBehaviour.Properties lattice(){return BlockBehaviour.Properties.of().strength(.3F).sound(SoundType.WOOD).noOcclusion().ignitedByLava();}
     public static final RegistryObject<JuniperLeavesBlock> JUNIPER_LEAVES=BLOCKS.register("juniper_leaves",()->new JuniperLeavesBlock(BlockBehaviour.Properties.copy(Blocks.OAK_LEAVES)));
     public static final RegistryObject<JuniperLeavesBlock> FRUITING_JUNIPER_LEAVES=BLOCKS.register("fruiting_juniper_leaves",()->new JuniperLeavesBlock(BlockBehaviour.Properties.copy(Blocks.OAK_LEAVES)));
@@ -73,6 +78,10 @@ public final class PSBlocks {
     private static BlockBehaviour.Properties planks(){return BlockBehaviour.Properties.copy(Blocks.OAK_PLANKS).mapColor(net.minecraft.world.level.material.MapColor.CLAY);}
     private static BlockBehaviour.Properties log(){return BlockBehaviour.Properties.copy(Blocks.OAK_LOG).mapColor(state->state.getValue(net.minecraft.world.level.block.RotatedPillarBlock.AXIS)==net.minecraft.core.Direction.Axis.Y?net.minecraft.world.level.material.MapColor.COLOR_CYAN:net.minecraft.world.level.material.MapColor.CLAY);}
     private PSBlocks() {}
+    private static RegistryObject<net.minecraft.world.level.block.FlowerPotBlock> potted(String name,java.util.function.Supplier<? extends Block> plant){
+        return BLOCKS.register(name,()->new net.minecraft.world.level.block.FlowerPotBlock(
+                ()->(net.minecraft.world.level.block.FlowerPotBlock)Blocks.FLOWER_POT,plant,BlockBehaviour.Properties.copy(Blocks.POTTED_POPPY)));
+    }
     private static BlockBehaviour.Properties plant() {
         return BlockBehaviour.Properties.of().noCollission().noOcclusion().instabreak().randomTicks().sound(SoundType.GRASS);
     }

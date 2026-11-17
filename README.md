@@ -56,6 +56,8 @@ JEI is optional. The integration is tested with **JEI 15.74.0.234 for Forge 1.20
 
 JEI's common and Forge API dependencies are pinned to `15.74.0.234` from [the official Maven repository](https://maven.blamejared.com/mezz/jei/). They are compile-only and are not bundled in the production jar. To include JEI in a developer client, run `./gradlew -PwithJei runClient`; installed clients can add the separate Forge JEI jar to `mods`. The optional dependency range is JEI 15.19 or newer within major version 15; the exact tested version above is recommended.
 
+Decorative flower pots accept cannabis, hop, tobacco and coca seeds, or coffea cherries. Use the planting item on an empty vanilla flower pot, then use an empty hand to recover it. Morning glory and juniper saplings also retain their native pot forms.
+
 
 The operator command `/hallucinate <type> [targets] [x y z]` creates an owner-only contextual effect. Types are `single_entity`, `multiple_entity`, `friendly_zombies`, `hostile_villagers`, and `rasta_head`, with optional `psychedelicraft:` prefixes. Players may omit targets or supply coordinates relative to their command source; console use needs a player target. Creatures and identity substitutes use native 1.20.1 models without adding real mobs to the world. Reggie's generated dialogue stays in the affected player's local chat.
 
