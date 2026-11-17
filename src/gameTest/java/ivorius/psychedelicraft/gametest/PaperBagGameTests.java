@@ -52,8 +52,17 @@ public final class PaperBagGameTests {
         var p=player(h);p.getInventory().selected=4;p.getInventory().setItem(4,bag(new ItemStack(Items.COOKIE),1));p.getInventory().setItem(3,new ItemStack(Items.COOKIE,20));p.getInventory().setItem(5,new ItemStack(Items.COOKIE,30));p.getInventory().setItem(2,new ItemStack(Items.COOKIE,40));p.getInventory().tick();check(PaperBagItem.getContents(p.getInventory().getItem(4)).count()==51&&p.getInventory().getItem(3).isEmpty()&&p.getInventory().getItem(5).isEmpty()&&p.getInventory().getItem(2).getCount()==40,"native tick consumes only adjacent matching stacks");h.succeed();
     }
     @GameTest(template="empty") public static void normalAndCrouchedUseReleaseAStackOrOneItem(GameTestHelper h){
-        var p=player(h);var prototype=new ItemStack(Items.COOKIE);prototype.setHoverName(Component.literal("Released units "+p.getUUID()));p.setItemInHand(InteractionHand.MAIN_HAND,bag(prototype,100));var result=PSItems.PAPER_BAG.get().use(h.getLevel(),p,InteractionHand.MAIN_HAND);check(result.getResult().consumesAction()&&PaperBagItem.getContents(p.getMainHandItem()).count()==36,"normal native use releases sixty-four");p.setShiftKeyDown(true);PSItems.PAPER_BAG.get().use(h.getLevel(),p,InteractionHand.MAIN_HAND);check(PaperBagItem.getContents(p.getMainHandItem()).count()==35,"native crouched use releases one");int drops=h.getLevel().getEntitiesOfClass(ItemEntity.class,p.getBoundingBox().inflate(5),e->ItemStack.isSameItemSameTags(e.getItem(),prototype)).stream().mapToInt(e->e.getItem().getCount()).sum();check(drops==65,"native dropped items conserve released units: "+drops);h.succeed();
+        var p=player(h);var prototype=new ItemStack(Items.COOKIE);prototype.setHoverName(Component.literal("Released units "+p.getUUID()));
+        try(var trace=new NativeItemTrace(h.getLevel(),e->ItemStack.isSameItemSameTags(e.getItem(),prototype))){
+            p.setItemInHand(InteractionHand.MAIN_HAND,bag(prototype,100));var result=PSItems.PAPER_BAG.get().use(h.getLevel(),p,InteractionHand.MAIN_HAND);
+            check(result.getResult().consumesAction()&&PaperBagItem.getContents(p.getMainHandItem()).count()==36,"normal native use releases sixty-four");
+            p.setShiftKeyDown(true);PSItems.PAPER_BAG.get().use(h.getLevel(),p,InteractionHand.MAIN_HAND);check(PaperBagItem.getContents(p.getMainHandItem()).count()==35,"native crouched use releases one");
+            trace.log("paper-bag-stack-and-single",p.getBoundingBox().inflate(5));
+            int drops=h.getLevel().getEntitiesOfClass(ItemEntity.class,p.getBoundingBox().inflate(5),e->ItemStack.isSameItemSameTags(e.getItem(),prototype)).stream().mapToInt(e->e.getItem().getCount()).sum();
+            check(drops==65,"native dropped items conserve released units: "+drops);h.getLevel().getEntitiesOfClass(ItemEntity.class,p.getBoundingBox().inflate(5),e->ItemStack.isSameItemSameTags(e.getItem(),prototype)).forEach(ItemEntity::discard);h.succeed();
+        }
     }
+
     @GameTest(template="empty") public static void cancelledNativeDropRetainsBagContents(GameTestHelper h){
         var p=player(h);p.setItemInHand(InteractionHand.MAIN_HAND,bag(new ItemStack(Items.COOKIE),30));Object listener=new Object(){@SubscribeEvent public void cancelPaperDrop(EntityJoinLevelEvent e){if(e.getEntity() instanceof ItemEntity item&&item.getItem().is(Items.COOKIE))e.setCanceled(true);}};MinecraftForge.EVENT_BUS.register(listener);try{var result=PSItems.PAPER_BAG.get().use(h.getLevel(),p,InteractionHand.MAIN_HAND);check(!result.getResult().consumesAction()&&PaperBagItem.getContents(p.getMainHandItem()).count()==30,"failed native spawn keeps all contents");}finally{MinecraftForge.EVENT_BUS.unregister(listener);}h.succeed();
     }

@@ -78,10 +78,21 @@ public final class DrinkDisplayGameTests {
         check(h.getLevel().getBlockState(pos).isAir()&&drops(h).size()==1,"walking removes the display and drops one vessel");same(bottle(1900),drops(h).get(0).getItem(),"knocked vessel retains exact contents");drops(h).forEach(Entity::discard);h.succeed();
     }
     @GameTest(template="empty") public static void explosionAndNonLootRemovalReleaseEachStoredDrinkOnce(GameTestHelper h){
-        var display=display(h);display.place(10,bottle(1001),0);display.place(10,bottle(1002),0);display.place(200,bottle(1003),0);var pos=display.getBlockPos();h.getLevel().explode(null,pos.getX()+.5,pos.getY()+.5,pos.getZ()+.5,1,Level.ExplosionInteraction.BLOCK);
-        check(h.getLevel().getBlockState(pos).isAir(),"real native explosion removes display");var items=drops(h);check(items.size()==3,"explosion releases every stored vessel once");int amount=items.stream().mapToInt(e->PSItems.BOTTLE.get().contents(e.getItem()).getAmount()).sum();check(amount==3006,"explosion conserves all three independent volumes");items.forEach(Entity::discard);
-        display=display(h);display.place(128,bottle(877),0);h.getLevel().destroyBlock(display.getBlockPos(),false);check(drops(h).size()==1,"non-loot removal releases stored contents just once");same(bottle(877),drops(h).get(0).getItem(),"non-loot removal keeps metadata");drops(h).forEach(Entity::discard);h.succeed();
+        // Reused test worlds can contain old drops outside the template's cleared box.
+        // Keep exact per-operation conservation without counting unrelated pre-existing UUIDs.
+        var before=drops(h).stream().map(Entity::getUUID).collect(java.util.stream.Collectors.toSet());
+        var display=display(h);display.place(10,bottle(1001),0);display.place(10,bottle(1002),0);display.place(200,bottle(1003),0);var pos=display.getBlockPos();
+        try(var trace=new NativeItemTrace(h.getLevel(),e->e.getItem().is(PSItems.BOTTLE.get()))){
+            h.getLevel().explode(null,pos.getX()+.5,pos.getY()+.5,pos.getZ()+.5,1,Level.ExplosionInteraction.BLOCK);trace.log("display-explosion",new AABB(pos).inflate(2));
+        }
+        check(h.getLevel().getBlockState(pos).isAir(),"real native explosion removes display");
+        var firstPrior=before;var items=drops(h).stream().filter(e->!firstPrior.contains(e.getUUID())).toList();check(items.size()==3,"explosion releases every stored vessel once: "+items.size());
+        int amount=items.stream().mapToInt(e->PSItems.BOTTLE.get().contents(e.getItem()).getAmount()).sum();check(amount==3006,"explosion conserves all three independent volumes");items.forEach(Entity::discard);
+        before=drops(h).stream().map(Entity::getUUID).collect(java.util.stream.Collectors.toSet());
+        display=display(h);display.place(128,bottle(877),0);h.getLevel().destroyBlock(display.getBlockPos(),false);
+        var prior=before;items=drops(h).stream().filter(e->!prior.contains(e.getUUID())).toList();check(items.size()==1,"non-loot removal releases stored contents just once");same(bottle(877),items.get(0).getItem(),"non-loot removal keeps metadata");items.forEach(Entity::discard);h.succeed();
     }
+
     @GameTest(template="empty") public static void rackFrontSlotsClampEveryEdgeAndNativeUseMovesOneBottle(GameTestHelper h){
         for(Direction facing:Direction.Plane.HORIZONTAL)for(Direction side:Direction.values())for(double edge:new double[]{0,1}){int slot=BottleRackBlock.slotAt(facing,side,edge,edge,edge);check(side!=facing&&side.getAxis().isHorizontal()?slot==-1:slot>=0&&slot<9,"all allowed face boundaries clamp to nine valid slots");}
         var rack=rack(h);var player=player(h);var full=bottle(1654);player.setItemInHand(InteractionHand.MAIN_HAND,full.copy());var hit=hit(rack.getBlockPos(),Direction.NORTH,.9,.9,.3);
