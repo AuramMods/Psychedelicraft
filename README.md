@@ -6,7 +6,7 @@ Psychedelicraft
 ![Downloads](https://img.shields.io/github/downloads/Sollace/Psychedelicraft/total.svg?color=yellowgreen)
 ![License](https://img.shields.io/github/license/Sollace/Psychedelicraft)
 
-This branch is developing the Minecraft 1.20.1 Forge port. The effect registry, initial consumables, ten crop blocks, drying tables, smoking tools, portable fluid vessels, flask/distillery/barrel machines, mash tubs, placed drinks, bottle racks, lattices, grape vines, morning glory, juniper trees/wood/signs/boats, native world fluids, molotovs and core gameplay hooks are implemented; the full content and audiovisual migration is in progress. See the [1.20.1 port report](docs/PORT_1201.md) for migration coverage and verification.
+This branch is developing the Minecraft 1.20.1 Forge port. The effect registry, initial consumables, ten crop blocks, drying tables, smoking tools, portable fluid vessels, flask/distillery/barrel machines, mash tubs, placed drinks, bottle racks, lattices, grape vines, morning glory, juniper trees/wood/signs/boats, native world fluids, molotovs, Reality Rifts/Rift Jars/Glitch and core gameplay hooks are implemented; the full content and audiovisual migration is in progress. See the [1.20.1 port report](docs/PORT_1201.md) for migration coverage and verification.
 
 The One And Only, accept no substitutes!
 
@@ -38,7 +38,7 @@ and you may use this mod in modpacks.
 Installation
 ============
 
-Use Minecraft **1.20.1**, **Java 17** and **Forge 47.4.28**. This branch currently contains the effect foundation, initial consumables, primary crops, coffee roasting, drying-table automation, smoking items/tools, portable drinks, fluid transfers, coffee servings and flask/distillery/barrel processing, mash-tub stewing and fermentation, placed vessels, bottle racks, decorative lab props, native lattices/vines, morning-glory extracts and concentrated-extract LSD paper crafting, and the juniper tree/fruit/wood family with native signs, boats, chest boats and berry mash. Native world-fluid placement, metadata propagation, buckets, dispensers, coffee cooling and vat inflow are also implemented, along with molotov crafting, fluid-preserving bottle conversion and native projectile behavior. The feature checklist tracks the remaining port.
+Use Minecraft **1.20.1**, **Java 17** and **Forge 47.4.28**. This branch currently contains the effect foundation, initial consumables, primary crops, coffee roasting, drying-table automation, smoking items/tools, portable drinks, fluid transfers, coffee servings and flask/distillery/barrel processing, mash-tub stewing and fermentation, placed vessels, bottle racks, decorative lab props, native lattices/vines, morning-glory extracts and concentrated-extract LSD paper crafting, and the juniper tree/fruit/wood family with native signs, boats, chest boats and berry mash. Native world-fluid placement, metadata propagation, buckets, dispensers, coffee cooling and vat inflow are also implemented, along with molotov crafting, fluid-preserving bottle conversion and native projectile behavior. Reality Rifts, Rift Jar capture/discharge/overload and native Glitch behavior are implemented with their core rendering assets. The feature checklist tracks the remaining port.
 
 Build with a Java 17 JDK.
 

@@ -54,6 +54,8 @@ public final class DrugEvents {
             updateModifier(event.player.getAttribute(Attributes.ATTACK_DAMAGE), properties.getMultiplier(Drug::attackDamageModifier) - 1, AttributeModifier.Operation.MULTIPLY_TOTAL);
             updateModifier(event.player.getAttribute(ForgeMod.BLOCK_REACH.get()), properties.getModifier(Drug::extraBlockReach), AttributeModifier.Operation.ADDITION);
             MushroomGrowth.tick(event.player, properties);
+            int interval=ivorius.psychedelicraft.config.PSConfig.RIFT_SPAWN_INTERVAL.get();
+            if(interval>0&&event.player.getRandom().nextInt(interval)==0)ivorius.psychedelicraft.entity.RealityRiftEntity.spawnNear(event.player);
         }
         if (event.player instanceof ServerPlayer player && (properties.takeDirty() || player.tickCount % 20 == 0)) {
             DrugNetwork.sync(player);

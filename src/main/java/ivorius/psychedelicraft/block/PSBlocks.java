@@ -68,6 +68,8 @@ public final class PSBlocks {
     public static final RegistryObject<JuniperSigns.Hanging> JUNIPER_HANGING_SIGN=BLOCKS.register("juniper_hanging_sign",()->new JuniperSigns.Hanging(BlockBehaviour.Properties.copy(Blocks.OAK_HANGING_SIGN)));
     public static final RegistryObject<JuniperSigns.HangingWall> JUNIPER_WALL_HANGING_SIGN=BLOCKS.register("juniper_wall_hanging_sign",()->new JuniperSigns.HangingWall(BlockBehaviour.Properties.copy(Blocks.OAK_WALL_HANGING_SIGN).dropsLike(JUNIPER_HANGING_SIGN.get())));
     public static final RegistryObject<net.minecraft.world.level.block.FlowerPotBlock> POTTED_JUNIPER_SAPLING=BLOCKS.register("potted_juniper_sapling",()->new net.minecraft.world.level.block.FlowerPotBlock(()->(net.minecraft.world.level.block.FlowerPotBlock)Blocks.FLOWER_POT,JUNIPER_SAPLING,BlockBehaviour.Properties.copy(Blocks.POTTED_OAK_SAPLING)));
+    public static final RegistryObject<RiftJarBlock> RIFT_JAR=BLOCKS.register("rift_jar",RiftJarBlock::new);
+    public static final RegistryObject<GlitchedBlock> GLITCH=BLOCKS.register("glitch",GlitchedBlock::new);
     private static BlockBehaviour.Properties planks(){return BlockBehaviour.Properties.copy(Blocks.OAK_PLANKS).mapColor(net.minecraft.world.level.material.MapColor.CLAY);}
     private static BlockBehaviour.Properties log(){return BlockBehaviour.Properties.copy(Blocks.OAK_LOG).mapColor(state->state.getValue(net.minecraft.world.level.block.RotatedPillarBlock.AXIS)==net.minecraft.core.Direction.Axis.Y?net.minecraft.world.level.material.MapColor.COLOR_CYAN:net.minecraft.world.level.material.MapColor.CLAY);}
     private PSBlocks() {}

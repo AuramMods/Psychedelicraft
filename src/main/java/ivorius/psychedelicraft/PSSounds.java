@@ -10,5 +10,8 @@ public final class PSSounds {
     public static final RegistryObject<SoundEvent> BREATH=SOUNDS.register("entity.player.breath",()->SoundEvent.createVariableRangeEvent(Psychedelicraft.id("entity.player.breath")));
     public static final RegistryObject<SoundEvent> BOTTLE_RACK_USE=SOUNDS.register("block.bottle_rack.use",()->SoundEvent.createVariableRangeEvent(Psychedelicraft.id("block.bottle_rack.use")));
     public static final RegistryObject<SoundEvent> PLACED_DRINK_SET_DOWN=SOUNDS.register("block.placed_drink.set_down",()->SoundEvent.createVariableRangeEvent(Psychedelicraft.id("block.placed_drink.set_down")));
+    public static final RegistryObject<SoundEvent> RIFT_JAR_TOGGLE=SOUNDS.register("block.rift_jar.toggle",()->SoundEvent.createVariableRangeEvent(Psychedelicraft.id("block.rift_jar.toggle")));
+    public static final RegistryObject<SoundEvent> RIFT_JAR_OPEN=SOUNDS.register("block.rift_jar.open",()->SoundEvent.createVariableRangeEvent(Psychedelicraft.id("block.rift_jar.open")));
+    public static final RegistryObject<SoundEvent> RIFT_JAR_CLOSE=SOUNDS.register("block.rift_jar.close",()->SoundEvent.createVariableRangeEvent(Psychedelicraft.id("block.rift_jar.close")));
     private PSSounds(){}
 }

@@ -86,6 +86,7 @@ public final class PSItems {
     public static final RegistryObject<PortableFluidItem> SYRINGE=vessel("syringe",ivorius.psychedelicraft.fluid.FluidVessel.SYRINGE);
     public static final RegistryObject<PortableFluidItem> FILLED_BOWL=vessel("filled_bowl",ivorius.psychedelicraft.fluid.FluidVessel.BOWL);
     public static final RegistryObject<PortableFluidItem> FILLED_GLASS_BOTTLE=vessel("filled_glass_bottle",ivorius.psychedelicraft.fluid.FluidVessel.GLASS_BOTTLE);
+    public static final RegistryObject<RiftJarItem> RIFT_JAR=ITEMS.register("rift_jar",RiftJarItem::new);
     public static final RegistryObject<MolotovCocktailItem> MOLOTOV_COCKTAIL=ITEMS.register("molotov_cocktail",MolotovCocktailItem::new);
     public static final RegistryObject<FilledBucketItem> FILLED_BUCKET=ITEMS.register("filled_bucket",FilledBucketItem::new);
 
@@ -138,7 +139,8 @@ public final class PSItems {
             .title(Component.translatable("itemGroup.psychedelicraft"))
             .icon(() -> new ItemStack(COFFEE_BEANS.get()))
             .displayItems((parameters, output) -> ITEMS.getEntries().forEach(item -> {
-                if(item.get() instanceof PortableFluidItem vessel)VesselCreativeItems.add(vessel,output::accept);
+                if(item.get() instanceof RiftJarItem jar){if(ivorius.psychedelicraft.config.PSConfig.ENABLE_RIFT_JARS.get())for(float amount:new float[]{0,.25F,.55F,.75F,.9F})output.accept(jar.filled(amount));}
+                else if(item.get() instanceof PortableFluidItem vessel)VesselCreativeItems.add(vessel,output::accept);
                 else if(item.get() instanceof LatticeCropItem)for(int age=0;age<4;age++)output.accept(LatticeCropItem.withAge(new ItemStack(item.get()),age));
                 else if(item.get()!=HARMONIUM.get())output.accept(item.get());
                 else if(PSConfig.ENABLE_HARMONIUM.get())for(DyeColor dye:DyeColor.values()){

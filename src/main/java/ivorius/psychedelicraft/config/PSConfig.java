@@ -10,7 +10,8 @@ public final class PSConfig {
     public static final ForgeConfigSpec.IntValue DRYING_TABLE_TICKS;
     public static final ForgeConfigSpec.IntValue IRON_DRYING_TABLE_TICKS;
     public static final ForgeConfigSpec.BooleanValue ENABLE_HARMONIUM;
-    public static final ForgeConfigSpec.BooleanValue DISABLE_MOLOTOVS;
+    public static final ForgeConfigSpec.BooleanValue DISABLE_MOLOTOVS,ENABLE_RIFT_JARS;
+    public static final ForgeConfigSpec.IntValue RIFT_SPAWN_INTERVAL;
     public static final Map<String,FluidTickConfig> FLUID_TICKS=new LinkedHashMap<>();
     public static final ForgeConfigSpec.IntValue FLOWER_EXTRACT_DISTILLATION_TICKS;
     public static final ForgeConfigSpec.IntValue SLURRY_HARDENING_TICKS;
@@ -29,6 +30,8 @@ public final class PSConfig {
         }
         builder.pop();
         builder.push("balancing");
+        ENABLE_RIFT_JARS=builder.comment("Show empty and filled rift jars in the creative catalog.").define("enableRiftJars",false);
+        RIFT_SPAWN_INTERVAL=builder.comment("One-in-N chance per player tick to spawn a nearby Reality Rift. Zero disables random spawning.").defineInRange("randomTicksUntilRiftSpawn",180*60*20,0,Integer.MAX_VALUE);
         ENABLE_HARMONIUM=builder.define("enableHarmonium",true);
         DISABLE_MOLOTOVS=builder.comment("Hide molotovs in the creative catalog, matching the accepted setting.").define("disableMolotovs",false);
         DRYING_TABLE_TICKS=builder.comment("Ticks at maximum heat to finish a wooden drying-table batch.")

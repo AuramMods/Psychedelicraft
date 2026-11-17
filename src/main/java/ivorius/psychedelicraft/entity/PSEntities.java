@@ -8,5 +8,6 @@ public final class PSEntities {
     public static final RegistryObject<EntityType<JuniperBoat>> JUNIPER_BOAT=TYPES.register("juniper_boat",()->EntityType.Builder.<JuniperBoat>of(JuniperBoat::new,MobCategory.MISC).sized(1.375F,.5625F).clientTrackingRange(10).build(Psychedelicraft.id("juniper_boat").toString()));
     public static final RegistryObject<EntityType<JuniperChestBoat>> JUNIPER_CHEST_BOAT=TYPES.register("juniper_chest_boat",()->EntityType.Builder.<JuniperChestBoat>of(JuniperChestBoat::new,MobCategory.MISC).sized(1.375F,.5625F).clientTrackingRange(10).build(Psychedelicraft.id("juniper_chest_boat").toString()));
     public static final RegistryObject<EntityType<MolotovCocktailEntity>> MOLOTOV_COCKTAIL=TYPES.register("molotov_cocktail",()->EntityType.Builder.<MolotovCocktailEntity>of(MolotovCocktailEntity::new,MobCategory.MISC).sized(.1F,.1F).clientTrackingRange(4).updateInterval(10).build(Psychedelicraft.id("molotov_cocktail").toString()));
+    public static final RegistryObject<EntityType<RealityRiftEntity>> REALITY_RIFT=TYPES.register("reality_rift",()->EntityType.Builder.<RealityRiftEntity>of(RealityRiftEntity::new,MobCategory.MISC).sized(2,2).clientTrackingRange(5).updateInterval(3).build(Psychedelicraft.id("reality_rift").toString()));
     private PSEntities(){}
 }
