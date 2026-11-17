@@ -16,4 +16,6 @@ abstract class GeometryShaderMixin {
     private void psychedelicraft$geometryLocations(CallbackInfo ci){GeometryEffects.register((ShaderInstance)(Object)this,uniforms,samplerNames);}
     @Inject(method="apply",at=@At("HEAD"))
     private void psychedelicraft$geometryValues(CallbackInfo ci){GeometryEffects.apply((ShaderInstance)(Object)this);}
+    @Inject(method="apply",at=@At("RETURN"))
+    private void psychedelicraft$apparitionBlend(CallbackInfo ci){ivorius.psychedelicraft.client.render.ApparitionRender.applyBlend();}
 }

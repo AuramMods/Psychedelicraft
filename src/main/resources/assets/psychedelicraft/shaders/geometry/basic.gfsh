@@ -1,5 +1,6 @@
 /* Native fragment behavior runs first, including discard, fog and material data. */
 uniform float PS_Enabled;
+uniform vec4 PS_ApparitionTint;
 uniform float PS_WorldTicks;
 uniform vec4 PS_Pulses;
 uniform float PS_SurfaceFractalStrength;
@@ -11,6 +12,7 @@ vec4 psychedelicraft_modulate(vec4 color) {
 }
 void main() {
   psychedelicraft_parent_main();
+  __PS_FRAGMENT_COLOR__ *= PS_ApparitionTint;
   if (PS_Enabled <= 0.0) return;
   __PS_SURFACE_FALLBACK__
   float pulse = max(0.0, sin((PS_PulseDistance - PS_WorldTicks) / 5.0) - 0.4) * PS_Pulses.a;

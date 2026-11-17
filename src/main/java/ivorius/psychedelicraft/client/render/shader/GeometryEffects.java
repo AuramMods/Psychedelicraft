@@ -41,6 +41,7 @@ public final class GeometryEffects {
     }
     public static void register(ShaderInstance shader,List<Uniform> uniforms,List<String> samplers){
         add(shader,uniforms,"PS_Enabled",4,1);add(shader,uniforms,"PS_WorldTicks",4,1);add(shader,uniforms,"PS_WavesMatrix",6,3);
+        add(shader,uniforms,"PS_ApparitionTint",7,4);
         add(shader,uniforms,"PS_DistantWorldDeformation",4,1);add(shader,uniforms,"PS_SurfaceFractalCoords",7,4);
         add(shader,uniforms,"PS_SurfaceFractalStrength",4,1);add(shader,uniforms,"PS_FractalFractureStrength",4,1);
         add(shader,uniforms,"PS_PlayerPosition",6,3);add(shader,uniforms,"PS_CameraPosition",6,3);
@@ -51,6 +52,7 @@ public final class GeometryEffects {
         if(Uniform.glGetUniformLocation(shader.getId(),name)!=-1&&uniforms.stream().noneMatch(uniform->uniform.getName().equals(name)))uniforms.add(new Uniform(name,type,count,shader));
     }
     public static void apply(ShaderInstance shader){
+        float[] tint=ApparitionRender.tint();set(shader,"PS_ApparitionTint",tint[0],tint[1],tint[2],tint[3]);
         var client=Minecraft.getInstance();var phase=RenderPhase.current();
         boolean active=phase.active()&&client.level!=null&&client.player!=null&&PSClientConfig.SHADERS_3D.get();
         var h=ClientEffects.hallucinations();var drugs=active?DrugCapability.get(client.player):null;

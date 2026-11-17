@@ -28,10 +28,14 @@ public final class PostRenderState implements AutoCloseable {
     private final ShaderInstance shader=RenderSystem.getShader();
     private final BlendMode lastBlend=BlendModeAccessor.psychedelicraft$getLastApplied();
     public PostRenderState(){
+        this(true);
+    }
+    /** World effects retain the existing depth test and clipping; screen passes install their own defaults. */
+    public PostRenderState(boolean screen){
         GL11.glGetIntegerv(GL11.GL_VIEWPORT,viewport);GL11.glGetIntegerv(GL11.GL_SCISSOR_BOX,scissorBox);GL11.glGetFloatv(GL11.GL_COLOR_CLEAR_VALUE,clearColor);GL11.glGetBooleanv(GL11.GL_COLOR_WRITEMASK,colorMask);
         for(int i=0;i<textures.length;i++){GlStateManager._activeTexture(GL13.GL_TEXTURE0+i);textures[i]=GL11.glGetInteger(GL11.GL_TEXTURE_BINDING_2D);shaderTextures[i]=RenderSystem.getShaderTexture(i);}GlStateManager._activeTexture(activeTexture);
         RenderSystem.getModelViewStack().pushPose();
-        RenderSystem.disableScissor();GL11.glDisable(GL11.GL_STENCIL_TEST);RenderSystem.disableCull();RenderSystem.disableDepthTest();RenderSystem.depthMask(false);RenderSystem.colorMask(true,true,true,true);RenderSystem.disableBlend();
+        if(screen){RenderSystem.disableScissor();GL11.glDisable(GL11.GL_STENCIL_TEST);RenderSystem.disableCull();RenderSystem.disableDepthTest();RenderSystem.depthMask(false);RenderSystem.colorMask(true,true,true,true);RenderSystem.disableBlend();}
     }
     @Override public void close(){
         RenderSystem.getModelViewStack().popPose();RenderSystem.applyModelViewMatrix();RenderSystem.setProjectionMatrix(projection,sorting);RenderSystem.setShaderColor(shaderColor[0],shaderColor[1],shaderColor[2],shaderColor[3]);RenderSystem.setShader(()->shader);

@@ -489,5 +489,7 @@
   "entity.psychedelicraft.juniper_boat": "Łódka z jałowca",
   "entity.psychedelicraft.juniper_chest_boat": "Łódka ze skrzynią z jałowca",
   "entity.minecraft.villager.psychedelicraft.drug_addict": "Ćpun",
-  "entity.minecraft.villager.psychedelicraft.drug_dealer": "Diler narkotyków"
+  "entity.minecraft.villager.psychedelicraft.drug_dealer": "Diler narkotyków",
+  "commands.psychedelicraft.hallucinate.success": "Utworzono halucynację",
+  "commands.psychedelicraft.hallucinate.unknown": "Nieznana halucynacja: %s"
 }

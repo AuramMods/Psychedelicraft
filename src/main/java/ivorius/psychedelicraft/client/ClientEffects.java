@@ -3,6 +3,7 @@ package ivorius.psychedelicraft.client;
 import ivorius.psychedelicraft.Psychedelicraft;
 import ivorius.psychedelicraft.client.render.CameraEffects;
 import ivorius.psychedelicraft.client.render.ScreenOverlays;
+import ivorius.psychedelicraft.client.render.ContextualHallucinations;
 import ivorius.psychedelicraft.entity.drug.DrugCapability;
 import ivorius.psychedelicraft.entity.drug.DrugNetwork.Snapshot;
 import ivorius.psychedelicraft.entity.drug.DrugProperties;
@@ -55,6 +56,7 @@ public final class ClientEffects {
     public static void tick(TickEvent.ClientTickEvent event) {
         if (event.phase != TickEvent.Phase.END) return;
         Minecraft client = Minecraft.getInstance();
+        ContextualHallucinations.track(client.player,client.level);
         if(client.level!=visualLevel||client.player!=visualPlayer){resetVisuals();visualLevel=client.level;visualPlayer=client.player;}
         pauseProgress=Mth.clamp(pauseProgress+(client.isPaused()?.25F:-.25F),0,1);
         if(client.level==null||client.player==null)return;
@@ -71,17 +73,20 @@ public final class ClientEffects {
         }
         camera.tick(client);
         if(!client.isPaused())overlays.tick(client,DrugCapability.get(client.player));
+        if(!client.isPaused())ContextualHallucinations.tick(DrugCapability.get(client.player),hallucinations.strength(HallucinationManager.Effect.ENTITIES)*.4F);
     }
 
     @SubscribeEvent
     public static void disconnect(ClientPlayerNetworkEvent.LoggingOut event) {
         pending.clear();
+        ContextualHallucinations.track(null,null);
         resetVisuals();
         visualLevel=null;visualPlayer=null;
     }
 
     @SubscribeEvent(priority=net.minecraftforge.eventbus.api.EventPriority.LOWEST)
     public static void world(RenderLevelStageEvent event){
+        if(event.getStage()==RenderLevelStageEvent.Stage.AFTER_ENTITIES)ContextualHallucinations.render(Minecraft.getInstance(),event.getPartialTick(),event.getPoseStack());
         if(event.getStage()!=RenderLevelStageEvent.Stage.AFTER_LEVEL)return;
         var client=Minecraft.getInstance();if(client.player==null||client.level==null)return;
         worldProjection=new org.joml.Matrix4f(event.getProjectionMatrix());

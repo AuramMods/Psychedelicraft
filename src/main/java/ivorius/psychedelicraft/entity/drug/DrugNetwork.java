@@ -17,7 +17,7 @@ import java.util.UUID;
 
 public final class DrugNetwork {
     private static final SimpleChannel CHANNEL = NetworkRegistry.newSimpleChannel(Psychedelicraft.id("main"),
-            () -> "1", "1"::equals, "1"::equals);
+            () -> "2", "2"::equals, "2"::equals);
 
     private DrugNetwork() {}
 
@@ -27,6 +27,22 @@ public final class DrugNetwork {
                 .consumerMainThread((message, context) -> DistExecutor.unsafeRunWhenOn(Dist.CLIENT,
                         () -> () -> ClientEffects.receive(message)))
                 .add();
+        CHANNEL.messageBuilder(ForcedHallucination.class,1,NetworkDirection.PLAY_TO_CLIENT)
+                .encoder(ForcedHallucination::encode).decoder(ForcedHallucination::decode)
+                .consumerMainThread((message,context)->DistExecutor.unsafeRunWhenOn(Dist.CLIENT,
+                        ()->()->ivorius.psychedelicraft.client.render.ContextualHallucinations.receive(context.get().getNetworkManager(),message))).add();
+    }
+
+    public static void hallucinate(ServerPlayer player,HallucinationType type,net.minecraft.core.BlockPos position){
+        CHANNEL.send(PacketDistributor.PLAYER.with(()->player),new ForcedHallucination(player.getId(),player.getUUID(),player.level().dimension().location(),type,position));
+    }
+
+    public record ForcedHallucination(int entityId,UUID player,ResourceLocation dimension,HallucinationType type,net.minecraft.core.BlockPos position){
+        public void encode(FriendlyByteBuf buffer){buffer.writeVarInt(entityId);buffer.writeUUID(player);buffer.writeResourceLocation(dimension);buffer.writeUtf(type.id().toString(),64);buffer.writeBoolean(position!=null);if(position!=null)buffer.writeBlockPos(position);}
+        public static ForcedHallucination decode(FriendlyByteBuf buffer){
+            int id=buffer.readVarInt();UUID player=buffer.readUUID();ResourceLocation dimension=buffer.readResourceLocation();HallucinationType type=HallucinationType.byName(buffer.readUtf(64));
+            return new ForcedHallucination(id,player,dimension,type,buffer.readBoolean()?buffer.readBlockPos():null);
+        }
     }
 
     public static void sync(ServerPlayer player) {
