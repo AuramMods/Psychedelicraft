@@ -2,7 +2,6 @@ package ivorius.psychedelicraft.command;
 
 import com.mojang.brigadier.arguments.BoolArgumentType;
 import com.mojang.brigadier.arguments.DoubleArgumentType;
-import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.context.CommandContext;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import com.mojang.brigadier.exceptions.SimpleCommandExceptionType;
@@ -14,7 +13,9 @@ import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
 import net.minecraft.commands.SharedSuggestionProvider;
 import net.minecraft.commands.arguments.EntityArgument;
+import net.minecraft.commands.arguments.ResourceLocationArgument;
 import net.minecraft.network.chat.Component;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.level.GameRules;
 import net.minecraftforge.event.RegisterCommandsEvent;
@@ -34,9 +35,9 @@ public final class DrugCommand {
     @SubscribeEvent public static void register(RegisterCommandsEvent event) {
         var target=Commands.argument("target",EntityArgument.players());
         target.then(Commands.literal("get").executes(context -> get(context,null))
-                .then(drug().executes(context -> get(context,resolve(StringArgumentType.getString(context,"drug"))))));
+                .then(drug(false).executes(context -> get(context,resolve(drugId(context))))));
         for (String action : List.of("set","add","lock")) {
-            var choice=drug();
+            var choice=drug(true);
             if (action.equals("lock")) choice.then(Commands.argument("locked",BoolArgumentType.bool()).executes(context -> change(context,action)));
             else choice.then(Commands.argument("value",DoubleArgumentType.doubleArg(0,1)).executes(context -> change(context,action)));
             target.then(Commands.literal(action).then(choice));
@@ -44,10 +45,17 @@ public final class DrugCommand {
         event.getDispatcher().register(Commands.literal("drug").requires(source -> source.hasPermission(2)).then(target));
     }
 
-    private static com.mojang.brigadier.builder.RequiredArgumentBuilder<CommandSourceStack,String> drug() {
-        return Commands.argument("drug",StringArgumentType.word()).suggests((context,builder) ->
-                SharedSuggestionProvider.suggest(Stream.concat(Stream.of("all"),DrugType.values().stream()
+    private static com.mojang.brigadier.builder.RequiredArgumentBuilder<CommandSourceStack,ResourceLocation> drug(boolean includeAll) {
+        return Commands.argument("drug",ResourceLocationArgument.id()).suggests((context,builder) ->
+                SharedSuggestionProvider.suggest(Stream.concat(includeAll?Stream.of("all"):Stream.empty(),DrugType.values().stream()
                         .flatMap(type -> Stream.of(type.id(),path(type)))),builder));
+    }
+
+    /** Keep the explicit namespace, while bare IDs retain the accepted mod namespace. */
+    static String drugId(CommandContext<CommandSourceStack> context) {
+        return context.getNodes().stream().filter(node->node.getNode() instanceof com.mojang.brigadier.tree.ArgumentCommandNode<?,?>
+                        &&node.getNode().getName().equals("drug"))
+                .findFirst().orElseThrow().getRange().get(context.getInput());
     }
 
     private static DrugType resolve(String id) throws CommandSyntaxException {
@@ -57,7 +65,7 @@ public final class DrugCommand {
     private static String path(DrugType type) { return type.id().substring(type.id().indexOf(':')+1); }
 
     private static int change(CommandContext<CommandSourceStack> context,String action) throws CommandSyntaxException {
-        String id=StringArgumentType.getString(context,"drug");
+        String id=drugId(context);
         boolean all=id.equals("all");
         Collection<DrugType> types=all?DrugType.values():List.of(resolve(id));
         var players=EntityArgument.getPlayers(context,"target");

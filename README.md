@@ -69,3 +69,8 @@ The operator command `/hallucinate <type> [targets] [x y z]` creates an owner-on
 
 
 Drug themes use the strongest enabled active drug and loop locally. Configure `audio.drugsBackgroundMusic` and the per-drug `audio.background_music` flags in the Forge client TOML. Resource packs can supply `psychedelicraft:drug.<drug_path>` sound events; missing or empty sets use the included generic loop. Stimulant breathing follows the player and is audible to nearby observers, while heartbeats stay local. Drug perception also changes existing sound sources and recovers when the effect clears.
+
+
+Alcohol and kava slur chat, cannabis adds localized filler words, and Zero corrupts text according to the active effect intensity. Set `balancing.messageDistortion.incoming` or `.outgoing` in the local `psychedelicraft-common.toml` to disable either direction. Incoming changes preserve text styling and links. Command input bypasses outgoing distortion, and action-bar messages stay unchanged. Outgoing changes run before Minecraft signs and sends the chat message.
+
+`balancing.enableHarmonium` defaults to `false`, matching the accepted source. Enable it to show its colored creative variants and dealer offers. Existing explicit settings remain respected. The [settings matrix](docs/PORT_1201_SETTINGS.md) maps all 140 Forge config values and their verification evidence.

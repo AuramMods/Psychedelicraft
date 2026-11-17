@@ -80,6 +80,6 @@ public final class ContextualHallucinations {
     @SubscribeEvent(priority=EventPriority.LOWEST)
     public static void chat(ClientChatReceivedEvent.Player event){
         var state=forClient();if(state==null)return;
-        String sender=event.getBoundChatType().name().getString();state.heads.forEach(head->head.chat.receive(sender,event.getMessage()));
+        String sender=event.getBoundChatType().name().getString();state.heads.forEach(head->head.chat.receive(sender,event.getPlayerChatMessage().decoratedContent()));
     }
 }

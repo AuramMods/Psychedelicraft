@@ -39,7 +39,7 @@ final class RastaHeadChat {
     }
 
     private void emit(String line) {
-        Minecraft.getInstance().gui.getChat().addMessage(Component.translatable("chat.type.text", Component.literal(NAME), Component.literal(line)));
+        Minecraft.getInstance().gui.getChat().addMessage(ivorius.psychedelicraft.client.ClientChatEffects.distortIncoming(Component.translatable("chat.type.text", Component.literal(NAME), Component.literal(line))));
         RandomSource worldRandom=player.level().random;
         if(worldRandom.nextFloat()<.3F||line.contains("!")){
             double x=worldRandom.nextFloat(),z=worldRandom.nextFloat();
