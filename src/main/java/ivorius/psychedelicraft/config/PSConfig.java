@@ -17,7 +17,7 @@ public final class PSConfig {
     static {
         ForgeConfigSpec.Builder builder = new ForgeConfigSpec.Builder();
         builder.push("worldGeneration");
-        for (String name : List.of("cannabis","hop","tobacco","coffea","coca","belladonna","jimsonweed","tomato","peyote")) {
+        for (String name : List.of("cannabis","hop","tobacco","coffea","coca","belladonna","jimsonweed","tomato","peyote","morning_glory")) {
             builder.push(name);
             GENERATION.put(name,new GenerationFeature(builder.define("enabled",true),
                     builder.comment("Additional biome ids or #biome tags. All included selectors must match; built-in defaults remain enabled.")

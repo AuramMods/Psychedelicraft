@@ -38,6 +38,8 @@ public final class Psychedelicraft {
         PSRecipes.register(bus);
         PSMenus.MENUS.register(bus);
         ModLoadingContext.get().registerConfig(ModConfig.Type.COMMON, PSConfig.COMMON);
+        bus.addListener((net.minecraftforge.fml.event.lifecycle.FMLCommonSetupEvent event) -> event.enqueueWork(() ->
+                ((net.minecraft.world.level.block.FlowerPotBlock)net.minecraft.world.level.block.Blocks.FLOWER_POT).addPlant(id("morning_glory"),PSBlocks.POTTED_MORNING_GLORY)));
         bus.addListener((RegisterCapabilitiesEvent event) -> event.register(DrugProperties.class));
         DrugNetwork.register();
         PSCriteria.register();

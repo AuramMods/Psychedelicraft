@@ -15,7 +15,7 @@ public enum FluidVessel {
     public boolean accepts(Fluid supplied){
         Fluid fluid=PSFluids.canonical(supplied);
         if(this==SYRINGE)return PSFluids.isInjectable(fluid);if(this==BUCKET)return true;
-        if(fluid==Fluids.LAVA)return this==GLASS_BOTTLE;if(PSFluids.isInjectable(fluid))return false;
+        if(fluid==Fluids.LAVA)return this==GLASS_BOTTLE;if(PSFluids.isInjectable(fluid)&&!PSFluids.isFlowerExtract(fluid))return false;
         if(fluid==PSFluids.COFFEE.get())return this==CUP;if(PSFluids.brew(fluid)!=null)return this!=CUP;
         return this!=MUG||(fluid!=PSFluids.COCA_TEA.get()&&fluid!=PSFluids.CANNABIS_TEA.get()&&fluid!=PSFluids.PEYOTE_JUICE.get()&&fluid!=PSFluids.KAVA.get()&&!PSFluids.isFlowerExtract(fluid));
     }

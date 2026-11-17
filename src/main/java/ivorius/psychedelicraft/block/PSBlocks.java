@@ -40,6 +40,13 @@ public final class PSBlocks {
     public static final RegistryObject<BottleRackBlock> BOTTLE_RACK=BLOCKS.register("bottle_rack",BottleRackBlock::new);
     public static final RegistryObject<LabPropBlock> BUNSEN_BURNER=BLOCKS.register("bunsen_burner",LabPropBlock::new);
     public static final RegistryObject<LabPropBlock.Tray> TRAY=BLOCKS.register("tray",LabPropBlock.Tray::new);
+    public static final RegistryObject<LatticeBlock> LATTICE=BLOCKS.register("lattice",()->new LatticeBlock(lattice()));
+    public static final RegistryObject<LatticeCropBlock> WINE_GRAPE_LATTICE=BLOCKS.register("wine_grape_lattice",()->new LatticeCropBlock(false,1,()->PSItems.WINE_GRAPES.get(),lattice()));
+    public static final RegistryObject<LatticeCropBlock> MORNING_GLORY_LATTICE=BLOCKS.register("morning_glory_lattice",()->new LatticeCropBlock(true,2,()->PSItems.MORNING_GLORY.get(),lattice()));
+    public static final RegistryObject<VineStemBlock> MORNING_GLORY=BLOCKS.register("morning_glory",()->new VineStemBlock(plant()));
+    public static final RegistryObject<net.minecraft.world.level.block.FlowerPotBlock> POTTED_MORNING_GLORY=BLOCKS.register("potted_morning_glory",()->new net.minecraft.world.level.block.FlowerPotBlock(
+            ()->(net.minecraft.world.level.block.FlowerPotBlock)Blocks.FLOWER_POT,MORNING_GLORY,BlockBehaviour.Properties.copy(Blocks.POTTED_POPPY)));
+    private static BlockBehaviour.Properties lattice(){return BlockBehaviour.Properties.of().strength(.3F).sound(SoundType.WOOD).noOcclusion().ignitedByLava();}
     private PSBlocks() {}
     private static BlockBehaviour.Properties plant() {
         return BlockBehaviour.Properties.of().noCollission().noOcclusion().instabreak().randomTicks().sound(SoundType.GRASS);

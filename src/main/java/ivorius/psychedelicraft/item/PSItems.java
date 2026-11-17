@@ -101,12 +101,22 @@ public final class PSItems {
     public static final RegistryObject<FluidMachineItem> JUNGLE_BARREL=ITEMS.register("jungle_barrel",()->new FluidMachineItem(PSBlocks.JUNGLE_BARREL.get(),16000));
     public static final RegistryObject<FluidMachineItem> DARK_OAK_BARREL=ITEMS.register("dark_oak_barrel",()->new FluidMachineItem(PSBlocks.DARK_OAK_BARREL.get(),16000));
 
+    public static final RegistryObject<Item> LATTICE=ITEMS.register("lattice",()->new BlockItem(PSBlocks.LATTICE.get(),new Item.Properties()) {
+        @Override public int getBurnTime(ItemStack stack,net.minecraft.world.item.crafting.RecipeType<?> type){return 700;}
+    });
+    public static final RegistryObject<LatticeCropItem> WINE_GRAPE_LATTICE=ITEMS.register("wine_grape_lattice",()->new LatticeCropItem(PSBlocks.WINE_GRAPE_LATTICE.get()));
+    public static final RegistryObject<LatticeCropItem> MORNING_GLORY_LATTICE=ITEMS.register("morning_glory_lattice",()->new LatticeCropItem(PSBlocks.MORNING_GLORY_LATTICE.get()));
+    public static final RegistryObject<Item> MORNING_GLORY=ITEMS.register("morning_glory",()->new Item(new Item.Properties()));
+    public static final RegistryObject<Item> MORNING_GLORY_SEEDS=seed("morning_glory_seeds",PSBlocks.MORNING_GLORY);
+    public static final RegistryObject<WineGrapesItem> WINE_GRAPES=ITEMS.register("wine_grapes",WineGrapesItem::new);
+
     public static final DeferredRegister<CreativeModeTab> TABS = DeferredRegister.create(Registries.CREATIVE_MODE_TAB,Psychedelicraft.MOD_ID);
     public static final RegistryObject<CreativeModeTab> MAIN_TAB = TABS.register("main", () -> CreativeModeTab.builder()
             .title(Component.translatable("itemGroup.psychedelicraft"))
             .icon(() -> new ItemStack(COFFEE_BEANS.get()))
             .displayItems((parameters, output) -> ITEMS.getEntries().forEach(item -> {
                 if(item.get() instanceof PortableFluidItem vessel)VesselCreativeItems.add(vessel,output::accept);
+                else if(item.get() instanceof LatticeCropItem)for(int age=0;age<4;age++)output.accept(LatticeCropItem.withAge(new ItemStack(item.get()),age));
                 else if(item.get()!=HARMONIUM.get())output.accept(item.get());
                 else if(PSConfig.ENABLE_HARMONIUM.get())for(DyeColor dye:DyeColor.values()){
                     ItemStack stack=new ItemStack(item.get());HarmoniumItem.setColor(stack,HarmoniumItem.packColor(dye.getTextureDiffuseColors()));output.accept(stack);

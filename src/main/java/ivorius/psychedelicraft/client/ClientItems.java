@@ -27,6 +27,8 @@ public final class ClientItems {
             for(var item:java.util.List.of(PSItems.SMOKING_PIPE,PSItems.BONG))ItemProperties.register(item.get(),Psychedelicraft.id("filled"),
                     (stack,level,entity,seed)->entity instanceof Player player&&(item.get().canDraw(player)
                             ||!player.isLocalPlayer()&&player.isUsingItem()&&player.getUseItem()==stack)?1:0);
+            for(var crop:java.util.List.of(PSItems.WINE_GRAPE_LATTICE,PSItems.MORNING_GLORY_LATTICE))ItemProperties.register(crop.get(),Psychedelicraft.id("age"),
+                    (stack,level,entity,seed)->ivorius.psychedelicraft.item.LatticeCropItem.age(stack)/10F);
             PSItems.ITEMS.getEntries().forEach(entry -> {
                 if(entry.get() instanceof PortableFluidItem vessel)ItemProperties.register(vessel,Psychedelicraft.id("filled"),
                         (stack,level,entity,seed)->vessel.contents(stack).isEmpty()?0:1);
