@@ -494,5 +494,7 @@
   "fluid.status.stew": "Stewing",
   "time.until.stew": "Stew ready in %s",
   "subtitle.psychedelicraft.bottle_rack_use": "Bottle rack clacks",
-  "block.psychedelicraft.placed_drink": "Placed Drinks"
+  "block.psychedelicraft.placed_drink": "Placed Drinks",
+  "entity.psychedelicraft.juniper_boat": "Juniper Boat",
+  "entity.psychedelicraft.juniper_chest_boat": "Juniper Chest Boat"
 }

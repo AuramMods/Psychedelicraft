@@ -11,13 +11,7 @@ import net.minecraft.world.item.*;
 import net.minecraft.world.item.context.UseOnContext;
 import net.minecraft.world.level.Level;
 
-public final class WineGrapesItem extends Item {
-    public WineGrapesItem() { super(new Properties().food(new FoodProperties.Builder().nutrition(1).saturationMod(.5F).meat().build())); }
-    @Override public int getUseDuration(ItemStack stack) { return 15; }
-    @Override public ItemStack finishUsingItem(ItemStack stack, Level level, LivingEntity consumer) {
-        if (consumer instanceof Player player && player.getAbilities().instabuild) { super.finishUsingItem(stack.copy(), level, consumer); return stack; }
-        return super.finishUsingItem(stack, level, consumer);
-    }
+public final class WineGrapesItem extends QuickFoodItem {
     @Override public InteractionResult useOn(UseOnContext context) {
         var player = context.getPlayer(); var level = context.getLevel(); var pos = context.getClickedPos();
         if (player == null || player.isShiftKeyDown() || !player.mayUseItemAt(pos, context.getClickedFace(), context.getItemInHand())

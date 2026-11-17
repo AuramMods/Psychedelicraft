@@ -13,6 +13,23 @@
     "psychedelicraft:bottle_rack",
     "psychedelicraft:lattice",
     "psychedelicraft:wine_grape_lattice",
-    "psychedelicraft:morning_glory_lattice"
+    "psychedelicraft:morning_glory_lattice",
+    "psychedelicraft:juniper_log",
+    "psychedelicraft:juniper_wood",
+    "psychedelicraft:stripped_juniper_log",
+    "psychedelicraft:stripped_juniper_wood",
+    "psychedelicraft:juniper_planks",
+    "psychedelicraft:juniper_stairs",
+    "psychedelicraft:juniper_slab",
+    "psychedelicraft:juniper_fence",
+    "psychedelicraft:juniper_fence_gate",
+    "psychedelicraft:juniper_door",
+    "psychedelicraft:juniper_trapdoor",
+    "psychedelicraft:juniper_button",
+    "psychedelicraft:juniper_pressure_plate",
+    "psychedelicraft:juniper_sign",
+    "psychedelicraft:juniper_wall_sign",
+    "psychedelicraft:juniper_hanging_sign",
+    "psychedelicraft:juniper_wall_hanging_sign"
   ]
 }

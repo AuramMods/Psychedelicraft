@@ -27,6 +27,7 @@ public final class Psychedelicraft {
 
     public Psychedelicraft() {
         IEventBus bus = FMLJavaModLoadingContext.get().getModEventBus();
+        ivorius.psychedelicraft.entity.PSEntities.TYPES.register(bus);
         PSItems.ITEMS.register(bus);
         ivorius.psychedelicraft.fluid.PSFluids.register(bus);
         PSSounds.SOUNDS.register(bus);
@@ -40,6 +41,7 @@ public final class Psychedelicraft {
         ModLoadingContext.get().registerConfig(ModConfig.Type.COMMON, PSConfig.COMMON);
         bus.addListener((net.minecraftforge.fml.event.lifecycle.FMLCommonSetupEvent event) -> event.enqueueWork(() ->
                 ((net.minecraft.world.level.block.FlowerPotBlock)net.minecraft.world.level.block.Blocks.FLOWER_POT).addPlant(id("morning_glory"),PSBlocks.POTTED_MORNING_GLORY)));
+        bus.addListener((net.minecraftforge.fml.event.lifecycle.FMLCommonSetupEvent event) -> event.enqueueWork(ivorius.psychedelicraft.block.JuniperContent::setup));
         bus.addListener((RegisterCapabilitiesEvent event) -> event.register(DrugProperties.class));
         DrugNetwork.register();
         PSCriteria.register();

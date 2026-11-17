@@ -18,5 +18,7 @@ public final class PSBlockEntities {
     public static final RegistryObject<BlockEntityType<MashTubEdgeBlockEntity>> MASH_TUB_EDGE=TYPES.register("mash_tub_edge",()->BlockEntityType.Builder.of(MashTubEdgeBlockEntity::new,PSBlocks.MASH_TUB_EDGE.get()).build(null));
     public static final RegistryObject<BlockEntityType<PlacedDrinkBlockEntity>> PLACED_DRINK=TYPES.register("placed_drink",()->BlockEntityType.Builder.of(PlacedDrinkBlockEntity::new,PSBlocks.PLACED_DRINK.get()).build(null));
     public static final RegistryObject<BlockEntityType<BottleRackBlockEntity>> BOTTLE_RACK=TYPES.register("bottle_rack",()->BlockEntityType.Builder.of(BottleRackBlockEntity::new,PSBlocks.BOTTLE_RACK.get()).build(null));
+    public static final RegistryObject<BlockEntityType<JuniperSignBlockEntity>> JUNIPER_SIGN=TYPES.register("juniper_sign",()->BlockEntityType.Builder.of(JuniperSignBlockEntity::new,PSBlocks.JUNIPER_SIGN.get(),PSBlocks.JUNIPER_WALL_SIGN.get()).build(null));
+    public static final RegistryObject<BlockEntityType<JuniperHangingSignBlockEntity>> JUNIPER_HANGING_SIGN=TYPES.register("juniper_hanging_sign",()->BlockEntityType.Builder.of(JuniperHangingSignBlockEntity::new,PSBlocks.JUNIPER_HANGING_SIGN.get(),PSBlocks.JUNIPER_WALL_HANGING_SIGN.get()).build(null));
     private PSBlockEntities(){}
 }

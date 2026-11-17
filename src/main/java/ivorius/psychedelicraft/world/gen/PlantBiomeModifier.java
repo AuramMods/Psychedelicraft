@@ -46,6 +46,7 @@ public record PlantBiomeModifier(String plant, HolderSet<PlacedFeature> features
             case "cannabis","hop","tobacco","coffea","coca" -> biome.is(BiomeTags.IS_OVERWORLD)
                     && (biome.value().getBaseTemperature()<0.15F || biome.is(BiomeTags.IS_HILL)
                     || biome.is(BiomeTags.IS_FOREST) || biome.is(Biomes.PLAINS));
+            case "juniper" -> biome.is(BiomeTags.IS_OVERWORLD)&&(biome.is(BiomeTags.IS_HILL)||biome.is(BiomeTags.IS_FOREST)||matches(biome,"#forge:is_forest")||matches(biome,"#forge:is_hill"));
             case "morning_glory" -> biome.is(Biomes.FLOWER_FOREST)||biome.is(Biomes.SUNFLOWER_PLAINS)||biome.is(Biomes.MEADOW)||biome.is(Biomes.LUSH_CAVES);
             case "belladonna" -> biome.is(Biomes.DARK_FOREST);
             case "jimsonweed" -> biome.is(Biomes.JUNGLE)||biome.is(Biomes.SPARSE_JUNGLE);

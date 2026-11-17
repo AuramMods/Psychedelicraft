@@ -1,0 +1,20 @@
+{
+  "type": "psychedelicraft:mashing",
+  "stew_time": 0,
+  "base_fluid": {
+    "fluid": "minecraft:water"
+  },
+  "ingredients": [
+    { "item": "psychedelicraft:juniper_berries" },
+    { "item": "psychedelicraft:juniper_berries" },
+    { "item": "psychedelicraft:juniper_berries" },
+    { "item": "psychedelicraft:juniper_berries" },
+    { "item": "minecraft:sugar" },
+    { "tag": "psychedelicraft:grapes" },
+    { "tag": "psychedelicraft:grapes" },
+    { "item": "minecraft:wheat" }
+  ],
+  "result": {
+    "fluid": "psychedelicraft:juniper"
+  }
+}

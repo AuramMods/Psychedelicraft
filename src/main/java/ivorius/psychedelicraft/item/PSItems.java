@@ -110,6 +110,28 @@ public final class PSItems {
     public static final RegistryObject<Item> MORNING_GLORY_SEEDS=seed("morning_glory_seeds",PSBlocks.MORNING_GLORY);
     public static final RegistryObject<WineGrapesItem> WINE_GRAPES=ITEMS.register("wine_grapes",WineGrapesItem::new);
 
+    public static final RegistryObject<BlockItem> JUNIPER_LEAVES=ITEMS.register("juniper_leaves",()->new BlockItem(PSBlocks.JUNIPER_LEAVES.get(),new Item.Properties()));
+    public static final RegistryObject<BlockItem> FRUITING_JUNIPER_LEAVES=ITEMS.register("fruiting_juniper_leaves",()->new BlockItem(PSBlocks.FRUITING_JUNIPER_LEAVES.get(),new Item.Properties()));
+    public static final RegistryObject<BlockItem> JUNIPER_LOG=ITEMS.register("juniper_log",()->new BlockItem(PSBlocks.JUNIPER_LOG.get(),new Item.Properties()));
+    public static final RegistryObject<BlockItem> JUNIPER_WOOD=ITEMS.register("juniper_wood",()->new BlockItem(PSBlocks.JUNIPER_WOOD.get(),new Item.Properties()));
+    public static final RegistryObject<BlockItem> STRIPPED_JUNIPER_LOG=ITEMS.register("stripped_juniper_log",()->new BlockItem(PSBlocks.STRIPPED_JUNIPER_LOG.get(),new Item.Properties()));
+    public static final RegistryObject<BlockItem> STRIPPED_JUNIPER_WOOD=ITEMS.register("stripped_juniper_wood",()->new BlockItem(PSBlocks.STRIPPED_JUNIPER_WOOD.get(),new Item.Properties()));
+    public static final RegistryObject<BlockItem> JUNIPER_SAPLING=ITEMS.register("juniper_sapling",()->new BlockItem(PSBlocks.JUNIPER_SAPLING.get(),new Item.Properties()));
+    public static final RegistryObject<BlockItem> JUNIPER_PLANKS=ITEMS.register("juniper_planks",()->new BlockItem(PSBlocks.JUNIPER_PLANKS.get(),new Item.Properties()));
+    public static final RegistryObject<BlockItem> JUNIPER_STAIRS=ITEMS.register("juniper_stairs",()->new BlockItem(PSBlocks.JUNIPER_STAIRS.get(),new Item.Properties()));
+    public static final RegistryObject<BlockItem> JUNIPER_SLAB=ITEMS.register("juniper_slab",()->new BlockItem(PSBlocks.JUNIPER_SLAB.get(),new Item.Properties()));
+    public static final RegistryObject<BlockItem> JUNIPER_FENCE=ITEMS.register("juniper_fence",()->new BlockItem(PSBlocks.JUNIPER_FENCE.get(),new Item.Properties()));
+    public static final RegistryObject<BlockItem> JUNIPER_FENCE_GATE=ITEMS.register("juniper_fence_gate",()->new BlockItem(PSBlocks.JUNIPER_FENCE_GATE.get(),new Item.Properties()));
+    public static final RegistryObject<BlockItem> JUNIPER_TRAPDOOR=ITEMS.register("juniper_trapdoor",()->new BlockItem(PSBlocks.JUNIPER_TRAPDOOR.get(),new Item.Properties()));
+    public static final RegistryObject<BlockItem> JUNIPER_PRESSURE_PLATE=ITEMS.register("juniper_pressure_plate",()->new BlockItem(PSBlocks.JUNIPER_PRESSURE_PLATE.get(),new Item.Properties()));
+    public static final RegistryObject<BlockItem> JUNIPER_BUTTON=ITEMS.register("juniper_button",()->new BlockItem(PSBlocks.JUNIPER_BUTTON.get(),new Item.Properties()));
+    public static final RegistryObject<Item> JUNIPER_DOOR=ITEMS.register("juniper_door",()->new net.minecraft.world.item.DoubleHighBlockItem(PSBlocks.JUNIPER_DOOR.get(),new Item.Properties()));
+    public static final RegistryObject<Item> JUNIPER_SIGN=ITEMS.register("juniper_sign",()->new net.minecraft.world.item.SignItem(new Item.Properties().stacksTo(16),PSBlocks.JUNIPER_SIGN.get(),PSBlocks.JUNIPER_WALL_SIGN.get()));
+    public static final RegistryObject<Item> JUNIPER_HANGING_SIGN=ITEMS.register("juniper_hanging_sign",()->new net.minecraft.world.item.HangingSignItem(PSBlocks.JUNIPER_HANGING_SIGN.get(),PSBlocks.JUNIPER_WALL_HANGING_SIGN.get(),new Item.Properties().stacksTo(16)));
+    public static final RegistryObject<QuickFoodItem> JUNIPER_BERRIES=ITEMS.register("juniper_berries",QuickFoodItem::new);
+    public static final RegistryObject<JuniperBoatItem> JUNIPER_BOAT=ITEMS.register("juniper_boat",()->new JuniperBoatItem(false));
+    public static final RegistryObject<JuniperBoatItem> JUNIPER_CHEST_BOAT=ITEMS.register("juniper_chest_boat",()->new JuniperBoatItem(true));
+
     public static final DeferredRegister<CreativeModeTab> TABS = DeferredRegister.create(Registries.CREATIVE_MODE_TAB,Psychedelicraft.MOD_ID);
     public static final RegistryObject<CreativeModeTab> MAIN_TAB = TABS.register("main", () -> CreativeModeTab.builder()
             .title(Component.translatable("itemGroup.psychedelicraft"))

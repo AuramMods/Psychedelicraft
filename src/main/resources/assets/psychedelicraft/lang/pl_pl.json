@@ -485,5 +485,7 @@
   "fluid.status.stew": "Maceracja",
   "time.until.stew": "Maceracja zakończy się za %s",
   "subtitle.psychedelicraft.bottle_rack_use": "Stojak na butelki stuka",
-  "block.psychedelicraft.placed_drink": "Ustawione napoje"
+  "block.psychedelicraft.placed_drink": "Ustawione napoje",
+  "entity.psychedelicraft.juniper_boat": "Łódka z jałowca",
+  "entity.psychedelicraft.juniper_chest_boat": "Łódka ze skrzynią z jałowca"
 }
