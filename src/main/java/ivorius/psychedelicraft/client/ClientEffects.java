@@ -38,6 +38,7 @@ public final class ClientEffects {
     private static org.joml.Matrix4f worldProjection;
     private static net.minecraft.client.multiplayer.ClientLevel visualLevel;
     private static Player visualPlayer;
+    private static boolean visualAlive;
     private static float pauseProgress;
 
     private ClientEffects() {}
@@ -56,24 +57,26 @@ public final class ClientEffects {
     public static void tick(TickEvent.ClientTickEvent event) {
         if (event.phase != TickEvent.Phase.END) return;
         Minecraft client = Minecraft.getInstance();
-        ContextualHallucinations.track(client.player,client.level);
-        if(client.level!=visualLevel||client.player!=visualPlayer){resetVisuals();visualLevel=client.level;visualPlayer=client.player;}
+        boolean alive=ClientDrugState.alive(client.player);
+        ContextualHallucinations.track(alive?client.player:null,alive?client.level:null);
+        if(client.level!=visualLevel||client.player!=visualPlayer||alive!=visualAlive){resetVisuals();visualLevel=client.level;visualPlayer=client.player;visualAlive=alive;}
         pauseProgress=Mth.clamp(pauseProgress+(client.isPaused()?.25F:-.25F),0,1);
-        if(client.level==null||client.player==null)return;
-        if(!client.isPaused()){hallucinations.update(DrugCapability.get(client.player),client.player.getRandom(),client.player.tickCount);environment.update(client.player);}
+        if(client.level==null||!alive){if(client.player!=null)pending.remove(client.player.getUUID());return;}
+        if(!client.isPaused()){hallucinations.update(ClientDrugState.get(client.player),client.player.getRandom(),client.player.tickCount);environment.update(client.player);}
         Iterator<Snapshot> snapshots = pending.values().iterator();
         while (snapshots.hasNext()) {
             Snapshot snapshot = snapshots.next();
             if (!snapshot.dimension().equals(client.level.dimension().location())) continue;
             Player player = client.level.getPlayerByUUID(snapshot.player());
             if (player != null) {
-                DrugCapability.get(player).fromNbt(snapshot.data());
-                snapshots.remove();
+                if(!ClientDrugState.alive(player)){snapshots.remove();continue;}
+                var capability=player.getCapability(DrugCapability.TYPE);
+                if(capability.isPresent()){capability.ifPresent(drugs->drugs.fromNbt(snapshot.data()));snapshots.remove();}
             }
         }
         camera.tick(client);
-        if(!client.isPaused())overlays.tick(client,DrugCapability.get(client.player));
-        if(!client.isPaused())ContextualHallucinations.tick(DrugCapability.get(client.player),hallucinations.strength(HallucinationManager.Effect.ENTITIES)*.4F);
+        if(!client.isPaused())overlays.tick(client,ClientDrugState.get(client.player));
+        if(!client.isPaused())ContextualHallucinations.tick(ClientDrugState.get(client.player),hallucinations.strength(HallucinationManager.Effect.ENTITIES)*.4F);
     }
 
     @SubscribeEvent
@@ -81,11 +84,12 @@ public final class ClientEffects {
         pending.clear();
         ContextualHallucinations.track(null,null);
         resetVisuals();
-        visualLevel=null;visualPlayer=null;
+        visualLevel=null;visualPlayer=null;visualAlive=false;
     }
 
     @SubscribeEvent(priority=net.minecraftforge.eventbus.api.EventPriority.LOWEST)
     public static void world(RenderLevelStageEvent event){
+        if(!ClientDrugState.alive(Minecraft.getInstance().player))return;
         if(event.getStage()==RenderLevelStageEvent.Stage.AFTER_ENTITIES)ContextualHallucinations.render(Minecraft.getInstance(),event.getPartialTick(),event.getPoseStack());
         if(event.getStage()!=RenderLevelStageEvent.Stage.AFTER_LEVEL)return;
         var client=Minecraft.getInstance();if(client.player==null||client.level==null)return;
@@ -95,9 +99,9 @@ public final class ClientEffects {
 
     /** GameRenderer's return is after hands; Forge's AFTER_LEVEL event is before them. */
     public static void completeWorld(float partial){
-        var client=Minecraft.getInstance();if(client.player==null||client.level==null||worldProjection==null)return;
+        var client=Minecraft.getInstance();if(!ClientDrugState.alive(client.player)||client.level==null||worldProjection==null)return;
         try(var phase=ivorius.psychedelicraft.client.render.RenderPhase.POST.enter()){
-            overlays.render(client,DrugCapability.get(client.player),environment,partial);
+            overlays.render(client,ClientDrugState.get(client.player),environment,partial);
             post.render(client,partial,worldProjection,hallucinations,environment,pauseProgress);
         }finally{worldProjection=null;}
     }

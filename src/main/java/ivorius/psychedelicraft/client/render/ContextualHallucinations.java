@@ -1,5 +1,6 @@
 /* Copyright (c) 2014, Lukas Tenbrink. Modern integration originally by Sollace. */
 package ivorius.psychedelicraft.client.render;
+import ivorius.psychedelicraft.client.ClientDrugState;
 
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.logging.LogUtils;
@@ -36,7 +37,7 @@ public final class ContextualHallucinations {
     }
     public static void receive(Connection connection,DrugNetwork.ForcedHallucination message){
         var client=Minecraft.getInstance();var player=client.player;
-        if(client.getConnection()==null||client.getConnection().getConnection()!=connection||client.level==null||player==null||message.type()==null
+        if(client.getConnection()==null||client.getConnection().getConnection()!=connection||client.level==null||!ClientDrugState.alive(player)||message.type()==null
                 ||player.getId()!=message.entityId()||!player.getUUID().equals(message.player())||!client.level.dimension().location().equals(message.dimension()))return;
         track(player,client.level);
         current.add(message.type(),message.position()==null?null:Vec3.atCenterOf(message.position()));
@@ -64,7 +65,7 @@ public final class ContextualHallucinations {
         }
     }
     private float forcedAlpha(float partial){return HallucinationTiming.forcedAlpha(previousForcedTicks,forcedTicks,partial,player.tickCount);}
-    @Nullable private static ContextualHallucinations forClient(){var client=Minecraft.getInstance();return current!=null&&current.player==client.player&&current.world==client.level?current:null;}
+    @Nullable private static ContextualHallucinations forClient(){var client=Minecraft.getInstance();return current!=null&&ClientDrugState.alive(client.player)&&current.player==client.player&&current.world==client.level?current:null;}
     public static Entity forRender(Entity original){
         var state=forClient();if(state==null||original.level()!=state.world||ApparitionRender.isRendering())return original;
         for(var swap:state.swaps){Entity replacement=swap.disguise(original);if(replacement!=null)return replacement;}

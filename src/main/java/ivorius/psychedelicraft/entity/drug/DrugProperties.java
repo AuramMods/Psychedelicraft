@@ -19,6 +19,7 @@ import java.util.List;
 import java.util.Map;
 
 public final class DrugProperties implements NbtSerialisable {
+    private final Breathing breathing=new Breathing();
     private final Map<DrugType, Drug> drugs = new LinkedHashMap<>();
     private final List<DrugInfluence> influences = new ArrayList<>();
     private final Stomach stomach = new Stomach();
@@ -111,6 +112,7 @@ public final class DrugProperties implements NbtSerialisable {
             dirty |= stomach.takeDirty();
             if (!player.level().isClientSide) peyoteFlight.tick(player, getActiveValue(DrugType.PEYOTE));
             if (player.isAlive()) {
+                breathing.tick(this,player);
                 if (player.level().isClientSide && player.isLocalPlayer()) {
                     if (player.onGround() && player.getRandom().nextFloat() < getModifier(Drug::randomJumpChance)) player.jumpFromGround();
                     if (!player.swinging && player.getRandom().nextFloat() < getModifier(Drug::randomSwingChance)) player.swing(InteractionHand.MAIN_HAND);

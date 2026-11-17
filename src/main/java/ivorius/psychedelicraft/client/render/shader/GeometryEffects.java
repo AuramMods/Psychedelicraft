@@ -1,5 +1,6 @@
 /* Copyright (c) 2014, Lukas Tenbrink. Modern shader integration adapted from Sollace. */
 package ivorius.psychedelicraft.client.render.shader;
+import ivorius.psychedelicraft.client.ClientDrugState;
 
 import com.mojang.blaze3d.shaders.*;
 import ivorius.psychedelicraft.Psychedelicraft;
@@ -54,8 +55,8 @@ public final class GeometryEffects {
     public static void apply(ShaderInstance shader){
         float[] tint=ApparitionRender.tint();set(shader,"PS_ApparitionTint",tint[0],tint[1],tint[2],tint[3]);
         var client=Minecraft.getInstance();var phase=RenderPhase.current();
-        boolean active=phase.active()&&client.level!=null&&client.player!=null&&PSClientConfig.SHADERS_3D.get();
-        var h=ClientEffects.hallucinations();var drugs=active?DrugCapability.get(client.player):null;
+        boolean active=phase.active()&&client.level!=null&&ClientDrugState.alive(client.player)&&PSClientConfig.SHADERS_3D.get();
+        var h=ClientEffects.hallucinations();var drugs=active?ClientDrugState.get(client.player):null;
         boolean deform=active&&phase.deforms();String name=shader.getName();
         boolean surface=active&&GeometryMaterial.surface(phase,name);
         float[] pulse=active&&GeometryMaterial.pulses(name)?h.pulseColor():null;

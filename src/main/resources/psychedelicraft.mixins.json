@@ -38,6 +38,7 @@
     "client.EntityDispatcherAccessor",
     "client.EntityVisualAccessor",
     "client.WalkAnimationAccessor",
-    "client.IdentityRenderMixin"
+    "client.IdentityRenderMixin",
+    "client.SoundEngineMixin"
   ]
 }

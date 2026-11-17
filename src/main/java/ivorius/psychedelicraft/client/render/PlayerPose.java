@@ -1,5 +1,6 @@
 /* Copyright (c) 2014, Lukas Tenbrink. */
 package ivorius.psychedelicraft.client.render;
+import ivorius.psychedelicraft.client.ClientDrugState;
 
 import ivorius.psychedelicraft.entity.drug.*;
 import net.minecraft.client.model.EntityModel;
@@ -29,7 +30,7 @@ public final class PlayerPose implements AutoCloseable {
     public static PlayerPose apply(EntityModel<?> model, LivingEntity entity, float tick) {
         if (!(entity instanceof Player player)
                 || !(model instanceof HumanoidModel<?> humanoid)) return EMPTY;
-        var drugs = DrugCapability.get(player);
+        var drugs = ClientDrugState.get(player);
         float view = drugs.blendStrength(0, Drug::viewTrembleStrength);
         float hand = drugs.blendStrength(0, Drug::handTrembleStrength);
         float alcohol = Math.min(1, (float)(drugs.getActiveValue(DrugType.ALCOHOL) + drugs.getActiveValue(DrugType.KAVA)));

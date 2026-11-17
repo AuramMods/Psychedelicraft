@@ -1,5 +1,6 @@
 /* Copyright (c) 2014, Lukas Tenbrink. Updated by Sollace on 4 Jan 2023. */
 package ivorius.psychedelicraft.client.render;
+import ivorius.psychedelicraft.client.ClientDrugState;
 
 import com.mojang.blaze3d.vertex.PoseStack;
 import ivorius.psychedelicraft.entity.drug.*;
@@ -17,7 +18,7 @@ public final class CameraEffects {
     public void tick(Minecraft client) {
         var player = client.player;
         if (player == null) return;
-        var drugs = DrugCapability.get(player);
+        var drugs = ClientDrugState.get(player);
         if (!client.isPaused()) {
             var movement = player.getDeltaMovement();
             drift.update(drugs.getModifier(Drug::weightlessness), player.tickCount, movement.x, movement.z, player.getRandom());
@@ -28,9 +29,9 @@ public final class CameraEffects {
 
     public void view(PoseStack pose, Camera camera, float partial) {
         var client = Minecraft.getInstance();
-        if (client.player == null || camera.getEntity() != client.player) return;
+        if (!ClientDrugState.alive(client.player) || camera.getEntity() != client.player) return;
         var player = client.player;
-        var drugs = DrugCapability.get(player);
+        var drugs = ClientDrugState.get(player);
         var position = drift.position(partial);
         var rotation = drift.rotation(partial);
         float wobble = Math.min(1, drugs.getModifier(Drug::viewWobblyness));
@@ -45,7 +46,7 @@ public final class CameraEffects {
 
     public void turn(LocalPlayer player, double nativeX, double nativeY, double rawX, double rawY) {
         var client = Minecraft.getInstance();
-        if (player == client.player && !client.isPaused() && DrugCapability.get(player).getModifier(Drug::headMotionInertia) > 0) {
+        if (player == client.player && !client.isPaused() && ClientDrugState.get(player).getModifier(Drug::headMotionInertia) > 0) {
             float speed = sensitivity(client);
             var change = inertia.sample((float)rawX * speed, (float)rawY * speed, client.getFrameTime());
             int invert = client.options.invertYMouse().get() ? -1 : 1;
@@ -59,11 +60,11 @@ public final class CameraEffects {
     public boolean outOfBody(Entity cameraEntity) {
         var client = Minecraft.getInstance();
         return client.player != null && cameraEntity == client.player && client.getCameraEntity() == client.player
-                && DrugCapability.get(client.player).getModifier(Drug::weightlessness) > 0 && drift.isOutOfBody();
+                && ClientDrugState.get(client.player).getModifier(Drug::weightlessness) > 0 && drift.isOutOfBody();
     }
 
     public static void hand(PoseStack pose, LocalPlayer player, float partial) {
-        var drugs = DrugCapability.get(player);
+        var drugs = ClientDrugState.get(player);
         float tick = player.tickCount + partial;
         pose.translate(CameraMotion.noise(tick) * .015F * drugs.blendStrength(0, Drug::handTrembleStrength),
                 CameraMotion.vertical(tick, drugs.blendStrength(0, Drug::viewTrembleStrength)) * .3F, 0);

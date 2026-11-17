@@ -9,6 +9,7 @@ public final class PSSounds {
     public static final DeferredRegister<SoundEvent> SOUNDS=DeferredRegister.create(ForgeRegistries.SOUND_EVENTS,Psychedelicraft.MOD_ID);
     public static final RegistryObject<SoundEvent> BREATH=SOUNDS.register("entity.player.breath",()->SoundEvent.createVariableRangeEvent(Psychedelicraft.id("entity.player.breath")));
     public static final RegistryObject<SoundEvent> HEARTBEAT=SOUNDS.register("entity.player.heartbeat",()->SoundEvent.createVariableRangeEvent(Psychedelicraft.id("entity.player.heartbeat")));
+    public static final RegistryObject<SoundEvent> DRUG_GENERIC=SOUNDS.register("drug.generic",()->SoundEvent.createVariableRangeEvent(Psychedelicraft.id("drug.generic")));
     public static final RegistryObject<SoundEvent> BOTTLE_RACK_USE=SOUNDS.register("block.bottle_rack.use",()->SoundEvent.createVariableRangeEvent(Psychedelicraft.id("block.bottle_rack.use")));
     public static final RegistryObject<SoundEvent> PLACED_DRINK_SET_DOWN=SOUNDS.register("block.placed_drink.set_down",()->SoundEvent.createVariableRangeEvent(Psychedelicraft.id("block.placed_drink.set_down")));
     public static final RegistryObject<SoundEvent> RIFT_JAR_TOGGLE=SOUNDS.register("block.rift_jar.toggle",()->SoundEvent.createVariableRangeEvent(Psychedelicraft.id("block.rift_jar.toggle")));

@@ -1,5 +1,6 @@
 /* Copyright (c) 2014, Lukas Tenbrink. Target shaders and effects updated by Sollace. */
 package ivorius.psychedelicraft.client.render.shader;
+import ivorius.psychedelicraft.client.ClientDrugState;
 
 import com.mojang.blaze3d.pipeline.*;
 import com.mojang.blaze3d.systems.RenderSystem;
@@ -42,7 +43,7 @@ public final class PostEffects {
     public void captureWorldDepth(Minecraft client,HallucinationManager h,EnvironmentEffects environment){
         worldDepthCaptured=false;
         if(failed||!PSClientConfig.SHADERS_2D.get())return;
-        var drugs=DrugCapability.get(client.player);
+        var drugs=ClientDrugState.get(client.player);
         if(h.contrastColor(drugs.getHarmonium())==null&&PSClientConfig.BLUR_NEAR.get()<=0&&PSClientConfig.BLUR_FAR.get()<=0
                 &&environment.heatDistortion()<=0&&environment.waterDistortion((float)drugs.getActiveValue(DrugType.PEYOTE))<=0&&drugs.getActiveValue(DrugType.ZERO)<=0)return;
         try(var state=new PostRenderState()){prepare(client,true);depth.copyDepthFrom(main);worldDepthCaptured=true;}
@@ -50,7 +51,7 @@ public final class PostEffects {
 
     public void render(Minecraft client,float partial,Matrix4f projection,HallucinationManager h,EnvironmentEffects environment,float pauseProgress){
         lastPasses.clear();if(failed)return;
-        var drugs=DrugCapability.get(client.player);float ticks=client.player.tickCount+partial;
+        var drugs=ClientDrugState.get(client.player);float ticks=client.player.tickCount+partial;
         float slow=h.strength(Effect.SLOW_COLOR_ROTATION),quick=h.strength(Effect.QUICK_COLOR_ROTATION),intensify=drugs.getColorIntensification(h.strength(Effect.SUPER_SATURATION)),desaturate=drugs.getDesaturation(h.strength(Effect.DESATURATION)),inversion=drugs.getModifier(Drug::inversionStrength);
         float[] contrast=h.contrastColor(drugs.getHarmonium()),colorBloom=h.bloomColor(drugs.getHarmonium());
         float bloom=h.strength(Effect.BLOOM)+drugs.getModifier(Drug::bloomStrength),vision=drugs.blendStrength(0,Drug::doubleVision),power=(float)drugs.getActiveValue(DrugType.POWER),digital=(float)drugs.getActiveValue(DrugType.ZERO);
