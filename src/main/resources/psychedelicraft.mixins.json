@@ -14,7 +14,8 @@
     "VillagerGoalPackagesMixin",
     "ResetProfessionMixin",
     "MerchantOfferMixin",
-    "MerchantMenuMixin"
+    "MerchantMenuMixin",
+    "MobEquipmentAccessor"
   ],
   "injectors": {
     "defaultRequire": 1

@@ -34,7 +34,6 @@ import net.minecraftforge.items.IItemHandler;
 import net.minecraftforge.items.wrapper.SidedInvWrapper;
 import org.jetbrains.annotations.Nullable;
 import java.util.EnumMap;
-import java.util.UUID;
 
 public final class DryingTableBlockEntity extends BlockEntity implements WorldlyContainer,MenuProvider {
     private static final int[] INPUT_SLOTS={1,2,3,4,5,6,7,8,9};
@@ -49,8 +48,6 @@ public final class DryingTableBlockEntity extends BlockEntity implements Worldly
     private ResourceLocation savedRecipe;
     private int ticks;
     private float heat,progress;
-    private UUID dealer;
-    private long reservationExpires;
     public final ContainerData data=new ContainerData(){
         @Override public int get(int field){return switch(field){case 0->(int)(heat*1000);case 1->(int)(progress*1000);default->0;};}
         @Override public void set(int field,int value){if(field==0)heat=Mth.clamp(value/1000F,0,1);else if(field==1)progress=Mth.clamp(value/1000F,0,1);}
@@ -68,7 +65,6 @@ public final class DryingTableBlockEntity extends BlockEntity implements Worldly
         return super.getCapability(capability,side);
     }
     public void tick(ServerLevel world){
-        if(reservationExpired())release(dealer);
         float oldHeat=heat,oldProgress=progress;
         DryingRecipe matched=recipes.getRecipeFor(this,world).orElse(null);
         if(!recipeLoaded){
@@ -121,13 +117,11 @@ public final class DryingTableBlockEntity extends BlockEntity implements Worldly
     @Override protected void saveAdditional(CompoundTag tag){
         super.saveAdditional(tag);ContainerHelper.saveAllItems(tag,items);tag.putFloat("heatRatio",heat);tag.putFloat("dryingProgress",progress);
         if(recipe!=null)tag.putString("currentRecipe",recipe.getId().toString());else if(savedRecipe!=null)tag.putString("currentRecipe",savedRecipe.toString());
-        if(dealer!=null)tag.putUUID("Dealer",dealer);if(reservationExpires!=0)tag.putLong("ReservationExpires",reservationExpires);
     }
     @Override public void load(CompoundTag tag){
         super.load(tag);items.clear();ContainerHelper.loadAllItems(tag,items);
         heat=finiteFraction(tag.getFloat("heatRatio"));progress=finiteFraction(tag.getFloat("dryingProgress"));
         savedRecipe=ResourceLocation.tryParse(tag.getString("currentRecipe"));recipe=null;recipeLoaded=false;
-        dealer=tag.hasUUID("Dealer")?tag.getUUID("Dealer"):null;reservationExpires=dealer==null?0:tag.getLong("ReservationExpires");
     }
     private static float finiteFraction(float value){return Float.isFinite(value)?Mth.clamp(value,0,1):0;}
     @Override public CompoundTag getUpdateTag(){return saveWithoutMetadata();}
@@ -152,17 +146,4 @@ public final class DryingTableBlockEntity extends BlockEntity implements Worldly
     @Override public Component getDisplayName(){return getBlockState().getBlock().getName();}
     @Override public AbstractContainerMenu createMenu(int id,Inventory inventory,Player player){return new DryingTableMenu(id,inventory,this,data,worldPosition);}
 
-    public boolean availableTo(UUID villager){return dealer==null||dealer.equals(villager)||reservationExpired();}
-    public boolean reservedFor(UUID villager){return villager.equals(dealer)&&!reservationExpired();}
-    public void releaseReservation(UUID villager,long expiresAt){if(expiresAt!=0&&expiresAt==reservationExpires)release(villager);}
-    public boolean reserve(UUID villager,long expiresAt){
-        if(!availableTo(villager))return false;
-        if(!reservedFor(villager)){dealer=villager;reservationExpires=expiresAt;super.setChanged();}return true;
-    }
-    private boolean reservationExpired(){return reservationExpires!=0&&level!=null&&level.getGameTime()>=reservationExpires;}
-    public boolean claim(UUID villager){
-        if(!availableTo(villager))return false;
-        if(!villager.equals(dealer)||reservationExpires!=0){dealer=villager;reservationExpires=0;super.setChanged();}return true;
-    }
-    public void release(UUID villager){if(villager.equals(dealer)){dealer=null;reservationExpires=0;super.setChanged();}}
 }

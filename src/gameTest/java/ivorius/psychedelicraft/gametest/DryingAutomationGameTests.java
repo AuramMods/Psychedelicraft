@@ -69,12 +69,11 @@ public final class DryingAutomationGameTests {
         helper.assertFalse(((FireBlock)Blocks.FIRE).canCatchFire(helper.getLevel(),helper.absolutePos(POS),Direction.UP),"iron table cannot catch fire");
         helper.succeed();
     }
-    @GameTest(template="empty") public static void savedProgressInventoryAndReservationsSurviveReload(GameTestHelper helper){
+    @GameTest(template="empty") public static void savedProgressAndInventorySurviveReload(GameTestHelper helper){
         DryingTableBlockEntity table=table(helper);table.setItem(1,new ItemStack(Items.APPLE));
-        UUID dealer=UUID.randomUUID();helper.assertTrue(table.claim(dealer),"claim succeeds");
         table.data.set(0,720);table.data.set(1,420);
         CompoundTag saved=table.saveWithoutMetadata();DryingTableBlockEntity restored=new DryingTableBlockEntity(helper.absolutePos(POS),table.getBlockState());restored.load(saved);
-        helper.assertTrue(restored.reservedFor(dealer)&&restored.getItem(1).getCount()==1,"inventory and dealer ownership persist");
+        helper.assertTrue(restored.getItem(1).getCount()==1&&!saved.contains("Dealer")&&!saved.contains("ReservationExpires"),"inventory persists; native POI ownership has no duplicate block-entity lock");
         helper.assertTrue(Math.abs(restored.getHeatRatio()-.72F)<.001&&Math.abs(restored.getDryingProgress()-.42F)<.001,"saved heat and progress persist");
         saved.putFloat("heatRatio",Float.NaN);saved.putFloat("dryingProgress",Float.POSITIVE_INFINITY);restored.load(saved);
         helper.assertTrue(restored.getHeatRatio()==0&&restored.getDryingProgress()==0,"nonfinite saved values cannot poison processing");
