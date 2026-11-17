@@ -29,6 +29,7 @@ public final class Psychedelicraft {
         IEventBus bus = FMLJavaModLoadingContext.get().getModEventBus();
         ivorius.psychedelicraft.entity.PSEntities.TYPES.register(bus);
         PSItems.ITEMS.register(bus);
+        ivorius.psychedelicraft.entity.PSTradeOffers.register(bus);
         ivorius.psychedelicraft.fluid.PSFluids.register(bus);
         PSSounds.SOUNDS.register(bus);
         ivorius.psychedelicraft.particle.PSParticles.TYPES.register(bus);

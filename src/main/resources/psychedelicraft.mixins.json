@@ -9,9 +9,17 @@
     "EntityMashTubFluidMixin",
     "WorldFluidFlowMixin",
     "ForgeFluidPlacementMixin",
-    "MolotovMenuTransferMixin"
+    "ModMenuTransferMixin",
+    "VillagerMixin",
+    "VillagerGoalPackagesMixin",
+    "ResetProfessionMixin",
+    "MerchantOfferMixin",
+    "MerchantMenuMixin"
   ],
   "injectors": {
     "defaultRequire": 1
-  }
+  },
+  "client": [
+    "client.AddictRendererMixin"
+  ]
 }

@@ -25,6 +25,7 @@ public final class PSCriteria {
     public static void drankBrew(Player player,FluidStack contents){if(player instanceof ServerPlayer server&&PSFluids.brew(contents.getFluid())!=null)DRANK_BREW.fire(server,contents);}
     public static void tookMash(Player player,net.minecraft.world.item.ItemStack stack){var handler=FluidVesselHandler.forTransfer(stack);if(handler!=null)tookMash(player,handler.drain(Integer.MAX_VALUE,net.minecraftforge.fluids.capability.IFluidHandler.FluidAction.SIMULATE));}
     public static void tookMash(Player player,FluidStack contents){if(!contents.isEmpty()&&player instanceof ServerPlayer server)MASHED_ITEM.fire(server,contents);}
+    public static void feedVillager(Player player) { if(player instanceof ServerPlayer server)CUSTOM.fire(server,"feed_villager"); }
     public static void hangover(Player player) {
         if (player instanceof ServerPlayer serverPlayer) CUSTOM.fire(serverPlayer, "get_hangover");
     }

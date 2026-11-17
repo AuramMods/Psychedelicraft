@@ -14,6 +14,7 @@ public final class PSDamageTypes {
     public static final ResourceKey<DamageType> RESPIRATORY_FAILURE = key("respiratory_failure");
     public static final ResourceKey<DamageType> KIDNEY_FAILURE = key("kidney_failure");
     public static final ResourceKey<DamageType> IN_SLEEP = key("in_sleep");
+    public static final ResourceKey<DamageType> OVERDOSE = key("overdose");
     public static final ResourceKey<DamageType> OVER_EATING = key("over_eating");
 
     public static final ResourceKey<DamageType> MOLOTOV=key("molotov"),SELF_MOLOTOV=key("self_molotov");
@@ -36,7 +37,7 @@ public final class PSDamageTypes {
         return ResourceKey.create(Registries.DAMAGE_TYPE, Psychedelicraft.id(path));
     }
 
-    public static DamageSource of(Player player, ResourceKey<DamageType> type) {
+    public static DamageSource of(net.minecraft.world.entity.LivingEntity player, ResourceKey<DamageType> type) {
         return new DamageSource(player.level().registryAccess().registryOrThrow(Registries.DAMAGE_TYPE)
                 .getHolderOrThrow(type));
     }

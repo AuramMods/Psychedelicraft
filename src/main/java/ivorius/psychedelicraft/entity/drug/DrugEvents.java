@@ -40,6 +40,8 @@ public final class DrugEvents {
 
     @SubscribeEvent
     public static void tick(TickEvent.PlayerTickEvent event) {
+        // Forge can post a final network player tick after death/removal has already invalidated capabilities.
+        if (!event.player.isAlive() || event.player.isRemoved()) return;
         if (event.phase == TickEvent.Phase.START) {
             StomachFoodStats.bind(event.player);
             return;

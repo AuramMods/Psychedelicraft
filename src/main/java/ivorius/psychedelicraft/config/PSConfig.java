@@ -7,6 +7,7 @@ import java.util.Map;
 
 public final class PSConfig {
     public static final ForgeConfigSpec COMMON;
+    public static final ForgeConfigSpec.BooleanValue FARMER_DRUG_DEALS;
     public static final ForgeConfigSpec.IntValue DRYING_TABLE_TICKS;
     public static final ForgeConfigSpec.IntValue IRON_DRYING_TABLE_TICKS;
     public static final ForgeConfigSpec.BooleanValue ENABLE_HARMONIUM;
@@ -19,6 +20,7 @@ public final class PSConfig {
     static {
         ForgeConfigSpec.Builder builder = new ForgeConfigSpec.Builder();
         builder.push("worldGeneration");
+        FARMER_DRUG_DEALS=builder.comment("Add the original crop and drug trades to the native novice farmer pool.").define("farmerDrugDeals",true);
         for (String name : List.of("cannabis","hop","tobacco","coffea","coca","belladonna","jimsonweed","tomato","peyote","morning_glory","juniper")) {
             builder.push(name);
             GENERATION.put(name,new GenerationFeature(builder.define("enabled",true),
