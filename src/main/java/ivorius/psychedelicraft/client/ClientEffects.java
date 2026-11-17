@@ -1,14 +1,14 @@
 package ivorius.psychedelicraft.client;
 
-import com.mojang.blaze3d.systems.RenderSystem;
 import ivorius.psychedelicraft.Psychedelicraft;
 import ivorius.psychedelicraft.entity.drug.Drug;
 import ivorius.psychedelicraft.entity.drug.DrugCapability;
 import ivorius.psychedelicraft.entity.drug.DrugNetwork.Snapshot;
 import ivorius.psychedelicraft.entity.drug.DrugProperties;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.renderer.PostChain;
-import net.minecraft.client.renderer.PostPass;
+import ivorius.psychedelicraft.client.render.HallucinationManager;
+import ivorius.psychedelicraft.client.render.EnvironmentEffects;
+import ivorius.psychedelicraft.client.render.shader.PostEffects;
 import net.minecraft.server.packs.resources.ResourceManager;
 import net.minecraft.util.Mth;
 import net.minecraft.world.entity.player.Player;
@@ -20,10 +20,7 @@ import net.minecraftforge.client.event.ViewportEvent;
 import net.minecraftforge.event.TickEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
-import org.slf4j.Logger;
-import com.mojang.logging.LogUtils;
 
-import java.io.IOException;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
@@ -31,12 +28,13 @@ import java.util.UUID;
 
 @Mod.EventBusSubscriber(modid = Psychedelicraft.MOD_ID, value = Dist.CLIENT)
 public final class ClientEffects {
-    private static final Logger LOGGER = LogUtils.getLogger();
     private static final Map<UUID, Snapshot> pending = new HashMap<>();
-    private static PostChain colors;
-    private static PostPass colorPass;
-    private static boolean failed;
-    private static int width, height;
+    private static final PostEffects post=new PostEffects();
+    private static HallucinationManager hallucinations=new HallucinationManager();
+    private static EnvironmentEffects environment=new EnvironmentEffects();
+    private static net.minecraft.client.multiplayer.ClientLevel visualLevel;
+    private static Player visualPlayer;
+    private static float pauseProgress;
 
     private ClientEffects() {}
 
@@ -48,7 +46,10 @@ public final class ClientEffects {
     public static void tick(TickEvent.ClientTickEvent event) {
         if (event.phase != TickEvent.Phase.END) return;
         Minecraft client = Minecraft.getInstance();
-        if (client.level == null) return;
+        if(client.level!=visualLevel||client.player!=visualPlayer){resetVisuals();visualLevel=client.level;visualPlayer=client.player;}
+        pauseProgress=Mth.clamp(pauseProgress+(client.isPaused()?.25F:-.25F),0,1);
+        if(client.level==null||client.player==null)return;
+        if(!client.isPaused()){hallucinations.update(DrugCapability.get(client.player),client.player.getRandom(),client.player.tickCount);environment.update(client.player);}
         Iterator<Snapshot> snapshots = pending.values().iterator();
         while (snapshots.hasNext()) {
             Snapshot snapshot = snapshots.next();
@@ -64,7 +65,8 @@ public final class ClientEffects {
     @SubscribeEvent
     public static void disconnect(ClientPlayerNetworkEvent.LoggingOut event) {
         pending.clear();
-        release();
+        resetVisuals();
+        visualLevel=null;visualPlayer=null;
     }
 
     @SubscribeEvent
@@ -77,59 +79,13 @@ public final class ClientEffects {
     }
 
     @SubscribeEvent
-    public static void world(RenderLevelStageEvent event) {
-        if (event.getStage() != RenderLevelStageEvent.Stage.AFTER_LEVEL) return;
-        Minecraft client = Minecraft.getInstance();
-        if (client.player == null) return;
-        DrugProperties properties = DrugCapability.get(client.player);
-        float rotation = properties.getModifier(Drug::colorHallucinationStrength);
-        if (rotation <= 0 || failed) return;
-        try {
-            prepare(client);
-            colorPass.getEffect().safeGetUniform("ticks").set(client.player.tickCount + event.getPartialTick());
-            colorPass.getEffect().safeGetUniform("slowColorRotation").set(rotation);
-            RenderSystem.backupProjectionMatrix();
-            try {
-                RenderSystem.disableBlend();
-                RenderSystem.disableDepthTest();
-                RenderSystem.resetTextureMatrix();
-                colors.process(event.getPartialTick());
-            } finally {
-                RenderSystem.restoreProjectionMatrix();
-                client.getMainRenderTarget().bindWrite(true);
-                RenderSystem.enableDepthTest();
-                RenderSystem.defaultBlendFunc();
-            }
-        } catch (IOException error) {
-            failed = true;
-            LOGGER.error("Could not load Psychedelicraft color shader", error);
-        }
+    public static void world(RenderLevelStageEvent event){
+        if(event.getStage()!=RenderLevelStageEvent.Stage.AFTER_LEVEL)return;
+        var client=Minecraft.getInstance();if(client.player==null||client.level==null)return;
+        post.render(client,event.getPartialTick(),event.getProjectionMatrix(),hallucinations,environment,pauseProgress);
     }
 
-    private static void prepare(Minecraft client) throws IOException {
-        if (colors == null) {
-            colors = new PostChain(client.getTextureManager(), client.getResourceManager(),
-                    client.getMainRenderTarget(), Psychedelicraft.id("shaders/post/simple_effects.json"));
-            colors.addTempTarget("swap", client.getWindow().getWidth(), client.getWindow().getHeight());
-            colorPass = colors.addPass("psychedelicraft:simple_effects", client.getMainRenderTarget(), colors.getTempTarget("swap"));
-            colors.addPass("blit", colors.getTempTarget("swap"), client.getMainRenderTarget());
-        }
-        int currentWidth = client.getWindow().getWidth();
-        int currentHeight = client.getWindow().getHeight();
-        if (currentWidth != width || currentHeight != height) {
-            colors.resize(currentWidth, currentHeight);
-            width = currentWidth;
-            height = currentHeight;
-        }
-    }
-
-    private static void release() {
-        if (colors != null) colors.close();
-        colors = null;
-        colorPass = null;
-        width = height = 0;
-        failed = false;
-    }
+    private static void resetVisuals(){post.release();hallucinations=new HallucinationManager();environment=new EnvironmentEffects();pauseProgress=0;}
 
     @Mod.EventBusSubscriber(modid = Psychedelicraft.MOD_ID, value = Dist.CLIENT, bus = Mod.EventBusSubscriber.Bus.MOD)
     public static final class Resources {
@@ -138,7 +94,7 @@ public final class ClientEffects {
         @SubscribeEvent
         public static void register(RegisterClientReloadListenersEvent event) {
             event.registerReloadListener((net.minecraft.server.packs.resources.ResourceManagerReloadListener)
-                    (ResourceManager manager) -> release());
+                    (ResourceManager manager) -> post.release());
         }
     }
 }
