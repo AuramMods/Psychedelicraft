@@ -1,0 +1,18 @@
+/* Native fragment behavior runs first, including discard, fog and material data. */
+uniform float PS_Enabled;
+uniform float PS_WorldTicks;
+uniform vec4 PS_Pulses;
+uniform float PS_SurfaceFractalStrength;
+in vec3 PS_SurfaceColor;
+in float PS_PulseDistance;
+vec4 psychedelicraft_modulate(vec4 color) {
+  if (PS_Enabled <= 0.0) return color;
+  return vec4(mix(color.rgb, PS_SurfaceColor, PS_SurfaceFractalStrength), color.a);
+}
+void main() {
+  psychedelicraft_parent_main();
+  if (PS_Enabled <= 0.0) return;
+  __PS_SURFACE_FALLBACK__
+  float pulse = max(0.0, sin((PS_PulseDistance - PS_WorldTicks) / 5.0) - 0.4) * PS_Pulses.a;
+  __PS_FRAGMENT_COLOR__.rgb = mix(__PS_FRAGMENT_COLOR__.rgb, (__PS_FRAGMENT_COLOR__.rgb + 1.0) * PS_Pulses.rgb, pulse);
+}

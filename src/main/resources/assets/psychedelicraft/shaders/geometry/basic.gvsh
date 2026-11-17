@@ -1,0 +1,112 @@
+/* Original wave equations: Lukas Tenbrink / Sollace. Native coordinates adapted for Forge. */
+uniform float PS_Enabled;
+uniform sampler2D PS_SurfaceFractalSampler;
+uniform float PS_WorldTicks;
+uniform vec3 PS_WavesMatrix;
+uniform float PS_DistantWorldDeformation;
+uniform vec4 PS_SurfaceFractalCoords;
+uniform float PS_SurfaceFractalStrength;
+uniform float PS_FractalFractureStrength;
+uniform vec3 PS_PlayerPosition;
+uniform vec3 PS_CameraPosition;
+uniform mat4 PS_ViewToWorld;
+uniform float PS_PulseShape;
+out vec3 PS_SurfaceColor;
+out float PS_PulseDistance;
+float psychedelicraft_gold_noise(vec2 xy, float seed) {
+  const float phi = 1.61803398874989484820459;
+  return fract(tan(distance(xy * phi, xy) * seed) * xy.x);
+}
+void main() {
+  psychedelicraft_parent_main();
+  PS_SurfaceColor = vec3(0.0);
+  PS_PulseDistance = 0.0;
+  if (PS_Enabled <= 0.0) return;
+  vec3 view = __PS_VIEW_POSITION__;
+  vec3 relative = (PS_ViewToWorld * vec4(view, 1.0)).xyz;
+  vec3 position = relative + PS_CameraPosition;
+  if (PS_PulseShape == 1.0 || PS_PulseShape == 3.0) PS_PulseDistance = length(view);
+  else if (PS_PulseShape == 2.0) PS_PulseDistance = max(length(relative.xz), abs(relative.y));
+  if (PS_SurfaceFractalStrength > 0.0) {
+    vec2 uv = mod(position.xz + position.yy, 4.0) / 4.0;
+    PS_SurfaceColor = texture(PS_SurfaceFractalSampler, mix(PS_SurfaceFractalCoords.xy, PS_SurfaceFractalCoords.zw, uv)).rgb;
+    __PS_SURFACE_COLOR__
+  }
+  float worldTicks = PS_WorldTicks;
+  float smallWaves = PS_WavesMatrix.x;
+  float bigWaves = PS_WavesMatrix.y;
+  float wiggleWaves = PS_WavesMatrix.z;
+  float distantWorldDeformation = PS_DistantWorldDeformation;
+  float fractalFractureStrength = PS_FractalFractureStrength;
+  vec3 playerPos = PS_PlayerPosition;
+  float fogFragCoord = length(gl_Position);
+  if (smallWaves > 0.0) {
+    float w1 = 8.0;
+
+    gl_Position[1] += sin((position.x + worldTicks / 5.0) / w1 * 3.14159 * 2.0) * sin((position.z + worldTicks / 5.0) / w1 * 3.14159 * 2.0) * smallWaves * 1.5;
+    gl_Position[1] -= sin((playerPos.x + worldTicks / 5.0) / w1 * 3.14159 * 2.0) * sin((playerPos.z + worldTicks / 5.0) / w1 * 3.14159 * 2.0) * smallWaves * 1.5;
+
+    float w2 = 16.0;
+
+    gl_Position.y += sin((position.x + worldTicks / 8.0) / w2 * 3.14159 * 2.0) * sin((position.z) / w2 * 3.14159 * 2.0) * smallWaves * 3.0;
+    gl_Position.y -= sin((playerPos.x + worldTicks / 8.0) / w2 * 3.14159 * 2.0) * sin((playerPos.z) / w2 * 3.14159 * 2.0) * smallWaves * 3.0;
+
+    gl_Position.x = mix(gl_Position.x, gl_Position[0] * (1.0 + fogFragCoord / 20.0), smallWaves);
+    gl_Position.y = mix(gl_Position.y, gl_Position[1] * (1.0 + fogFragCoord / 20.0), smallWaves);
+  }
+
+
+  if (fractalFractureStrength > 0) {
+    float fractalScollSpeed = worldTicks / 100;
+    gl_Position.x += sin(psychedelicraft_gold_noise(position.xy, position.x + fractalScollSpeed)) * fractalFractureStrength;
+    gl_Position.y += sin(psychedelicraft_gold_noise(position.xy, position.y + fractalScollSpeed)) * fractalFractureStrength;
+  }
+
+  if (wiggleWaves > 0.0) {
+    float w1 = 8.0;
+    gl_Position.x += sin((position.y + worldTicks / 8.0) / w1 * 3.14159 * 2.0)
+                    * sin((position.z + worldTicks / 5.0) / w1 * 3.14159 * 2.0)
+                    * wiggleWaves;
+  }
+
+  if (distantWorldDeformation > 0.0 && fogFragCoord > 5.0) {
+    gl_Position.y += (sin(fogFragCoord / 8.0 * 3.14159 * 2.0) + 1.0)
+                     * distantWorldDeformation
+                     * (fogFragCoord - 5.0) / 8.0;
+  }
+
+  if (bigWaves > 0.0) {
+    if (gl_Position[2] > 0.1) {
+      float dDist = (gl_Position[2] - 0.1) * bigWaves;
+      if (gl_Position[2] > 20.0) {
+        dDist = (20.0 - 0.1) * bigWaves + (gl_Position.z - 20.0) * bigWaves * 0.3;
+      }
+
+      float inf1 = sin(worldTicks * 0.0086465563) * dDist;
+      float inf2 = cos(worldTicks * 0.0086465563) * dDist;
+      float inf3 = sin(worldTicks * 0.0091033941) * dDist;
+      float inf4 = cos(worldTicks * 0.0091033941) * dDist;
+      float inf5 = sin(worldTicks * 0.0064566190) * dDist;
+      float inf6 = cos(worldTicks * 0.0064566190) * dDist;
+
+      float pMul = 1.3;
+
+      gl_Position.x += sin(gl_Position.z * 0.1 * sin(worldTicks * 0.001849328) + worldTicks * 0.014123412) * 0.5 * inf1 * pMul;
+      gl_Position.y += cos(gl_Position.z * 0.1 * sin(worldTicks * 0.001234728) + worldTicks * 0.017481893) * 0.4 * inf1 * pMul;
+
+      gl_Position.x += sin(gl_Position.y * 0.1 * sin(worldTicks * 0.001523784) + worldTicks * 0.021823911) * 0.2 * inf2 * pMul;
+      gl_Position.y += sin(gl_Position.x * 0.1 * sin(worldTicks * 0.001472387) + worldTicks * 0.023193141) * 0.08 * inf2 * pMul;
+
+      gl_Position.x += sin(gl_Position.z * 0.15 * sin(worldTicks * 0.001284923) + worldTicks * 0.019404289) * 0.25 * inf3 * pMul;
+      gl_Position.y += cos(gl_Position.z * 0.15 * sin(worldTicks * 0.001482938) + worldTicks * 0.018491238) * 0.15 * inf3 * pMul;
+
+      gl_Position.x += sin(gl_Position.y * 0.05 * sin(worldTicks * 0.001283942) + worldTicks * 0.012942342) * 0.4 * inf4 * pMul;
+      gl_Position.y += sin(gl_Position.x * 0.05 * sin(worldTicks * 0.001829482) + worldTicks * 0.012981328) * 0.35 * inf4 * pMul;
+
+      gl_Position.z += sin(gl_Position.y * 0.13 * sin(worldTicks * 0.02834472) + worldTicks * 0.023482934) * 0.1 * inf5 * pMul;
+      gl_Position.z += sin(gl_Position.x * 0.124 * sin(worldTicks * 0.00184298) + worldTicks * 0.018394082) * 0.05 * inf6 * pMul;
+      gl_Position.w += sin(gl_Position.y * 0.13 * sin(worldTicks * 0.02834472) + worldTicks * 0.023482934) * 0.1 * inf5 * pMul;
+      gl_Position.w += sin(gl_Position.x * 0.124 * sin(worldTicks * 0.00184298) + worldTicks * 0.018394082) * 0.05 * inf6 * pMul;
+    }
+  }
+}

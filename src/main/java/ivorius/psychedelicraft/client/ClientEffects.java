@@ -38,9 +38,14 @@ public final class ClientEffects {
 
     private ClientEffects() {}
 
+    public static HallucinationManager hallucinations(){return hallucinations;}
+
     public static void receive(Snapshot message) {
         pending.put(message.player(), message);
     }
+
+    @SubscribeEvent
+    public static void frame(TickEvent.RenderTickEvent event){if(event.phase==TickEvent.Phase.START)ivorius.psychedelicraft.client.render.RenderPhase.reset();}
 
     @SubscribeEvent
     public static void tick(TickEvent.ClientTickEvent event) {
@@ -82,7 +87,7 @@ public final class ClientEffects {
     public static void world(RenderLevelStageEvent event){
         if(event.getStage()!=RenderLevelStageEvent.Stage.AFTER_LEVEL)return;
         var client=Minecraft.getInstance();if(client.player==null||client.level==null)return;
-        post.render(client,event.getPartialTick(),event.getProjectionMatrix(),hallucinations,environment,pauseProgress);
+        try(var phase=ivorius.psychedelicraft.client.render.RenderPhase.POST.enter()){post.render(client,event.getPartialTick(),event.getProjectionMatrix(),hallucinations,environment,pauseProgress);}
     }
 
     private static void resetVisuals(){post.release();hallucinations=new HallucinationManager();environment=new EnvironmentEffects();pauseProgress=0;}
