@@ -20,5 +20,6 @@ public final class PSBlockEntities {
     public static final RegistryObject<BlockEntityType<BottleRackBlockEntity>> BOTTLE_RACK=TYPES.register("bottle_rack",()->BlockEntityType.Builder.of(BottleRackBlockEntity::new,PSBlocks.BOTTLE_RACK.get()).build(null));
     public static final RegistryObject<BlockEntityType<JuniperSignBlockEntity>> JUNIPER_SIGN=TYPES.register("juniper_sign",()->BlockEntityType.Builder.of(JuniperSignBlockEntity::new,PSBlocks.JUNIPER_SIGN.get(),PSBlocks.JUNIPER_WALL_SIGN.get()).build(null));
     public static final RegistryObject<BlockEntityType<JuniperHangingSignBlockEntity>> JUNIPER_HANGING_SIGN=TYPES.register("juniper_hanging_sign",()->BlockEntityType.Builder.of(JuniperHangingSignBlockEntity::new,PSBlocks.JUNIPER_HANGING_SIGN.get(),PSBlocks.JUNIPER_WALL_HANGING_SIGN.get()).build(null));
+    public static final RegistryObject<BlockEntityType<FluidAttributesBlockEntity>> FLUID_ATTRIBUTES=TYPES.register("fluid_attributes",()->BlockEntityType.Builder.of(FluidAttributesBlockEntity::new,ivorius.psychedelicraft.fluid.PSFluids.all().stream().map(f->f.block.get()).toArray(net.minecraft.world.level.block.Block[]::new)).build(null));
     private PSBlockEntities(){}
 }

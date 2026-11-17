@@ -6,7 +6,9 @@
   "refmap": "psychedelicraft.refmap.json",
   "mixins": [
     "AbstractFurnaceBlockEntityMixin",
-    "EntityMashTubFluidMixin"
+    "EntityMashTubFluidMixin",
+    "WorldFluidFlowMixin",
+    "ForgeFluidPlacementMixin"
   ],
   "injectors": {
     "defaultRequire": 1

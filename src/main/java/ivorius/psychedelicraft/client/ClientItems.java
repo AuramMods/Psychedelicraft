@@ -18,6 +18,7 @@ public final class ClientItems {
     private ClientItems() {}
     @SubscribeEvent public static void setup(FMLClientSetupEvent event) {
         event.enqueueWork(() -> {
+            for(var fluid:ivorius.psychedelicraft.fluid.PSFluids.all()){net.minecraft.client.renderer.ItemBlockRenderTypes.setRenderLayer(fluid.get(),net.minecraft.client.renderer.RenderType.translucent());net.minecraft.client.renderer.ItemBlockRenderTypes.setRenderLayer(fluid.flowing.get(),net.minecraft.client.renderer.RenderType.translucent());}
             net.minecraft.client.renderer.Sheets.addWoodType(ivorius.psychedelicraft.block.PSWoodTypes.JUNIPER);
             ivorius.psychedelicraft.block.PSBlocks.BLOCKS.getEntries().forEach(block ->
                     net.minecraft.client.renderer.ItemBlockRenderTypes.setRenderLayer(block.get(),net.minecraft.client.renderer.RenderType.cutout()));

@@ -45,6 +45,9 @@ public final class PSFluids {
     private static Family family(FluidProfile profile){Family family=new Family(profile);FAMILIES.put(profile.path,family);return family;}
     public static Collection<Family> all(){return Collections.unmodifiableCollection(FAMILIES.values());}
     public static void register(IEventBus bus){TYPES.register(bus);FLUIDS.register(bus);}
+    public static void registerInteractions(){
+        for(var family:all())if(family.waterLike())FluidInteractionRegistry.addInteraction(net.minecraftforge.common.ForgeMod.LAVA_TYPE.get(),new FluidInteractionRegistry.InteractionInformation(family.get().getFluidType(),state->(state.isSource()?net.minecraft.world.level.block.Blocks.OBSIDIAN:net.minecraft.world.level.block.Blocks.COBBLESTONE).defaultBlockState()));
+    }
     public static Fluid canonical(Fluid fluid){return fluid instanceof FlowingFluid flowing?flowing.getSource():fluid;}
     public static Fluid resolve(String id){ResourceLocation location=ResourceLocation.tryParse(id);Fluid fluid=location==null?null:ForgeRegistries.FLUIDS.getValue(location);return fluid==null||fluid==Fluids.EMPTY?null:canonical(fluid);}
     public static String id(Fluid fluid){return ForgeRegistries.FLUIDS.getKey(canonical(fluid)).toString();}
@@ -76,13 +79,19 @@ public final class PSFluids {
     }
     public static final class Family {
         public final FluidProfile profile;
-        public final RegistryObject<WorldFluid> source;
-        public final RegistryObject<ForgeFlowingFluid.Flowing> flowing;
+        public final RegistryObject<WorldFluid.Source> source;
+        public final RegistryObject<WorldFluid.Flowing> flowing;
+        public final RegistryObject<ivorius.psychedelicraft.block.PhysicalFluidBlock> block;
         private final RegistryObject<FluidType> type;
         Family(FluidProfile profile){
             this.profile=profile;
-            type=TYPES.register(profile.path,()->new FluidType(FluidType.Properties.create().descriptionId("fluid.psychedelicraft."+profile.path).density(1000).viscosity(profile.viscosity*1000)
+            type=TYPES.register(profile.path,()->new FluidType(FluidType.Properties.create().descriptionId("fluid.psychedelicraft."+profile.path).density(1000).viscosity(profile.viscosity*1000).canConvertToSource(false).canSwim(waterLike()).canDrown(waterLike()).canExtinguish(waterLike()).supportsBoating(waterLike()).canHydrate(waterLike())
                     .sound(SoundActions.BUCKET_FILL,SoundEvents.BUCKET_FILL).sound(SoundActions.BUCKET_EMPTY,SoundEvents.BUCKET_EMPTY)){
+                @Override public boolean isVaporizedOnPlacement(net.minecraft.world.level.Level level,net.minecraft.core.BlockPos pos,FluidStack stack){return level.dimensionType().ultraWarm();}
+                @Override public void onVaporize(@org.jetbrains.annotations.Nullable Player player,net.minecraft.world.level.Level level,net.minecraft.core.BlockPos pos,FluidStack stack){
+                    level.playSound(player,pos,SoundEvents.FIRE_EXTINGUISH,net.minecraft.sounds.SoundSource.BLOCKS,.5F,2.6F+(level.random.nextFloat()-level.random.nextFloat())*.8F);
+                    if(level instanceof net.minecraft.server.level.ServerLevel server)server.sendParticles(net.minecraft.core.particles.ParticleTypes.LARGE_SMOKE,pos.getX()+.5,pos.getY()+.5,pos.getZ()+.5,8,.35,.35,.35,0);
+                }
                 @Override public Component getDescription(FluidStack stack){return profile.getDisplayName(stack);}
                 @Override public ItemStack getBucket(FluidStack stack){if(stack.isEmpty())return ItemStack.EMPTY;ItemStack bucket=new ItemStack(PSItems.FILLED_BUCKET.get());FluidStack portion=FluidContents.normalize(stack);portion.setAmount(Math.min(portion.getAmount(),BUCKET_VOLUME));bucket.getOrCreateTag().put("fluid",FluidContents.write(portion));return bucket;}
                 @Override public void initializeClient(Consumer<IClientFluidTypeExtensions> consumer){consumer.accept(new IClientFluidTypeExtensions(){
@@ -92,11 +101,22 @@ public final class PSFluids {
                     @Override public ResourceLocation getFlowingTexture(FluidStack stack){return profile.getFlowing(stack);}
                     @Override public int getTintColor(){return profile.getColor(FluidStack.EMPTY);}
                     @Override public int getTintColor(FluidStack stack){return profile.getColor(stack);}
+                    @Override public ResourceLocation getRenderOverlayTexture(net.minecraft.client.Minecraft client){return waterLike()?new ResourceLocation("minecraft","textures/misc/underwater.png"):null;}
+                    private FluidStack worldContents(net.minecraft.world.level.BlockAndTintGetter level,net.minecraft.core.BlockPos pos){return block.get().contents(level,pos);}
+                    private boolean waterTexture(){return Family.this==KAVA||isFlowerExtract(Family.this.get());}
+                    @Override public ResourceLocation getStillTexture(FluidState state,net.minecraft.world.level.BlockAndTintGetter level,net.minecraft.core.BlockPos pos){return waterTexture()?new ResourceLocation("minecraft","block/water_still"):profile.getStill(worldContents(level,pos));}
+                    @Override public ResourceLocation getFlowingTexture(FluidState state,net.minecraft.world.level.BlockAndTintGetter level,net.minecraft.core.BlockPos pos){return waterTexture()?new ResourceLocation("minecraft","block/water_flow"):profile.getFlowing(worldContents(level,pos));}
+                    @Override public int getTintColor(FluidState state,net.minecraft.world.level.BlockAndTintGetter level,net.minecraft.core.BlockPos pos){return waterTexture()?0xff000000|profile.getColor(worldContents(level,pos)):0xffffffff;}
+                    @Override public org.joml.Vector3f modifyFogColor(net.minecraft.client.Camera camera,float partialTick,net.minecraft.client.multiplayer.ClientLevel level,int distance,float darken,org.joml.Vector3f original){
+                        if(!waterLike())return original;int color=profile.getColor(worldContents(level,camera.getBlockPosition()));return new org.joml.Vector3f((color>>16&255)/255F,(color>>8&255)/255F,(color&255)/255F);
+                    }
                 });}
             });
-            source=FLUIDS.register(profile.path,()->new WorldFluid(this));flowing=FLUIDS.register("flowing_"+profile.path,()->new ForgeFlowingFluid.Flowing(properties()));
+            source=FLUIDS.register(profile.path,()->new WorldFluid.Source(this));flowing=FLUIDS.register("flowing_"+profile.path,()->new WorldFluid.Flowing(this));
+            block=ivorius.psychedelicraft.block.PSBlocks.BLOCKS.register(profile.path,()->new ivorius.psychedelicraft.block.PhysicalFluidBlock(this));
         }
         public WorldFluid get(){return source.get();}
-        ForgeFlowingFluid.Properties properties(){return new ForgeFlowingFluid.Properties(type,source,flowing).bucket(()->PSItems.FILLED_BUCKET.get()).tickRate(profile.viscosity*5);}
+        public boolean waterLike(){return !Set.of("agave","kava","bath_salts").contains(profile.path);}
+        ForgeFlowingFluid.Properties properties(){return new ForgeFlowingFluid.Properties(type,source,flowing).bucket(()->PSItems.FILLED_BUCKET.get()).block(block).levelDecreasePerBlock(profile.viscosity).tickRate(5);}
     }
 }

@@ -86,7 +86,7 @@ public final class PSItems {
     public static final RegistryObject<PortableFluidItem> SYRINGE=vessel("syringe",ivorius.psychedelicraft.fluid.FluidVessel.SYRINGE);
     public static final RegistryObject<PortableFluidItem> FILLED_BOWL=vessel("filled_bowl",ivorius.psychedelicraft.fluid.FluidVessel.BOWL);
     public static final RegistryObject<PortableFluidItem> FILLED_GLASS_BOTTLE=vessel("filled_glass_bottle",ivorius.psychedelicraft.fluid.FluidVessel.GLASS_BOTTLE);
-    public static final RegistryObject<PortableFluidItem> FILLED_BUCKET=vessel("filled_bucket",ivorius.psychedelicraft.fluid.FluidVessel.BUCKET);
+    public static final RegistryObject<FilledBucketItem> FILLED_BUCKET=ITEMS.register("filled_bucket",FilledBucketItem::new);
 
     public static final RegistryObject<BlockItem> BOTTLE_RACK=ITEMS.register("bottle_rack",()->new BlockItem(PSBlocks.BOTTLE_RACK.get(),new Item.Properties()));
     public static final RegistryObject<BlockItem> BUNSEN_BURNER=ITEMS.register("bunsen_burner",()->new BlockItem(PSBlocks.BUNSEN_BURNER.get(),new Item.Properties()));

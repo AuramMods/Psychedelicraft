@@ -51,10 +51,11 @@ public final class MashTubBlock extends FluidMachineBlock implements LiquidBlock
             for(BlockPos part:BlockPos.betweenClosed(pos.offset(-1,0,-1),pos.offset(1,0,1))){BlockState other=world.getBlockState(part);if(other.getBlock() instanceof MashTubWallBlock&&center(part,other).equals(pos))world.removeBlock(part,false);}
         }super.onRemove(state,world,pos,replacement,moving);
     }
-    public static boolean canAcceptLiquid(BlockGetter world,BlockPos pos,Fluid fluid){var vat=getVat(world,pos);return vat!=null&&(fluid==Fluids.WATER||fluid==Fluids.LAVA)&&vat.getTank().fill(new FluidStack(fluid,1000),FluidAction.SIMULATE)==1000;}
+    public static boolean canAcceptLiquid(BlockGetter world,BlockPos pos,Fluid fluid){var vat=getVat(world,pos);return vat!=null&&(fluid==Fluids.WATER||fluid==Fluids.LAVA||fluid instanceof ivorius.psychedelicraft.fluid.WorldFluid)&&vat.getTank().fillExactly(incomingFluid(world,pos,fluid),FluidAction.SIMULATE);}
     public static boolean acceptLiquid(LevelAccessor world,BlockPos pos,FluidState fluid){
-        if(!canAcceptLiquid(world,pos,fluid.getType()))return false;if(world.isClientSide())return true;return getVat(world,pos).getTank().fillExactly(new FluidStack(fluid.getType(),1000),FluidAction.EXECUTE);
+        if(!canAcceptLiquid(world,pos,fluid.getType()))return false;if(world.isClientSide())return true;return getVat(world,pos).getTank().fillExactly(incomingFluid(world,pos,fluid.getType()),FluidAction.EXECUTE);
     }
+    private static FluidStack incomingFluid(BlockGetter world,BlockPos pos,Fluid fluid){return new FluidStack(ivorius.psychedelicraft.fluid.PSFluids.canonical(fluid),1000,fluid instanceof ivorius.psychedelicraft.fluid.WorldFluid?PhysicalFluidBlock.neighborAttributes(world,pos,fluid):null);}
     @Override public boolean canPlaceLiquid(BlockGetter world,BlockPos pos,BlockState state,Fluid fluid){return canAcceptLiquid(world,pos,fluid);}
     @Override public boolean placeLiquid(LevelAccessor world,BlockPos pos,BlockState state,FluidState fluid){return acceptLiquid(world,pos,fluid);}
 }
