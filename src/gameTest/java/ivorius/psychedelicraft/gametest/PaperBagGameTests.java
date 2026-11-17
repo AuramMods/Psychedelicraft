@@ -26,7 +26,7 @@ import java.util.*;
 @GameTestHolder("psychedelicrafttests") @PrefixGameTestTemplate(false)
 public final class PaperBagGameTests {
     static void check(boolean v,String s){if(!v)throw new GameTestAssertException(s);}
-    static net.minecraftforge.common.util.FakePlayer player(GameTestHelper h){var p=FakePlayerFactory.get(h.getLevel(),new GameProfile(UUID.randomUUID(),"PaperBagTest"));p.setGameMode(GameType.SURVIVAL);p.getInventory().clearContent();p.setPos(h.absolutePos(new BlockPos(3,3,3)).getCenter());return p;}
+    static net.minecraftforge.common.util.FakePlayer player(GameTestHelper h){var p=FakePlayerFactory.get(h.getLevel(),new GameProfile(UUID.randomUUID(),"PaperBagTest"));p.setGameMode(GameType.SURVIVAL);p.getInventory().clearContent();p.setPos(h.absolutePos(new BlockPos(1,1,1)).getCenter());return p;}
     static ItemStack bag(ItemStack prototype,int count){var bag=new ItemStack(PSItems.PAPER_BAG.get());PaperBagItem.setContents(bag,new PaperBagItem.Contents(prototype,count));return bag;}
     @GameTest(template="empty") public static void fullIntegerCountsPreserveTagsCapacityAndEmptyStackLimit(GameTestHelper h){
         var cookies=new ItemStack(Items.COOKIE,64);cookies.setHoverName(Component.literal("Named cookies"));var contents=new PaperBagItem.Contents(cookies,63970);check(contents.insert(cookies)&&cookies.getCount()==34,"only thirty fit at the integer cap");var bag=bag(contents.peek(1),contents.count());check(bag.getMaxStackSize()==1&&PaperBagItem.getContents(bag.copy()).count()==64000,"filled native bags are unstackable and save integer counts");var restored=PaperBagItem.getContents(bag);var output=restored.take(64);check(output.getCount()==64&&output.getHoverName().getString().equals("Named cookies")&&!restored.insert(new ItemStack(Items.COOKIE))&&!restored.insert(bag),"tags survive and mismatched or nested contents cannot mix");restored.take(64000);bag.setHoverName(Component.literal("Retained bag name"));PaperBagItem.setContents(bag,restored);check(bag.getMaxStackSize()==64&&bag.getTagElement("contents")==null&&bag.hasCustomHoverName(),"last removal clears contents without erasing other bag data");h.succeed();
@@ -53,14 +53,23 @@ public final class PaperBagGameTests {
     }
     @GameTest(template="empty") public static void normalAndCrouchedUseReleaseAStackOrOneItem(GameTestHelper h){
         var p=player(h);var prototype=new ItemStack(Items.COOKIE);prototype.setHoverName(Component.literal("Released units "+p.getUUID()));
-        try(var trace=new NativeItemTrace(h.getLevel(),e->ItemStack.isSameItemSameTags(e.getItem(),prototype))){
+        var trace=new NativeItemTrace(h.getLevel(),e->ItemStack.isSameItemSameTags(e.getItem(),prototype));
+        try(trace){
             p.setItemInHand(InteractionHand.MAIN_HAND,bag(prototype,100));var result=PSItems.PAPER_BAG.get().use(h.getLevel(),p,InteractionHand.MAIN_HAND);
             check(result.getResult().consumesAction()&&PaperBagItem.getContents(p.getMainHandItem()).count()==36,"normal native use releases sixty-four");
             p.setShiftKeyDown(true);PSItems.PAPER_BAG.get().use(h.getLevel(),p,InteractionHand.MAIN_HAND);check(PaperBagItem.getContents(p.getMainHandItem()).count()==35,"native crouched use releases one");
-            trace.log("paper-bag-stack-and-single",p.getBoundingBox().inflate(5));
-            int drops=h.getLevel().getEntitiesOfClass(ItemEntity.class,p.getBoundingBox().inflate(5),e->ItemStack.isSameItemSameTags(e.getItem(),prototype)).stream().mapToInt(e->e.getItem().getCount()).sum();
-            check(drops==65,"native dropped items conserve released units: "+drops);h.getLevel().getEntitiesOfClass(ItemEntity.class,p.getBoundingBox().inflate(5),e->ItemStack.isSameItemSameTags(e.getItem(),prototype)).forEach(ItemEntity::discard);h.succeed();
+            trace.log("paper-bag-stack-and-single-immediate",p.getBoundingBox().inflate(5));
         }
+        // Accepted native spawns can precede entity-section visibility. Keep the exact
+        // world-query assertion, allowing native loading callbacks to finish first.
+        h.startSequence().thenWaitUntil(()->{
+            int drops=h.getLevel().getEntitiesOfClass(ItemEntity.class,p.getBoundingBox().inflate(5),e->ItemStack.isSameItemSameTags(e.getItem(),prototype)).stream().mapToInt(e->e.getItem().getCount()).sum();
+            check(drops==65,"native dropped items conserve released units: "+drops);
+            check(PaperBagItem.getContents(p.getMainHandItem()).count()==35,"waiting does not change the retained contents");
+        }).thenExecute(()->{
+            trace.log("paper-bag-stack-and-single-visible",p.getBoundingBox().inflate(5));
+            h.getLevel().getEntitiesOfClass(ItemEntity.class,p.getBoundingBox().inflate(5),e->ItemStack.isSameItemSameTags(e.getItem(),prototype)).forEach(ItemEntity::discard);
+        }).thenSucceed();
     }
 
     @GameTest(template="empty") public static void cancelledNativeDropRetainsBagContents(GameTestHelper h){
