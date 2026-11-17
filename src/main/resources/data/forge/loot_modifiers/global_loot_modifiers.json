@@ -1,0 +1,12 @@
+{
+  "replace": false,
+  "entries": [
+    "psychedelicraft:chest_supplies/chests/abandoned_mineshaft",
+    "psychedelicraft:chest_supplies/chests/simple_dungeon",
+    "psychedelicraft:chest_supplies/chests/village/village_shepherd",
+    "psychedelicraft:chest_supplies/chests/village/village_tannery",
+    "psychedelicraft:chest_supplies/chests/village/village_temple",
+    "psychedelicraft:chest_supplies/chests/village/village_toolsmith",
+    "psychedelicraft:chest_supplies/chests/village/village_weaponsmith"
+  ]
+}

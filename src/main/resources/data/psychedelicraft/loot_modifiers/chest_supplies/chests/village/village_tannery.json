@@ -1,0 +1,11 @@
+{
+  "type": "psychedelicraft:chest_supplies",
+  "conditions": [
+    {
+      "condition": "forge:loot_table_id",
+      "loot_table_id": "minecraft:chests/village/village_tannery"
+    }
+  ],
+  "table": "psychedelicraft:supplies/chests/village/village_tannery",
+  "village": true
+}

@@ -15,7 +15,8 @@
     "ResetProfessionMixin",
     "MerchantOfferMixin",
     "MerchantMenuMixin",
-    "MobEquipmentAccessor"
+    "MobEquipmentAccessor",
+    "StructureTemplatePoolMixin"
   ],
   "injectors": {
     "defaultRequire": 1

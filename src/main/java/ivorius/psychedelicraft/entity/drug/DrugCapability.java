@@ -14,17 +14,25 @@ import org.jetbrains.annotations.Nullable;
 public final class DrugCapability implements ICapabilitySerializable<CompoundTag> {
     public static final Capability<DrugProperties> TYPE = CapabilityManager.get(new CapabilityToken<>() {});
     private final DrugProperties properties = new DrugProperties();
-    private final LazyOptional<DrugProperties> optional = LazyOptional.of(() -> properties);
+    private LazyOptional<DrugProperties> optional = LazyOptional.of(() -> properties);
 
     public static DrugProperties get(Player player) {
         return player.getCapability(TYPE).orElseThrow(() -> new IllegalStateException("Missing player drug capability"));
     }
 
-    public void invalidate() { optional.invalidate(); }
+    public void invalidate() {
+        var previous=optional;
+        optional=null;
+        if(previous!=null)previous.invalidate();
+    }
 
     @Override
     public <T> @NotNull LazyOptional<T> getCapability(@NotNull Capability<T> capability, @Nullable Direction direction) {
-        return TYPE.orEmpty(capability, optional);
+        if(capability!=TYPE)return LazyOptional.empty();
+        // Forge revives the same player/dispatcher after dimension travel and while copying a clone.
+        // The owner gates queries while invalid; revive exposes a fresh handle to the retained data.
+        if(optional==null)optional=LazyOptional.of(() -> properties);
+        return optional.cast();
     }
 
     @Override

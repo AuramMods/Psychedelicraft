@@ -36,6 +36,7 @@ public final class Psychedelicraft {
         PSItems.TABS.register(bus);
         PSBlocks.BLOCKS.register(bus);
         PSWorldGen.register(bus);
+        ivorius.psychedelicraft.world.gen.ChestLootModifier.register(bus);
         PSBlockEntities.TYPES.register(bus);
         PSRecipes.register(bus);
         PSMenus.MENUS.register(bus);
