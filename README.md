@@ -52,6 +52,10 @@ Run the unit and headless Forge GameTest suites with `./gradlew build runGameTes
 
 Development runs use `./gradlew runClient` and `./gradlew runServer`. The background QA workflow is recorded in [the port report](docs/PORT_1201.md).
 
+JEI is optional. The integration is tested with **JEI 15.74.0.234 for Forge 1.20.1** and covers drying, mashing, fermentation, maturation, distillation, vessel filling, shears harvesting, fluid-aware crafting remainders, colored bottles and coffee heating. Drying-table recipes support JEI's transfer button and the progress arrow opens their category. Fluid and vessel subtypes preserve brew attributes, warmth and dye. The mod also runs without JEI on both client and dedicated server.
+
+JEI's common and Forge API dependencies are pinned to `15.74.0.234` from [the official Maven repository](https://maven.blamejared.com/mezz/jei/). They are compile-only and are not bundled in the production jar. To include JEI in a developer client, run `./gradlew -PwithJei runClient`; installed clients can add the separate Forge JEI jar to `mods`. The optional dependency range is JEI 15.19 or newer within major version 15; the exact tested version above is recommended.
+
 
 The operator command `/hallucinate <type> [targets] [x y z]` creates an owner-only contextual effect. Types are `single_entity`, `multiple_entity`, `friendly_zombies`, `hostile_villagers`, and `rasta_head`, with optional `psychedelicraft:` prefixes. Players may omit targets or supply coordinates relative to their command source; console use needs a player target. Creatures and identity substitutes use native 1.20.1 models without adding real mobs to the world. Reggie's generated dialogue stays in the affected player's local chat.
 

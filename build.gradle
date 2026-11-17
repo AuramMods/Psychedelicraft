@@ -43,11 +43,18 @@ minecraft {
 repositories {
     mavenCentral()
     maven { url = 'https://repo.spongepowered.org/repository/maven-public/' }
+    maven { url = 'https://maven.blamejared.com' }
 }
 dependencies {
     minecraft 'net.minecraftforge:forge:1.20.1-47.4.28'
     annotationProcessor 'org.spongepowered:mixin:0.8.5:processor'
     testImplementation 'junit:junit:4.13.2'
+    compileOnly fg.deobf('mezz.jei:jei-1.20.1-common-api:15.74.0.234')
+    compileOnly fg.deobf('mezz.jei:jei-1.20.1-forge-api:15.74.0.234')
+    // Optional developer convenience; production clients may omit JEI completely.
+    if (providers.gradleProperty('withJei').isPresent()) {
+        runtimeOnly fg.deobf('mezz.jei:jei-1.20.1-forge:15.74.0.234')
+    }
 }
 mixin {
     add sourceSets.main, 'psychedelicraft.refmap.json'

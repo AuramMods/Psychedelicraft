@@ -40,6 +40,8 @@ public final class FillReceptacleRecipe extends CustomRecipe {
         if(used>=0)for(int slot=0;slot<result.size();slot++)if(slot!=used)result.set(slot,inventory.getItem(slot).getCraftingRemainingItem());return result;
     }
     @Override public ItemStack getResultItem(RegistryAccess registries){for(ItemStack stack:receptacle.getItems()){ItemStack result=fill(stack);if(!result.isEmpty())return result;}return ItemStack.EMPTY;}
+    /** Matched vessel/output pairs for recipe browsers, assembled through the actual recipe. */
+    public List<ItemStack> getDisplayOutputs(){return Arrays.stream(receptacle.getItems()).map(this::fill).toList();}
     @Override public String getGroup(){return group;}
     @Override public NonNullList<Ingredient> getIngredients(){return ingredients;}
     @Override public boolean canCraftInDimensions(int width,int height){return width*height>=ingredients.size();}

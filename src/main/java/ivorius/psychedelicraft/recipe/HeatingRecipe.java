@@ -19,7 +19,7 @@ import net.minecraftforge.fluids.FluidStack;
 import java.util.*;
 
 /** Native furnaces call assemble for feasibility and completion, retaining arbitrary item data. */
-public final class HeatingRecipe extends AbstractCookingRecipe {
+public final class HeatingRecipe extends SmeltingRecipe {
     private final Fluid fluid;
     private final int minimum;
     private final CompoundTag required;
@@ -28,7 +28,7 @@ public final class HeatingRecipe extends AbstractCookingRecipe {
 
     private HeatingRecipe(ResourceLocation id,Ingredient ingredient,Fluid fluid,int minimum,CompoundTag required,
                           ItemStack replacement,Map<String,Change> changes,float experience,int time){
-        super(RecipeType.SMELTING,id,"",CookingBookCategory.MISC,ingredient,new ItemStack(PSItems.STONE_CUP.get()),experience,time);
+        super(id,"",CookingBookCategory.MISC,ingredient,new ItemStack(PSItems.STONE_CUP.get()),experience,time);
         this.fluid=fluid;this.minimum=minimum;this.required=required.copy();this.replacement=replacement.copy();this.changes=Map.copyOf(changes);
     }
     @Override public boolean matches(Container inventory,Level level){return !assemble(inventory,RegistryAccess.EMPTY).isEmpty();}
@@ -58,6 +58,27 @@ public final class HeatingRecipe extends AbstractCookingRecipe {
         return assemble(new net.minecraft.world.SimpleContainer(vessel.replaceContents(new FluidStack(fluid,Math.max(minimum,250),required))),registries);
     }
     @Override public boolean isSpecial(){return true;}
+    /** Full vessels and successive heating stages, without changing any registered recipe. */
+    public List<ItemStack> getDisplayInputs(){
+        List<ItemStack> result=new ArrayList<>();
+        List<ItemStack> candidates=new ArrayList<>();
+        PSItems.ITEMS.getEntries().forEach(item->candidates.add(new ItemStack(item.get())));
+        for(var item:List.of(net.minecraft.world.item.Items.BUCKET,net.minecraft.world.item.Items.BOWL,net.minecraft.world.item.Items.GLASS_BOTTLE))candidates.add(new ItemStack(item));
+        for(ItemStack candidate:candidates){
+            if(!ingredient.isEmpty()&&!ingredient.test(candidate))continue;
+            var handler=FluidVesselHandler.forCrafting(candidate);
+            if(handler==null||handler.getTankCapacity(0)<minimum||!handler.canFillFluidType(new FluidStack(fluid,minimum,required)))continue;
+            ItemStack input=handler.replaceContents(new FluidStack(fluid,handler.getTankCapacity(0),required));
+            Set<String> seen=new HashSet<>();
+            // Datapacks may define an unbounded increment: show representative stages only.
+            while(seen.size()<32&&seen.add(input.save(new CompoundTag()).toString())){
+                ItemStack output=assemble(new net.minecraft.world.SimpleContainer(input),RegistryAccess.EMPTY);
+                if(output.isEmpty())break;
+                result.add(input.copy());input=output;
+            }
+        }
+        return result;
+    }
     @Override public RecipeSerializer<?> getSerializer(){return PSRecipes.HEATING.get();}
 
     private record Change(String type,int value){
