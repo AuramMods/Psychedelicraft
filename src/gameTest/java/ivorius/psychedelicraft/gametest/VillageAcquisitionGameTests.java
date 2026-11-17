@@ -15,6 +15,10 @@ import net.minecraft.resources.ResourceKey;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.*;
+import net.minecraft.world.level.chunk.ChunkGenerator;
+import net.minecraft.world.level.levelgen.NoiseBasedChunkGenerator;
+import net.minecraft.world.level.levelgen.RandomState;
+import net.minecraft.world.level.levelgen.presets.WorldPresets;
 import net.minecraft.world.level.levelgen.structure.pools.*;
 import net.minecraft.world.level.levelgen.structure.templatesystem.*;
 import net.minecraft.world.level.storage.loot.*;
@@ -27,6 +31,22 @@ public final class VillageAcquisitionGameTests {
     public static final List<String> BUILDINGS=List.of("plains/houses/plains_hot_house_1","plains/houses/plains_hot_house_2","plains/houses/plains_vineyard","plains/houses/plains_lattice_wall_1","desert/houses/desert_hot_house_1","desert/houses/desert_hot_house_2");
     static final List<String> CHESTS=List.of("abandoned_mineshaft","simple_dungeon","village/village_shepherd","village/village_tannery","village/village_temple","village/village_toolsmith","village/village_weaponsmith");
     static void check(boolean value,String message){if(!value)throw new GameTestAssertException(message);}
+    // Placement seeds alone do not fix terrain: the old context inherited a random host-world noise state.
+    private static final long[] GRAPH_TERRAIN_SEEDS={0,1,-1,7525615505601443197L};
+    private record GraphTerrain(ChunkGenerator generator,RandomState noise){}
+    private static GraphTerrain graphTerrain(GameTestHelper h,long seed){
+        var registries=h.getLevel().registryAccess();
+        var generator=(NoiseBasedChunkGenerator)registries.registryOrThrow(Registries.WORLD_PRESET)
+                .getHolderOrThrow(WorldPresets.NORMAL).value().overworld().orElseThrow().generator();
+        return new GraphTerrain(generator,RandomState.create(generator.generatorSettings().value(),
+                registries.registryOrThrow(Registries.NOISE).asLookup(),seed));
+    }
+    private static net.minecraft.world.level.levelgen.structure.Structure.GenerationContext graphContext(GameTestHelper h,GraphTerrain terrain,int seed,BlockPos origin){
+        var level=h.getLevel();
+        return new net.minecraft.world.level.levelgen.structure.Structure.GenerationContext(level.registryAccess(),terrain.generator(),
+                terrain.generator().getBiomeSource(),terrain.noise(),level.getStructureManager(),seed,
+                new net.minecraft.world.level.ChunkPos(origin),level,biome->true);
+    }
     @GameTest(template="empty") public static void additivePoolsRetainNativeEntriesWeightsAndAreIdempotent(GameTestHelper h){
         var registry=h.getLevel().registryAccess().registryOrThrow(Registries.TEMPLATE_POOL);
         for(int i=0;i<VillagePools.PATHS.size();i++){
@@ -44,22 +64,26 @@ public final class VillageAcquisitionGameTests {
     }
     @GameTest(template="empty",batch="village_graph",timeoutTicks=200) public static void nativeVillageGraphsAcceptAllSixBuildings(GameTestHelper h){
         var level=h.getLevel();var pools=level.registryAccess().registryOrThrow(Registries.TEMPLATE_POOL);var seen=new HashSet<String>();
-        for(String climate:List.of("plains","desert"))for(int seed=1;seed<=16;seed++){
-            var root=pools.getHolderOrThrow(ResourceKey.create(Registries.TEMPLATE_POOL,new ResourceLocation("minecraft","village/"+climate+"/town_centers")));
-            var generator=level.getChunkSource().getGenerator();var origin=new BlockPos(100,0,100);
-            var context=new net.minecraft.world.level.levelgen.structure.Structure.GenerationContext(level.registryAccess(),generator,generator.getBiomeSource(),level.getChunkSource().randomState(),level.getStructureManager(),seed,new net.minecraft.world.level.ChunkPos(origin),level,biome->true);
-            var stub=JigsawPlacement.addPieces(context,root,Optional.empty(),6,origin,true,Optional.of(net.minecraft.world.level.levelgen.Heightmap.Types.WORLD_SURFACE_WG),80).orElseThrow();
-            for(var piece:stub.getPiecesBuilder().build().pieces())if(piece instanceof net.minecraft.world.level.levelgen.structure.PoolElementStructurePiece pool)seen.add(pool.getElement().toString());
+        for(long terrainSeed:GRAPH_TERRAIN_SEEDS){
+            var terrain=graphTerrain(h,terrainSeed);var sampled=new HashSet<String>();
+            for(String climate:List.of("plains","desert"))for(int seed=1;seed<=16;seed++){
+                var root=pools.getHolderOrThrow(ResourceKey.create(Registries.TEMPLATE_POOL,new ResourceLocation("minecraft","village/"+climate+"/town_centers")));
+                var origin=new BlockPos(100,0,100);var context=graphContext(h,terrain,seed,origin);
+                var stub=JigsawPlacement.addPieces(context,root,Optional.empty(),6,origin,true,Optional.of(net.minecraft.world.level.levelgen.Heightmap.Types.WORLD_SURFACE_WG),80).orElseThrow();
+                for(var piece:stub.getPiecesBuilder().build().pieces())if(piece instanceof net.minecraft.world.level.levelgen.structure.PoolElementStructurePiece pool)sampled.add(pool.getElement().toString());
+            }
+            com.mojang.logging.LogUtils.getLogger().info("VILLAGE_GRAPH_SAMPLE hostSeed={} terrainSeed={} notSelected={}",level.getSeed(),terrainSeed,
+                    BUILDINGS.stream().filter(b->sampled.stream().noneMatch(s->s.contains("psychedelicraft:village/"+b))).toList());
+            seen.addAll(sampled);
         }
         for(String building:BUILDINGS)check(seen.stream().anyMatch(s->s.contains("psychedelicraft:village/"+building)),"native village graphs must accept "+building);h.succeed();
     }
     @GameTest(template="empty",batch="village_graph") public static void nativeInteriorStreetBoundsAcceptTheGreenhouseFloor(GameTestHelper h){
         var level=h.getLevel();var pools=level.registryAccess().registryOrThrow(Registries.TEMPLATE_POOL);
         var root=new StructureTemplatePool(pools.getHolderOrThrow(ResourceKey.create(Registries.TEMPLATE_POOL,new ResourceLocation("minecraft","empty"))),List.of(com.mojang.datafixers.util.Pair.of(StructurePoolElement.single("psychedelicrafttests:village_street"),1)),StructureTemplatePool.Projection.RIGID);
-        var seen=new HashSet<String>();
+        var seen=new HashSet<String>();var terrain=graphTerrain(h,0);
         for(int seed=1;seed<=32;seed++){
-            var generator=level.getChunkSource().getGenerator();var origin=new BlockPos(100,0,100);
-            var context=new net.minecraft.world.level.levelgen.structure.Structure.GenerationContext(level.registryAccess(),generator,generator.getBiomeSource(),level.getChunkSource().randomState(),level.getStructureManager(),seed,new net.minecraft.world.level.ChunkPos(origin),level,biome->true);
+            var origin=new BlockPos(100,0,100);var context=graphContext(h,terrain,seed,origin);
             var stub=JigsawPlacement.addPieces(context,Holder.direct(root),Optional.empty(),1,origin,false,Optional.of(net.minecraft.world.level.levelgen.Heightmap.Types.WORLD_SURFACE_WG),80).orElseThrow();
             for(var piece:stub.getPiecesBuilder().build().pieces())if(piece instanceof net.minecraft.world.level.levelgen.structure.PoolElementStructurePiece pool)seen.add(pool.getElement().toString());
         }

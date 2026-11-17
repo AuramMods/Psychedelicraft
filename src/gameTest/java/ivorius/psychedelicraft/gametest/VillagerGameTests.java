@@ -88,6 +88,23 @@ public final class VillagerGameTests {
         }h.succeed();
     }
     @GameTest(template="empty") public static void harmoniumTradeCarriesNativeMixedColorAndOriginalStock(GameTestHelper h){
-        var v=villager(h,PSTradeOffers.DRUG_DEALER.get());var offer=offer(v,3,PSItems.HARMONIUM.get());check(HarmoniumItem.hasColor(offer.getResult())&&offer.getBaseCostA().getCount()==3&&offer.getMaxUses()==7&&offer.getXp()==2&&offer.getPriceMultiplier()==.2F,"native dye mix is stored on the harmonium trade result");v.discard();h.succeed();
+        var v=villager(h,PSTradeOffers.DRUG_DEALER.get());boolean previous=PSConfig.ENABLE_HARMONIUM.get();
+        try{for(boolean enabled:List.of(false,true)){
+            PSConfig.ENABLE_HARMONIUM.set(enabled);
+            var pools=new it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap<List<VillagerTrades.ItemListing>>();
+            for(int level=1;level<=5;level++)pools.put(level,new ArrayList<>());
+            net.minecraftforge.common.MinecraftForge.EVENT_BUS.post(new net.minecraftforge.event.village.VillagerTradesEvent(pools,PSTradeOffers.DRUG_DEALER.get()));
+            var offers=pools.get(3).stream().map(factory->factory.getOffer(v,v.getRandom())).filter(Objects::nonNull).toList();
+            check(offers.stream().anyMatch(o->o.getResult().is(PSItems.JOINT.get())),"either setting preserves the ordinary dealer offers");
+            var harmonium=offers.stream().filter(o->o.getResult().is(PSItems.HARMONIUM.get())).toList();
+            check(harmonium.size()==(enabled?1:0),"actual registration event honors the Harmonium switch independently of startup defaults");
+            if(enabled){
+                var offer=harmonium.get(0);check(HarmoniumItem.hasColor(offer.getResult())&&offer.getBaseCostA().getCount()==3&&offer.getMaxUses()==7&&offer.getXp()==2&&offer.getPriceMultiplier()==.2F,"native dye mix is stored on the harmonium trade result");
+                var p=player(h);var menu=menu(h,v,p,offer);menu.clicked(2,0,net.minecraft.world.inventory.ClickType.PICKUP,p);
+                check(ItemStack.matches(menu.getCarried(),offer.getResult())&&offer.getUses()==1&&menu.getSlot(0).getItem().isEmpty(),"native merchant click preserves the mixed color and spends the exact payment once");
+                v.setTradingPlayer(null);
+            }
+        }}finally{PSConfig.ENABLE_HARMONIUM.set(previous);v.discard();}
+        com.mojang.logging.LogUtils.getLogger().info("HARMONIUM_TRADE_CHECK startupSetting={} testedSettings=[false,true] nativePurchase=true",previous);h.succeed();
     }
 }

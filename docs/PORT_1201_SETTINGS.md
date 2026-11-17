@@ -18,7 +18,7 @@ The native gamerule `doSleepDeprivation` is also registered, with default `false
 | --- | --- | --- | --- | --- |
 | `balancing.disableMolotovs` | `false` | `balancing.disableMolotovs` | `item/PSItems` | Native creative variants: C13 |
 | `balancing.dryingTableTickDuration` | `19200` | `balancing.dryingTableTickDuration` | `block/entity/DryingTableBlockEntity` | Native timing/automation/config: C4 |
-| `balancing.enableHarmonium` | `false` | `balancing.enableHarmonium` | `item/PSItems`, `entity/PSTradeOffers` | Fresh default corrected/checked C29; enabled variants/offers C5/C15 |
+| `balancing.enableHarmonium` | `false` | `balancing.enableHarmonium` | `item/PSItems`, `entity/PSTradeOffers` | Fresh default C29; both native registration states and exact colored purchase C30; enabled variants C5 |
 | `balancing.enableRiftJars` | `false` | `balancing.enableRiftJars` | `item/PSItems` | Native creative variants: C14 |
 | `balancing.fluidAttributes.agave.ticksPerDistillation` | `96000` | `balancing.fluidAttributes.agave.ticksPerDistillation` | `fluid/BrewProfiles` → `BrewProcess` | Shared native processing/config: C7/C8; each named supplier inspected C29 |
 | `balancing.fluidAttributes.agave.ticksPerFermentation` | `36000` | `balancing.fluidAttributes.agave.ticksPerFermentation` | `fluid/BrewProfiles` → `BrewProcess` | Shared native processing/config: C7/C8; each named supplier inspected C29 |
