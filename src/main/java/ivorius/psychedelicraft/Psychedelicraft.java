@@ -44,7 +44,7 @@ public final class Psychedelicraft {
         bus.addListener((net.minecraftforge.fml.event.lifecycle.FMLCommonSetupEvent event) -> event.enqueueWork(() ->
                 ((net.minecraft.world.level.block.FlowerPotBlock)net.minecraft.world.level.block.Blocks.FLOWER_POT).addPlant(id("morning_glory"),PSBlocks.POTTED_MORNING_GLORY)));
         bus.addListener((net.minecraftforge.fml.event.lifecycle.FMLCommonSetupEvent event) -> event.enqueueWork(ivorius.psychedelicraft.block.JuniperContent::setup));
-        bus.addListener((net.minecraftforge.fml.event.lifecycle.FMLCommonSetupEvent event) -> event.enqueueWork(()->{ivorius.psychedelicraft.item.FilledBucketItem.registerDispenser();ivorius.psychedelicraft.fluid.PSFluids.registerInteractions();}));
+        bus.addListener((net.minecraftforge.fml.event.lifecycle.FMLCommonSetupEvent event) -> event.enqueueWork(()->{ivorius.psychedelicraft.item.PaperBagItem.registerDispenser();ivorius.psychedelicraft.item.FilledBucketItem.registerDispenser();ivorius.psychedelicraft.fluid.PSFluids.registerInteractions();}));
         bus.addListener((RegisterCapabilitiesEvent event) -> event.register(DrugProperties.class));
         DrugNetwork.register();
         PSCriteria.register();

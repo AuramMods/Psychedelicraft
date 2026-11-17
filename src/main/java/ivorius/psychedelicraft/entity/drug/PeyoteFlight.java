@@ -15,7 +15,7 @@ final class PeyoteFlight {
             granted = false;
             return;
         }
-        boolean eligible = player.isAlive() && intensity > 0 && player.getFoodData().getSaturationLevel() > 0;
+        boolean eligible = player.isAlive() && intensity > 0 && StomachFoodStats.packetSaturation(player.getFoodData()) > 0;
         if (eligible && granted && abilities.flying && !player.isPassenger()) {
             float saturation = StomachFoodStats.changeSaturation(player, -saturationPerTick(intensity), player.tickCount % 20 == 0);
             eligible = saturation > 0;

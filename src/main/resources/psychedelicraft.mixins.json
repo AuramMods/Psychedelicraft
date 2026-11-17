@@ -16,7 +16,9 @@
     "MerchantOfferMixin",
     "MerchantMenuMixin",
     "MobEquipmentAccessor",
-    "StructureTemplatePoolMixin"
+    "StructureTemplatePoolMixin",
+    "FoodDataMixin",
+    "ServerPlayerFoodMixin"
   ],
   "injectors": {
     "defaultRequire": 1

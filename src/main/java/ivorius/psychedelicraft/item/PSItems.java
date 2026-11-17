@@ -25,6 +25,9 @@ import net.minecraftforge.registries.RegistryObject;
 @Mod.EventBusSubscriber(modid = Psychedelicraft.MOD_ID, bus = Mod.EventBusSubscriber.Bus.MOD)
 public final class PSItems {
     public static final DeferredRegister<Item> ITEMS = DeferredRegister.create(ForgeRegistries.ITEMS, Psychedelicraft.MOD_ID);
+    public static final RegistryObject<Item> VOMIT=ITEMS.register("vomit",()->new Item(new Item.Properties()));
+    public static final RegistryObject<PaperBagItem> PAPER_BAG=ITEMS.register("paper_bag",PaperBagItem::new);
+    public static final RegistryObject<BagOfVomitItem> BAG_O_VOMIT=ITEMS.register("bag_o_vomit",BagOfVomitItem::new);
     public static final RegistryObject<Item> RED_MAGIC_MUSHROOMS = edible("red_magic_mushrooms", 0, DrugType.RED_SHROOMS, DrugInfluence.INGESTED_DELAY, 0.005, 0.003, 0.5);
     public static final RegistryObject<Item> BROWN_MAGIC_MUSHROOMS = edible("brown_magic_mushrooms", 0, DrugType.BROWN_SHROOMS, DrugInfluence.INGESTED_DELAY, 0.005, 0.003, 0.5);
     public static final RegistryObject<Item> LSD_PILL = edible("lsd_pill", 0, DrugType.LSD, DrugInfluence.INGESTED_DELAY, 0.05, 0.003, 0.6);

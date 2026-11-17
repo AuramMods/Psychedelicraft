@@ -18,6 +18,9 @@ public final class ClientItems {
     private ClientItems() {}
     @SubscribeEvent public static void setup(FMLClientSetupEvent event) {
         event.enqueueWork(() -> {
+            ivorius.psychedelicraft.item.BagOfVomitItem.disguise(BagDisguise::form);
+            ItemProperties.register(PSItems.BAG_O_VOMIT.get(),Psychedelicraft.id("disguise"),(stack,level,entity,seed)->BagDisguise.form());
+            ItemProperties.register(PSItems.PAPER_BAG.get(),Psychedelicraft.id("filled"),(stack,level,entity,seed)->{int count=ivorius.psychedelicraft.item.PaperBagItem.getContents(stack).count();return count>16000?1:count>0?.5F:0;});
             for(var fluid:ivorius.psychedelicraft.fluid.PSFluids.all()){net.minecraft.client.renderer.ItemBlockRenderTypes.setRenderLayer(fluid.get(),net.minecraft.client.renderer.RenderType.translucent());net.minecraft.client.renderer.ItemBlockRenderTypes.setRenderLayer(fluid.flowing.get(),net.minecraft.client.renderer.RenderType.translucent());}
             net.minecraft.client.renderer.Sheets.addWoodType(ivorius.psychedelicraft.block.PSWoodTypes.JUNIPER);
             ivorius.psychedelicraft.block.PSBlocks.BLOCKS.getEntries().forEach(block ->
