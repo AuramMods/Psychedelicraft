@@ -20,8 +20,10 @@ public final class PSCriteria {
     private static final Custom CUSTOM = new Custom();
     private static final DrankBrew DRANK_BREW=new DrankBrew();
     private static final MashedItem MASHED_ITEM=new MashedItem();
+    private static final DrugEffectsChangedCriterion DRUG_EFFECTS_CHANGED=new DrugEffectsChangedCriterion();
     private PSCriteria() {}
-    public static void register() { CriteriaTriggers.register(CUSTOM);CriteriaTriggers.register(DRANK_BREW);CriteriaTriggers.register(MASHED_ITEM); }
+    public static void register() { CriteriaTriggers.register(CUSTOM);CriteriaTriggers.register(DRANK_BREW);CriteriaTriggers.register(MASHED_ITEM);CriteriaTriggers.register(DRUG_EFFECTS_CHANGED); }
+    public static void drugsChanged(Player player,ivorius.psychedelicraft.entity.drug.DrugProperties properties){if(player instanceof ServerPlayer server)DRUG_EFFECTS_CHANGED.fire(server,properties);}
     public static void drankBrew(Player player,FluidStack contents){if(player instanceof ServerPlayer server&&PSFluids.brew(contents.getFluid())!=null)DRANK_BREW.fire(server,contents);}
     public static void tookMash(Player player,net.minecraft.world.item.ItemStack stack){var handler=FluidVesselHandler.forTransfer(stack);if(handler!=null)tookMash(player,handler.drain(Integer.MAX_VALUE,net.minecraftforge.fluids.capability.IFluidHandler.FluidAction.SIMULATE));}
     public static void tookMash(Player player,FluidStack contents){if(!contents.isEmpty()&&player instanceof ServerPlayer server)MASHED_ITEM.fire(server,contents);}
@@ -43,6 +45,7 @@ public final class PSCriteria {
             super(Psychedelicraft.id("custom"), player);
             this.event = event;
         }
+        @Override public JsonObject serializeToJson(SerializationContext context){JsonObject json=super.serializeToJson(context);json.addProperty("event",event);return json;}
     }
     private static final class DrankBrew extends SimpleCriterionTrigger<BrewCondition>{
         @Override public ResourceLocation getId(){return Psychedelicraft.id("drank_brew");}

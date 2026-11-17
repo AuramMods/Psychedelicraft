@@ -50,6 +50,7 @@ public final class DrugEvents {
         DrugProperties properties = DrugCapability.get(event.player);
         properties.tick(event.player.tickCount, event.player);
         if (!event.player.level().isClientSide) {
+            ivorius.psychedelicraft.advancement.PSCriteria.drugsChanged(event.player,properties);
             float speed = properties.getMultiplier(Drug::speedModifier);
             updateModifier(event.player.getAttribute(Attributes.MOVEMENT_SPEED), speed - 1, AttributeModifier.Operation.MULTIPLY_TOTAL);
             updateModifier(event.player.getAttribute(Attributes.ATTACK_SPEED), speed - 1, AttributeModifier.Operation.MULTIPLY_TOTAL);

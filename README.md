@@ -58,6 +58,8 @@ JEI's common and Forge API dependencies are pinned to `15.74.0.234` from [the of
 
 Decorative flower pots accept cannabis, hop, tobacco and coca seeds, or coffea cherries. Use the planting item on an empty vanilla flower pot, then use an empty hand to recover it. Morning glory and juniper saplings also retain their native pot forms.
 
+The 24 mod advancements track plant/material acquisition, drying equipment, smoking items, mash withdrawal, distinct brewed drinks, villager feeding, hangovers and the original sixteen-drug challenge. Brew criteria inspect the actual served contents, including maturation and vinegar state. Minecraft supplies its native trident and Channeling advancements.
+
 
 The operator command `/hallucinate <type> [targets] [x y z]` creates an owner-only contextual effect. Types are `single_entity`, `multiple_entity`, `friendly_zombies`, `hostile_villagers`, and `rasta_head`, with optional `psychedelicraft:` prefixes. Players may omit targets or supply coordinates relative to their command source; console use needs a player target. Creatures and identity substitutes use native 1.20.1 models without adding real mobs to the world. Reggie's generated dialogue stays in the affected player's local chat.
 
