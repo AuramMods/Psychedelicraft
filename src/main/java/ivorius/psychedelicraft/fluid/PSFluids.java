@@ -52,6 +52,11 @@ public final class PSFluids {
     public static Fluid resolve(String id){ResourceLocation location=ResourceLocation.tryParse(id);Fluid fluid=location==null?null:ForgeRegistries.FLUIDS.getValue(location);return fluid==null||fluid==Fluids.EMPTY?null:canonical(fluid);}
     public static String id(Fluid fluid){return ForgeRegistries.FLUIDS.getKey(canonical(fluid)).toString();}
     public static FluidProfile profile(Fluid fluid){return canonical(fluid) instanceof WorldFluid world?world.family.profile:null;}
+    /** Forge keeps custom fluid contact separate from the native water fluid type. */
+    public static boolean isWaterLike(FluidType type){
+        for(var family:all())if(family.waterLike()&&family.get().getFluidType()==type)return true;
+        return false;
+    }
     public static BrewProfile brew(Fluid fluid){return profile(fluid) instanceof BrewProfile brew?brew:null;}
     public static Component displayName(FluidStack stack){FluidProfile profile=profile(stack.getFluid());return profile==null?stack.getDisplayName():profile.getDisplayName(stack);}
     public static int color(FluidStack stack){FluidProfile profile=profile(stack.getFluid());return profile==null?0xffffffff:profile.getColor(stack);}

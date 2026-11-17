@@ -80,3 +80,5 @@ Open **Mods → Psychedelicraft → Config** for the native Forge settings scree
 The [native-system mapping report](docs/PORT_1201_NATIVE.md) records how the 1.12 backports map to Minecraft 1.20.1, the tested mod interactions, and the remaining native-integration checks. CI retains failed-test logs, configs and the owned GameTest world for 14 days to support reproduction.
 
 The paper-bag release check allows native entity visibility callbacks to finish before requiring its exact world count. A separate regression covers accepted drops in an initially unloaded chunk and verifies their count, metadata and identity after loading. The test fixture and reproduction evidence are documented in the port report.
+
+Native conduits recognize the water-like brews for frame activation, player power and hostile targeting. Their normal breathing, mining and gradual underwater vision remain native; agave, kava and bath salts retain their existing non-water classification.
