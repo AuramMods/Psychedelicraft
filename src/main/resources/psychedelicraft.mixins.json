@@ -30,6 +30,9 @@
     "client.GeometryShaderMixin",
     "client.GameGeometryMixin",
     "client.LevelGeometryMixin",
-    "client.PistonGeometryMixin"
+    "client.PistonGeometryMixin",
+    "client.CameraBodyMixin",
+    "client.MouseInertiaMixin",
+    "client.PlayerPoseMixin"
   ]
 }

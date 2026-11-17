@@ -1,7 +1,7 @@
 package ivorius.psychedelicraft.client;
 
 import ivorius.psychedelicraft.Psychedelicraft;
-import ivorius.psychedelicraft.entity.drug.Drug;
+import ivorius.psychedelicraft.client.render.CameraEffects;
 import ivorius.psychedelicraft.entity.drug.DrugCapability;
 import ivorius.psychedelicraft.entity.drug.DrugNetwork.Snapshot;
 import ivorius.psychedelicraft.entity.drug.DrugProperties;
@@ -16,7 +16,6 @@ import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.client.event.ClientPlayerNetworkEvent;
 import net.minecraftforge.client.event.RegisterClientReloadListenersEvent;
 import net.minecraftforge.client.event.RenderLevelStageEvent;
-import net.minecraftforge.client.event.ViewportEvent;
 import net.minecraftforge.event.TickEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
@@ -32,6 +31,7 @@ public final class ClientEffects {
     private static final PostEffects post=new PostEffects();
     private static HallucinationManager hallucinations=new HallucinationManager();
     private static EnvironmentEffects environment=new EnvironmentEffects();
+    private static CameraEffects camera=new CameraEffects();
     private static net.minecraft.client.multiplayer.ClientLevel visualLevel;
     private static Player visualPlayer;
     private static float pauseProgress;
@@ -39,6 +39,7 @@ public final class ClientEffects {
     private ClientEffects() {}
 
     public static HallucinationManager hallucinations(){return hallucinations;}
+    public static CameraEffects camera(){return camera;}
 
     public static void receive(Snapshot message) {
         pending.put(message.player(), message);
@@ -65,6 +66,7 @@ public final class ClientEffects {
                 snapshots.remove();
             }
         }
+        camera.tick(client);
     }
 
     @SubscribeEvent
@@ -75,22 +77,13 @@ public final class ClientEffects {
     }
 
     @SubscribeEvent
-    public static void camera(ViewportEvent.ComputeCameraAngles event) {
-        Minecraft client = Minecraft.getInstance();
-        if (client.player == null || event.getCamera().getEntity() != client.player) return;
-        float wobble = DrugCapability.get(client.player).getModifier(Drug::viewWobblyness);
-        float ticks = client.player.tickCount + (float) event.getPartialTick();
-        event.setRoll(event.getRoll() + Mth.sin(ticks * 0.07F) * wobble * Mth.RAD_TO_DEG);
-    }
-
-    @SubscribeEvent
     public static void world(RenderLevelStageEvent event){
         if(event.getStage()!=RenderLevelStageEvent.Stage.AFTER_LEVEL)return;
         var client=Minecraft.getInstance();if(client.player==null||client.level==null)return;
         try(var phase=ivorius.psychedelicraft.client.render.RenderPhase.POST.enter()){post.render(client,event.getPartialTick(),event.getProjectionMatrix(),hallucinations,environment,pauseProgress);}
     }
 
-    private static void resetVisuals(){post.release();hallucinations=new HallucinationManager();environment=new EnvironmentEffects();pauseProgress=0;}
+    private static void resetVisuals(){post.release();hallucinations=new HallucinationManager();environment=new EnvironmentEffects();camera=new CameraEffects();pauseProgress=0;}
 
     @Mod.EventBusSubscriber(modid = Psychedelicraft.MOD_ID, value = Dist.CLIENT, bus = Mod.EventBusSubscriber.Bus.MOD)
     public static final class Resources {
