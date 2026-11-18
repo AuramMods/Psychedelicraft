@@ -84,3 +84,5 @@ The paper-bag release check allows native entity visibility callbacks to finish 
 Native conduits recognize the water-like brews for frame activation, player power and hostile targeting. Their normal breathing, mining and gradual underwater vision remain native; agave, kava and bath salts retain their existing non-water classification.
 
 The [current registration and asset matrix](docs/PORT_1201_REGISTRY.md) inventories every running mod item, block, fluid, entity, recipe, command, setting, advancement and drug profile, with source mappings, observed evidence and remaining scope. Its [separate QA sidecar](tools/qa/registration-audit/README.md) reproduces the installed-jar inventory and English/Polish item contact sheets on an isolated display.
+
+The [audiovisual evidence matrix](docs/PORT_1201_RENDERING.md) separates actual dose/packet checks from controlled GPU/model fixtures and records the remaining lifecycle work.

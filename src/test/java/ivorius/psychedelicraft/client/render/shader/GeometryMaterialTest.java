@@ -22,4 +22,16 @@ public class GeometryMaterialTest {
     @Test public void skyStarsPostAndHandsKeepTheirAcceptedPhasePolicies(){
         assertFalse(GeometryMaterial.surface(RenderPhase.SKY,"position_tex"));assertFalse(GeometryMaterial.surface(RenderPhase.STARS,"position"));assertTrue(GeometryMaterial.surface(RenderPhase.SKY,"position"));assertTrue(GeometryMaterial.surface(RenderPhase.END_SKY,"position_tex"));assertFalse(GeometryMaterial.surface(RenderPhase.POST,"position_tex_color"));assertEquals(0,GeometryMaterial.pulseShape(RenderPhase.SKY,"position_tex"),0);assertEquals(2,GeometryMaterial.pulseShape(RenderPhase.STARS,"position"),0);assertEquals(2,GeometryMaterial.pulseShape(RenderPhase.HAND,"position_tex"),0);
     }
+    @Test public void immersionAndThickFogUseSphericalBandsWithoutChangingUniformMaterials(){
+        assertEquals(1,GeometryMaterial.pulseShape(RenderPhase.WORLD,"rendertype_solid",true),0);
+        assertEquals(1,GeometryMaterial.pulseShape(RenderPhase.WORLD,"particle",true),0);
+        assertEquals(1,GeometryMaterial.pulseShape(RenderPhase.MODEL,"rendertype_entity_solid",true),0);
+        assertEquals(3,GeometryMaterial.pulseShape(RenderPhase.WORLD,"rendertype_solid",false),0);
+        assertEquals(2,GeometryMaterial.pulseShape(RenderPhase.MODEL,"rendertype_entity_solid",false),0);
+        for(boolean fog:new boolean[]{false,true}){
+            assertEquals(0,GeometryMaterial.pulseShape(RenderPhase.WORLD,"rendertype_end_portal",fog),0);
+            assertEquals(0,GeometryMaterial.pulseShape(RenderPhase.BORDER,"position_tex",fog),0);
+            assertEquals(1,GeometryMaterial.pulseShape(RenderPhase.WORLD,"psychedelicraft:rendertype_zero_matter",fog),0);
+        }
+    }
 }

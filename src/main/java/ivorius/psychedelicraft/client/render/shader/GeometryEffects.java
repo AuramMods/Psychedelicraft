@@ -23,9 +23,20 @@ import java.util.List;
 public final class GeometryEffects {
     private static final Matrix4f viewToWorld=new Matrix4f();
     private static float partial;
+    private static boolean sphericalFog;
     private GeometryEffects(){}
-    public static void beginFrame(float tickDelta){partial=tickDelta;}
-    public static void captureView(Matrix4f view){viewToWorld.set(view).invert();}
+    public static void beginFrame(float tickDelta){partial=tickDelta;sphericalFog=false;}
+    public static void captureView(Matrix4f view){
+        viewToWorld.set(view).invert();
+        var client=Minecraft.getInstance();var camera=client.gameRenderer.getMainCamera();
+        var entity=camera.getEntity();
+        boolean impaired=entity instanceof net.minecraft.world.entity.LivingEntity living
+                &&(living.hasEffect(net.minecraft.world.effect.MobEffects.BLINDNESS)||living.hasEffect(net.minecraft.world.effect.MobEffects.DARKNESS));
+        // Match the accepted fog policy through native 1.20 camera/dimension/boss APIs.
+        sphericalFog=client.level!=null&&(impaired||camera.getFluidInCamera()!=net.minecraft.world.level.material.FogType.NONE
+                ||client.level.effects().isFoggyAt(camera.getBlockPosition().getX(),camera.getBlockPosition().getZ())
+                ||client.gui.getBossOverlay().shouldCreateWorldFog());
+    }
     private static String extension(boolean vertex)throws IOException{
         var id=Psychedelicraft.id("shaders/geometry/basic."+(vertex?"gvsh":"gfsh"));
         var manager=Minecraft.getInstance().getResourceManager();
@@ -68,7 +79,7 @@ public final class GeometryEffects {
         set(shader,"PS_FractalFractureStrength",deform?(float)drugs.getActiveValue(DrugType.LSD)*.06F:0);
         set(shader,"PS_SurfaceFractalStrength",surface?net.minecraft.util.Mth.clamp(h.strength(Effect.SURFACE_FRACTALS),0,1):0);
         set(shader,"PS_Pulses",pulse==null?0:pulse[0],pulse==null?0:pulse[1],pulse==null?0:pulse[2],pulse==null?0:pulse[3]);
-        set(shader,"PS_PulseShape",GeometryMaterial.pulseShape(phase,name));
+        set(shader,"PS_PulseShape",GeometryMaterial.pulseShape(phase,name,sphericalFog));
         shader.safeGetUniform("PS_ViewToWorld").set(viewToWorld);
         var camera=active?client.gameRenderer.getMainCamera().getPosition():net.minecraft.world.phys.Vec3.ZERO;set(shader,"PS_CameraPosition",(float)camera.x,(float)camera.y,(float)camera.z);
         set(shader,"PS_PlayerPosition",active?(float)client.player.getX():0,active?(float)client.player.getY():0,active?(float)client.player.getZ():0);

@@ -25,8 +25,9 @@ void main() {
   vec3 view = __PS_VIEW_POSITION__;
   vec3 relative = (PS_ViewToWorld * vec4(view, 1.0)).xyz;
   vec3 position = relative + PS_CameraPosition;
-  if (PS_PulseShape == 1.0 || PS_PulseShape == 3.0) PS_PulseDistance = length(view);
-  else if (PS_PulseShape == 2.0) PS_PulseDistance = max(length(relative.xz), abs(relative.y));
+  if (PS_PulseShape == 1.0) PS_PulseDistance = length(view);
+  // Model and terrain bands share world up; only spherical fog uses radial distance.
+  else if (PS_PulseShape > 1.0) PS_PulseDistance = max(length(relative.xz), abs(relative.y));
   if (PS_SurfaceFractalStrength > 0.0) {
     vec2 uv = mod(position.xz + position.yy, 4.0) / 4.0;
     PS_SurfaceColor = texture(PS_SurfaceFractalSampler, mix(PS_SurfaceFractalCoords.xy, PS_SurfaceFractalCoords.zw, uv)).rgb;

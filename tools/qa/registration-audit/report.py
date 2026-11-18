@@ -59,7 +59,7 @@ def behavior(identity):
     if name in {"lattice", "wine_grape_lattice", "morning_glory_lattice", "morning_glory", "morning_glory_seeds", "wine_grapes"}:
         return "C10 vine/flower integration; C33 exact harvests"
     if name in {"rift_jar", "glitch", "reality_rift"}:
-        return "C14 rifts/jars/glitch; combined rendering still pending"
+        return "C14 rifts/jars/glitch; C36 combined native rendering/reload/resize"
     if name in {"vomit", "paper_bag", "bag_o_vomit"}:
         return "C18 stomach/bag/disguise; C33 native item visibility"
     if name in {"joint", "peyote_joint", "cigarette", "cigar", "smoking_pipe", "bong", "harmonium"}:
@@ -111,14 +111,14 @@ def main():
            "advancements, commands and drug types, then calls native model baking/selection and GUI item rendering. "
            "It repeats the client observations after a real Polish language/resource reload. "
            "C35 proves registration/assets/default names; behavior evidence is separately assigned below. "
-           "It does not prove every NBT subtype, all block-state pixels, natural acquisition, or the remaining combined-render/multiplayer lifecycle paths.", "",
+           "It does not prove every NBT subtype, all block-state pixels, natural acquisition, or multiplayer lifecycle paths.", "",
            "## Sources and status", "",
            f"[Accepted Forge source](https://github.com/AuramMods/Psychedelicraft/tree/{ACCEPTED}/{BASE}) supplies custom behavior and fixes; "
            f"[original 1.20.1 source](https://github.com/AuramMods/Psychedelicraft/tree/{ORIGINAL}/{BASE}) supplies the complete modern baseline. "
            "Chosen implementation links identify the current Java class or its native registration owner. "
            "C-number evidence refers to [the cycle report](PORT_1201.md). "
-           "[Native mappings](PORT_1201_NATIVE.md) and [all 140 settings](PORT_1201_SETTINGS.md) are part of this matrix.", "",
-           "Implemented systems still retain the remaining combined-render and lifecycle checks listed in the main report. "
+           "[Native mappings](PORT_1201_NATIVE.md), [all 140 settings](PORT_1201_SETTINGS.md), and [audiovisual evidence](PORT_1201_RENDERING.md) are part of this matrix.", "",
+           "C36 supplies the subsequent combined-render evidence on its corrected jar; this inventory retains its C35 snapshot provenance. Implemented systems retain the lifecycle checks listed in the main report. "
            "Shader-pack compatibility is explicitly deferred, not silently treated as verified.", "",
            "| Runtime registry | Mod entries |", "| --- | --- |"]
     out += [f"| `{kind}` | {len(rows)} |" for kind, rows in en["registries"].items()]
@@ -279,7 +279,7 @@ def main():
             "Native/delegated sound events and dynamic music have separate C22/C24 runtime evidence.", "",
             "The complete 140-setting source/consumer/default/evidence matrix remains in [PORT_1201_SETTINGS.md](PORT_1201_SETTINGS.md), "
             "with native UI/EN/PL/save/restart/scope evidence in C31. This inventory does not turn a registered ID or a valid model into broad gameplay proof. "
-            "Remaining requirements include combined special-material/Reggie/text rendering, two-player death/respawn/dimension/custom-benefit/natural-expiry checks, "
+            "Remaining requirements include two-player death/respawn/dimension/custom-benefit/natural-expiry checks, "
             "the explicitly open native handoffs, and the final complete-goal audit.", "",
             "Audit findings needing review:", ""]
     findings = missing + missing_audio

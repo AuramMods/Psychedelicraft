@@ -4,13 +4,13 @@ This is the C35 runtime inventory, replacing the historical **Initial registered
 
 Minecraft **1.20.1**, Forge **47.4.28**; production SHA-256 **`edcecfa9a1918227be345f583cbd389415bf2644a49d44f57c6afdd9157466c5`**. The production source is C34 (`388fd078`); C35 adds the separate QA sidecar and this evidence. Final runtime snapshots and four contact sheets are retained in ignored `run/production/cycle35/game-final/registration-audit`.
 
-The [reproducible audit tool](../tools/qa/registration-audit/README.md) exports actual registry values, loaded recipes, advancements, commands and drug types, then calls native model baking/selection and GUI item rendering. It repeats the client observations after a real Polish language/resource reload. C35 proves registration/assets/default names; behavior evidence is separately assigned below. It does not prove every NBT subtype, all block-state pixels, natural acquisition, or the remaining combined-render/multiplayer lifecycle paths.
+The [reproducible audit tool](../tools/qa/registration-audit/README.md) exports actual registry values, loaded recipes, advancements, commands and drug types, then calls native model baking/selection and GUI item rendering. It repeats the client observations after a real Polish language/resource reload. C35 proves registration/assets/default names; behavior evidence is separately assigned below. It does not prove every NBT subtype, all block-state pixels, natural acquisition, or multiplayer lifecycle paths.
 
 ## Sources and status
 
-[Accepted Forge source](https://github.com/AuramMods/Psychedelicraft/tree/51286f8f3e6866e8b952175c9c60c7f6e63bef8d/src/main/java/ivorius/psychedelicraft/) supplies custom behavior and fixes; [original 1.20.1 source](https://github.com/AuramMods/Psychedelicraft/tree/319a4ea0160d6600cffcd5f5cc9e363ceaab44a1/src/main/java/ivorius/psychedelicraft/) supplies the complete modern baseline. Chosen implementation links identify the current Java class or its native registration owner. C-number evidence refers to [the cycle report](PORT_1201.md). [Native mappings](PORT_1201_NATIVE.md) and [all 140 settings](PORT_1201_SETTINGS.md) are part of this matrix.
+[Accepted Forge source](https://github.com/AuramMods/Psychedelicraft/tree/51286f8f3e6866e8b952175c9c60c7f6e63bef8d/src/main/java/ivorius/psychedelicraft/) supplies custom behavior and fixes; [original 1.20.1 source](https://github.com/AuramMods/Psychedelicraft/tree/319a4ea0160d6600cffcd5f5cc9e363ceaab44a1/src/main/java/ivorius/psychedelicraft/) supplies the complete modern baseline. Chosen implementation links identify the current Java class or its native registration owner. C-number evidence refers to [the cycle report](PORT_1201.md). [Native mappings](PORT_1201_NATIVE.md), [all 140 settings](PORT_1201_SETTINGS.md), and [audiovisual evidence](PORT_1201_RENDERING.md) are part of this matrix.
 
-Implemented systems still retain the remaining combined-render and lifecycle checks listed in the main report. Shader-pack compatibility is explicitly deferred, not silently treated as verified.
+C36 supplies the subsequent combined-render evidence on its corrected jar; this inventory retains its C35 snapshot provenance. Implemented systems retain the lifecycle checks listed in the main report. Shader-pack compatibility is explicitly deferred, not silently treated as verified.
 
 | Runtime registry | Mod entries |
 | --- | --- |
@@ -64,7 +64,7 @@ Implemented systems still retain the remaining combined-render and lifecycle che
 | `drying_table` | [DryingTableBlock](../src/main/java/ivorius/psychedelicraft/block/DryingTableBlock.java) | C4 drying/sided automation; C35 1 states, 1 MODEL states baked |
 | `flask` | [FlaskBlock](../src/main/java/ivorius/psychedelicraft/block/FlaskBlock.java) | C7 processing/automation; C6 contents; C35 1 states, 1 MODEL states baked |
 | `fruiting_juniper_leaves` | [JuniperLeavesBlock](../src/main/java/ivorius/psychedelicraft/block/JuniperLeavesBlock.java) | C11 wood/fruit/vehicle integration; C35 28 states, 28 MODEL states baked |
-| `glitch` | [GlitchedBlock](../src/main/java/ivorius/psychedelicraft/block/GlitchedBlock.java) | C14 rifts/jars/glitch; combined rendering still pending; C35 1 states, 1 MODEL states baked |
+| `glitch` | [GlitchedBlock](../src/main/java/ivorius/psychedelicraft/block/GlitchedBlock.java) | C14 rifts/jars/glitch; C36 combined native rendering/reload/resize; C35 1 states, 1 MODEL states baked |
 | `honey` | [PhysicalFluidBlock](../src/main/java/ivorius/psychedelicraft/block/PhysicalFluidBlock.java) | C12 world fluid/metadata; C34 conduit classification; native `INVISIBLE` render path |
 | `hop` | [HopPlantBlock](../src/main/java/ivorius/psychedelicraft/block/HopPlantBlock.java) | C3 placement/growth/acquisition; C35 64 states, 64 MODEL states baked |
 | `iron_drying_table` | [DryingTableBlock](../src/main/java/ivorius/psychedelicraft/block/DryingTableBlock.java) | C4 drying/sided automation; C35 1 states, 1 MODEL states baked |
@@ -112,7 +112,7 @@ Implemented systems still retain the remaining combined-render and lifecycle che
 | `potted_tobacco` | Native `FlowerPotBlock` via [PSBlocks](../src/main/java/ivorius/psychedelicraft/block/PSBlocks.java) | C10/C11 native pots; C26 all five drug pots; C35 1 states, 1 MODEL states baked |
 | `red_grapes` | [PhysicalFluidBlock](../src/main/java/ivorius/psychedelicraft/block/PhysicalFluidBlock.java) | C12 world fluid/metadata; C34 conduit classification; native `INVISIBLE` render path |
 | `rice` | [PhysicalFluidBlock](../src/main/java/ivorius/psychedelicraft/block/PhysicalFluidBlock.java) | C12 world fluid/metadata; C34 conduit classification; native `INVISIBLE` render path |
-| `rift_jar` | [RiftJarBlock](../src/main/java/ivorius/psychedelicraft/block/RiftJarBlock.java) | C14 rifts/jars/glitch; combined rendering still pending; native `ENTITYBLOCK_ANIMATED` render path |
+| `rift_jar` | [RiftJarBlock](../src/main/java/ivorius/psychedelicraft/block/RiftJarBlock.java) | C14 rifts/jars/glitch; C36 combined native rendering/reload/resize; native `ENTITYBLOCK_ANIMATED` render path |
 | `slurry` | [PhysicalFluidBlock](../src/main/java/ivorius/psychedelicraft/block/PhysicalFluidBlock.java) | C12 world fluid/metadata; C34 conduit classification; native `INVISIBLE` render path |
 | `spruce_barrel` | [BarrelBlock](../src/main/java/ivorius/psychedelicraft/block/BarrelBlock.java) | C7 processing/automation; C6 contents; native `ENTITYBLOCK_ANIMATED` render path |
 | `stripped_juniper_log` | Native `RotatedPillarBlock` via [PSBlocks](../src/main/java/ivorius/psychedelicraft/block/PSBlocks.java) | C11 wood/fruit/vehicle integration; C35 3 states, 3 MODEL states baked |
@@ -271,7 +271,7 @@ Implemented systems still retain the remaining combined-render and lifecycle che
 | `peyote` | Native `BlockItem` via [PSItems](../src/main/java/ivorius/psychedelicraft/item/PSItems.java) | C3 placement/growth/acquisition; C35 EN/PL native default render/name: present |
 | `peyote_joint` | [SmokeableItem](../src/main/java/ivorius/psychedelicraft/item/SmokeableItem.java) | C5 smoking/stacking; C30 optional Harmonium trades; C35 EN/PL native default render/name: present |
 | `red_magic_mushrooms` | [EdibleItem](../src/main/java/ivorius/psychedelicraft/item/EdibleItem.java) | C1/C2 scalar/use benefits; C4 drying; C10 LSD paper; C35 EN/PL native default render/name: present |
-| `rift_jar` | [RiftJarItem](../src/main/java/ivorius/psychedelicraft/item/RiftJarItem.java) | C14 rifts/jars/glitch; combined rendering still pending; C35 EN/PL native default render/name: present |
+| `rift_jar` | [RiftJarItem](../src/main/java/ivorius/psychedelicraft/item/RiftJarItem.java) | C14 rifts/jars/glitch; C36 combined native rendering/reload/resize; C35 EN/PL native default render/name: present |
 | `shot_glass` | [PortableFluidItem](../src/main/java/ivorius/psychedelicraft/item/PortableFluidItem.java) | C6 transfer/servings; C12 world buckets; C35 EN/PL native default render/name: present |
 | `smoking_pipe` | [BongItem](../src/main/java/ivorius/psychedelicraft/item/BongItem.java) | C5 smoking/stacking; C30 optional Harmonium trades; C35 EN/PL native default render/name: present |
 | `spruce_barrel` | [FluidMachineItem](../src/main/java/ivorius/psychedelicraft/item/FluidMachineItem.java) | C7 processing/automation; C6 contents; C35 EN/PL native default render/name: present |
@@ -310,7 +310,7 @@ Implemented systems still retain the remaining combined-render and lifecycle che
 | `juniper_boat` | Native `EntityType` via [PSEntities](../src/main/java/ivorius/psychedelicraft/entity/PSEntities.java) | C11 wood/fruit/vehicle integration; C35 renderer `JuniperBoatRenderer` |
 | `juniper_chest_boat` | Native `EntityType` via [PSEntities](../src/main/java/ivorius/psychedelicraft/entity/PSEntities.java) | C11 wood/fruit/vehicle integration; C35 renderer `JuniperBoatRenderer` |
 | `molotov_cocktail` | Native `EntityType` via [PSEntities](../src/main/java/ivorius/psychedelicraft/entity/PSEntities.java) | C13 native projectile and fluid-preserving conversion; C35 renderer `ThrownItemRenderer` |
-| `reality_rift` | Native `EntityType` via [PSEntities](../src/main/java/ivorius/psychedelicraft/entity/PSEntities.java) | C14 rifts/jars/glitch; combined rendering still pending; C35 renderer `RealityRiftRenderer` |
+| `reality_rift` | Native `EntityType` via [PSEntities](../src/main/java/ivorius/psychedelicraft/entity/PSEntities.java) | C14 rifts/jars/glitch; C36 combined native rendering/reload/resize; C35 renderer `RealityRiftRenderer` |
 
 ## BLOCK_ENTITY_TYPES
 
@@ -327,7 +327,7 @@ Implemented systems still retain the remaining combined-render and lifecycle che
 | `mash_tub` | Native `BlockEntityType` via [PSBlockEntities](../src/main/java/ivorius/psychedelicraft/block/entity/PSBlockEntities.java) | C8 batches/walls/automation |
 | `mash_tub_edge` | Native `BlockEntityType` via [PSBlockEntities](../src/main/java/ivorius/psychedelicraft/block/entity/PSBlockEntities.java) | C8 batches/walls/automation |
 | `placed_drink` | Native `BlockEntityType` via [PSBlockEntities](../src/main/java/ivorius/psychedelicraft/block/entity/PSBlockEntities.java) | C9 display/props/rack; C32 exact display drops |
-| `rift_jar` | Native `BlockEntityType` via [PSBlockEntities](../src/main/java/ivorius/psychedelicraft/block/entity/PSBlockEntities.java) | C14 rifts/jars/glitch; combined rendering still pending |
+| `rift_jar` | Native `BlockEntityType` via [PSBlockEntities](../src/main/java/ivorius/psychedelicraft/block/entity/PSBlockEntities.java) | C14 rifts/jars/glitch; C36 combined native rendering/reload/resize |
 
 ## PARTICLE_TYPES
 
@@ -787,7 +787,7 @@ All accepted entity registrations are accounted for. The four mod-specific types
 | `juniper_boat` | `psychedelicraft:juniper_boat` | C11 wood/fruit/vehicle integration |
 | `juniper_chest_boat` | `psychedelicraft:juniper_chest_boat` | C11 wood/fruit/vehicle integration |
 | `molotov_cocktail` | `psychedelicraft:molotov_cocktail` | C13 native projectile and fluid-preserving conversion |
-| `reality_rift` | `psychedelicraft:reality_rift` | C14 rifts/jars/glitch; combined rendering still pending |
+| `reality_rift` | `psychedelicraft:reality_rift` | C14 rifts/jars/glitch; C36 combined native rendering/reload/resize |
 | `sniffer` | `minecraft:sniffer` | Native implementation; see native mapping report for bounded evidence |
 | `thrown_trident` | `minecraft:trident` | Native implementation; see native mapping report for bounded evidence |
 | `trader_llama` | `minecraft:trader_llama` | Native implementation; see native mapping report for bounded evidence |
@@ -822,7 +822,7 @@ The target adds `juniper_hanging_sign` as the native separate hanging-sign block
 
 C35 inspects **1509** MODEL block states, 100 native default item renders per language, all 4 mod entity-renderer bindings, loaded recipes/advancements and all 18 custom profiles. Each mod item-description key is also checked directly in both packaged language catalogs, independently of native fallback resolution. Quad/sprite observations use seed zero for each direction and the unculled face; this does not enumerate every weighted-model outcome. The production archive contains **8** sound definitions; local sound references with missing/invalid Ogg headers: **0**. Native/delegated sound events and dynamic music have separate C22/C24 runtime evidence.
 
-The complete 140-setting source/consumer/default/evidence matrix remains in [PORT_1201_SETTINGS.md](PORT_1201_SETTINGS.md), with native UI/EN/PL/save/restart/scope evidence in C31. This inventory does not turn a registered ID or a valid model into broad gameplay proof. Remaining requirements include combined special-material/Reggie/text rendering, two-player death/respawn/dimension/custom-benefit/natural-expiry checks, the explicitly open native handoffs, and the final complete-goal audit.
+The complete 140-setting source/consumer/default/evidence matrix remains in [PORT_1201_SETTINGS.md](PORT_1201_SETTINGS.md), with native UI/EN/PL/save/restart/scope evidence in C31. This inventory does not turn a registered ID or a valid model into broad gameplay proof. Remaining requirements include two-player death/respawn/dimension/custom-benefit/natural-expiry checks, the explicitly open native handoffs, and the final complete-goal audit.
 
 Audit findings needing review:
 

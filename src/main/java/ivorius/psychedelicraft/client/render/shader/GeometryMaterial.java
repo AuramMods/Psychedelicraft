@@ -22,4 +22,8 @@ public final class GeometryMaterial {
                 ||shader.contains("lightning")||shader.contains("leash")||shader.contains("text")||shader.contains("water_mask"))return 2;
         return 3;
     }
+    public static float pulseShape(RenderPhase phase,String shader,boolean sphericalFog){
+        float shape=pulseShape(phase,shader);
+        return sphericalFog&&shape>1?1:shape;
+    }
 }
