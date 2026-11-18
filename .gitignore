@@ -14,3 +14,5 @@ logs/
 classes/
 out/
 .vscode/launch.json
+
+.qa/

@@ -41,4 +41,38 @@ public final class PlayerLifecycleGameTests {
         DrugEvents.tick(new TickEvent.PlayerTickEvent(TickEvent.Phase.END,player));
         helper.assertTrue(!player.getCapability(DrugCapability.TYPE).isPresent(),"final tick leaves native capability invalidation intact");helper.succeed();
     }
+    @GameTest(template="empty") public static void dimensionChangeReplaysOwnedPeyoteFlight(GameTestHelper helper){
+        dimensionAbilityReplay(helper,true,false);
+    }
+    @GameTest(template="empty") public static void dimensionChangePreservesExternalFlightPermission(GameTestHelper helper){
+        dimensionAbilityReplay(helper,false,true);
+    }
+    @GameTest(template="empty") public static void dimensionChangeKeepsSoberSurvivalFlightDisabled(GameTestHelper helper){
+        dimensionAbilityReplay(helper,false,false);
+    }
+    private static void dimensionAbilityReplay(GameTestHelper helper,boolean peyote,boolean external){
+        var player=FakePlayerFactory.get(helper.getLevel(),new GameProfile(UUID.randomUUID(),"FlightReplay"));
+        player.setGameMode(net.minecraft.world.level.GameType.SURVIVAL);
+        var packets=new java.util.ArrayList<net.minecraft.network.protocol.Packet<?>>();
+        new net.minecraft.server.network.ServerGamePacketListenerImpl(helper.getLevel().getServer(),
+                new net.minecraft.network.Connection(net.minecraft.network.protocol.PacketFlow.SERVERBOUND),player){
+            @Override public void send(net.minecraft.network.protocol.Packet<?> packet){packets.add(packet);}
+        };
+        var properties=DrugCapability.get(player);
+        if(peyote){
+            properties.setDrugLocked(DrugType.PEYOTE,true);properties.setDrugValue(DrugType.PEYOTE,.5);
+            for(int tick=0;tick<100;tick++)properties.tick(tick,player);
+            helper.assertTrue(properties.toNbt().getBoolean("peyoteFlightGranted")&&player.getAbilities().mayfly,"normal drug ticks own and grant flight");
+        }else if(external)player.getAbilities().mayfly=true;
+        player.getAbilities().flying=peyote||external;
+        var saved=properties.toNbt();float saturation=StomachFoodStats.packetSaturation(player.getFoodData());packets.clear();
+        net.minecraftforge.event.ForgeEventFactory.firePlayerChangedDimensionEvent(player,net.minecraft.world.level.Level.NETHER,helper.getLevel().dimension());
+        var abilities=packets.stream().filter(net.minecraft.network.protocol.game.ClientboundPlayerAbilitiesPacket.class::isInstance)
+                .map(net.minecraft.network.protocol.game.ClientboundPlayerAbilitiesPacket.class::cast).toList();
+        helper.assertTrue(abilities.size()==1,"dimension lifecycle replays one actual native abilities packet");
+        helper.assertTrue(abilities.get(0).canFly()==(peyote||external)&&abilities.get(0).isFlying()==(peyote||external),"native packet retains the current server flight state");
+        helper.assertTrue(player.getAbilities().mayfly==(peyote||external)&&player.getAbilities().flying==(peyote||external),"replay does not grant or revoke permissions");
+        helper.assertTrue(properties.toNbt().equals(saved)&&StomachFoodStats.packetSaturation(player.getFoodData())==saturation,"replay neither changes drugs/ownership nor charges saturation");
+        player.remove(Entity.RemovalReason.DISCARDED);helper.succeed();
+    }
 }

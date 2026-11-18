@@ -69,4 +69,33 @@ public final class StomachGameTests {
         var p=player(h);for(int i=0;i<36;i++)p.getInventory().setItem(i,new ItemStack(Items.STONE,64));p.setItemInHand(InteractionHand.OFF_HAND,new ItemStack(PSItems.PAPER_BAG.get(),2));Object listener=new Object(){@net.minecraftforge.eventbus.api.SubscribeEvent public void cancelCaughtVomit(net.minecraftforge.event.entity.EntityJoinLevelEvent e){if(e.getEntity() instanceof ItemEntity item&&item.getItem().is(PSItems.BAG_O_VOMIT.get()))e.setCanceled(true);}};net.minecraftforge.common.MinecraftForge.EVENT_BUS.register(listener);try{DrugCapability.get(p).getStomach().vomit(p);check(p.getOffhandItem().getCount()==2&&p.getInventory().countItem(PSItems.BAG_O_VOMIT.get())==0,"failed catch delivery consumes no empty bag or native inventory items");}finally{net.minecraftforge.common.MinecraftForge.EVENT_BUS.unregister(listener);}h.succeed();
     }
 
+    private static FoodData maskedFood(net.minecraft.world.entity.player.Player player){
+        var food=player.getFoodData();food.setFoodLevel(12);food.setSaturation(3);
+        DrugCapability.get(player).getStomach().updateHunger(20,5,1);
+        check(food.getFoodLevel()==20&&!food.needsFood(),"living hunger suppression masks the retained manager");
+        close(food.getSaturationLevel(),5,"living saturation view uses the active anchor");return food;
+    }
+    private static void neutralFood(FoodData food){
+        check(food.getFoodLevel()==12&&food.needsFood(),"unavailable/dead owner reads native food and appetite");
+        close(food.getSaturationLevel(),3,"unavailable/dead owner reads native saturation");
+    }
+    @GameTest(template="empty") public static void removedFoodViewUsesNativeStateAndNeverRevivesCapability(GameTestHelper h){
+        var p=player(h);var food=maskedFood(p);var previous=p.getCapability(DrugCapability.TYPE);
+        p.remove(Entity.RemovalReason.CHANGED_DIMENSION);neutralFood(food);
+        check(!previous.isPresent()&&!p.getCapability(DrugCapability.TYPE).isPresent(),"food reads leave both invalidated handles retired");h.succeed();
+    }
+    @GameTest(template="empty") public static void deadFoodViewIsNeutralBeforeAndAfterNativeRemoval(GameTestHelper h){
+        var p=player(h);var food=maskedFood(p);p.setHealth(0);neutralFood(food);
+        var previous=p.getCapability(DrugCapability.TYPE);p.remove(Entity.RemovalReason.KILLED);neutralFood(food);
+        check(!previous.isPresent()&&!p.getCapability(DrugCapability.TYPE).isPresent(),"death HUD reads never revive the owner capability");h.succeed();
+    }
+    @GameTest(template="empty") public static void reboundFoodUsesReplacementOwnerAndLeavesStaleViewNeutral(GameTestHelper h){
+        var original=player(h);var stale=maskedFood(original);var previous=original.getCapability(DrugCapability.TYPE);original.remove(Entity.RemovalReason.CHANGED_DIMENSION);
+        var replacement=player(h);replacement.foodData=stale;StomachFoodStats.bind(replacement);neutralFood(replacement.getFoodData());
+        DrugCapability.get(replacement).getStomach().updateHunger(20,5,1);
+        check(replacement.getFoodData().getFoodLevel()==20,"replacement uses its own live perception");neutralFood(stale);
+        effect(replacement,DrugType.CAFFEINE,.5);replacement.getFoodData().setExhaustion(0);replacement.getFoodData().addExhaustion(1);
+        close(replacement.getFoodData().getExhaustionLevel(),.8F,"retained native manager scales exhaustion through the replacement owner");
+        check(!previous.isPresent()&&!original.getCapability(DrugCapability.TYPE).isPresent(),"rebinding leaves original handles invalid");replacement.remove(Entity.RemovalReason.DISCARDED);h.succeed();
+    }
 }

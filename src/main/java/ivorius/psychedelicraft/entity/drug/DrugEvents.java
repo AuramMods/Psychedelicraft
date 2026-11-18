@@ -121,7 +121,11 @@ public final class DrugEvents {
     public static void login(PlayerEvent.PlayerLoggedInEvent event) { sync(event.getEntity()); }
 
     @SubscribeEvent
-    public static void changedDimension(PlayerEvent.PlayerChangedDimensionEvent event) { sync(event.getEntity()); }
+    public static void changedDimension(PlayerEvent.PlayerChangedDimensionEvent event) {
+        sync(event.getEntity());
+        // Dimension respawn creates a new client player even when the server-side grant is unchanged.
+        if (event.getEntity() instanceof ServerPlayer player) player.onUpdateAbilities();
+    }
 
     @SubscribeEvent
     public static void respawn(PlayerEvent.PlayerRespawnEvent event) { sync(event.getEntity()); }

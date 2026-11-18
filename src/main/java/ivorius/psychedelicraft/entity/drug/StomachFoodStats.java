@@ -30,6 +30,10 @@ public final class StomachFoodStats extends FoodData {
     }
 
     private Stomach stomach(){return DrugCapability.get(owner).getStomach();}
+    @javax.annotation.Nullable private Stomach readableStomach(){
+        if(!owner.isAlive()||owner.isRemoved())return null;
+        return owner.getCapability(DrugCapability.TYPE).map(DrugProperties::getStomach).orElse(null);
+    }
     int actualFoodLevel(){return delegate.getFoodLevel();}
     float actualSaturation(){return delegate.getSaturationLevel();}
     public static int packetFoodLevel(FoodData food){return food instanceof StomachFoodStats stomach?stomach.actualFoodLevel():food.getFoodLevel();}
@@ -65,11 +69,17 @@ public final class StomachFoodStats extends FoodData {
     @Override public void tick(Player player) { delegate.tick(player); }
     @Override public void readAdditionalSaveData(CompoundTag tag) { delegate.readAdditionalSaveData(tag); }
     @Override public void addAdditionalSaveData(CompoundTag tag) { delegate.addAdditionalSaveData(tag); }
-    @Override public int getFoodLevel() { return stomach().perceivedFood(actualFoodLevel()); }
+    @Override public int getFoodLevel() {
+        var view=readableStomach();return view==null?actualFoodLevel():view.perceivedFood(actualFoodLevel());
+    }
     @Override public int getLastFoodLevel() { return delegate.getLastFoodLevel(); }
-    @Override public boolean needsFood() { return stomach().needsFood(delegate.needsFood()); }
+    @Override public boolean needsFood() {
+        var view=readableStomach();return view==null?delegate.needsFood():view.needsFood(delegate.needsFood());
+    }
     @Override public float getExhaustionLevel() { return delegate.getExhaustionLevel(); }
-    @Override public float getSaturationLevel() { return stomach().perceivedSaturation(actualSaturation()); }
+    @Override public float getSaturationLevel() {
+        var view=readableStomach();return view==null?actualSaturation():view.perceivedSaturation(actualSaturation());
+    }
     @Override public void setFoodLevel(int food) { if(owner.level().isClientSide||!stomach().isLocked())delegate.setFoodLevel(food); }
     @Override public void setSaturation(float saturation) { delegate.setSaturation(saturation); }
     @Override public void setExhaustion(float exhaustion) { delegate.setExhaustion(exhaustion); }
