@@ -17,6 +17,7 @@ import net.minecraft.client.renderer.blockentity.TheEndPortalRenderer;
 import net.minecraft.client.renderer.texture.TextureAtlas;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraftforge.fml.ModList;
 import org.joml.Matrix4f;
 import java.io.*;
 import java.nio.charset.StandardCharsets;
@@ -32,6 +33,7 @@ public final class GeometryEffects {
     private static final Matrix4f worldToClip = new Matrix4f();
     private static final Matrix4f clipToWorld = new Matrix4f();
     private static float partial;
+    private static float nativeTerrainRadius;
     private static boolean sphericalFog;
     private GeometryEffects(){}
     public static void beginFrame(float tickDelta){partial=tickDelta;sphericalFog=false;}
@@ -40,6 +42,7 @@ public final class GeometryEffects {
         worldToClip.set(projection).mul(view);
         clipToWorld.set(worldToClip).invert();
         var client=Minecraft.getInstance();var camera=client.gameRenderer.getMainCamera();
+        nativeTerrainRadius = ModList.get().isLoaded("distanthorizons") ? client.options.getEffectiveRenderDistance() * 16F : 0F;
         var entity=camera.getEntity();
         boolean impaired=entity instanceof net.minecraft.world.entity.LivingEntity living
                 &&(living.hasEffect(net.minecraft.world.effect.MobEffects.BLINDNESS)||living.hasEffect(net.minecraft.world.effect.MobEffects.DARKNESS));
@@ -148,7 +151,8 @@ public final class GeometryEffects {
         add(shader,uniforms,"PS_ApparitionTint",7,4);
         add(shader,uniforms,"PS_DistantWorldDeformation",4,1);add(shader,uniforms,"PS_SurfaceFractalCoords",7,4);
         add(shader,uniforms,"PS_SurfaceFractalStrength",4,1);add(shader,uniforms,"PS_FractalFractureStrength",4,1);
-        add(shader,uniforms,"PS_PeyoteStrength",4,1);add(shader,uniforms,"PS_WorldUpClip",7,4);
+        add(shader,uniforms,"PS_PeyoteStrength",4,1);add(shader,uniforms,"PS_NativeTerrainRadius",4,1);
+        add(shader,uniforms,"PS_WorldToClip",10,16);
         add(shader,uniforms,"PS_PlayerPosition",6,3);add(shader,uniforms,"PS_CameraPosition",6,3);
         add(shader,uniforms,"PS_ViewToWorld",10,16);add(shader,uniforms,"PS_Pulses",7,4);add(shader,uniforms,"PS_PulseShape",4,1);
         if(Uniform.glGetUniformLocation(shader.getId(),"PS_SurfaceFractalSampler")!=-1&&!samplers.contains("PS_SurfaceFractalSampler")){samplers.add("PS_SurfaceFractalSampler");shader.setSampler("PS_SurfaceFractalSampler",null);}
@@ -159,6 +163,7 @@ public final class GeometryEffects {
     public static void apply(ShaderInstance shader){
         boolean useAtlas = applyValues(shader.getName(), (name, values) -> set(shader, name, values), true);
         shader.safeGetUniform("PS_ViewToWorld").set(viewToWorld);
+        shader.safeGetUniform("PS_WorldToClip").set(worldToClip);
         shader.setSampler("PS_SurfaceFractalSampler", useAtlas
                 ? Minecraft.getInstance().getTextureManager().getTexture(TextureAtlas.LOCATION_BLOCKS)
                 : com.mojang.blaze3d.systems.RenderSystem.getShaderTexture(0));
@@ -187,6 +192,7 @@ public final class GeometryEffects {
             };
             applyValues(material, program::set, program.hasUniform(IRIS_BLOCK_ATLAS));
             program.setMatrix("PS_ViewToWorld", viewToWorld);
+            program.setMatrix("PS_WorldToClip", worldToClip);
         } else {
             float[] tint = ApparitionRender.tint();
             program.set("PS_ApparitionTint", tint[0], tint[1], tint[2], tint[3]);
@@ -232,7 +238,7 @@ public final class GeometryEffects {
         uniforms.set("PS_DistantWorldDeformation",distantBend);
         uniforms.set("PS_FractalFractureStrength",fracture);
         uniforms.set("PS_PeyoteStrength",peyote);
-        uniforms.set("PS_WorldUpClip",worldToClip.m10(),worldToClip.m11(),worldToClip.m12(),worldToClip.m13());
+        uniforms.set("PS_NativeTerrainRadius",nativeTerrainRadius);
         uniforms.set("PS_SurfaceFractalStrength",surface?net.minecraft.util.Mth.clamp(h.strength(Effect.SURFACE_FRACTALS),0,1):0);
         uniforms.set("PS_Pulses",pulse==null?0:pulse[0],pulse==null?0:pulse[1],pulse==null?0:pulse[2],pulse==null?0:pulse[3]);
         uniforms.set("PS_PulseShape",GeometryMaterial.pulseShape(phase,name,sphericalFog));

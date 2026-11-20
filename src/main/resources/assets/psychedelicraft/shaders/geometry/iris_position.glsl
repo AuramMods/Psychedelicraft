@@ -1,5 +1,4 @@
 uniform float PS_Enabled;
-uniform mat4 PS_WorldToClip;
 uniform mat4 PS_ClipToWorld;
 uniform vec3 PS_CameraPosition;
 
@@ -9,7 +8,8 @@ vec4 psychedelicraft_terrain_position(vec4 position) {
       && PS_DistantWorldDeformation <= 0.0 && PS_FractalFractureStrength <= 0.0
       && PS_PeyoteStrength <= 0.0)) return position;
   vec4 clip = PS_WorldToClip * position;
-  vec4 deformed = PS_ClipToWorld * psychedelicraft_deform(clip, position.xyz + PS_CameraPosition, length(position.xyz));
+  vec4 deformed = PS_ClipToWorld * psychedelicraft_deform(clip, position.xyz + PS_CameraPosition,
+                                                          length(position.xyz), length(position.xz));
   if (abs(deformed.w) < 0.0001) return position;
   return vec4(deformed.xyz / deformed.w, 1.0);
 }

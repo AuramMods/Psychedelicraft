@@ -25,5 +25,5 @@ void main() {
     PS_SurfaceColor = texture(PS_SurfaceFractalSampler, mix(PS_SurfaceFractalCoords.xy, PS_SurfaceFractalCoords.zw, uv)).rgb;
     __PS_SURFACE_COLOR__
   }
-  gl_Position = psychedelicraft_deform(gl_Position, position, length(view));
+  gl_Position = psychedelicraft_deform(gl_Position, position, length(view), length(relative.xz));
 }

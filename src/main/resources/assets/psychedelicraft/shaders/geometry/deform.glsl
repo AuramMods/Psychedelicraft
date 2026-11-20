@@ -4,27 +4,28 @@ uniform vec3 PS_WavesMatrix;
 uniform float PS_DistantWorldDeformation;
 uniform float PS_FractalFractureStrength;
 uniform float PS_PeyoteStrength;
-uniform vec4 PS_WorldUpClip;
+uniform mat4 PS_WorldToClip;
 uniform vec3 PS_PlayerPosition;
+uniform float PS_NativeTerrainRadius;
 float psychedelicraft_gold_noise(vec2 xy, float seed) {
   const float phi = 1.61803398874989484820459;
   return fract(tan(distance(xy * phi, xy) * seed) * xy.x);
 }
 
-float psychedelicraft_peyote_height(vec2 position, float ticks) {
-  float rise = sin(dot(position, vec2(0.052, 0.019)) - ticks * 0.023);
-  float swell = sin(dot(position, vec2(-0.020, 0.038)) + ticks * 0.017);
-  return 3.0 * rise + 1.5 * swell;
+vec2 psychedelicraft_fracture(vec3 position) {
+  if (PS_FractalFractureStrength <= 0.0) return vec2(0.0);
+  float scroll = PS_WorldTicks / 100.0;
+  return sin(vec2(psychedelicraft_gold_noise(position.xy, position.x + scroll),
+                  psychedelicraft_gold_noise(position.xy, position.y + scroll))) * PS_FractalFractureStrength;
 }
 
 // The legacy distance-based waves measure camera-space distance before projection.
-vec4 psychedelicraft_deform(vec4 clip, vec3 position, float viewDistance) {
+vec4 psychedelicraft_legacy_waves(vec4 clip, vec3 position, float viewDistance, vec2 fracture) {
   float worldTicks = PS_WorldTicks;
   float smallWaves = PS_WavesMatrix.x;
   float bigWaves = PS_WavesMatrix.y;
   float wiggleWaves = PS_WavesMatrix.z;
   float distantWorldDeformation = PS_DistantWorldDeformation;
-  float fractalFractureStrength = PS_FractalFractureStrength;
   vec3 playerPos = PS_PlayerPosition;
   if (smallWaves > 0.0) {
     float w1 = 8.0;
@@ -42,11 +43,7 @@ vec4 psychedelicraft_deform(vec4 clip, vec3 position, float viewDistance) {
   }
 
 
-  if (fractalFractureStrength > 0) {
-    float fractalScollSpeed = worldTicks / 100;
-    clip.x += sin(psychedelicraft_gold_noise(position.xy, position.x + fractalScollSpeed)) * fractalFractureStrength;
-    clip.y += sin(psychedelicraft_gold_noise(position.xy, position.y + fractalScollSpeed)) * fractalFractureStrength;
-  }
+  clip.xy += fracture;
 
   if (wiggleWaves > 0.0) {
     float w1 = 8.0;
@@ -95,10 +92,74 @@ vec4 psychedelicraft_deform(vec4 clip, vec3 position, float viewDistance) {
       clip.w += sin(clip.x * 0.124 * sin(worldTicks * 0.00184298) + worldTicks * 0.018394082) * 0.05 * inf6 * pMul;
     }
   }
+  return clip;
+}
+
+vec3 psychedelicraft_broad_waves(vec3 position, float scale) {
+  vec3 point = position / scale;
+  float ticks = PS_WorldTicks;
+  float small = sin(point.x * 0.068 + ticks * 0.046) * sin(point.z * 0.063 + ticks * 0.033);
+  float wiggle = sin(point.y * 0.073 + ticks * 0.028) * sin(point.z * 0.051 + ticks * 0.047);
+  float big = sin(dot(point.xz, vec2(0.029, 0.022)) + ticks * 0.017);
+  float distant = sin(dot(point.xz, vec2(-0.024, 0.044)) + ticks * 0.022);
+  return scale * vec3(4.0 * wiggle * PS_WavesMatrix.z + 5.0 * big * PS_WavesMatrix.y,
+                      5.0 * small * PS_WavesMatrix.x + 9.0 * big * PS_WavesMatrix.y
+                          + 8.0 * distant * PS_DistantWorldDeformation, 0.0);
+}
+
+float psychedelicraft_peyote_height(vec2 position, float scale) {
+  vec2 point = position / scale;
+  float rise = sin(dot(point, vec2(0.052, 0.019)) - PS_WorldTicks * 0.023);
+  float swell = sin(dot(point, vec2(-0.020, 0.038)) + PS_WorldTicks * 0.017);
+  return scale * (3.0 * rise + 1.5 * swell);
+}
+
+vec3 psychedelicraft_world_offset(vec3 position, float scale, float broadBlend) {
+  vec3 offset = vec3(0.0);
+  if (broadBlend > 0.0) {
+    offset = (psychedelicraft_broad_waves(position, scale) - psychedelicraft_broad_waves(PS_PlayerPosition, scale))
+             * broadBlend;
+  }
   if (PS_PeyoteStrength > 0.0) {
-    float height = psychedelicraft_peyote_height(position.xz, worldTicks)
-                 - psychedelicraft_peyote_height(playerPos.xz, worldTicks);
-    clip += PS_WorldUpClip * (height * PS_PeyoteStrength);
+    offset.y += (psychedelicraft_peyote_height(position.xz, scale) - psychedelicraft_peyote_height(PS_PlayerPosition.xz, scale))
+                * PS_PeyoteStrength;
+  }
+  return offset;
+}
+
+vec4 psychedelicraft_deform(vec4 clip, vec3 position, float viewDistance, float horizontalDistance) {
+  bool movement = any(greaterThan(PS_WavesMatrix, vec3(0.0))) || PS_DistantWorldDeformation > 0.0;
+  float broadBlend = 0.0;
+  float coarseBlend = 0.0;
+  float horizonBlend = 0.0;
+  if (PS_NativeTerrainRadius > 0.0) {
+    // Use the same spatial bands on both sides of the handoff, including during chunk fades.
+    float transitionEnd = max(48.0, PS_NativeTerrainRadius - 16.0);
+    if (movement) broadBlend = smoothstep(max(16.0, transitionEnd - 48.0), transitionEnd, horizontalDistance);
+    coarseBlend = smoothstep(max(160.0, transitionEnd), max(384.0, transitionEnd + 192.0), horizontalDistance);
+    horizonBlend = smoothstep(max(672.0, transitionEnd + 192.0), max(1536.0, transitionEnd + 576.0), horizontalDistance);
+  }
+
+  vec2 fracture = psychedelicraft_fracture(position);
+  if (broadBlend < 1.0) {
+    vec4 legacy = psychedelicraft_legacy_waves(clip, position, viewDistance, fracture);
+    clip = mix(legacy, clip + vec4(fracture, 0.0, 0.0), broadBlend);
+  } else {
+    clip.xy += fracture;
+  }
+
+  if (broadBlend > 0.0 || PS_PeyoteStrength > 0.0) {
+    vec3 offset;
+    if (horizonBlend > 0.0) {
+      offset = psychedelicraft_world_offset(position, 16.0, broadBlend);
+      if (horizonBlend < 1.0) offset = mix(psychedelicraft_world_offset(position, 4.0, broadBlend), offset, horizonBlend);
+    } else if (coarseBlend > 0.0) {
+      offset = psychedelicraft_world_offset(position, 4.0, broadBlend);
+      if (coarseBlend < 1.0) offset = mix(psychedelicraft_world_offset(position, 1.0, broadBlend), offset, coarseBlend);
+    } else {
+      offset = psychedelicraft_world_offset(position, 1.0, broadBlend);
+    }
+    clip += PS_WorldToClip * vec4(offset, 0.0);
   }
   return clip;
 }
