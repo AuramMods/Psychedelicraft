@@ -98,6 +98,22 @@ public final class GeometrySource {
         return renameMain(source, main) + "\n" + extension;
     }
 
+    static String irisModelVertex(String source, String extension) {
+        String code = code(source);
+        var main = MAIN.matcher(code);
+        if (!main.find() || !declares(code, "in", "vec3", "iris_Position")
+                || !declares(code, "uniform", "mat4", "iris_ModelViewMat")) return source;
+        String point = declares(code, "uniform", "vec3", "iris_ChunkOffset")
+                ? "iris_Position + iris_ChunkOffset" : "iris_Position";
+        return renameMain(source, main) + "\n" + extension.replace("__PS_VIEW_POSITION__",
+                "(iris_ModelViewMat * vec4(" + point + ", 1.0)).xyz");
+    }
+
+    static boolean hasIrisColor(String source) {
+        String code = code(source);
+        return MAIN.matcher(code).find() && declares(code, "out", "vec4", "iris_FragData0");
+    }
+
     private static String renameMain(String source, Matcher main) {
         return source.substring(0, main.start()) + "void psychedelicraft_parent_main()" + source.substring(main.end());
     }

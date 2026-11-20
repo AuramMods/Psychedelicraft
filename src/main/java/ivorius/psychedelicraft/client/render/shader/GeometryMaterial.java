@@ -18,7 +18,7 @@ public final class GeometryMaterial {
                 ||shader.contains("see_through")||shader.contains("translucent_moving_block"))return 0;
         if(shader.contains("zero_matter"))return 1;
         if(phase==RenderPhase.STARS||phase==RenderPhase.SKY||phase==RenderPhase.HAND||phase==RenderPhase.MODEL)return 2;
-        if(shader.contains("entity")||shader.contains("glint")||shader.contains("armor")||shader.contains("energy_swirl")||shader.contains("eyes")
+        if(shader.contains("entity")||shader.startsWith("entities_")||shader.contains("glint")||shader.contains("armor")||shader.contains("energy_swirl")||shader.contains("eyes")
                 ||shader.contains("lightning")||shader.contains("leash")||shader.contains("text")||shader.contains("water_mask"))return 2;
         return 3;
     }

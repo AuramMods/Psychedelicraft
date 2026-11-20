@@ -73,8 +73,9 @@ public final class GeometryEffects {
         return GeometrySource.deformDistantTerrain(source, projectedDeformation() + geometryResource("lod_position.gvsh"));
     }
 
-    public static <K> Map<K, String> injectIrisTerrain(Map<K, String> stages, boolean material) throws IOException {
-        if (stages == null) return null;
+    private record IrisStages<K>(K vertex, K fragment, boolean intermediate) {}
+
+    private static <K> IrisStages<K> identifyIrisStages(Map<K, String> stages) {
         K vertex = null;
         K fragment = null;
         boolean intermediate = false;
@@ -86,16 +87,37 @@ public final class GeometryEffects {
                 default -> intermediate = true;
             }
         }
-        if (vertex == null) return stages;
-        String source = stages.get(vertex);
+        return new IrisStages<>(vertex, fragment, intermediate);
+    }
+
+    public static <K> Map<K, String> injectIrisTerrain(Map<K, String> stages, boolean material) throws IOException {
+        if (stages == null) return null;
+        var layout = identifyIrisStages(stages);
+        if (layout.vertex == null) return stages;
+        String source = stages.get(layout.vertex);
         String replacement = GeometrySource.deformIrisTerrain(source, projectedDeformation());
         if (source.equals(replacement)) return stages;
         var patched = new LinkedHashMap<>(stages);
-        if (material && !intermediate && fragment != null && GeometrySource.supportsIrisMaterial(source, stages.get(fragment))) {
+        if (material && !layout.intermediate && layout.fragment != null && GeometrySource.supportsIrisMaterial(source, stages.get(layout.fragment))) {
             replacement = GeometrySource.irisTerrainMaterial(replacement, geometryResource("iris_material.gvsh"), true);
-            patched.put(fragment, GeometrySource.irisTerrainMaterial(stages.get(fragment), extension(false), false));
+            patched.put(layout.fragment, GeometrySource.irisTerrainMaterial(stages.get(layout.fragment), extension(false), false));
         }
-        patched.put(vertex, replacement);
+        patched.put(layout.vertex, replacement);
+        return patched;
+    }
+
+    public static <K> Map<K, String> injectIrisModel(Map<K, String> stages) throws IOException {
+        if (stages == null) return null;
+        var layout = identifyIrisStages(stages);
+        if (layout.vertex == null || layout.fragment == null || layout.intermediate) return stages;
+        String vertex = stages.get(layout.vertex);
+        String fragment = stages.get(layout.fragment);
+        if (!GeometrySource.hasIrisColor(fragment)) return stages;
+        String replacement = GeometrySource.irisModelVertex(vertex, geometryResource("deform.glsl") + geometryResource("iris_model.gvsh"));
+        if (vertex.equals(replacement)) return stages;
+        var patched = new LinkedHashMap<>(stages);
+        patched.put(layout.vertex, replacement);
+        patched.put(layout.fragment, GeometrySource.irisTerrainMaterial(fragment, extension(false), false));
         return patched;
     }
     public static void register(ShaderInstance shader,List<Uniform> uniforms,List<String> samplers){
@@ -111,7 +133,7 @@ public final class GeometryEffects {
         if(Uniform.glGetUniformLocation(shader.getId(),name)!=-1&&uniforms.stream().noneMatch(uniform->uniform.getName().equals(name)))uniforms.add(new Uniform(name,type,count,shader));
     }
     public static void apply(ShaderInstance shader){
-        boolean useAtlas = applyValues(shader.getName(), (name, values) -> set(shader, name, values));
+        boolean useAtlas = applyValues(shader.getName(), (name, values) -> set(shader, name, values), true);
         shader.safeGetUniform("PS_ViewToWorld").set(viewToWorld);
         shader.setSampler("PS_SurfaceFractalSampler", useAtlas
                 ? Minecraft.getInstance().getTextureManager().getTexture(TextureAtlas.LOCATION_BLOCKS)
@@ -120,24 +142,34 @@ public final class GeometryEffects {
 
     public static void applyTerrain(GeometryProgram program) {
         if (!program.hasGeometry()) return;
-        applyValues("terrain", program::set);
+        applyValues("terrain", program::set, true);
         program.setMatrix("PS_ViewToWorld", viewToWorld);
         program.setMatrix("PS_WorldToClip", worldToClip);
         program.setMatrix("PS_ClipToWorld", clipToWorld);
+    }
+
+    public static void applyIrisModel(String shaderName, GeometryProgram program) {
+        if (program.hasGeometry()) {
+            applyValues(shaderName, program::set, false);
+            program.setMatrix("PS_ViewToWorld", viewToWorld);
+        } else {
+            float[] tint = ApparitionRender.tint();
+            program.set("PS_ApparitionTint", tint[0], tint[1], tint[2], tint[3]);
+        }
     }
 
     private interface UniformValues {
         void set(String name, float... values);
     }
 
-    private static boolean applyValues(String name, UniformValues uniforms) {
+    private static boolean applyValues(String name, UniformValues uniforms, boolean atlas) {
         float[] tint = ApparitionRender.tint();
         uniforms.set("PS_ApparitionTint", tint[0], tint[1], tint[2], tint[3]);
         var client=Minecraft.getInstance();var phase=RenderPhase.current();
         boolean active=phase.active()&&client.level!=null&&ClientDrugState.alive(client.player)&&PSClientConfig.SHADERS_3D.get();
         var h=ClientEffects.hallucinations();var drugs=active?ClientDrugState.get(client.player):null;
         boolean deform=active&&phase.deforms();
-        boolean surface=active&&GeometryMaterial.surface(phase,name);
+        boolean surface=active&&atlas&&GeometryMaterial.surface(phase,name);
         float[] pulse=active&&GeometryMaterial.pulses(name)?h.pulseColor():null;
         boolean any=active&&(deform&&(h.strength(Effect.SMALL_WAVES)>0||h.strength(Effect.BIG_WAVES)>0||h.strength(Effect.WIGGLE_WAVES)>0||h.strength(Effect.DISTANT_WORLD_DEFORMATION)>0||drugs.getActiveValue(DrugType.LSD)>0)||surface&&h.strength(Effect.SURFACE_FRACTALS)>0||pulse!=null);
         uniforms.set("PS_Enabled",any?1:0);

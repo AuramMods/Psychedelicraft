@@ -1,0 +1,18 @@
+uniform float PS_Enabled;
+uniform mat4 PS_ViewToWorld;
+uniform vec3 PS_CameraPosition;
+uniform float PS_PulseShape;
+out vec3 PS_SurfaceColor;
+out float PS_PulseDistance;
+
+void main() {
+  psychedelicraft_parent_main();
+  PS_SurfaceColor = vec3(0.0);
+  PS_PulseDistance = 0.0;
+  if (PS_Enabled <= 0.0) return;
+  vec3 view = __PS_VIEW_POSITION__;
+  vec3 relative = (PS_ViewToWorld * vec4(view, 1.0)).xyz;
+  if (PS_PulseShape == 1.0) PS_PulseDistance = length(view);
+  else if (PS_PulseShape > 1.0) PS_PulseDistance = max(length(relative.xz), abs(relative.y));
+  gl_Position = psychedelicraft_deform(gl_Position, relative + PS_CameraPosition);
+}
