@@ -18,16 +18,22 @@ import net.minecraft.resources.ResourceLocation;
 import org.joml.Matrix4f;
 import java.io.*;
 import java.nio.charset.StandardCharsets;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 
 public final class GeometryEffects {
     private static final Matrix4f viewToWorld=new Matrix4f();
+    private static final Matrix4f worldToClip = new Matrix4f();
+    private static final Matrix4f clipToWorld = new Matrix4f();
     private static float partial;
     private static boolean sphericalFog;
     private GeometryEffects(){}
     public static void beginFrame(float tickDelta){partial=tickDelta;sphericalFog=false;}
-    public static void captureView(Matrix4f view){
+    public static void captureView(Matrix4f view, Matrix4f projection){
         viewToWorld.set(view).invert();
+        worldToClip.set(projection).mul(view);
+        clipToWorld.set(worldToClip).invert();
         var client=Minecraft.getInstance();var camera=client.gameRenderer.getMainCamera();
         var entity=camera.getEntity();
         boolean impaired=entity instanceof net.minecraft.world.entity.LivingEntity living
@@ -38,7 +44,11 @@ public final class GeometryEffects {
                 ||client.gui.getBossOverlay().shouldCreateWorldFog());
     }
     private static String extension(boolean vertex)throws IOException{
-        var id=Psychedelicraft.id("shaders/geometry/basic."+(vertex?"gvsh":"gfsh"));
+        String source = geometryResource(vertex ? "basic.gvsh" : "basic.gfsh");
+        return vertex ? source.replace("__PS_DEFORMATION__", geometryResource("deform.glsl")) : source;
+    }
+    private static String geometryResource(String name) throws IOException {
+        var id=Psychedelicraft.id("shaders/geometry/"+name);
         var manager=Minecraft.getInstance().getResourceManager();
         var resource=manager==null?java.util.Optional.<net.minecraft.server.packs.resources.Resource>empty():manager.getResource(id);
         try(var stream=resource.isPresent()?resource.get().open():GeometryEffects.class.getResourceAsStream("/assets/"+id.getNamespace()+"/"+id.getPath())){
@@ -53,6 +63,21 @@ public final class GeometryEffects {
     }
     public static String injectTerrain(String source, boolean vertex) throws IOException {
         return GeometrySource.combineTerrain(source, extension(vertex), vertex);
+    }
+    public static <K> Map<K, String> injectIrisTerrain(Map<K, String> stages) throws IOException {
+        if (stages == null) return null;
+        for (var stage : stages.entrySet()) {
+            if (!(stage.getKey() instanceof Enum<?> type) || !type.name().equals("VERTEX")) continue;
+            String source = stage.getValue();
+            if (source == null) return stages;
+            String replacement = GeometrySource.deformIrisTerrain(source, geometryResource("deform.glsl")
+                    + geometryResource("iris_position.glsl"));
+            if (source.equals(replacement)) return stages;
+            var patched = new LinkedHashMap<>(stages);
+            patched.put(stage.getKey(), replacement);
+            return patched;
+        }
+        return stages;
     }
     public static void register(ShaderInstance shader,List<Uniform> uniforms,List<String> samplers){
         add(shader,uniforms,"PS_Enabled",4,1);add(shader,uniforms,"PS_WorldTicks",4,1);add(shader,uniforms,"PS_WavesMatrix",6,3);
@@ -77,7 +102,9 @@ public final class GeometryEffects {
     public static void applyTerrain(GeometryProgram program) {
         if (!program.hasGeometry()) return;
         applyValues("terrain", program::set);
-        program.setViewToWorld(viewToWorld);
+        program.setMatrix("PS_ViewToWorld", viewToWorld);
+        program.setMatrix("PS_WorldToClip", worldToClip);
+        program.setMatrix("PS_ClipToWorld", clipToWorld);
     }
 
     private interface UniformValues {

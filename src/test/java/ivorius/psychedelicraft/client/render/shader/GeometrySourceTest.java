@@ -5,7 +5,17 @@ import java.nio.charset.StandardCharsets;
 import static org.junit.Assert.*;
 
 public class GeometrySourceTest {
-    private static String extension(boolean vertex)throws Exception{try(var in=GeometrySourceTest.class.getResourceAsStream("/assets/psychedelicraft/shaders/geometry/basic."+(vertex?"gvsh":"gfsh"))){assertNotNull(in);return new String(in.readAllBytes(),StandardCharsets.UTF_8);}}
+    private static String extension(boolean vertex) throws Exception {
+        String source = geometryResource(vertex ? "basic.gvsh" : "basic.gfsh");
+        return vertex ? source.replace("__PS_DEFORMATION__", geometryResource("deform.glsl")) : source;
+    }
+
+    private static String geometryResource(String name) throws Exception {
+        try (var in = GeometrySourceTest.class.getResourceAsStream("/assets/psychedelicraft/shaders/geometry/" + name)) {
+            assertNotNull(in);
+            return new String(in.readAllBytes(), StandardCharsets.UTF_8);
+        }
+    }
     @Test public void terrainCoordinatesIncludeNativeChunkOffsetBeforeRecoveringWorldPosition()throws Exception{
         String original="#version 150\nin vec3 Position;\nuniform vec3 ChunkOffset;\nuniform mat4 ModelViewMat;\nout vec4 vertexColor;\nvoid main() { gl_Position = ModelViewMat * vec4(Position + ChunkOffset, 1.0); vertexColor=vec4(1); }";
         String actual=GeometrySource.combine(original,extension(true),true);assertTrue(actual.contains("(ModelViewMat * vec4((Position + ChunkOffset), 1.0)).xyz"));assertTrue(actual.contains("vertexColor.rgb = mix(vertexColor.rgb, PS_SurfaceColor"));assertTrue(actual.contains("vec3 position = relative + PS_CameraPosition"));assertFalse(actual.contains("__PS_"));assertEquals(1,actual.split("void main\\(\\)",-1).length-1);

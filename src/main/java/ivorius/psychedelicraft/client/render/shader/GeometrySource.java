@@ -2,11 +2,14 @@
 package ivorius.psychedelicraft.client.render.shader;
 
 import java.util.regex.Pattern;
+import java.util.regex.Matcher;
 
 /** Compose core stages without changing the native program's lighting, fog, textures or discard paths. */
 public final class GeometrySource {
     private static final Pattern COMMENTS=Pattern.compile("(?s)/\\*.*?\\*/|//[^\\r\\n]*");
     private static final Pattern MAIN=Pattern.compile("\\bvoid\\s+main\\s*\\(\\s*(?:void\\s*)?\\)");
+    private static final Pattern IRIS_CHUNK_POSITION = Pattern.compile(
+            "\\bvec4\\s+getVertexPosition\\s*\\(\\s*\\)\\s*\\{\\s*return\\s+(vec4\\(\\s*_vert_position[^;]*\\));");
     private GeometrySource(){}
     static String code(String source){return COMMENTS.matcher(source).replaceAll(match->{char[] chars=match.group().toCharArray();for(int i=0;i<chars.length;i++)if(chars[i]!='\r'&&chars[i]!='\n')chars[i]=' ';return new String(chars);});}
     static boolean declares(String code,String qualifier,String type,String name){return Pattern.compile("\\b"+qualifier+"\\s+"+type+"\\s+[^;{}]*\\b"+name+"\\b[^;{}]*;").matcher(code).find();}
@@ -53,7 +56,17 @@ public final class GeometrySource {
         return renameMain(source, main) + "\n// Psychedelicraft terrain stage\n" + extension;
     }
 
-    private static String renameMain(String source, java.util.regex.Matcher main) {
+    static String deformIrisTerrain(String source, String deformation) {
+        var vertex = IRIS_CHUNK_POSITION.matcher(code(source));
+        if (!vertex.find()) return source;
+        String position = source.substring(vertex.start(1), vertex.end(1));
+        return source.substring(0, vertex.start()) + "vec4 psychedelicraft_terrain_position(vec4 position);\n"
+                + source.substring(vertex.start(), vertex.start(1))
+                + "psychedelicraft_terrain_position(" + position + ")" + source.substring(vertex.end(1))
+                + "\n" + deformation;
+    }
+
+    private static String renameMain(String source, Matcher main) {
         return source.substring(0, main.start()) + "void psychedelicraft_parent_main()" + source.substring(main.end());
     }
 }

@@ -34,6 +34,8 @@
     "client.EmbeddiumShaderSourceMixin",
     "client.EmbeddiumTerrainMixin",
     "client.OculusShaderTintMixin",
+    "client.OculusTerrainSourceMixin",
+    "client.OculusTerrainMixin",
     "client.GameGeometryMixin",
     "client.HandGeometryMixin",
     "client.LevelGeometryMixin",

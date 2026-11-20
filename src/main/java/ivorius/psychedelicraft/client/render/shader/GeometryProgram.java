@@ -35,8 +35,8 @@ public final class GeometryProgram {
         }
     }
 
-    void setViewToWorld(Matrix4f value) {
-        int location = location("PS_ViewToWorld");
+    void setMatrix(String name, Matrix4f value) {
+        int location = location(name);
         if (location < 0) return;
         try (var stack = MemoryStack.stackPush()) {
             GL20.glUniformMatrix4fv(location, false, value.get(stack.mallocFloat(16)));

@@ -15,7 +15,7 @@ abstract class LevelGeometryMixin {
     @Shadow private VertexBuffer starBuffer;
     @Unique private RenderPhase.Scope psychedelicraft$skyScope,psychedelicraft$cloudScope,psychedelicraft$endSkyScope,psychedelicraft$borderScope;
     @Inject(method="renderLevel",at=@At("HEAD"))
-    private void psychedelicraft$view(PoseStack pose,float partial,long finish,boolean outline,Camera camera,GameRenderer game,LightTexture light,Matrix4f projection,CallbackInfo ci){GeometryEffects.captureView(pose.last().pose());}
+    private void psychedelicraft$view(PoseStack pose,float partial,long finish,boolean outline,Camera camera,GameRenderer game,LightTexture light,Matrix4f projection,CallbackInfo ci){GeometryEffects.captureView(pose.last().pose(),projection);}
     @Inject(method="renderSky",at=@At("HEAD"))
     private void psychedelicraft$sky(PoseStack pose,Matrix4f projection,float partial,Camera camera,boolean fog,Runnable setupFog,CallbackInfo ci){psychedelicraft$skyScope=RenderPhase.SKY.enter();}
     @Inject(method="renderSky",at=@At("RETURN"))
