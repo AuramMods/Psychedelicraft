@@ -31,6 +31,7 @@
     "client.ShaderBlendAccessor",
     "client.CoreProgramMixin",
     "client.GeometryShaderMixin",
+    "client.OculusShaderTintMixin",
     "client.GameGeometryMixin",
     "client.HandGeometryMixin",
     "client.LevelGeometryMixin",
