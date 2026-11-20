@@ -3,6 +3,7 @@ package ivorius.psychedelicraft.client.render.shader;
 import ivorius.psychedelicraft.client.ClientDrugState;
 
 import com.mojang.blaze3d.shaders.*;
+import com.mojang.blaze3d.systems.RenderSystem;
 import ivorius.psychedelicraft.Psychedelicraft;
 import ivorius.psychedelicraft.client.ClientEffects;
 import ivorius.psychedelicraft.client.render.*;
@@ -12,6 +13,7 @@ import ivorius.psychedelicraft.entity.drug.*;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.Camera;
 import net.minecraft.client.renderer.ShaderInstance;
+import net.minecraft.client.renderer.blockentity.TheEndPortalRenderer;
 import net.minecraft.client.renderer.texture.TextureAtlas;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.resources.ResourceLocation;
@@ -178,6 +180,8 @@ public final class GeometryEffects {
             String material = switch (shaderName) {
                 case "sky_basic" -> "position";
                 case "sky_basic_color" -> "position_color";
+                case "block_entity", "block_entity_bright", "block_entity_diffuse", "be_translucent" ->
+                        drawsIrisEndSurface() ? "rendertype_end_portal" : shaderName;
                 default -> shaderName;
             };
             applyValues(material, program::set, program.hasUniform(IRIS_BLOCK_ATLAS));
@@ -186,6 +190,13 @@ public final class GeometryEffects {
             float[] tint = ApparitionRender.tint();
             program.set("PS_ApparitionTint", tint[0], tint[1], tint[2], tint[3]);
         }
+    }
+
+    private static boolean drawsIrisEndSurface() {
+        // Oculus submits both portal surfaces as textured block-entity geometry.
+        var textures = Minecraft.getInstance().getTextureManager();
+        var portal = textures.getTexture(TheEndPortalRenderer.END_PORTAL_LOCATION, null);
+        return portal != null && portal.getId() == RenderSystem.getShaderTexture(0);
     }
 
     public static int blockAtlasId() {
