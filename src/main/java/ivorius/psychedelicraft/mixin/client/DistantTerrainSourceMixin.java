@@ -15,8 +15,9 @@ abstract class DistantTerrainSourceMixin {
     @Inject(method = "loadFile", at = @At("RETURN"), cancellable = true, require = 0)
     private static void psychedelicraft$deformDistantTerrain(String path, boolean include, StringBuilder builder,
                                                               CallbackInfoReturnable<StringBuilder> cir) throws IOException {
-        if (path.equals("shaders/standard.vert")) {
-            cir.setReturnValue(new StringBuilder(GeometryEffects.injectDistantTerrain(cir.getReturnValue().toString())));
+        boolean vertex = path.equals("shaders/standard.vert");
+        if (vertex || path.equals("shaders/flat_shaded.frag")) {
+            cir.setReturnValue(new StringBuilder(GeometryEffects.injectDistantTerrain(cir.getReturnValue().toString(), vertex)));
         }
     }
 }

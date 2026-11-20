@@ -1,6 +1,24 @@
+uniform sampler2D PS_DhBlockAtlas;
+uniform vec4 PS_SurfaceFractalCoords;
+uniform float PS_SurfaceFractalStrength;
+uniform float PS_PulseShape;
+out vec3 PS_SurfaceColor;
+out float PS_PulseDistance;
+
 void main() {
   psychedelicraft_parent_main();
+  PS_SurfaceColor = vec3(0.0);
+  PS_PulseDistance = 0.0;
   if (PS_Enabled <= 0.0) return;
+  vec3 relative = vertexWorldPos;
+  if (PS_PulseShape == 1.0) PS_PulseDistance = length(relative);
+  else if (PS_PulseShape > 1.0) PS_PulseDistance = max(length(relative.xz), abs(relative.y));
+  if (PS_SurfaceFractalStrength > 0.0) {
+    vec3 world = relative + PS_CameraPosition;
+    vec2 uv = mod(world.xz + world.yy, 4.0) / 4.0;
+    PS_SurfaceColor = texture(PS_DhBlockAtlas, mix(PS_SurfaceFractalCoords.xy, PS_SurfaceFractalCoords.zw, uv)).rgb;
+    vertexColor.rgb = mix(vertexColor.rgb, PS_SurfaceColor, PS_SurfaceFractalStrength);
+  }
   vec4 position = psychedelicraft_terrain_position(vec4(vertexWorldPos, 1.0));
   vertexWorldPos = position.xyz;
   gl_Position = uCombinedMatrix * position;

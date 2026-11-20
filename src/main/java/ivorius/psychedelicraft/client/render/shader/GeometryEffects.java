@@ -24,6 +24,7 @@ import java.util.Map;
 
 public final class GeometryEffects {
     public static final String IRIS_BLOCK_ATLAS = "PS_IrisBlockAtlas";
+    public static final String DH_BLOCK_ATLAS = "PS_DhBlockAtlas";
     public enum IrisTerrainPass { NEAR, DISTANT, SHADOW }
     private static final Matrix4f viewToWorld=new Matrix4f();
     private static final Matrix4f worldToClip = new Matrix4f();
@@ -71,8 +72,11 @@ public final class GeometryEffects {
         return geometryResource("deform.glsl") + geometryResource("iris_position.glsl");
     }
 
-    public static String injectDistantTerrain(String source) throws IOException {
-        return GeometrySource.deformDistantTerrain(source, projectedDeformation() + geometryResource("lod_position.gvsh"));
+    public static String injectDistantTerrain(String source, boolean vertex) throws IOException {
+        if (vertex) {
+            return GeometrySource.deformDistantTerrain(source, projectedDeformation() + geometryResource("lod_position.gvsh"));
+        }
+        return GeometrySource.combineTerrain(source, extension(false), false);
     }
 
     private record IrisStages<K>(K vertex, K fragment, boolean intermediate) {}
