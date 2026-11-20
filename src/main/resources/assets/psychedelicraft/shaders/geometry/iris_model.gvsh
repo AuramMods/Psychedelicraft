@@ -2,6 +2,9 @@ uniform float PS_Enabled;
 uniform mat4 PS_ViewToWorld;
 uniform vec3 PS_CameraPosition;
 uniform float PS_PulseShape;
+uniform sampler2D PS_IrisBlockAtlas;
+uniform vec4 PS_SurfaceFractalCoords;
+uniform float PS_SurfaceFractalStrength;
 out vec3 PS_SurfaceColor;
 out float PS_PulseDistance;
 
@@ -12,7 +15,13 @@ void main() {
   if (PS_Enabled <= 0.0) return;
   vec3 view = __PS_VIEW_POSITION__;
   vec3 relative = (PS_ViewToWorld * vec4(view, 1.0)).xyz;
+  vec3 position = relative + PS_CameraPosition;
   if (PS_PulseShape == 1.0) PS_PulseDistance = length(view);
   else if (PS_PulseShape > 1.0) PS_PulseDistance = max(length(relative.xz), abs(relative.y));
-  gl_Position = psychedelicraft_deform(gl_Position, relative + PS_CameraPosition);
+  if (PS_SurfaceFractalStrength > 0.0) {
+    vec2 uv = mod(position.xz + position.yy, 4.0) / 4.0;
+    PS_SurfaceColor = texture(PS_IrisBlockAtlas, mix(PS_SurfaceFractalCoords.xy, PS_SurfaceFractalCoords.zw, uv)).rgb;
+    __PS_SURFACE_COLOR__
+  }
+  gl_Position = psychedelicraft_deform(gl_Position, position);
 }

@@ -23,6 +23,8 @@ import java.util.List;
 import java.util.Map;
 
 public final class GeometryEffects {
+    public static final String IRIS_BLOCK_ATLAS = "PS_IrisBlockAtlas";
+    public enum IrisTerrainPass { NEAR, DISTANT, SHADOW }
     private static final Matrix4f viewToWorld=new Matrix4f();
     private static final Matrix4f worldToClip = new Matrix4f();
     private static final Matrix4f clipToWorld = new Matrix4f();
@@ -90,7 +92,7 @@ public final class GeometryEffects {
         return new IrisStages<>(vertex, fragment, intermediate);
     }
 
-    public static <K> Map<K, String> injectIrisTerrain(Map<K, String> stages, boolean material) throws IOException {
+    public static <K> Map<K, String> injectIrisTerrain(Map<K, String> stages, IrisTerrainPass pass) throws IOException {
         if (stages == null) return null;
         var layout = identifyIrisStages(stages);
         if (layout.vertex == null) return stages;
@@ -98,9 +100,11 @@ public final class GeometryEffects {
         String replacement = GeometrySource.deformIrisTerrain(source, projectedDeformation());
         if (source.equals(replacement)) return stages;
         var patched = new LinkedHashMap<>(stages);
-        if (material && !layout.intermediate && layout.fragment != null && GeometrySource.supportsIrisMaterial(source, stages.get(layout.fragment))) {
-            replacement = GeometrySource.irisTerrainMaterial(replacement, geometryResource("iris_material.gvsh"), true);
-            patched.put(layout.fragment, GeometrySource.irisTerrainMaterial(stages.get(layout.fragment), extension(false), false));
+        boolean distant = pass == IrisTerrainPass.DISTANT;
+        if (pass != IrisTerrainPass.SHADOW && !layout.intermediate && layout.fragment != null
+                && GeometrySource.supportsIrisMaterial(source, stages.get(layout.fragment), distant)) {
+            replacement = GeometrySource.irisTerrainVertexMaterial(replacement, geometryResource("iris_material.gvsh"), distant);
+            patched.put(layout.fragment, GeometrySource.irisColorFragment(stages.get(layout.fragment), extension(false), false));
         }
         patched.put(layout.vertex, replacement);
         return patched;
@@ -117,7 +121,7 @@ public final class GeometryEffects {
         if (vertex.equals(replacement)) return stages;
         var patched = new LinkedHashMap<>(stages);
         patched.put(layout.vertex, replacement);
-        patched.put(layout.fragment, GeometrySource.irisTerrainMaterial(fragment, extension(false), false));
+        patched.put(layout.fragment, GeometrySource.irisColorFragment(fragment, extension(false), !GeometrySource.irisModelVertexColor(vertex)));
         return patched;
     }
     public static void register(ShaderInstance shader,List<Uniform> uniforms,List<String> samplers){
@@ -150,12 +154,16 @@ public final class GeometryEffects {
 
     public static void applyIrisModel(String shaderName, GeometryProgram program) {
         if (program.hasGeometry()) {
-            applyValues(shaderName, program::set, false);
+            applyValues(shaderName, program::set, program.hasUniform(IRIS_BLOCK_ATLAS));
             program.setMatrix("PS_ViewToWorld", viewToWorld);
         } else {
             float[] tint = ApparitionRender.tint();
             program.set("PS_ApparitionTint", tint[0], tint[1], tint[2], tint[3]);
         }
+    }
+
+    public static int blockAtlasId() {
+        return Minecraft.getInstance().getTextureManager().getTexture(TextureAtlas.LOCATION_BLOCKS).getId();
     }
 
     private interface UniformValues {

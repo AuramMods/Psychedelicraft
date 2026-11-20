@@ -75,27 +75,32 @@ public final class GeometrySource {
         return renameMain(source, main) + "\n" + deformation;
     }
 
-    static boolean supportsIrisMaterial(String vertex, String fragment) {
+    static boolean supportsIrisMaterial(String vertex, String fragment, boolean distant) {
         String vertexCode = code(vertex);
         String fragmentCode = code(fragment);
         return MAIN.matcher(vertexCode).find() && declares(vertexCode, "out", "vec4", "color")
                 && MAIN.matcher(fragmentCode).find() && declares(fragmentCode, "in", "vec4", "color")
-                && declares(fragmentCode, "uniform", "sampler2D", "gtexture")
+                && (distant || declares(fragmentCode, "uniform", "sampler2D", "gtexture"))
                 && declares(fragmentCode, "out", "vec4", "iris_FragData0");
     }
 
-    static String irisTerrainMaterial(String source, String extension, boolean vertex) {
+    static String irisTerrainVertexMaterial(String source, String extension, boolean distant) {
         String code = code(source);
         var main = MAIN.matcher(code);
         if (!main.find()) return source;
-        if (vertex) {
-            String sampler = declares(code, "uniform", "sampler2D", "gtexture") ? "" : "uniform sampler2D gtexture;\n";
-            extension = sampler + extension;
-        } else {
-            extension = extension.replace("__PS_FRAGMENT_COLOR__", "iris_FragData0")
-                    .replace("__PS_SURFACE_FALLBACK__", "");
-        }
-        return renameMain(source, main) + "\n" + extension;
+        String atlas = distant ? GeometryEffects.IRIS_BLOCK_ATLAS : "gtexture";
+        String sampler = declares(code, "uniform", "sampler2D", atlas) ? "" : "uniform sampler2D " + atlas + ";\n";
+        String position = distant ? "modelOffset + _vert_position" : "_vert_position + u_RegionOffset + _get_draw_translation(_draw_id)";
+        return renameMain(source, main) + "\n" + sampler + extension.replace("__PS_ATLAS__", atlas)
+                .replace("__PS_TERRAIN_POSITION__", position);
+    }
+
+    static String irisColorFragment(String source, String extension, boolean surfaceFallback) {
+        var main = MAIN.matcher(code(source));
+        if (!main.find()) return source;
+        return renameMain(source, main) + "\n" + extension.replace("__PS_FRAGMENT_COLOR__", "iris_FragData0")
+                .replace("__PS_SURFACE_FALLBACK__", surfaceFallback
+                        ? "iris_FragData0.rgb = mix(iris_FragData0.rgb, PS_SurfaceColor, PS_SurfaceFractalStrength);" : "");
     }
 
     static String irisModelVertex(String source, String extension) {
@@ -106,7 +111,13 @@ public final class GeometrySource {
         String point = declares(code, "uniform", "vec3", "iris_ChunkOffset")
                 ? "iris_Position + iris_ChunkOffset" : "iris_Position";
         return renameMain(source, main) + "\n" + extension.replace("__PS_VIEW_POSITION__",
-                "(iris_ModelViewMat * vec4(" + point + ", 1.0)).xyz");
+                        "(iris_ModelViewMat * vec4(" + point + ", 1.0)).xyz")
+                .replace("__PS_SURFACE_COLOR__", irisModelVertexColor(source)
+                        ? "color.rgb = mix(color.rgb, PS_SurfaceColor, PS_SurfaceFractalStrength);" : "");
+    }
+
+    static boolean irisModelVertexColor(String source) {
+        return declares(code(source), "out", "vec4", "color");
     }
 
     static boolean hasIrisColor(String source) {

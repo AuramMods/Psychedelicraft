@@ -21,7 +21,11 @@ public final class GeometryProgram {
     }
 
     boolean hasGeometry() {
-        return location("PS_Enabled") >= 0;
+        return hasUniform("PS_Enabled");
+    }
+
+    boolean hasUniform(String name) {
+        return location(name) >= 0;
     }
 
     void set(String name, float... values) {
