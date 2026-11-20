@@ -77,9 +77,54 @@ public final class MolotovGameTests {
  @GameTest(template="world_fluid") public static void delayedOwnerSpawnResolvesOnlyTheMatchingNativeEntityIdentity(GameTestHelper h){
   var level=h.getLevel();var owner=EntityType.COW.create(level);owner.setNoAi(true);owner.setPos(h.absolutePos(P).getCenter());var projectile=new MolotovCocktailEntity(level,owner,filled(PSItems.MOLOTOV_COCKTAIL.get(),1000));var data=new FriendlyByteBuf(Unpooled.buffer());try{projectile.writeSpawnData(data);var peer=PSEntities.MOLOTOV_COCKTAIL.get().create(level);peer.readSpawnData(data);check(peer.getOwner()==null,"a not-yet-tracked owner does not resolve prematurely");var wrong=EntityType.COW.create(level);wrong.setId(owner.getId());wrong.setNoAi(true);wrong.setPos(h.absolutePos(P).getCenter());level.addFreshEntity(wrong);check(peer.getOwner()==null,"an unrelated entity reusing the network id cannot become the owner");wrong.discard();level.addFreshEntity(owner);check(peer.getOwner()==owner,"later native entity registration resolves the retained id and UUID without another spawn packet");owner.discard();}finally{data.release();}h.succeed();
  }
- @GameTest(template="world_fluid") public static void savedOfflineOwnerUuidSurvivesTrackingBeforeReconnection(GameTestHelper h){
-  var level=h.getLevel();var owner=EntityType.COW.create(level);owner.setNoAi(true);owner.setPos(h.absolutePos(P).getCenter());var original=new MolotovCocktailEntity(level,owner,filled(PSItems.MOLOTOV_COCKTAIL.get(),1733));var saved=new CompoundTag();original.save(saved);var restored=(MolotovCocktailEntity)EntityType.loadEntityRecursive(saved,level,java.util.function.Function.identity());check(restored.getOwner()==null,"native saved owner is currently absent from the world");var data=new FriendlyByteBuf(Unpooled.buffer());try{restored.writeSpawnData(data);var peer=PSEntities.MOLOTOV_COCKTAIL.get().create(level);peer.readSpawnData(data);check(peer.getOwner()==null,"tracking with no live owner keeps the native saved UUID pending");level.addFreshEntity(owner);check(peer.getOwner()==owner,"native UUID resolves after later reconnection even without an original network entity id");owner.discard();}finally{data.release();}h.succeed();
+ private static ChunkPos ownerChunk;
+ private static LivingEntity returningOwner;
+
+ @GameTest(template="world_fluid", batch="molotov_owner_visibility", timeoutTicks=1200)
+ public static void savedOfflineOwnerUuidSurvivesTrackingBeforeReconnection(GameTestHelper h){
+     var level=h.getLevel();
+     var owner=EntityType.COW.create(level);
+     var origin=h.absolutePos(P);
+     owner.setPos(origin.getCenter());
+     var original=new MolotovCocktailEntity(level,owner,filled(PSItems.MOLOTOV_COCKTAIL.get(),1733));
+     var saved=new CompoundTag();
+     check(original.save(saved),"native save writes the offline owner's identity");
+     var restored=(MolotovCocktailEntity)EntityType.loadEntityRecursive(saved,level,java.util.function.Function.identity());
+     check(restored!=null&&restored.getOwner()==null,"native saved owner is still offline");
+     var peer=PSEntities.MOLOTOV_COCKTAIL.get().create(level);
+     var data=new FriendlyByteBuf(Unpooled.buffer());
+     try{
+         restored.writeSpawnData(data);
+         peer.readSpawnData(data);
+     }finally{data.release();}
+     check(peer.getOwner()==null,"tracking before the owner returns does not resolve an unrelated entity");
+
+     // A reconnect creates a new entity ID. Its UUID only becomes queryable when its chunk starts tracking entities.
+     var rejoined=EntityType.COW.create(level);
+     rejoined.setUUID(owner.getUUID());
+     rejoined.setNoAi(true);
+     rejoined.setNoGravity(true);
+     rejoined.setPos(origin.getX()+1000000.5,300,origin.getZ()+1000000.5);
+     returningOwner=rejoined;
+     check(rejoined.getId()!=owner.getId(),"the returning owner has a fresh network identity");
+     check(level.addFreshEntity(rejoined)&&rejoined.isAddedToWorld()&&!rejoined.isRemoved(),"native world accepts the returning owner");
+     check(level.getEntity(owner.getUUID())==null&&peer.getOwner()==null,"accepted owner remains hidden in the unrequested chunk");
+
+     ownerChunk=new ChunkPos(rejoined.blockPosition());
+     long acceptedAt=level.getGameTime();
+     level.setChunkForced(ownerChunk.x,ownerChunk.z,true);
+     h.startSequence().thenWaitUntil(()->check(level.getEntity(owner.getUUID())==rejoined,"native chunk tracking exposes the returning owner"))
+             .thenExecute(()->{
+                 check(peer.getOwner()==rejoined,"the original tracking packet resolves the native UUID without another packet");
+                 com.mojang.logging.LogUtils.getLogger().info("MOLOTOV_OWNER_VISIBILITY elapsedTicks={} acceptedWhileHidden=true resolvedSameUuid=true",level.getGameTime()-acceptedAt);
+             }).thenSucceed();
  }
+
+ @AfterBatch(batch="molotov_owner_visibility") public static void cleanReturningOwner(net.minecraft.server.level.ServerLevel level){
+     if(returningOwner!=null){returningOwner.discard();returningOwner=null;}
+     if(ownerChunk!=null){level.setChunkForced(ownerChunk.x,ownerChunk.z,false);ownerChunk=null;}
+ }
+
  @GameTest(template="world_fluid",timeoutTicks=30) public static void nativeCollisionDamagesEachNearbyTargetOnceAndSetsExactFireTicks(GameTestHelper h){
   floor(h);var level=h.getLevel();var p=player(h);var at=h.absolutePos(P).getCenter();var a=EntityType.COW.create(level);var b=EntityType.COW.create(level);a.setNoAi(true);b.setNoAi(true);a.setPos(at.x,at.y-.5,at.z);b.setPos(at.x+.6,at.y-.5,at.z);level.addFreshEntity(a);level.addFreshEntity(b);Map<UUID,Integer> counts=new HashMap<>();Map<UUID,Float> amounts=new HashMap<>();Object listener=new Object(){@SubscribeEvent public void countMolotovAttack(LivingAttackEvent event){if((event.getEntity()==a||event.getEntity()==b)&&event.getSource().is(PSDamageTypes.MOLOTOV)){counts.merge(event.getEntity().getUUID(),1,Integer::sum);amounts.put(event.getEntity().getUUID(),event.getAmount());check(event.getSource().getEntity()==p&&event.getSource().getDirectEntity() instanceof MolotovCocktailEntity,"native damage attribution keeps owner and projectile");}}};MinecraftForge.EVENT_BUS.register(listener);var e=projectile(h,p,filled(PSItems.MOLOTOV_COCKTAIL.get(),2000),new Vec3(at.x,at.y-.3,at.z-.8),new Vec3(0,0,.2));
   h.runAtTickTime(3,()->{try{check(e.isRemoved()&&counts.getOrDefault(a.getUUID(),0)==1&&counts.getOrDefault(b.getUUID(),0)==1,"one native impact damages each distinct nearby target once: removed="+e.isRemoved()+", counts="+counts+", position="+e.position()+", targets="+a.position()+" / "+b.position()+", strength="+e.strength());check(amounts.values().stream().anyMatch(v->Math.abs(v-4)<.001F)&&amounts.values().stream().anyMatch(v->v>0&&v<4),"direct minimum damage and distance-scaled collateral both apply");check(a.getRemainingFireTicks()>0&&a.getRemainingFireTicks()<=12&&b.getRemainingFireTicks()>0&&b.getRemainingFireTicks()<=12,"accepted fire duration uses game ticks, not seconds");}finally{MinecraftForge.EVENT_BUS.unregister(listener);a.discard();b.discard();}h.succeed();});
