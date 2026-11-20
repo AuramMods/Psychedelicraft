@@ -2,11 +2,11 @@ Psychedelicraft
 ============
 
 [![Current Version](https://img.shields.io/github/v/tag/Sollace/Psychedelicraft)](https://img.shields.io/github/v/tag/Sollace/Psychedelicraft)
-[![Build Status](https://github.com/Sollace/Psychedelicraft/actions/workflows/gradle-build.yml/badge.svg)](https://github.com/Sollace/Psychedelicraft/actions/workflows/gradle-build.yml)
+[![Build Status](https://github.com/AuramMods/Psychedelicraft/actions/workflows/gradle-build.yml/badge.svg?branch=codex%2F1.20.1-forge)](https://github.com/AuramMods/Psychedelicraft/actions/workflows/gradle-build.yml)
 ![Downloads](https://img.shields.io/github/downloads/Sollace/Psychedelicraft/total.svg?color=yellowgreen)
 ![License](https://img.shields.io/github/license/Sollace/Psychedelicraft)
 
-This branch is developing the Minecraft 1.20.1 Forge port. The effect registry, initial consumables, ten crop blocks, drying tables, smoking tools, portable fluid vessels, flask/distillery/barrel machines, mash tubs, placed drinks, bottle racks, lattices, grape vines, morning glory, juniper trees/wood/signs/boats, native world fluids, molotovs, Reality Rifts/Rift Jars/Glitch, native dealer/addict professions and trades, farmer crop acquisition, dealer farming/drying/bonemeal work, native village buildings/acquisition loot, hunger perception/overeating, vomiting and paper-bag storage, native post-processing/depth/temporal effects, world/model/cloud/hand deformation, surface coloration, pulses, camera drift/wobble/tremor, mouse inertia, scoped player/hand poses, screen overlays and local heartbeat pulses, contextual entity apparitions/identity swaps/Reggie dialogue, native breathing and drug themes, listener-volume changes, and core gameplay hooks are implemented; the full content and audiovisual migration is in progress. See the [1.20.1 port report](docs/PORT_1201.md) for migration coverage and verification.
+This branch ports Psychedelicraft to Minecraft 1.20.1 Forge. It includes the accepted gameplay changes, native crops and machines, multiplayer effects, and the original audiovisual systems. Build and install instructions are below. The [port report](docs/PORT_1201.md) records the implementation and verification.
 
 The One And Only, accept no substitutes!
 
@@ -38,7 +38,7 @@ and you may use this mod in modpacks.
 Installation
 ============
 
-Use Minecraft **1.20.1**, **Java 17** and **Forge 47.4.28**. This branch currently contains the effect foundation, initial consumables, primary crops, coffee roasting, drying-table automation, smoking items/tools, portable drinks, fluid transfers, coffee servings and flask/distillery/barrel processing, mash-tub stewing and fermentation, placed vessels, bottle racks, decorative lab props, native lattices/vines, morning-glory extracts and concentrated-extract LSD paper crafting, and the juniper tree/fruit/wood family with native signs, boats, chest boats and berry mash. Native world-fluid placement, metadata propagation, buckets, dispensers, coffee cooling and vat inflow are also implemented, along with molotov crafting, fluid-preserving bottle conversion and native projectile behavior. Reality Rifts, Rift Jar capture/discharge/overload and native Glitch behavior are implemented with their core rendering assets. Native dealer/addict professions, drying-table job acquisition, original trade pools, farmer grape acquisition and muffin feeding are also implemented. Dealer pickup, nine-input drying, crop planting/harvesting and bonemeal work are implemented with native villager AI and work-item cleanup. Native plains/desert village buildings and additive village/dungeon acquisition loot are implemented. Drug hunger perception, overeating, caught/body vomiting, paper-bag inventory/world/dispenser storage and the bag-of-vomit disguise are also implemented. The feature checklist tracks the remaining port.
+Use Minecraft **1.20.1**, **Java 17** and **Forge 47.4.28**. The [delivery verification](docs/PORT_1201.md#delivery-verification) links the tested gameplay, automation, world generation, client effects and multiplayer behavior.
 
 Build with a Java 17 JDK.
 
@@ -77,7 +77,7 @@ Alcohol and kava slur chat, cannabis adds localized filler words, and Zero corru
 
 Open **Mods → Psychedelicraft → Config** for the native Forge settings screen. It includes visual/audio controls, message distortion, gameplay switches, processing times and biome selectors. Changes apply immediately where the underlying system supports them and save when you leave the settings tree. Reset buttons restore the shipped defaults. On a dedicated connection, the screen exposes only local visual/audio/chat choices; edit server gameplay settings on the server. Generation and trade-pool changes require a world restart.
 
-The [native-system mapping report](docs/PORT_1201_NATIVE.md) records how the 1.12 backports map to Minecraft 1.20.1, the tested mod interactions, and the remaining native-integration checks. CI retains failed-test logs, configs and the owned GameTest world for 14 days to support reproduction.
+The [native-system mapping report](docs/PORT_1201_NATIVE.md) records how the 1.12 backports map to Minecraft 1.20.1, the tested mod interactions, and the observed mod interactions. CI retains failed-test logs, configs and the owned GameTest world for 14 days to support reproduction.
 
 The paper-bag release check allows native entity visibility callbacks to finish before requiring its exact world count. A separate regression covers accepted drops in an initially unloaded chunk and verifies their count, metadata and identity after loading. The test fixture and reproduction evidence are documented in the port report.
 
@@ -85,4 +85,4 @@ Native conduits recognize the water-like brews for frame activation, player powe
 
 The [current registration and asset matrix](docs/PORT_1201_REGISTRY.md) inventories every running mod item, block, fluid, entity, recipe, command, setting, advancement and drug profile, with source mappings, observed evidence and remaining scope. Its [separate QA sidecar](tools/qa/registration-audit/README.md) reproduces the installed-jar inventory and English/Polish item contact sheets on an isolated display.
 
-The [audiovisual evidence matrix](docs/PORT_1201_RENDERING.md) separates actual dose/packet checks from controlled GPU/model fixtures and records the remaining lifecycle work.
+The [audiovisual evidence matrix](docs/PORT_1201_RENDERING.md) separates actual dose/packet checks from controlled GPU/model fixtures and links the installed multiplayer lifecycle results. Oculus and modified BSL compatibility testing is deferred.

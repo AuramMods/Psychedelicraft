@@ -75,7 +75,7 @@ def behavior(identity):
     if name.startswith("dried_"):
         return "C3 material source; C4 drying ingredient/output"
     if name in {"cannabis", "hop", "tobacco", "coca", "coffea", "peyote", "agave_plant", "jimsonweed", "belladonna", "tomatoes"}:
-        return "C3 placement/growth/acquisition"
+        return "C3 placement and growth, C39 native wild generation"
     if name in {"agave_leaf", "belladonna_berries", "belladonna_leaf", "belladonna_seeds", "cannabis_buds", "cannabis_leaf", "cannabis_seeds", "coca_leaves", "coca_seeds", "coffea_cherries", "coffee_beans", "hop_cones", "hop_seeds", "jimsonweed_leaf", "jimsonweed_seed_pod", "jimsonweed_seeds", "tobacco_seeds", "tomato", "tomato_leaf", "tomato_seeds"}:
         return "C3 crops/materials/roasting; C4/C6 processing inputs"
     return "Behavior evidence needs assignment"
@@ -118,8 +118,8 @@ def main():
            "Chosen implementation links identify the current Java class or its native registration owner. "
            "C-number evidence refers to [the cycle report](PORT_1201.md). "
            "[Native mappings](PORT_1201_NATIVE.md), [all 140 settings](PORT_1201_SETTINGS.md), and [audiovisual evidence](PORT_1201_RENDERING.md) are part of this matrix.", "",
-           "C36 supplies the subsequent combined-render evidence on its corrected jar; this inventory retains its C35 snapshot provenance. Implemented systems retain the lifecycle checks listed in the main report. "
-           "Shader-pack compatibility is explicitly deferred, not silently treated as verified.", "",
+           "This inventory retains its C35 snapshot provenance. C36 verifies combined rendering, C37 verifies the two-player lifecycle, and C38–C39 verify native and wild acquisition. The main report links these later checks. "
+           "Oculus and modified BSL compatibility testing is deferred.", "",
            "| Runtime registry | Mod entries |", "| --- | --- |"]
     out += [f"| `{kind}` | {len(rows)} |" for kind, rows in en["registries"].items()]
     out += [f"| Loaded mod recipes | {len(en['recipes'])} |", f"| Advancements | {len(en['advancements'])} |", f"| Mod drug profiles (not Forge potions) | {len(en['effects'])} |", f"| Operator command roots | {len(en['commands'])} |", f"| Forge settings | {len(en['settings'])}; enumerated in linked settings matrix |", f"| Advancement criteria | {len(en['criteria'])} |", ""]
@@ -171,9 +171,16 @@ def main():
     out += [f"| [`{short(identity)}`](../src/main/resources/data/psychedelicraft/advancements/{short(identity)}.json) | C27 criteria, native awards, localization and restart |" for identity in en["advancements"]]
     out += ["", "## Every drug profile", "", "These are the mod's scalar profiles, not registered vanilla potion effects. "
             "The accepted `coccaine` spelling is retained for saved/command identity. C2 covers the scalar/use hooks; C19–C24 and C29 cover the restored audiovisual/text channels. "
-            "Combined audiovisual and broader multiplayer lifecycle checks remain open.", "", "| ID | Chosen implementation | Status |", "| --- | --- | --- |"]
+            "C36 verifies combined rendering. C37 verifies a seven-profile custom-benefit cohort across its installed multiplayer lifecycle.", "", "| ID | Chosen implementation | Status |", "| --- | --- | --- |"]
+    lifecycle = {"brown_shrooms", "red_shrooms", "peyote", "caffeine", "alcohol", "coccaine", "lsd"}
     for identity, row in en["effects"].items():
-        out.append(f"| `{short(identity)}` | {implementation(row['class'], 'entity/drug/DrugType.java')} | Scalar profile registered; C2 regression/native checks; combined lifecycle audit pending |")
+        name = short(identity)
+        evidence = "C2 scalar profile and shared progression"
+        if name in lifecycle:
+            evidence += ", C37 installed benefit and lifecycle checks"
+        elif name == "tobacco":
+            evidence += ", C5 smoking and C37 native saturation"
+        out.append(f"| `{name}` | {implementation(row['class'], 'entity/drug/DrugType.java')} | {evidence} |")
     out += ["", "## Every setting and criterion", "", "The live config-spec export contains "
             f"**{sum(k.startswith('common:') for k in en['settings'])} common** and **{sum(k.startswith('client:') for k in en['settings'])} client** leaves. "
             "Each is listed with its accepted source, default, consumer and evidence in [the settings matrix](PORT_1201_SETTINGS.md). "
@@ -279,8 +286,8 @@ def main():
             "Native/delegated sound events and dynamic music have separate C22/C24 runtime evidence.", "",
             "The complete 140-setting source/consumer/default/evidence matrix remains in [PORT_1201_SETTINGS.md](PORT_1201_SETTINGS.md), "
             "with native UI/EN/PL/save/restart/scope evidence in C31. This inventory does not turn a registered ID or a valid model into broad gameplay proof. "
-            "Remaining requirements include two-player death/respawn/dimension/custom-benefit/natural-expiry checks, "
-            "the explicitly open native handoffs, and the final complete-goal audit.", "",
+            "Read the later actual behavior samples in the cycle report. C37 verifies death, respawn, dimension travel, custom benefits and near-end expiry. "
+            "C38 and C39 verify native ocean and wild crop acquisition.", "",
             "Audit findings needing review:", ""]
     findings = missing + missing_audio
     out += [f"- `{identity}`: {issue}" for identity, issue in findings] if findings else ["- None in the covered registry/model/default-name/local-audio checks."]

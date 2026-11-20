@@ -10,7 +10,7 @@ The [reproducible audit tool](../tools/qa/registration-audit/README.md) exports 
 
 [Accepted Forge source](https://github.com/AuramMods/Psychedelicraft/tree/51286f8f3e6866e8b952175c9c60c7f6e63bef8d/src/main/java/ivorius/psychedelicraft/) supplies custom behavior and fixes; [original 1.20.1 source](https://github.com/AuramMods/Psychedelicraft/tree/319a4ea0160d6600cffcd5f5cc9e363ceaab44a1/src/main/java/ivorius/psychedelicraft/) supplies the complete modern baseline. Chosen implementation links identify the current Java class or its native registration owner. C-number evidence refers to [the cycle report](PORT_1201.md). [Native mappings](PORT_1201_NATIVE.md), [all 140 settings](PORT_1201_SETTINGS.md), and [audiovisual evidence](PORT_1201_RENDERING.md) are part of this matrix.
 
-C36 supplies the subsequent combined-render evidence on its corrected jar; this inventory retains its C35 snapshot provenance. Implemented systems retain the lifecycle checks listed in the main report. Shader-pack compatibility is explicitly deferred, not silently treated as verified.
+This inventory retains its C35 snapshot provenance. C36 verifies combined rendering, C37 verifies the two-player lifecycle, and C38–C39 verify native and wild acquisition. The main report links these later checks. Oculus and modified BSL compatibility testing is deferred.
 
 | Runtime registry | Mod entries |
 | --- | --- |
@@ -41,22 +41,22 @@ C36 supplies the subsequent combined-render evidence on its corrected jar; this 
 | --- | --- | --- |
 | `acacia_barrel` | [BarrelBlock](../src/main/java/ivorius/psychedelicraft/block/BarrelBlock.java) | C7 processing/automation; C6 contents; native `ENTITYBLOCK_ANIMATED` render path |
 | `agave` | [PhysicalFluidBlock](../src/main/java/ivorius/psychedelicraft/block/PhysicalFluidBlock.java) | C12 world fluid/metadata; C34 conduit classification; native `INVISIBLE` render path |
-| `agave_plant` | [AgavePlantBlock](../src/main/java/ivorius/psychedelicraft/block/AgavePlantBlock.java) | C3 placement/growth/acquisition; C35 6 states, 6 MODEL states baked |
+| `agave_plant` | [AgavePlantBlock](../src/main/java/ivorius/psychedelicraft/block/AgavePlantBlock.java) | C3 placement and growth, C39 native wild generation; C35 6 states, 6 MODEL states baked |
 | `apple` | [PhysicalFluidBlock](../src/main/java/ivorius/psychedelicraft/block/PhysicalFluidBlock.java) | C12 world fluid/metadata; C34 conduit classification; native `INVISIBLE` render path |
 | `banana` | [PhysicalFluidBlock](../src/main/java/ivorius/psychedelicraft/block/PhysicalFluidBlock.java) | C12 world fluid/metadata; C34 conduit classification; native `INVISIBLE` render path |
 | `bath_salts` | [PhysicalFluidBlock](../src/main/java/ivorius/psychedelicraft/block/PhysicalFluidBlock.java) | C12 world fluid/metadata; C34 conduit classification; native `INVISIBLE` render path |
-| `belladonna` | [NightshadeBlock](../src/main/java/ivorius/psychedelicraft/block/NightshadeBlock.java) | C3 placement/growth/acquisition; C35 8 states, 8 MODEL states baked |
+| `belladonna` | [NightshadeBlock](../src/main/java/ivorius/psychedelicraft/block/NightshadeBlock.java) | C3 placement and growth, C39 native wild generation; C35 8 states, 8 MODEL states baked |
 | `belladonna_extract` | [PhysicalFluidBlock](../src/main/java/ivorius/psychedelicraft/block/PhysicalFluidBlock.java) | C12 world fluid/metadata; C34 conduit classification; native `INVISIBLE` render path |
 | `birch_barrel` | [BarrelBlock](../src/main/java/ivorius/psychedelicraft/block/BarrelBlock.java) | C7 processing/automation; C6 contents; native `ENTITYBLOCK_ANIMATED` render path |
 | `bottle_rack` | [BottleRackBlock](../src/main/java/ivorius/psychedelicraft/block/BottleRackBlock.java) | C9 display/props/rack; C32 exact display drops; C35 4 states, 4 MODEL states baked |
 | `bunsen_burner` | [LabPropBlock](../src/main/java/ivorius/psychedelicraft/block/LabPropBlock.java) | C9 display/props/rack; C32 exact display drops; C35 1 states, 1 MODEL states baked |
 | `caffeine` | [PhysicalFluidBlock](../src/main/java/ivorius/psychedelicraft/block/PhysicalFluidBlock.java) | C12 world fluid/metadata; C34 conduit classification; native `INVISIBLE` render path |
-| `cannabis` | [CannabisPlantBlock](../src/main/java/ivorius/psychedelicraft/block/CannabisPlantBlock.java) | C3 placement/growth/acquisition; C35 64 states, 64 MODEL states baked |
+| `cannabis` | [CannabisPlantBlock](../src/main/java/ivorius/psychedelicraft/block/CannabisPlantBlock.java) | C3 placement and growth, C39 native wild generation; C35 64 states, 64 MODEL states baked |
 | `cannabis_tea` | [PhysicalFluidBlock](../src/main/java/ivorius/psychedelicraft/block/PhysicalFluidBlock.java) | C12 world fluid/metadata; C34 conduit classification; native `INVISIBLE` render path |
-| `coca` | [CocaPlantBlock](../src/main/java/ivorius/psychedelicraft/block/CocaPlantBlock.java) | C3 placement/growth/acquisition; C35 52 states, 52 MODEL states baked |
+| `coca` | [CocaPlantBlock](../src/main/java/ivorius/psychedelicraft/block/CocaPlantBlock.java) | C3 placement and growth, C39 native wild generation; C35 52 states, 52 MODEL states baked |
 | `coca_tea` | [PhysicalFluidBlock](../src/main/java/ivorius/psychedelicraft/block/PhysicalFluidBlock.java) | C12 world fluid/metadata; C34 conduit classification; native `INVISIBLE` render path |
 | `cocaine` | [PhysicalFluidBlock](../src/main/java/ivorius/psychedelicraft/block/PhysicalFluidBlock.java) | C12 world fluid/metadata; C34 conduit classification; native `INVISIBLE` render path |
-| `coffea` | [CoffeaPlantBlock](../src/main/java/ivorius/psychedelicraft/block/CoffeaPlantBlock.java) | C3 placement/growth/acquisition; C35 64 states, 64 MODEL states baked |
+| `coffea` | [CoffeaPlantBlock](../src/main/java/ivorius/psychedelicraft/block/CoffeaPlantBlock.java) | C3 placement and growth, C39 native wild generation; C35 64 states, 64 MODEL states baked |
 | `coffee` | [PhysicalFluidBlock](../src/main/java/ivorius/psychedelicraft/block/PhysicalFluidBlock.java) | C12 world fluid/metadata; C34 conduit classification; native `INVISIBLE` render path |
 | `corn` | [PhysicalFluidBlock](../src/main/java/ivorius/psychedelicraft/block/PhysicalFluidBlock.java) | C12 world fluid/metadata; C34 conduit classification; native `INVISIBLE` render path |
 | `dark_oak_barrel` | [BarrelBlock](../src/main/java/ivorius/psychedelicraft/block/BarrelBlock.java) | C7 processing/automation; C6 contents; native `ENTITYBLOCK_ANIMATED` render path |
@@ -66,9 +66,9 @@ C36 supplies the subsequent combined-render evidence on its corrected jar; this 
 | `fruiting_juniper_leaves` | [JuniperLeavesBlock](../src/main/java/ivorius/psychedelicraft/block/JuniperLeavesBlock.java) | C11 wood/fruit/vehicle integration; C35 28 states, 28 MODEL states baked |
 | `glitch` | [GlitchedBlock](../src/main/java/ivorius/psychedelicraft/block/GlitchedBlock.java) | C14 rifts/jars/glitch; C36 combined native rendering/reload/resize; C35 1 states, 1 MODEL states baked |
 | `honey` | [PhysicalFluidBlock](../src/main/java/ivorius/psychedelicraft/block/PhysicalFluidBlock.java) | C12 world fluid/metadata; C34 conduit classification; native `INVISIBLE` render path |
-| `hop` | [HopPlantBlock](../src/main/java/ivorius/psychedelicraft/block/HopPlantBlock.java) | C3 placement/growth/acquisition; C35 64 states, 64 MODEL states baked |
+| `hop` | [HopPlantBlock](../src/main/java/ivorius/psychedelicraft/block/HopPlantBlock.java) | C3 placement and growth, C39 native wild generation; C35 64 states, 64 MODEL states baked |
 | `iron_drying_table` | [DryingTableBlock](../src/main/java/ivorius/psychedelicraft/block/DryingTableBlock.java) | C4 drying/sided automation; C35 1 states, 1 MODEL states baked |
-| `jimsonweed` | [NightshadeBlock](../src/main/java/ivorius/psychedelicraft/block/NightshadeBlock.java) | C3 placement/growth/acquisition; C35 8 states, 8 MODEL states baked |
+| `jimsonweed` | [NightshadeBlock](../src/main/java/ivorius/psychedelicraft/block/NightshadeBlock.java) | C3 placement and growth, C39 native wild generation; C35 8 states, 8 MODEL states baked |
 | `jimsonweed_extract` | [PhysicalFluidBlock](../src/main/java/ivorius/psychedelicraft/block/PhysicalFluidBlock.java) | C12 world fluid/metadata; C34 conduit classification; native `INVISIBLE` render path |
 | `jungle_barrel` | [BarrelBlock](../src/main/java/ivorius/psychedelicraft/block/BarrelBlock.java) | C7 processing/automation; C6 contents; native `ENTITYBLOCK_ANIMATED` render path |
 | `juniper` | [PhysicalFluidBlock](../src/main/java/ivorius/psychedelicraft/block/PhysicalFluidBlock.java) | C12 world fluid/metadata; C34 conduit classification; native `INVISIBLE` render path |
@@ -98,7 +98,7 @@ C36 supplies the subsequent combined-render evidence on its corrected jar; this 
 | `morning_glory_extract` | [PhysicalFluidBlock](../src/main/java/ivorius/psychedelicraft/block/PhysicalFluidBlock.java) | C12 world fluid/metadata; C34 conduit classification; native `INVISIBLE` render path |
 | `morning_glory_lattice` | [LatticeCropBlock](../src/main/java/ivorius/psychedelicraft/block/LatticeCropBlock.java) | C10 vine/flower integration; C33 exact harvests; C35 256 states, 256 MODEL states baked |
 | `oak_barrel` | [BarrelBlock](../src/main/java/ivorius/psychedelicraft/block/BarrelBlock.java) | C7 processing/automation; C6 contents; native `ENTITYBLOCK_ANIMATED` render path |
-| `peyote` | [PeyoteBlock](../src/main/java/ivorius/psychedelicraft/block/PeyoteBlock.java) | C3 placement/growth/acquisition; C35 4 states, 4 MODEL states baked |
+| `peyote` | [PeyoteBlock](../src/main/java/ivorius/psychedelicraft/block/PeyoteBlock.java) | C3 placement and growth, C39 native wild generation; C35 4 states, 4 MODEL states baked |
 | `peyote_juice` | [PhysicalFluidBlock](../src/main/java/ivorius/psychedelicraft/block/PhysicalFluidBlock.java) | C12 world fluid/metadata; C34 conduit classification; native `INVISIBLE` render path |
 | `pineapple` | [PhysicalFluidBlock](../src/main/java/ivorius/psychedelicraft/block/PhysicalFluidBlock.java) | C12 world fluid/metadata; C34 conduit classification; native `INVISIBLE` render path |
 | `placed_drink` | [PlacedDrinksBlock](../src/main/java/ivorius/psychedelicraft/block/PlacedDrinksBlock.java) | C9 display/props/rack; C32 exact display drops; native `INVISIBLE` render path |
@@ -118,9 +118,9 @@ C36 supplies the subsequent combined-render evidence on its corrected jar; this 
 | `stripped_juniper_log` | Native `RotatedPillarBlock` via [PSBlocks](../src/main/java/ivorius/psychedelicraft/block/PSBlocks.java) | C11 wood/fruit/vehicle integration; C35 3 states, 3 MODEL states baked |
 | `stripped_juniper_wood` | Native `RotatedPillarBlock` via [PSBlocks](../src/main/java/ivorius/psychedelicraft/block/PSBlocks.java) | C11 wood/fruit/vehicle integration; C35 3 states, 3 MODEL states baked |
 | `sugar_cane` | [PhysicalFluidBlock](../src/main/java/ivorius/psychedelicraft/block/PhysicalFluidBlock.java) | C12 world fluid/metadata; C34 conduit classification; native `INVISIBLE` render path |
-| `tobacco` | [TobaccoPlantBlock](../src/main/java/ivorius/psychedelicraft/block/TobaccoPlantBlock.java) | C3 placement/growth/acquisition; C35 64 states, 64 MODEL states baked |
+| `tobacco` | [TobaccoPlantBlock](../src/main/java/ivorius/psychedelicraft/block/TobaccoPlantBlock.java) | C3 placement and growth, C39 native wild generation; C35 64 states, 64 MODEL states baked |
 | `tomato` | [PhysicalFluidBlock](../src/main/java/ivorius/psychedelicraft/block/PhysicalFluidBlock.java) | C12 world fluid/metadata; C34 conduit classification; native `INVISIBLE` render path |
-| `tomatoes` | [NightshadeBlock](../src/main/java/ivorius/psychedelicraft/block/NightshadeBlock.java) | C3 placement/growth/acquisition; C35 8 states, 8 MODEL states baked |
+| `tomatoes` | [NightshadeBlock](../src/main/java/ivorius/psychedelicraft/block/NightshadeBlock.java) | C3 placement and growth, C39 native wild generation; C35 8 states, 8 MODEL states baked |
 | `tray` | [LabPropBlock$Tray](../src/main/java/ivorius/psychedelicraft/block/LabPropBlock.java) | C9 display/props/rack; C32 exact display drops; C35 2 states, 2 MODEL states baked |
 | `wheat` | [PhysicalFluidBlock](../src/main/java/ivorius/psychedelicraft/block/PhysicalFluidBlock.java) | C12 world fluid/metadata; C34 conduit classification; native `INVISIBLE` render path |
 | `wheat_hop` | [PhysicalFluidBlock](../src/main/java/ivorius/psychedelicraft/block/PhysicalFluidBlock.java) | C12 world fluid/metadata; C34 conduit classification; native `INVISIBLE` render path |
@@ -268,7 +268,7 @@ C36 supplies the subsequent combined-render evidence on its corrected jar; this 
 | `obsidian_bottle` | Native `Item` via [PSItems](../src/main/java/ivorius/psychedelicraft/item/PSItems.java) | C2 consumption; C28 acquisition/container recipes; C35 EN/PL native default render/name: present |
 | `obsidian_dust` | [PowderItem](../src/main/java/ivorius/psychedelicraft/item/PowderItem.java) | C2 consumption; C28 acquisition/container recipes; C35 EN/PL native default render/name: present |
 | `paper_bag` | [PaperBagItem](../src/main/java/ivorius/psychedelicraft/item/PaperBagItem.java) | C18 stomach/bag/disguise; C33 native item visibility; C35 EN/PL native default render/name: present |
-| `peyote` | Native `BlockItem` via [PSItems](../src/main/java/ivorius/psychedelicraft/item/PSItems.java) | C3 placement/growth/acquisition; C35 EN/PL native default render/name: present |
+| `peyote` | Native `BlockItem` via [PSItems](../src/main/java/ivorius/psychedelicraft/item/PSItems.java) | C3 placement and growth, C39 native wild generation; C35 EN/PL native default render/name: present |
 | `peyote_joint` | [SmokeableItem](../src/main/java/ivorius/psychedelicraft/item/SmokeableItem.java) | C5 smoking/stacking; C30 optional Harmonium trades; C35 EN/PL native default render/name: present |
 | `red_magic_mushrooms` | [EdibleItem](../src/main/java/ivorius/psychedelicraft/item/EdibleItem.java) | C1/C2 scalar/use benefits; C4 drying; C10 LSD paper; C35 EN/PL native default render/name: present |
 | `rift_jar` | [RiftJarItem](../src/main/java/ivorius/psychedelicraft/item/RiftJarItem.java) | C14 rifts/jars/glitch; C36 combined native rendering/reload/resize; C35 EN/PL native default render/name: present |
@@ -279,7 +279,7 @@ C36 supplies the subsequent combined-render evidence on its corrected jar; this 
 | `stripped_juniper_log` | Native `BlockItem` via [PSItems](../src/main/java/ivorius/psychedelicraft/item/PSItems.java) | C11 wood/fruit/vehicle integration; C35 EN/PL native default render/name: present |
 | `stripped_juniper_wood` | Native `BlockItem` via [PSItems](../src/main/java/ivorius/psychedelicraft/item/PSItems.java) | C11 wood/fruit/vehicle integration; C35 EN/PL native default render/name: present |
 | `syringe` | [PortableFluidItem](../src/main/java/ivorius/psychedelicraft/item/PortableFluidItem.java) | C6 transfer/servings; C12 world buckets; C35 EN/PL native default render/name: present |
-| `tobacco` | Native `Item` via [PSItems](../src/main/java/ivorius/psychedelicraft/item/PSItems.java) | C3 placement/growth/acquisition; C35 EN/PL native default render/name: present |
+| `tobacco` | Native `Item` via [PSItems](../src/main/java/ivorius/psychedelicraft/item/PSItems.java) | C3 placement and growth, C39 native wild generation; C35 EN/PL native default render/name: present |
 | `tobacco_seeds` | [CropSeedItem](../src/main/java/ivorius/psychedelicraft/item/CropSeedItem.java) | C3 crops/materials/roasting; C4/C6 processing inputs; C35 EN/PL native default render/name: present |
 | `tomato` | Native `Item` via [PSItems](../src/main/java/ivorius/psychedelicraft/item/PSItems.java) | C3 crops/materials/roasting; C4/C6 processing inputs; C35 EN/PL native default render/name: present |
 | `tomato_leaf` | Native `Item` via [PSItems](../src/main/java/ivorius/psychedelicraft/item/PSItems.java) | C3 crops/materials/roasting; C4/C6 processing inputs; C35 EN/PL native default render/name: present |
@@ -550,28 +550,28 @@ All 24 use the restored native criteria and client award UI (C27). C32 separatel
 
 ## Every drug profile
 
-These are the mod's scalar profiles, not registered vanilla potion effects. The accepted `coccaine` spelling is retained for saved/command identity. C2 covers the scalar/use hooks; C19–C24 and C29 cover the restored audiovisual/text channels. Combined audiovisual and broader multiplayer lifecycle checks remain open.
+These are the mod's scalar profiles, not registered vanilla potion effects. The accepted `coccaine` spelling is retained for saved/command identity. C2 covers the scalar/use hooks; C19–C24 and C29 cover the restored audiovisual/text channels. C36 verifies combined rendering. C37 verifies a seven-profile custom-benefit cohort across its installed multiplayer lifecycle.
 
 | ID | Chosen implementation | Status |
 | --- | --- | --- |
-| `brown_shrooms` | [BrownShroomsDrug](../src/main/java/ivorius/psychedelicraft/entity/drug/type/BrownShroomsDrug.java) | Scalar profile registered; C2 regression/native checks; combined lifecycle audit pending |
-| `red_shrooms` | [RedShroomsDrug](../src/main/java/ivorius/psychedelicraft/entity/drug/type/RedShroomsDrug.java) | Scalar profile registered; C2 regression/native checks; combined lifecycle audit pending |
-| `peyote` | [PeyoteDrug](../src/main/java/ivorius/psychedelicraft/entity/drug/type/PeyoteDrug.java) | Scalar profile registered; C2 regression/native checks; combined lifecycle audit pending |
-| `atropine` | [LsdDrug](../src/main/java/ivorius/psychedelicraft/entity/drug/type/LsdDrug.java) | Scalar profile registered; C2 regression/native checks; combined lifecycle audit pending |
-| `caffeine` | [CaffeineDrug](../src/main/java/ivorius/psychedelicraft/entity/drug/type/CaffeineDrug.java) | Scalar profile registered; C2 regression/native checks; combined lifecycle audit pending |
-| `warmth` | [WarmthDrug](../src/main/java/ivorius/psychedelicraft/entity/drug/type/WarmthDrug.java) | Scalar profile registered; C2 regression/native checks; combined lifecycle audit pending |
-| `alcohol` | [AlcoholDrug](../src/main/java/ivorius/psychedelicraft/entity/drug/type/AlcoholDrug.java) | Scalar profile registered; C2 regression/native checks; combined lifecycle audit pending |
-| `kava` | [AlcoholDrug](../src/main/java/ivorius/psychedelicraft/entity/drug/type/AlcoholDrug.java) | Scalar profile registered; C2 regression/native checks; combined lifecycle audit pending |
-| `cannabis` | [CannabisDrug](../src/main/java/ivorius/psychedelicraft/entity/drug/type/CannabisDrug.java) | Scalar profile registered; C2 regression/native checks; combined lifecycle audit pending |
-| `tobacco` | [TobaccoDrug](../src/main/java/ivorius/psychedelicraft/entity/drug/type/TobaccoDrug.java) | Scalar profile registered; C2 regression/native checks; combined lifecycle audit pending |
-| `coccaine` | [CocaineDrug](../src/main/java/ivorius/psychedelicraft/entity/drug/type/CocaineDrug.java) | Scalar profile registered; C2 regression/native checks; combined lifecycle audit pending |
-| `bath_salts` | [BathSaltsDrug](../src/main/java/ivorius/psychedelicraft/entity/drug/type/BathSaltsDrug.java) | Scalar profile registered; C2 regression/native checks; combined lifecycle audit pending |
-| `lsd` | [LsdDrug](../src/main/java/ivorius/psychedelicraft/entity/drug/type/LsdDrug.java) | Scalar profile registered; C2 regression/native checks; combined lifecycle audit pending |
-| `sugar` | [CaffeineDrug](../src/main/java/ivorius/psychedelicraft/entity/drug/type/CaffeineDrug.java) | Scalar profile registered; C2 regression/native checks; combined lifecycle audit pending |
-| `harmonium` | [HarmoniumDrug](../src/main/java/ivorius/psychedelicraft/entity/drug/type/HarmoniumDrug.java) | Scalar profile registered; C2 regression/native checks; combined lifecycle audit pending |
-| `zero` | [SimpleDrug](../src/main/java/ivorius/psychedelicraft/entity/drug/type/SimpleDrug.java) | Scalar profile registered; C2 regression/native checks; combined lifecycle audit pending |
-| `power` | [PowerDrug](../src/main/java/ivorius/psychedelicraft/entity/drug/type/PowerDrug.java) | Scalar profile registered; C2 regression/native checks; combined lifecycle audit pending |
-| `sleep_deprivation` | [SleepDeprivationDrug](../src/main/java/ivorius/psychedelicraft/entity/drug/type/SleepDeprivationDrug.java) | Scalar profile registered; C2 regression/native checks; combined lifecycle audit pending |
+| `brown_shrooms` | [BrownShroomsDrug](../src/main/java/ivorius/psychedelicraft/entity/drug/type/BrownShroomsDrug.java) | C2 scalar profile and shared progression, C37 installed benefit and lifecycle checks |
+| `red_shrooms` | [RedShroomsDrug](../src/main/java/ivorius/psychedelicraft/entity/drug/type/RedShroomsDrug.java) | C2 scalar profile and shared progression, C37 installed benefit and lifecycle checks |
+| `peyote` | [PeyoteDrug](../src/main/java/ivorius/psychedelicraft/entity/drug/type/PeyoteDrug.java) | C2 scalar profile and shared progression, C37 installed benefit and lifecycle checks |
+| `atropine` | [LsdDrug](../src/main/java/ivorius/psychedelicraft/entity/drug/type/LsdDrug.java) | C2 scalar profile and shared progression |
+| `caffeine` | [CaffeineDrug](../src/main/java/ivorius/psychedelicraft/entity/drug/type/CaffeineDrug.java) | C2 scalar profile and shared progression, C37 installed benefit and lifecycle checks |
+| `warmth` | [WarmthDrug](../src/main/java/ivorius/psychedelicraft/entity/drug/type/WarmthDrug.java) | C2 scalar profile and shared progression |
+| `alcohol` | [AlcoholDrug](../src/main/java/ivorius/psychedelicraft/entity/drug/type/AlcoholDrug.java) | C2 scalar profile and shared progression, C37 installed benefit and lifecycle checks |
+| `kava` | [AlcoholDrug](../src/main/java/ivorius/psychedelicraft/entity/drug/type/AlcoholDrug.java) | C2 scalar profile and shared progression |
+| `cannabis` | [CannabisDrug](../src/main/java/ivorius/psychedelicraft/entity/drug/type/CannabisDrug.java) | C2 scalar profile and shared progression |
+| `tobacco` | [TobaccoDrug](../src/main/java/ivorius/psychedelicraft/entity/drug/type/TobaccoDrug.java) | C2 scalar profile and shared progression, C5 smoking and C37 native saturation |
+| `coccaine` | [CocaineDrug](../src/main/java/ivorius/psychedelicraft/entity/drug/type/CocaineDrug.java) | C2 scalar profile and shared progression, C37 installed benefit and lifecycle checks |
+| `bath_salts` | [BathSaltsDrug](../src/main/java/ivorius/psychedelicraft/entity/drug/type/BathSaltsDrug.java) | C2 scalar profile and shared progression |
+| `lsd` | [LsdDrug](../src/main/java/ivorius/psychedelicraft/entity/drug/type/LsdDrug.java) | C2 scalar profile and shared progression, C37 installed benefit and lifecycle checks |
+| `sugar` | [CaffeineDrug](../src/main/java/ivorius/psychedelicraft/entity/drug/type/CaffeineDrug.java) | C2 scalar profile and shared progression |
+| `harmonium` | [HarmoniumDrug](../src/main/java/ivorius/psychedelicraft/entity/drug/type/HarmoniumDrug.java) | C2 scalar profile and shared progression |
+| `zero` | [SimpleDrug](../src/main/java/ivorius/psychedelicraft/entity/drug/type/SimpleDrug.java) | C2 scalar profile and shared progression |
+| `power` | [PowerDrug](../src/main/java/ivorius/psychedelicraft/entity/drug/type/PowerDrug.java) | C2 scalar profile and shared progression |
+| `sleep_deprivation` | [SleepDeprivationDrug](../src/main/java/ivorius/psychedelicraft/entity/drug/type/SleepDeprivationDrug.java) | C2 scalar profile and shared progression |
 
 ## Every setting and criterion
 
@@ -822,7 +822,7 @@ The target adds `juniper_hanging_sign` as the native separate hanging-sign block
 
 C35 inspects **1509** MODEL block states, 100 native default item renders per language, all 4 mod entity-renderer bindings, loaded recipes/advancements and all 18 custom profiles. Each mod item-description key is also checked directly in both packaged language catalogs, independently of native fallback resolution. Quad/sprite observations use seed zero for each direction and the unculled face; this does not enumerate every weighted-model outcome. The production archive contains **8** sound definitions; local sound references with missing/invalid Ogg headers: **0**. Native/delegated sound events and dynamic music have separate C22/C24 runtime evidence.
 
-The complete 140-setting source/consumer/default/evidence matrix remains in [PORT_1201_SETTINGS.md](PORT_1201_SETTINGS.md), with native UI/EN/PL/save/restart/scope evidence in C31. This inventory does not turn a registered ID or a valid model into broad gameplay proof. Remaining requirements include two-player death/respawn/dimension/custom-benefit/natural-expiry checks, the explicitly open native handoffs, and the final complete-goal audit.
+The complete 140-setting source/consumer/default/evidence matrix remains in [PORT_1201_SETTINGS.md](PORT_1201_SETTINGS.md), with native UI/EN/PL/save/restart/scope evidence in C31. This inventory does not turn a registered ID or a valid model into broad gameplay proof. Read the later actual behavior samples in the cycle report. C37 verifies death, respawn, dimension travel, custom benefits and near-end expiry. C38 and C39 verify native ocean and wild crop acquisition.
 
 Audit findings needing review:
 
