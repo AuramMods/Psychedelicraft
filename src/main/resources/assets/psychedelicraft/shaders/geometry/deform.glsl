@@ -8,7 +8,8 @@ float psychedelicraft_gold_noise(vec2 xy, float seed) {
   const float phi = 1.61803398874989484820459;
   return fract(tan(distance(xy * phi, xy) * seed) * xy.x);
 }
-vec4 psychedelicraft_deform(vec4 clip, vec3 position) {
+// The legacy distance-based waves measure camera-space distance before projection.
+vec4 psychedelicraft_deform(vec4 clip, vec3 position, float viewDistance) {
   float worldTicks = PS_WorldTicks;
   float smallWaves = PS_WavesMatrix.x;
   float bigWaves = PS_WavesMatrix.y;
@@ -16,7 +17,6 @@ vec4 psychedelicraft_deform(vec4 clip, vec3 position) {
   float distantWorldDeformation = PS_DistantWorldDeformation;
   float fractalFractureStrength = PS_FractalFractureStrength;
   vec3 playerPos = PS_PlayerPosition;
-  float fogFragCoord = length(clip);
   if (smallWaves > 0.0) {
     float w1 = 8.0;
 
@@ -28,8 +28,8 @@ vec4 psychedelicraft_deform(vec4 clip, vec3 position) {
     clip.y += sin((position.x + worldTicks / 8.0) / w2 * 3.14159 * 2.0) * sin((position.z) / w2 * 3.14159 * 2.0) * smallWaves * 3.0;
     clip.y -= sin((playerPos.x + worldTicks / 8.0) / w2 * 3.14159 * 2.0) * sin((playerPos.z) / w2 * 3.14159 * 2.0) * smallWaves * 3.0;
 
-    clip.x = mix(clip.x, clip[0] * (1.0 + fogFragCoord / 20.0), smallWaves);
-    clip.y = mix(clip.y, clip[1] * (1.0 + fogFragCoord / 20.0), smallWaves);
+    clip.x = mix(clip.x, clip[0] * (1.0 + viewDistance / 20.0), smallWaves);
+    clip.y = mix(clip.y, clip[1] * (1.0 + viewDistance / 20.0), smallWaves);
   }
 
 
@@ -46,10 +46,10 @@ vec4 psychedelicraft_deform(vec4 clip, vec3 position) {
                     * wiggleWaves;
   }
 
-  if (distantWorldDeformation > 0.0 && fogFragCoord > 5.0) {
-    clip.y += (sin(fogFragCoord / 8.0 * 3.14159 * 2.0) + 1.0)
+  if (distantWorldDeformation > 0.0 && viewDistance > 5.0) {
+    clip.y += (sin(viewDistance / 8.0 * 3.14159 * 2.0) + 1.0)
                      * distantWorldDeformation
-                     * (fogFragCoord - 5.0) / 8.0;
+                     * (viewDistance - 5.0) / 8.0;
   }
 
   if (bigWaves > 0.0) {

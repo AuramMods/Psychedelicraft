@@ -8,7 +8,7 @@ vec4 psychedelicraft_terrain_position(vec4 position) {
   if (PS_Enabled <= 0.0 || (all(equal(PS_WavesMatrix, vec3(0.0)))
       && PS_DistantWorldDeformation <= 0.0 && PS_FractalFractureStrength <= 0.0)) return position;
   vec4 clip = PS_WorldToClip * position;
-  vec4 deformed = PS_ClipToWorld * psychedelicraft_deform(clip, position.xyz + PS_CameraPosition);
+  vec4 deformed = PS_ClipToWorld * psychedelicraft_deform(clip, position.xyz + PS_CameraPosition, length(position.xyz));
   if (abs(deformed.w) < 0.0001) return position;
   return vec4(deformed.xyz / deformed.w, 1.0);
 }

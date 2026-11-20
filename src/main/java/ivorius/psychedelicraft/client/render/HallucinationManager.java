@@ -148,7 +148,6 @@ public final class HallucinationManager {
         PULSES(Category.COLOR),
         SURFACE_FRACTALS(Category.COLOR),
         DISTANT_WORLD_DEFORMATION(Category.MOVEMENT),
-        SHATTERING_FRACTALS(Category.MOVEMENT),
         BLOOM(Category.COLOR),
         COLOR_BLOOM(Category.COLOR),
         COLOR_CONTRAST(Category.COLOR);
