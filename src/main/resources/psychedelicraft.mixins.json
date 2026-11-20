@@ -32,6 +32,7 @@
     "client.CoreProgramMixin",
     "client.GeometryShaderMixin",
     "client.GameGeometryMixin",
+    "client.HandGeometryMixin",
     "client.LevelGeometryMixin",
     "client.PistonGeometryMixin",
     "client.CameraBodyMixin",
