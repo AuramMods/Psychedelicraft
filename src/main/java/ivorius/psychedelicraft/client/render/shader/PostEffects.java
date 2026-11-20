@@ -33,16 +33,20 @@ public final class PostEffects {
     private int width,height;
     private boolean stencil,failed;
     private boolean worldDepthCaptured;
+    private OculusHandDepth handDepth;
     private Throwable lastFailure;
     private long resourceGeneration;
     private record Key(String name,RenderTarget in,RenderTarget out){}
 
-    public void beginFrame(){worldDepthCaptured=false;}
+    public void beginFrame(){worldDepthCaptured=false;handDepth=null;}
+
+    public void captureOculusHandMasks(Object targets) {
+        if (PSClientConfig.SHADERS_2D.get()) handDepth = OculusHandDepth.read(targets);
+    }
 
     /** Preserve scene depth before the native first-person pass clears the main depth buffer. */
     public void captureWorldDepth(Minecraft client,HallucinationManager h,EnvironmentEffects environment){
-        worldDepthCaptured=false;
-        if(failed||!PSClientConfig.SHADERS_2D.get())return;
+        if(worldDepthCaptured||failed||!PSClientConfig.SHADERS_2D.get())return;
         var drugs=ClientDrugState.get(client.player);
         if(h.contrastColor(drugs.getHarmonium())==null&&PSClientConfig.BLUR_NEAR.get()<=0&&PSClientConfig.BLUR_FAR.get()<=0
                 &&environment.heatDistortion()<=0&&environment.waterDistortion((float)drugs.getActiveValue(DrugType.PEYOTE))<=0&&drugs.getActiveValue(DrugType.ZERO)<=0)return;
@@ -117,13 +121,24 @@ public final class PostEffects {
         RenderTarget out=source==a?b:a;var key=new Key(name,source,out);var pass=passes.get(key);
         if(pass==null){
             pass=new PostPass(resources,Psychedelicraft.id(name).toString(),source,out);pass.setOrthoMatrix(new Matrix4f().setOrtho(0,width,0,height,.1F,1000));
-            if(name.equals("heat_distortion")||name.equals("simple_effects_depth")||name.equals("depth_of_field")||name.equals("digital_depth"))pass.addAuxAsset("DepthSampler",()->depth.getDepthTextureId(),width,height);
+            if(usesDepth(name)) {
+                pass.addAuxAsset("DepthSampler", () -> depth.getDepthTextureId(), width, height);
+                pass.addAuxAsset("PS_DepthNoHand", () -> handDepth == null ? depth.getDepthTextureId() : handDepth.beforeHand(), width, height);
+                pass.addAuxAsset("PS_DepthWithHand", () -> handDepth == null ? depth.getDepthTextureId() : handDepth.withSolidHand(), width, height);
+            }
             if(name.equals("heat_distortion"))texture(pass,"NoiseSampler",HEAT,128,128);
             if(name.equals("distortion_map")){texture(pass,"OverlaySampler1",WATER,800,600);texture(pass,"OverlaySampler2",WATER,800,600);}
             if(name.equals("digital_depth"))texture(pass,"AsciiSampler",BITS,128,128);
             passes.put(key,pass);
         }
+        if (usesDepth(name)) set(pass.getEffect(), "PS_HasHandMask", handDepth == null ? 0 : 1);
         RenderSystem.disableBlend();RenderSystem.colorMask(true,true,true,true);uniforms.accept(pass.getEffect());pass.process(partial);lastPasses.add(name);return out;
+    }
+    private static boolean usesDepth(String pass) {
+        return switch (pass) {
+            case "heat_distortion", "simple_effects_depth", "depth_of_field", "digital_depth" -> true;
+            default -> false;
+        };
     }
     private static void texture(PostPass pass,String sampler,ResourceLocation location,int width,int height){pass.addAuxAsset(sampler,()->Minecraft.getInstance().getTextureManager().getTexture(location).getId(),width,height);}
     private static void set(EffectInstance effect,String name,float... values){AbstractUniform uniform=effect.safeGetUniform(name);switch(values.length){case 1->uniform.set(values[0]);case 2->uniform.set(values[0],values[1]);case 3->uniform.set(values[0],values[1],values[2]);case 4->uniform.set(values[0],values[1],values[2],values[3]);default->throw new IllegalArgumentException(name);}}

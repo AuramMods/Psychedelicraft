@@ -1,7 +1,7 @@
 #version 150
 
 uniform sampler2D DiffuseSampler;
-uniform sampler2D DepthSampler;
+#moj_import <psychedelicraft:scene_depth.glsl>
 uniform vec2 pixelSize;
 uniform float vertical;
 uniform float focalPointNear;
@@ -14,7 +14,7 @@ out vec4 fragColor;
 
 void main() {
     vec4 scene = texture(DiffuseSampler, texCoord);
-    float clipDepth = texture(DepthSampler, texCoord).r * 2.0 - 1.0;
+    float clipDepth = psychedelicraft_scene_depth(texCoord) * 2.0 - 1.0;
     float distance = ProjectionDepth.y / (clipDepth + ProjectionDepth.x);
     float blur = 0.0;
     if (distance < focalPointNear) blur = (focalPointNear - distance) * focalBlurNear / focalPointNear;

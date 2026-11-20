@@ -12,10 +12,22 @@
       "name": "DepthSampler"
     },
     {
+      "name": "PS_DepthNoHand"
+    },
+    {
+      "name": "PS_DepthWithHand"
+    },
+    {
       "name": "AsciiSampler"
     }
   ],
   "uniforms": [
+    {
+      "name": "PS_HasHandMask",
+      "type": "float",
+      "count": 1,
+      "values": [0.0]
+    },
     {
       "name": "newResolution",
       "type": "float",

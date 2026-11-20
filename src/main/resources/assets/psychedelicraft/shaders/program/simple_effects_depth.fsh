@@ -1,7 +1,7 @@
 #version 150
 
 uniform sampler2D DiffuseSampler;
-uniform sampler2D DepthSampler;
+#moj_import <psychedelicraft:scene_depth.glsl>
 
 in vec2 texCoord;
 
@@ -15,7 +15,7 @@ out vec4 fragColor;
 void main() {
 	vec4 incolor = texture(DiffuseSampler, texCoord);
 	vec3 outcolor = incolor.rgb;
-	float fogCoord = texture(DepthSampler, texCoord).r;
+	float fogCoord = psychedelicraft_scene_depth(texCoord);
 
 	//if (pulses.r > 0.0) {
 		// float pulseA = (sin((fogCoord - ticks) / 5.0) - 0.4) * pulses.r;

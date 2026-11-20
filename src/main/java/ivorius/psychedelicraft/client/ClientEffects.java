@@ -46,6 +46,17 @@ public final class ClientEffects {
     public static HallucinationManager hallucinations(){return hallucinations;}
     public static CameraEffects camera(){return camera;}
 
+    public static void captureOculusHandMasks(Object targets) {
+        post.captureOculusHandMasks(targets);
+    }
+
+    public static void captureBeforeOculusTranslucentHand() {
+        var client = Minecraft.getInstance();
+        if (client.level != null && ClientDrugState.alive(client.player)) {
+            post.captureWorldDepth(client, hallucinations, environment);
+        }
+    }
+
     public static void receive(Snapshot message) {
         pending.put(message.player(), message);
     }

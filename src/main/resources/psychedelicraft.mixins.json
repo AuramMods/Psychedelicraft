@@ -34,6 +34,8 @@
     "client.EmbeddiumShaderSourceMixin",
     "client.EmbeddiumTerrainMixin",
     "client.OculusShaderTintMixin",
+    "client.OculusHandDepthMixin",
+    "client.OculusTranslucentHandMixin",
     "client.OculusTerrainSourceMixin",
     "client.OculusTerrainMixin",
     "client.DistantTerrainSourceMixin",

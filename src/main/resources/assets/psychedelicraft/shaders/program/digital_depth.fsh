@@ -5,12 +5,12 @@
 #moj_import <psychedelicraft:pixelate.glsl>
 #moj_import <psychedelicraft:linear.glsl>
 
-uniform sampler2D DepthSampler;
+#moj_import <psychedelicraft:scene_depth.glsl>
 
 uniform vec2 depthRange;
 
 float getPixelDensity(vec2 newUV, vec4 newColor) {
-  float textureDepth = texture(DepthSampler, newUV).r;
+  float textureDepth = psychedelicraft_scene_depth(newUV);
   return linearize(textureDepth, depthRange.x, depthRange.y);
 }
 

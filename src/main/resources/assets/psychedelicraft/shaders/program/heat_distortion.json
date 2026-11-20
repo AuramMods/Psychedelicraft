@@ -12,10 +12,22 @@
       "name": "DepthSampler"
     },
     {
+      "name": "PS_DepthNoHand"
+    },
+    {
+      "name": "PS_DepthWithHand"
+    },
+    {
       "name": "NoiseSampler"
     }
   ],
   "uniforms": [
+    {
+      "name": "PS_HasHandMask",
+      "type": "float",
+      "count": 1,
+      "values": [0.0]
+    },
     {
       "name": "totalAlpha",
       "type": "float",
