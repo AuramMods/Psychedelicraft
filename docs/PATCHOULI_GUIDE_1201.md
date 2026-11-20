@@ -29,3 +29,29 @@ The guide presents gameplay families together where variants share the same cont
 
 Gameplay sources are the Forge 1.20.1 code and datapack resources. Optional pack items
 use the current ingredient tags. Settings and numeric examples describe the stock port.
+
+## Verification
+
+- The guide ships as 8 categories, 67 entries and 211 pages. The resource audit
+  resolved 49 internal links and all category, icon, item and recipe IDs.
+- The reobfuscated jar ran on dedicated Forge 47.4.28 with Patchouli 84.1.
+  At GUI scales 1 and 2, the isolated clients opened all 131 guide screens,
+  laid out all 211 pages and resolved all 36 live crafting or smelting diagrams.
+  A native click opened the linked coffea entry. The smallest text layout scale
+  was 0.98. Using Patchouli's block font keeps the body text legible at GUI scale 1.
+- A new survival player had an empty inventory on login and after a real respawn.
+  Native inventory clicks consumed a book and red dye and produced exactly
+  one guide with book ID `psychedelicraft:psychedelicraft`. Using the held item
+  opened the crimson guide. The build contains only the conditional crafting
+  recipe as an acquisition path.
+- A separate client and dedicated server reached the world without Patchouli.
+  Neither side had the guide recipe. All three dedicated runs saved and stopped
+  cleanly, and the three clients exited zero. The clients used muted Xvfb
+  displays and separate test directories.
+- The Java 17 build passed 94 unit tests and all 303 required Forge GameTests.
+  The packaged jar matched every guide resource in the source tree.
+
+The test logs, screenshot gallery and per-run results are stored locally under
+`run/production/patchouli-guide/`. The verified jar is
+`build/libs/psychedelicraft-1.20.1-port.1.jar` with SHA-256
+`09b20b4863a10e89d6797c44179b2278e8dd72881b75082b53fac231d83444d7`.

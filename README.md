@@ -50,6 +50,19 @@ The reobfuscated production jar is `build/libs/psychedelicraft-1.20.1-port.1.jar
 
 Run the unit and headless Forge GameTest suites with `./gradlew build runGameTestServer`. Village graph checks use explicit native Overworld terrain/placement samples, and Harmonium offer checks exercise both configuration states. Reproduction details and remaining test-world outliers are recorded in [the port report](docs/PORT_1201.md).
 
+### In-game guide
+
+Install Patchouli alongside Psychedelicraft. For multiplayer, install it on the client
+and dedicated server. Patchouli is optional for the rest of the mod.
+[Patchouli 1.20.1-84.1 for Forge](https://www.curseforge.com/minecraft/mc-mods/patchouli/files/6164575)
+
+Craft a **Psychedelicraft Guide** from **one book and one red dye** in any crafting grid.
+Hold the red book and use it to open the guide. It covers wild crops, workshop equipment,
+drinks, effects, automation, and optional discoveries.
+[Guide coverage and verification](docs/PATCHOULI_GUIDE_1201.md)
+
+### Development and gameplay notes
+
 Development runs use `./gradlew runClient` and `./gradlew runServer`. The background QA workflow is recorded in [the port report](docs/PORT_1201.md).
 
 JEI is optional. The integration is tested with **JEI 15.74.0.234 for Forge 1.20.1** and covers drying, mashing, fermentation, maturation, distillation, vessel filling, shears harvesting, fluid-aware crafting remainders, colored bottles and coffee heating. Drying-table recipes support JEI's transfer button and the progress arrow opens their category. Fluid and vessel subtypes preserve brew attributes, warmth and dye. The mod also runs without JEI on both client and dedicated server.
