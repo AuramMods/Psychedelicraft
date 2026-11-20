@@ -46,7 +46,7 @@ Build with a Java 17 JDK.
 ./gradlew clean build
 ```
 
-The reobfuscated production jar is `build/libs/psychedelicraft-1.20.1-port.1.jar`. Install the same jar on the Forge client and dedicated server in their `mods` directories. This port targets new 1.20.1 worlds.
+The reobfuscated production jar is `build/libs/psychedelicraft-1.20.1-port.2.jar`. Install the same jar on the Forge client and dedicated server in their `mods` directories. This port targets new 1.20.1 worlds.
 
 Run the unit and headless Forge GameTest suites with `./gradlew build runGameTestServer`. Village graph checks use explicit native Overworld terrain/placement samples, and Harmonium offer checks exercise both configuration states. Reproduction details and remaining test-world outliers are recorded in [the port report](docs/PORT_1201.md).
 

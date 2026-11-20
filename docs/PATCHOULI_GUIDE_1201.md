@@ -52,6 +52,6 @@ use the current ingredient tags. Settings and numeric examples describe the stoc
   The packaged jar matched every guide resource in the source tree.
 
 The test logs, screenshot gallery and per-run results are stored locally under
-`run/production/patchouli-guide/`. The verified jar is
+`run/production/patchouli-guide/`. The original guide verification used
 `build/libs/psychedelicraft-1.20.1-port.1.jar` with SHA-256
 `09b20b4863a10e89d6797c44179b2278e8dd72881b75082b53fac231d83444d7`.

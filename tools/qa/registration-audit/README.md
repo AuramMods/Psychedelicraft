@@ -51,7 +51,7 @@ Generate the current matrix after inspecting those artifacts:
 python3 tools/qa/registration-audit/report.py \
   --english "$audit_game/registration-audit/manifest-en_us.json" \
   --polish "$audit_game/registration-audit/manifest-pl_pl.json" \
-  --jar build/libs/psychedelicraft-1.20.1-port.1.jar \
+  --jar build/libs/psychedelicraft-1.20.1-port.2.jar \
   --output docs/PORT_1201_REGISTRY.md
 ```
 
