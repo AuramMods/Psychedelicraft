@@ -23,13 +23,20 @@ public final class ApparitionRender {
     public static boolean isRendering(){return rendering;}
     public static void applyBlend(){
         if(tint==WHITE)return;
-        RenderSystem.enableBlend();RenderSystem.blendFuncSeparate(GL11.GL_SRC_ALPHA,GL11.GL_ONE_MINUS_SRC_ALPHA,GL11.GL_ONE,GL11.GL_ONE_MINUS_SRC_ALPHA);
-        GL14.glBlendEquation(GL14.GL_FUNC_ADD);RenderSystem.depthMask(false);
+        RenderSystem.enableBlend();
+        RenderSystem.blendFuncSeparate(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA, GL11.GL_ONE, GL11.GL_ONE_MINUS_SRC_ALPHA);
+        RenderSystem.depthMask(false);
+        // Iris can set blend factors directly for layers such as glowing eyes.
+        GL11.glEnable(GL11.GL_BLEND);
+        GL14.glBlendFuncSeparate(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA, GL11.GL_ONE, GL11.GL_ONE_MINUS_SRC_ALPHA);
+        GL14.glBlendEquation(GL14.GL_FUNC_ADD);
+        GL11.glDepthMask(false);
     }
     static void drawEntity(Minecraft client,Entity entity,Vec3[] offsets,Vec3 center,float yaw,float partial,float scale,float red,float green,float blue,float alpha,PoseStack poses){
         var dispatcher=client.getEntityRenderDispatcher();
         boolean shadow=((EntityDispatcherAccessor)dispatcher).psychedelicraft$getShadow(),hitboxes=dispatcher.shouldRenderHitBoxes(),previous=rendering;
-        try(var state=new PostRenderState(false)){
+        // Oculus's world material programs use the first sixteen texture units.
+        try(var state=new PostRenderState(false,16)){
             rendering=true;dispatcher.setRenderShadow(false);dispatcher.setRenderHitBoxes(false);
             var buffers=MultiBufferSource.immediate(new BufferBuilder(256));
             MultiBufferSource colored=colored(buffers,red,green,blue,alpha);

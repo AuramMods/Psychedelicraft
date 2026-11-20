@@ -1,5 +1,6 @@
 package ivorius.psychedelicraft.mixin.client;
 
+import ivorius.psychedelicraft.client.render.ApparitionRender;
 import ivorius.psychedelicraft.client.render.shader.GeometryEffects;
 import ivorius.psychedelicraft.client.render.shader.GeometryProgram;
 import net.minecraft.client.renderer.ShaderInstance;
@@ -25,5 +26,6 @@ abstract class OculusShaderGeometryMixin {
             psychedelicraft$geometry = new GeometryProgram(shader.getId());
         }
         GeometryEffects.applyIrisModel(shader.getName(), psychedelicraft$geometry);
+        ApparitionRender.applyBlend();
     }
 }
