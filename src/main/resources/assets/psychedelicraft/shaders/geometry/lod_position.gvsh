@@ -1,0 +1,7 @@
+void main() {
+  psychedelicraft_parent_main();
+  if (PS_Enabled <= 0.0) return;
+  vec4 position = psychedelicraft_terrain_position(vec4(vertexWorldPos, 1.0));
+  vertexWorldPos = position.xyz;
+  gl_Position = uCombinedMatrix * position;
+}

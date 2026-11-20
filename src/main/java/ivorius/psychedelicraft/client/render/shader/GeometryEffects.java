@@ -64,14 +64,22 @@ public final class GeometryEffects {
     public static String injectTerrain(String source, boolean vertex) throws IOException {
         return GeometrySource.combineTerrain(source, extension(vertex), vertex);
     }
+
+    private static String projectedDeformation() throws IOException {
+        return geometryResource("deform.glsl") + geometryResource("iris_position.glsl");
+    }
+
+    public static String injectDistantTerrain(String source) throws IOException {
+        return GeometrySource.deformDistantTerrain(source, projectedDeformation() + geometryResource("lod_position.gvsh"));
+    }
+
     public static <K> Map<K, String> injectIrisTerrain(Map<K, String> stages) throws IOException {
         if (stages == null) return null;
         for (var stage : stages.entrySet()) {
             if (!(stage.getKey() instanceof Enum<?> type) || !type.name().equals("VERTEX")) continue;
             String source = stage.getValue();
             if (source == null) return stages;
-            String replacement = GeometrySource.deformIrisTerrain(source, geometryResource("deform.glsl")
-                    + geometryResource("iris_position.glsl"));
+            String replacement = GeometrySource.deformIrisTerrain(source, projectedDeformation());
             if (source.equals(replacement)) return stages;
             var patched = new LinkedHashMap<>(stages);
             patched.put(stage.getKey(), replacement);

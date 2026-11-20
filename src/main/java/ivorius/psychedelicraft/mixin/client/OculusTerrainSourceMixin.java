@@ -13,7 +13,7 @@ import java.util.Map;
 @Pseudo
 @Mixin(targets = "net.irisshaders.iris.pipeline.transform.TransformPatcher", remap = false)
 abstract class OculusTerrainSourceMixin {
-    @Inject(method = "patchSodium", at = @At("RETURN"), cancellable = true, require = 0)
+    @Inject(method = {"patchSodium", "patchDHTerrain"}, at = @At("RETURN"), cancellable = true, require = 0)
     private static void psychedelicraft$deformTerrain(CallbackInfoReturnable<Map<?, String>> cir) throws IOException {
         var stages = cir.getReturnValue();
         var patched = GeometryEffects.injectIrisTerrain(stages);

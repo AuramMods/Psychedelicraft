@@ -36,6 +36,8 @@
     "client.OculusShaderTintMixin",
     "client.OculusTerrainSourceMixin",
     "client.OculusTerrainMixin",
+    "client.DistantTerrainSourceMixin",
+    "client.DistantTerrainMixin",
     "client.GameGeometryMixin",
     "client.HandGeometryMixin",
     "client.LevelGeometryMixin",

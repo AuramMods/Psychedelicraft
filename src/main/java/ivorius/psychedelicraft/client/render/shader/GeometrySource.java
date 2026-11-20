@@ -9,7 +9,8 @@ public final class GeometrySource {
     private static final Pattern COMMENTS=Pattern.compile("(?s)/\\*.*?\\*/|//[^\\r\\n]*");
     private static final Pattern MAIN=Pattern.compile("\\bvoid\\s+main\\s*\\(\\s*(?:void\\s*)?\\)");
     private static final Pattern IRIS_CHUNK_POSITION = Pattern.compile(
-            "\\bvec4\\s+getVertexPosition\\s*\\(\\s*\\)\\s*\\{\\s*return\\s+(vec4\\(\\s*_vert_position[^;]*\\));");
+            "\\bvec4\\s+getVertexPosition\\s*\\(\\s*\\)\\s*\\{\\s*return\\s+"
+                    + "(vec4\\(\\s*(?:modelOffset\\s*\\+\\s*)?_vert_position[^;]*\\));");
     private GeometrySource(){}
     static String code(String source){return COMMENTS.matcher(source).replaceAll(match->{char[] chars=match.group().toCharArray();for(int i=0;i<chars.length;i++)if(chars[i]!='\r'&&chars[i]!='\n')chars[i]=' ';return new String(chars);});}
     static boolean declares(String code,String qualifier,String type,String name){return Pattern.compile("\\b"+qualifier+"\\s+"+type+"\\s+[^;{}]*\\b"+name+"\\b[^;{}]*;").matcher(code).find();}
@@ -64,6 +65,14 @@ public final class GeometrySource {
                 + source.substring(vertex.start(), vertex.start(1))
                 + "psychedelicraft_terrain_position(" + position + ")" + source.substring(vertex.end(1))
                 + "\n" + deformation;
+    }
+
+    static String deformDistantTerrain(String source, String deformation) {
+        String code = code(source);
+        var main = MAIN.matcher(code);
+        if (!main.find() || !declares(code, "out", "vec3", "vertexWorldPos")
+                || !declares(code, "uniform", "mat4", "uCombinedMatrix")) return source;
+        return renameMain(source, main) + "\n" + deformation;
     }
 
     private static String renameMain(String source, Matcher main) {
