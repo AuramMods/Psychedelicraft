@@ -148,6 +148,7 @@ public final class GeometryEffects {
         add(shader,uniforms,"PS_ApparitionTint",7,4);
         add(shader,uniforms,"PS_DistantWorldDeformation",4,1);add(shader,uniforms,"PS_SurfaceFractalCoords",7,4);
         add(shader,uniforms,"PS_SurfaceFractalStrength",4,1);add(shader,uniforms,"PS_FractalFractureStrength",4,1);
+        add(shader,uniforms,"PS_PeyoteStrength",4,1);add(shader,uniforms,"PS_WorldUpClip",7,4);
         add(shader,uniforms,"PS_PlayerPosition",6,3);add(shader,uniforms,"PS_CameraPosition",6,3);
         add(shader,uniforms,"PS_ViewToWorld",10,16);add(shader,uniforms,"PS_Pulses",7,4);add(shader,uniforms,"PS_PulseShape",4,1);
         if(Uniform.glGetUniformLocation(shader.getId(),"PS_SurfaceFractalSampler")!=-1&&!samplers.contains("PS_SurfaceFractalSampler")){samplers.add("PS_SurfaceFractalSampler");shader.setSampler("PS_SurfaceFractalSampler",null);}
@@ -216,12 +217,22 @@ public final class GeometryEffects {
         boolean deform=active&&phase.deforms();
         boolean surface=active&&atlas&&GeometryMaterial.surface(phase,name);
         float[] pulse=active&&GeometryMaterial.pulses(name)?h.pulseColor():null;
-        boolean any=active&&(deform&&(h.strength(Effect.SMALL_WAVES)>0||h.strength(Effect.BIG_WAVES)>0||h.strength(Effect.WIGGLE_WAVES)>0||h.strength(Effect.DISTANT_WORLD_DEFORMATION)>0||drugs.getActiveValue(DrugType.LSD)>0)||surface&&h.strength(Effect.SURFACE_FRACTALS)>0||pulse!=null);
+        float smallWaves = deform ? h.strength(Effect.SMALL_WAVES) * .5F : 0;
+        float bigWaves = deform ? h.strength(Effect.BIG_WAVES) * .6F : 0;
+        float wiggleWaves = deform ? h.strength(Effect.WIGGLE_WAVES) * .7F : 0;
+        float distantBend = deform ? h.strength(Effect.DISTANT_WORLD_DEFORMATION) : 0;
+        float fracture = deform ? (float) drugs.getActiveValue(DrugType.LSD) * .06F : 0;
+        float peyote = deform && (phase == RenderPhase.WORLD || phase == RenderPhase.MODEL)
+                ? (float) drugs.getActiveValue(DrugType.PEYOTE) : 0;
+        boolean any = smallWaves > 0 || bigWaves > 0 || wiggleWaves > 0 || distantBend > 0 || fracture > 0 || peyote > 0
+                || surface && h.strength(Effect.SURFACE_FRACTALS) > 0 || pulse != null;
         uniforms.set("PS_Enabled",any?1:0);
         uniforms.set("PS_WorldTicks",active?client.player.tickCount+partial:0);
-        uniforms.set("PS_WavesMatrix",deform?h.strength(Effect.SMALL_WAVES)*.5F:0,deform?h.strength(Effect.BIG_WAVES)*.6F:0,deform?h.strength(Effect.WIGGLE_WAVES)*.7F:0);
-        uniforms.set("PS_DistantWorldDeformation",deform?h.strength(Effect.DISTANT_WORLD_DEFORMATION):0);
-        uniforms.set("PS_FractalFractureStrength",deform?(float)drugs.getActiveValue(DrugType.LSD)*.06F:0);
+        uniforms.set("PS_WavesMatrix",smallWaves,bigWaves,wiggleWaves);
+        uniforms.set("PS_DistantWorldDeformation",distantBend);
+        uniforms.set("PS_FractalFractureStrength",fracture);
+        uniforms.set("PS_PeyoteStrength",peyote);
+        uniforms.set("PS_WorldUpClip",worldToClip.m10(),worldToClip.m11(),worldToClip.m12(),worldToClip.m13());
         uniforms.set("PS_SurfaceFractalStrength",surface?net.minecraft.util.Mth.clamp(h.strength(Effect.SURFACE_FRACTALS),0,1):0);
         uniforms.set("PS_Pulses",pulse==null?0:pulse[0],pulse==null?0:pulse[1],pulse==null?0:pulse[2],pulse==null?0:pulse[3]);
         uniforms.set("PS_PulseShape",GeometryMaterial.pulseShape(phase,name,sphericalFog));

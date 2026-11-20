@@ -32,7 +32,11 @@ public final class EnvironmentEffects {
         return flash>0?flash:Math.max(0,(5-experiencedHealth)/6);
     }
     public float heatDistortion(){return underwater||!PSClientConfig.HEAT_DISTORTION.get()?0:Mth.clamp((heat-1)*.0015F,0,.01F);}
-    public float waterDistortion(float peyote){return Math.max(underwater&&PSClientConfig.WATER_DISTORTION.get()?.025F:0,peyote*.01073F);}
+    public float waterDistortion(float peyote) {
+        float water = underwater && PSClientConfig.WATER_DISTORTION.get() ? .025F : 0;
+        float peyoteDistortion = PSClientConfig.PEYOTE_DISTORTION.get() ? peyote * .01073F : 0;
+        return Math.max(water, peyoteDistortion);
+    }
     public float wetOverlay(){return underwater||!PSClientConfig.WATER_OVERLAY.get()?0:Math.min(1,wetTicks/80F);}
     private static float smooth(float value,float target){float next=value+(target-value)*.01F;return next+Mth.clamp(target-next,-.01F,.01F);}
     private static float sunIntensity(float time,boolean rain,boolean thunder){float angle=((time+.25F)%1)*2;if(angle>1)return 0;float sun=Mth.cos((angle-.5F)*Mth.PI);return sun*(rain?.5F:1)*(thunder?.5F:1);}

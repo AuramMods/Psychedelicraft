@@ -3,11 +3,20 @@ uniform float PS_WorldTicks;
 uniform vec3 PS_WavesMatrix;
 uniform float PS_DistantWorldDeformation;
 uniform float PS_FractalFractureStrength;
+uniform float PS_PeyoteStrength;
+uniform vec4 PS_WorldUpClip;
 uniform vec3 PS_PlayerPosition;
 float psychedelicraft_gold_noise(vec2 xy, float seed) {
   const float phi = 1.61803398874989484820459;
   return fract(tan(distance(xy * phi, xy) * seed) * xy.x);
 }
+
+float psychedelicraft_peyote_height(vec2 position, float ticks) {
+  float rise = sin(dot(position, vec2(0.052, 0.019)) - ticks * 0.023);
+  float swell = sin(dot(position, vec2(-0.020, 0.038)) + ticks * 0.017);
+  return 3.0 * rise + 1.5 * swell;
+}
+
 // The legacy distance-based waves measure camera-space distance before projection.
 vec4 psychedelicraft_deform(vec4 clip, vec3 position, float viewDistance) {
   float worldTicks = PS_WorldTicks;
@@ -85,6 +94,11 @@ vec4 psychedelicraft_deform(vec4 clip, vec3 position, float viewDistance) {
       clip.w += sin(clip.y * 0.13 * sin(worldTicks * 0.02834472) + worldTicks * 0.023482934) * 0.1 * inf5 * pMul;
       clip.w += sin(clip.x * 0.124 * sin(worldTicks * 0.00184298) + worldTicks * 0.018394082) * 0.05 * inf6 * pMul;
     }
+  }
+  if (PS_PeyoteStrength > 0.0) {
+    float height = psychedelicraft_peyote_height(position.xz, worldTicks)
+                 - psychedelicraft_peyote_height(playerPos.xz, worldTicks);
+    clip += PS_WorldUpClip * (height * PS_PeyoteStrength);
   }
   return clip;
 }
