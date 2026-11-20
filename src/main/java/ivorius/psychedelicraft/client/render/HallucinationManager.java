@@ -11,6 +11,7 @@ import net.minecraft.util.RandomSource;
 
 import ivorius.psychedelicraft.entity.drug.Drug;
 import ivorius.psychedelicraft.entity.drug.DrugProperties;
+import ivorius.psychedelicraft.entity.drug.DrugType;
 import ivorius.psychedelicraft.entity.drug.type.HarmoniumDrug;
 import net.minecraft.util.Mth;
 
@@ -18,6 +19,7 @@ import org.jetbrains.annotations.Nullable;
 
 public final class HallucinationManager {
     private static final Effect[] EFFECTS = Effect.values();
+    private static final float BROWN_SHROOM_WAVE_THRESHOLD = 0.15F;
     private final List<Effect> active = new ArrayList<>();
     private final float[] categoryStrengths = new float[Category.values().length];
     private final float[] strengths = new float[EFFECTS.length];
@@ -33,12 +35,19 @@ public final class HallucinationManager {
         }
         int count = Math.max(0, Mth.floor(total * 4F + 0.9F));
 
-        while (!active.isEmpty() && random.nextFloat() < 1F / (20 * 60 * 5 / active.size())) {
-            active.remove(random.nextInt(active.size()));
+        // One mushroom peaks near 0.38. Reserve its small waves before the peak so they can build naturally.
+        int reserved = count > 0 && properties.getActiveValue(DrugType.BROWN_SHROOMS) >= BROWN_SHROOM_WAVE_THRESHOLD ? 1 : 0;
+        if (reserved > 0 && (active.isEmpty() || active.get(0) != Effect.SMALL_WAVES)) {
+            active.remove(Effect.SMALL_WAVES);
+            active.add(0, Effect.SMALL_WAVES);
+        }
+
+        while (active.size() > reserved && random.nextFloat() < 1F / (20 * 60 * 5 / active.size())) {
+            removeRandom(random, reserved);
             addRandom(random);
         }
         while (active.size() > count) {
-            active.remove(random.nextInt(active.size()));
+            removeRandom(random, reserved);
         }
         while (active.size() < count && addRandom(random)) {
             // Fill the remaining slots from the weighted effect pool.
@@ -94,6 +103,10 @@ public final class HallucinationManager {
 
     private static float colorWave(int age, float first, float second) {
         return 0.5F * (1F + Mth.sin(age * first) * 0.5F) * (1F + Mth.sin(age * second) * 0.5F);
+    }
+
+    private void removeRandom(RandomSource random, int reserved) {
+        active.remove(reserved + random.nextInt(active.size() - reserved));
     }
 
     private boolean addRandom(RandomSource random) {
