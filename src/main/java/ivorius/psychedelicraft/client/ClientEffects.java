@@ -128,6 +128,10 @@ public final class ClientEffects {
 
     private static void resetVisuals(){post.release();hallucinations=new HallucinationManager();environment=new EnvironmentEffects();camera=new CameraEffects();overlays=new ScreenOverlays();worldProjection=null;pauseProgress=0;}
 
+    public static void shaderPipelineChanged() {
+        post.invalidateRenderer();
+    }
+
     @Mod.EventBusSubscriber(modid = Psychedelicraft.MOD_ID, value = Dist.CLIENT, bus = Mod.EventBusSubscriber.Bus.MOD)
     public static final class Resources {
         private Resources() {}

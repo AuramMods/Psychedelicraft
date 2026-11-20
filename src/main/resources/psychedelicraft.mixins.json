@@ -36,6 +36,7 @@
     "client.OculusShaderGeometryMixin",
     "client.OculusModelSourceMixin",
     "client.OculusAtlasSamplerMixin",
+    "client.OculusPipelineLifetimeMixin",
     "client.OculusHandDepthMixin",
     "client.OculusHandRenderMixin",
     "client.OculusTerrainSourceMixin",

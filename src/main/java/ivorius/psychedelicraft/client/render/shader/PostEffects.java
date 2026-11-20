@@ -34,13 +34,24 @@ public final class PostEffects {
     private int width,height;
     private boolean stencil,failed;
     private boolean worldDepthCaptured;
+    private boolean rendererInvalidated;
     private OculusHandDepth handDepth;
     private float projectionDepthZ, projectionDepthTranslation;
     private Throwable lastFailure;
     private long resourceGeneration;
     private record Key(String name,RenderTarget in,RenderTarget out){}
 
-    public void beginFrame(){worldDepthCaptured=false;handDepth=null;distantDepth.beginFrame();}
+    public void invalidateRenderer() {
+        rendererInvalidated = true;
+    }
+
+    public void beginFrame(){
+        if (rendererInvalidated) {
+            rendererInvalidated = false;
+            release();
+        }
+        worldDepthCaptured=false;handDepth=null;distantDepth.beginFrame();
+    }
 
     public void captureOculusHandMasks(Object targets) {
         if (PSClientConfig.SHADERS_2D.get()) handDepth = OculusHandDepth.read(targets);
