@@ -75,6 +75,29 @@ public final class GeometrySource {
         return renameMain(source, main) + "\n" + deformation;
     }
 
+    static boolean supportsIrisMaterial(String vertex, String fragment) {
+        String vertexCode = code(vertex);
+        String fragmentCode = code(fragment);
+        return MAIN.matcher(vertexCode).find() && declares(vertexCode, "out", "vec4", "color")
+                && MAIN.matcher(fragmentCode).find() && declares(fragmentCode, "in", "vec4", "color")
+                && declares(fragmentCode, "uniform", "sampler2D", "gtexture")
+                && declares(fragmentCode, "out", "vec4", "iris_FragData0");
+    }
+
+    static String irisTerrainMaterial(String source, String extension, boolean vertex) {
+        String code = code(source);
+        var main = MAIN.matcher(code);
+        if (!main.find()) return source;
+        if (vertex) {
+            String sampler = declares(code, "uniform", "sampler2D", "gtexture") ? "" : "uniform sampler2D gtexture;\n";
+            extension = sampler + extension;
+        } else {
+            extension = extension.replace("__PS_FRAGMENT_COLOR__", "iris_FragData0")
+                    .replace("__PS_SURFACE_FALLBACK__", "");
+        }
+        return renameMain(source, main) + "\n" + extension;
+    }
+
     private static String renameMain(String source, Matcher main) {
         return source.substring(0, main.start()) + "void psychedelicraft_parent_main()" + source.substring(main.end());
     }

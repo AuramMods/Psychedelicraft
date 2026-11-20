@@ -73,19 +73,30 @@ public final class GeometryEffects {
         return GeometrySource.deformDistantTerrain(source, projectedDeformation() + geometryResource("lod_position.gvsh"));
     }
 
-    public static <K> Map<K, String> injectIrisTerrain(Map<K, String> stages) throws IOException {
+    public static <K> Map<K, String> injectIrisTerrain(Map<K, String> stages, boolean material) throws IOException {
         if (stages == null) return null;
+        K vertex = null;
+        K fragment = null;
+        boolean intermediate = false;
         for (var stage : stages.entrySet()) {
-            if (!(stage.getKey() instanceof Enum<?> type) || !type.name().equals("VERTEX")) continue;
-            String source = stage.getValue();
-            if (source == null) return stages;
-            String replacement = GeometrySource.deformIrisTerrain(source, projectedDeformation());
-            if (source.equals(replacement)) return stages;
-            var patched = new LinkedHashMap<>(stages);
-            patched.put(stage.getKey(), replacement);
-            return patched;
+            if (!(stage.getKey() instanceof Enum<?> type) || stage.getValue() == null) continue;
+            switch (type.name()) {
+                case "VERTEX" -> vertex = stage.getKey();
+                case "FRAGMENT" -> fragment = stage.getKey();
+                default -> intermediate = true;
+            }
         }
-        return stages;
+        if (vertex == null) return stages;
+        String source = stages.get(vertex);
+        String replacement = GeometrySource.deformIrisTerrain(source, projectedDeformation());
+        if (source.equals(replacement)) return stages;
+        var patched = new LinkedHashMap<>(stages);
+        if (material && !intermediate && fragment != null && GeometrySource.supportsIrisMaterial(source, stages.get(fragment))) {
+            replacement = GeometrySource.irisTerrainMaterial(replacement, geometryResource("iris_material.gvsh"), true);
+            patched.put(fragment, GeometrySource.irisTerrainMaterial(stages.get(fragment), extension(false), false));
+        }
+        patched.put(vertex, replacement);
+        return patched;
     }
     public static void register(ShaderInstance shader,List<Uniform> uniforms,List<String> samplers){
         add(shader,uniforms,"PS_Enabled",4,1);add(shader,uniforms,"PS_WorldTicks",4,1);add(shader,uniforms,"PS_WavesMatrix",6,3);
