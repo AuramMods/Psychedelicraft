@@ -57,6 +57,15 @@ public final class ClientEffects {
         }
     }
 
+    public static void observeDistantDepth(Object params, boolean solid) {
+        var client = Minecraft.getInstance();
+        if (ClientDrugState.alive(client.player)) post.observeDistantDepth(client, hallucinations, environment, params, solid);
+    }
+
+    public static void captureDistantOpaqueDepth(int texture, int width, int height) {
+        post.captureDistantOpaqueDepth(texture, width, height);
+    }
+
     public static void receive(Snapshot message) {
         pending.put(message.player(), message);
     }

@@ -20,7 +20,7 @@ public final class PostRenderState implements AutoCloseable {
     private final int equationRgb=GL11.glGetInteger(GL20.GL_BLEND_EQUATION_RGB),equationAlpha=GL11.glGetInteger(GL20.GL_BLEND_EQUATION_ALPHA),depthFunc=GL11.glGetInteger(GL11.GL_DEPTH_FUNC);
     private final boolean blend=GL11.glIsEnabled(GL11.GL_BLEND),depth=GL11.glIsEnabled(GL11.GL_DEPTH_TEST),cull=GL11.glIsEnabled(GL11.GL_CULL_FACE),scissor=GL11.glIsEnabled(GL11.GL_SCISSOR_TEST),stencil=GL11.glIsEnabled(GL11.GL_STENCIL_TEST),depthMask=GL11.glGetBoolean(GL11.GL_DEPTH_WRITEMASK);
     private final double clearDepth=GL11.glGetDouble(GL11.GL_DEPTH_CLEAR_VALUE);
-    private final int[] viewport=new int[4],scissorBox=new int[4],textures=new int[3],shaderTextures=new int[3];
+    private final int[] viewport=new int[4],scissorBox=new int[4],textures,shaderTextures;
     private final float[] clearColor=new float[4],shaderColor=RenderSystem.getShaderColor().clone();
     private final ByteBuffer colorMask=BufferUtils.createByteBuffer(4);
     private final Matrix4f projection=new Matrix4f(RenderSystem.getProjectionMatrix());
@@ -32,6 +32,11 @@ public final class PostRenderState implements AutoCloseable {
     }
     /** World effects retain the existing depth test and clipping; screen passes install their own defaults. */
     public PostRenderState(boolean screen){
+        this(screen, 3);
+    }
+    PostRenderState(boolean screen, int textureUnits) {
+        textures = new int[textureUnits];
+        shaderTextures = new int[textureUnits];
         GL11.glGetIntegerv(GL11.GL_VIEWPORT,viewport);GL11.glGetIntegerv(GL11.GL_SCISSOR_BOX,scissorBox);GL11.glGetFloatv(GL11.GL_COLOR_CLEAR_VALUE,clearColor);GL11.glGetBooleanv(GL11.GL_COLOR_WRITEMASK,colorMask);
         for(int i=0;i<textures.length;i++){GlStateManager._activeTexture(GL13.GL_TEXTURE0+i);textures[i]=GL11.glGetInteger(GL11.GL_TEXTURE_BINDING_2D);shaderTextures[i]=RenderSystem.getShaderTexture(i);}GlStateManager._activeTexture(activeTexture);
         RenderSystem.getModelViewStack().pushPose();

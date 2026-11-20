@@ -8,14 +8,12 @@ uniform float focalPointNear;
 uniform float focalPointFar;
 uniform float focalBlurNear;
 uniform float focalBlurFar;
-uniform vec2 ProjectionDepth;
 in vec2 texCoord;
 out vec4 fragColor;
 
 void main() {
     vec4 scene = texture(DiffuseSampler, texCoord);
-    float clipDepth = psychedelicraft_scene_depth(texCoord) * 2.0 - 1.0;
-    float distance = ProjectionDepth.y / (clipDepth + ProjectionDepth.x);
+    float distance = psychedelicraft_scene_distance(texCoord);
     float blur = 0.0;
     if (distance < focalPointNear) blur = (focalPointNear - distance) * focalBlurNear / focalPointNear;
     else if (distance > focalPointFar) blur = (distance - focalPointFar) * focalBlurFar / max(focalPointFar, 0.0001);

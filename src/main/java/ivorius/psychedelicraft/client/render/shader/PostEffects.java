@@ -27,6 +27,7 @@ public final class PostEffects {
     private static final ResourceLocation HEAT=Psychedelicraft.id("textures/effect/heat_distortion_noise.png"),WATER=Psychedelicraft.id("textures/effect/water_distortion.png"),BITS=Psychedelicraft.id("textures/effect/bits.png");
     private final Map<Key,PostPass> passes=new HashMap<>();
     private final MotionHistory history=new MotionHistory();
+    private final DistantDepth distantDepth = new DistantDepth();
     private final List<String> lastPasses=new ArrayList<>();
     private RenderTarget a,b,depth,main;
     private ShaderResources resources;
@@ -34,23 +35,37 @@ public final class PostEffects {
     private boolean stencil,failed;
     private boolean worldDepthCaptured;
     private OculusHandDepth handDepth;
+    private float projectionDepthZ, projectionDepthTranslation;
     private Throwable lastFailure;
     private long resourceGeneration;
     private record Key(String name,RenderTarget in,RenderTarget out){}
 
-    public void beginFrame(){worldDepthCaptured=false;handDepth=null;}
+    public void beginFrame(){worldDepthCaptured=false;handDepth=null;distantDepth.beginFrame();}
 
     public void captureOculusHandMasks(Object targets) {
         if (PSClientConfig.SHADERS_2D.get()) handDepth = OculusHandDepth.read(targets);
     }
 
+    public void observeDistantDepth(Minecraft client, HallucinationManager h, EnvironmentEffects environment, Object params, boolean solid) {
+        if (needsDepth(client, h, environment)) distantDepth.observeDraw(params, solid);
+    }
+
+    public void captureDistantOpaqueDepth(int texture, int width, int height) {
+        distantDepth.copyBeforeTranslucency(texture, width, height);
+    }
+
     /** Preserve scene depth before the native first-person pass clears the main depth buffer. */
     public void captureWorldDepth(Minecraft client,HallucinationManager h,EnvironmentEffects environment){
-        if(worldDepthCaptured||failed||!PSClientConfig.SHADERS_2D.get())return;
-        var drugs=ClientDrugState.get(client.player);
-        if(h.contrastColor(drugs.getHarmonium())==null&&PSClientConfig.BLUR_NEAR.get()<=0&&PSClientConfig.BLUR_FAR.get()<=0
-                &&environment.heatDistortion()<=0&&environment.waterDistortion((float)drugs.getActiveValue(DrugType.PEYOTE))<=0&&drugs.getActiveValue(DrugType.ZERO)<=0)return;
+        if(worldDepthCaptured||!needsDepth(client,h,environment))return;
         try(var state=new PostRenderState()){prepare(client,true);depth.copyDepthFrom(main);worldDepthCaptured=true;}
+    }
+
+    private boolean needsDepth(Minecraft client, HallucinationManager h, EnvironmentEffects environment) {
+        if (failed || !PSClientConfig.SHADERS_2D.get()) return false;
+        var drugs=ClientDrugState.get(client.player);
+        return h.contrastColor(drugs.getHarmonium()) != null || PSClientConfig.BLUR_NEAR.get() > 0 || PSClientConfig.BLUR_FAR.get() > 0
+                || environment.heatDistortion() > 0 || environment.waterDistortion((float)drugs.getActiveValue(DrugType.PEYOTE)) > 0
+                || drugs.getActiveValue(DrugType.ZERO) > 0;
     }
 
     public void render(Minecraft client,float partial,Matrix4f projection,HallucinationManager h,EnvironmentEffects environment,float pauseProgress){
@@ -68,12 +83,17 @@ public final class PostEffects {
         boolean post=PSClientConfig.SHADERS_2D.get()&&(colors||contrast!=null||colorBloom!=null||bloom>0||vision>0||horizontal>0||vertical>0||focus||heat>0||water>0||wet>0||digital>0);
         float motion=PSClientConfig.MOTION_BLUR.get()?drugs.blendStrength(0,Drug::motionBlur):0;
         if(!post&&motion<=0&&history.empty())return;
-        try(var state=new PostRenderState()){
+        boolean needsDepth=contrast!=null||focus||heat>0||water>0||digital>0;
+        try(var state=new PostRenderState(true, post && needsDepth ? 7 : 3)){
             if(motion>0){history.render(client,ticks,motion);lastPasses.add("motion_history");}else history.release();
             if(!post)return;
-            boolean needsDepth=contrast!=null||focus||heat>0||water>0||digital>0;
             prepare(client,needsDepth);
-            if(needsDepth&&!worldDepthCaptured)depth.copyDepthFrom(main);
+            if (needsDepth) {
+                if (!worldDepthCaptured) depth.copyDepthFrom(main);
+                projectionDepthZ = projection.m22();
+                projectionDepthTranslation = projection.m32();
+                distantDepth.finish();
+            }
             RenderTarget current=main;
             if(heat>0)current=distort(current,heat,ticks*.15F,partial);
             if(water>0)current=distort(current,water,ticks*.03F,partial);
@@ -84,7 +104,7 @@ public final class PostEffects {
                 float near=PSClientConfig.FOCUS_NEAR.get().floatValue(),far=PSClientConfig.FOCUS_FAR.get().floatValue();float low=Math.max(0,Math.min(near,far)),high=Math.max(0,Math.max(near,far));
                 for(int n=0;n<Mth.ceil(Math.max(nearBlur,farBlur));n++)for(int axis=0;axis<2;axis++){
                     float activeNear=Mth.clamp(nearBlur-n,0,1),activeFar=Mth.clamp(farBlur-n,0,1);int direction=axis;
-                    current=draw("depth_of_field",current,partial,e->{set(e,"pixelSize",1F/width,1F/height);set(e,"vertical",direction);set(e,"focalPointNear",low);set(e,"focalPointFar",high);set(e,"focalBlurNear",activeNear);set(e,"focalBlurFar",activeFar);set(e,"ProjectionDepth",projection.m22(),projection.m32());});
+                    current=draw("depth_of_field",current,partial,e->{set(e,"pixelSize",1F/width,1F/height);set(e,"vertical",direction);set(e,"focalPointNear",low);set(e,"focalPointFar",high);set(e,"focalBlurNear",activeNear);set(e,"focalBlurFar",activeFar);});
                 }
             }
             if(bloom>0)current=bloom(current,bloom,null,partial);
@@ -99,7 +119,7 @@ public final class PostEffects {
                 current=draw("digital_depth",current,partial,e->{set(e,"newResolution",resolutionX,resolutionY);set(e,"totalAlpha",1);set(e,"textProgress",ease((digital-.2F)*5)+ease((digital-.8F)*10));set(e,"maxColors",digital>.4F?Math.max(256/((digital-.4F)*640+1),2):-1);set(e,"saturation",1-ease((digital-.6F)*5));set(e,"depthRange",.05F,client.options.getEffectiveRenderDistance()*16F);});
             }
             main.bindWrite(true);current.blitToScreen(main.viewWidth,main.viewHeight,true);
-        }catch(IOException error){failed=true;lastFailure=error;try(var state=new PostRenderState()){releaseResources();history.release();}LOGGER.error("Could not load Psychedelicraft post effect",error);}
+        }catch(IOException error){failed=true;lastFailure=error;try(var state=new PostRenderState()){releaseResources();distantDepth.release();history.release();}LOGGER.error("Could not load Psychedelicraft post effect",error);}
     }
     private static float ease(float value){float x=Mth.clamp(value,0,1);return (1-Mth.cos(x*Mth.PI))*.5F;}
     private void prepare(Minecraft client,boolean needsDepth){
@@ -119,19 +139,33 @@ public final class PostEffects {
     }
     private RenderTarget draw(String name,RenderTarget source,float partial,Consumer<EffectInstance> uniforms)throws IOException{
         RenderTarget out=source==a?b:a;var key=new Key(name,source,out);var pass=passes.get(key);
+        boolean usesDepth = usesDepth(name);
         if(pass==null){
             pass=new PostPass(resources,Psychedelicraft.id(name).toString(),source,out);pass.setOrthoMatrix(new Matrix4f().setOrtho(0,width,0,height,.1F,1000));
-            if(usesDepth(name)) {
+            if(usesDepth) {
                 pass.addAuxAsset("DepthSampler", () -> depth.getDepthTextureId(), width, height);
                 pass.addAuxAsset("PS_DepthNoHand", () -> handDepth == null ? depth.getDepthTextureId() : handDepth.beforeHand(), width, height);
                 pass.addAuxAsset("PS_DepthWithHand", () -> handDepth == null ? depth.getDepthTextureId() : handDepth.withSolidHand(), width, height);
+                pass.addAuxAsset("PS_DistantDepth", () -> distantDepth.texture() == 0 ? depth.getDepthTextureId() : distantDepth.texture(), width, height);
+                pass.addAuxAsset("PS_DistantOpaqueDepth", () -> distantDepth.opaqueTexture() == 0 ? depth.getDepthTextureId() : distantDepth.opaqueTexture(), width, height);
             }
             if(name.equals("heat_distortion"))texture(pass,"NoiseSampler",HEAT,128,128);
             if(name.equals("distortion_map")){texture(pass,"OverlaySampler1",WATER,800,600);texture(pass,"OverlaySampler2",WATER,800,600);}
             if(name.equals("digital_depth"))texture(pass,"AsciiSampler",BITS,128,128);
             passes.put(key,pass);
         }
-        if (usesDepth(name)) set(pass.getEffect(), "PS_HasHandMask", handDepth == null ? 0 : 1);
+        if (usesDepth) {
+            var effect = pass.getEffect();
+            set(effect, "PS_HasHandMask", handDepth == null ? 0 : 1);
+            set(effect, "PS_NearProjection", projectionDepthZ, projectionDepthTranslation);
+            int mode = distantDepth.texture() == 0 ? 0 : distantDepth.opaqueTexture() == 0 ? 1 : 2;
+            set(effect, "PS_DistantDepthMode", mode);
+            if (mode != 0) {
+                var opaque = distantDepth.projection();
+                var translucent = distantDepth.translucentProjection();
+                set(effect, "PS_DistantProjections", opaque.z(), opaque.translation(), translucent.z(), translucent.translation());
+            }
+        }
         RenderSystem.disableBlend();RenderSystem.colorMask(true,true,true,true);uniforms.accept(pass.getEffect());pass.process(partial);lastPasses.add(name);return out;
     }
     private static boolean usesDepth(String pass) {
@@ -143,5 +177,5 @@ public final class PostEffects {
     private static void texture(PostPass pass,String sampler,ResourceLocation location,int width,int height){pass.addAuxAsset(sampler,()->Minecraft.getInstance().getTextureManager().getTexture(location).getId(),width,height);}
     private static void set(EffectInstance effect,String name,float... values){AbstractUniform uniform=effect.safeGetUniform(name);switch(values.length){case 1->uniform.set(values[0]);case 2->uniform.set(values[0],values[1]);case 3->uniform.set(values[0],values[1],values[2]);case 4->uniform.set(values[0],values[1],values[2],values[3]);default->throw new IllegalArgumentException(name);}}
     private void releaseResources(){passes.values().forEach(PostPass::close);passes.clear();if(a!=null)a.destroyBuffers();if(b!=null)b.destroyBuffers();if(depth!=null)depth.destroyBuffers();a=b=depth=main=null;width=height=0;resources=null;worldDepthCaptured=false;}
-    public void release(){RenderSystem.assertOnRenderThread();try(var state=new PostRenderState()){releaseResources();history.release();}failed=false;lastFailure=null;lastPasses.clear();}
+    public void release(){RenderSystem.assertOnRenderThread();try(var state=new PostRenderState()){releaseResources();distantDepth.release();history.release();}failed=false;lastFailure=null;lastPasses.clear();}
 }

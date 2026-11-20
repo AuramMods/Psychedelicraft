@@ -18,10 +18,34 @@
       "name": "PS_DepthWithHand"
     },
     {
+      "name": "PS_DistantDepth"
+    },
+    {
+      "name": "PS_DistantOpaqueDepth"
+    },
+    {
       "name": "AsciiSampler"
     }
   ],
   "uniforms": [
+    {
+      "name": "PS_DistantDepthMode",
+      "type": "float",
+      "count": 1,
+      "values": [0.0]
+    },
+    {
+      "name": "PS_NearProjection",
+      "type": "float",
+      "count": 2,
+      "values": [-1.001, -0.1]
+    },
+    {
+      "name": "PS_DistantProjections",
+      "type": "float",
+      "count": 4,
+      "values": [-1.001, -0.1, -1.001, -0.1]
+    },
     {
       "name": "PS_HasHandMask",
       "type": "float",

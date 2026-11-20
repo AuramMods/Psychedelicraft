@@ -40,6 +40,8 @@
     "client.OculusTerrainMixin",
     "client.DistantTerrainSourceMixin",
     "client.DistantTerrainMixin",
+    "client.DistantDepthPassMixin",
+    "client.OculusDistantDepthMixin",
     "client.GameGeometryMixin",
     "client.HandGeometryMixin",
     "client.LevelGeometryMixin",
