@@ -12,7 +12,7 @@
     {
       "type": "patchouli:text",
       "title": "Places to Check",
-      "text": "Look in plains and desert village greenhouses and plains vineyards. These buildings are rolled during village generation, so check more than one village. Farmers and dealers can supply missing crops."
+      "text": "Look in plains and desert village greenhouses and plains vineyards. These buildings are rolled during village generation, so check more than one village. $(l:psychedelicraft:advanced/villagers)Farmers and dealers$(/l) can supply missing crops."
     },
     {
       "type": "patchouli:text",

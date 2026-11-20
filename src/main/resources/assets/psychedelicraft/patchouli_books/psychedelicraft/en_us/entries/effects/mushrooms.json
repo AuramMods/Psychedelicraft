@@ -1,0 +1,28 @@
+{
+  "name": "Magic Mushroom Effects",
+  "icon": "psychedelicraft:brown_magic_mushrooms",
+  "category": "psychedelicraft:effects",
+  "sortnum": 70,
+  "pages": [
+    {
+      "type": "patchouli:spotlight",
+      "item": "psychedelicraft:brown_magic_mushrooms",
+      "text": "Either color adds extra random block ticks near you. Effects combine from both colors. The range starts at 2 blocks with 3 tick attempts per game tick, rising to 5 blocks and 18 attempts at peak growth strength."
+    },
+    {
+      "type": "patchouli:text",
+      "title": "Grow at Your Feet",
+      "text": "The extra ticks can advance crops and other randomly ticking blocks. They sample positions, so aim your movement at a dense plot of crops. Crops still need suitable soil, light and other normal growth conditions."
+    },
+    {
+      "type": "patchouli:text",
+      "title": "Mob Targeting",
+      "text": "Mobs can fail to acquire you as a target. One serving near its peak gives about a 25% chance to block a new target. Overlapping doses increase it. At full avoidance, mobs also drop an existing target."
+    },
+    {
+      "type": "patchouli:text",
+      "title": "Red or Brown",
+      "text": "Both colors give the same gameplay benefits. Their color, motion and contextual effects differ. See $(l:psychedelicraft:preparations/mushroom_batch)making a batch$(/l) for the two drying recipes."
+    }
+  ]
+}

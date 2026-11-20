@@ -1,0 +1,23 @@
+{
+  "name": "Advancement Trail",
+  "icon": "minecraft:writable_book",
+  "category": "psychedelicraft:advanced",
+  "sortnum": 20,
+  "pages": [
+    {
+      "type": "patchouli:text",
+      "title": "First Milestones",
+      "text": "Open Minecraft’s Advancements screen and select Psychedelicraft. Find crops, craft the drying table, mash tub or distillery, and roll a joint or bake a muffin. Those branches lead to growing and workshop milestones."
+    },
+    {
+      "type": "patchouli:text",
+      "title": "Brewing Track",
+      "text": "Mash wheat, grapes and cane for the wash branches. Later milestones check the actual brew you drink, including beer, mature beer, wine, brandy, basi and rum. Check the fluid style before serving."
+    },
+    {
+      "type": "patchouli:text",
+      "title": "Advanced Milestones",
+      "text": "Other branches track drying both mushroom colors and cannabis buds, feeding a villager, a hangover and active effects. Doses must be active for profile checks, so taking them at different times may give different results."
+    }
+  ]
+}

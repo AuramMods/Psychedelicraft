@@ -1,0 +1,33 @@
+{
+  "name": "Villagers & Trading",
+  "icon": "minecraft:emerald",
+  "category": "psychedelicraft:advanced",
+  "sortnum": 0,
+  "pages": [
+    {
+      "type": "patchouli:text",
+      "title": "Find a Dealer",
+      "text": "An unemployed villager can claim a wood or iron drying table as a workstation. Look in village greenhouses too. Trade like you would with a vanilla villager. Stock varies by villager and tier."
+    },
+    {
+      "type": "patchouli:text",
+      "title": "Dealer Stock",
+      "text": "Novices can offer cannabis, coca, peyote, muffins and cigarettes. Level two adds dried ingredients and tools. Level three can offer magic mushrooms, bongs, syringes, LSD pills or LSA squares."
+    },
+    {
+      "type": "patchouli:text",
+      "title": "Farmer Stock",
+      "text": "Novice farmers can supply grapes, hop seeds or cones, tobacco supplies, mugs, coffee beans or cherries. Farmers also keep their vanilla offers. The server’s farmerDrugDeals setting controls the added pool."
+    },
+    {
+      "type": "patchouli:text",
+      "title": "Dealer Work",
+      "text": "Dealers can work nearby farmland, plant seeds, apply bonemeal and dry ingredients. Keep the work area reachable and its crops lit. Mob griefing controls their ability to change crops."
+    },
+    {
+      "type": "patchouli:text",
+      "title": "A Risky Trade",
+      "text": "Feeding a hash muffin to some villagers can create an addict that buys preparations. Addicts can be injured by trades and restocking. Keep your ordinary farmers and dealers for renewable supplies."
+    }
+  ]
+}

@@ -1,0 +1,33 @@
+{
+  "name": "Visuals, Sound & HUD",
+  "icon": "minecraft:spyglass",
+  "category": "psychedelicraft:advanced",
+  "sortnum": 50,
+  "pages": [
+    {
+      "type": "patchouli:text",
+      "title": "Open the Settings",
+      "text": "From the Forge Mods screen choose Psychedelicraft, then Config. Visuals covers 2D effects, 3D shaders, overlays, motion blur and focus. Turn down the channels that make it harder for you to play."
+    },
+    {
+      "type": "patchouli:text",
+      "title": "Peyote & Shader Packs",
+      "text": "Use 3D Shaders for terrain deformation. Peyote Screen Distortion controls the watery ripple. Water Distortion controls the ordinary environment effect. Adjust these independently. AuramBSL with Oculus, Embeddium and Distant Horizons is the tested shader combination."
+    },
+    {
+      "type": "patchouli:text",
+      "title": "Audio & Chat",
+      "text": "Turn off Drug Theme Music globally or by effect. Vanilla sound controls still govern output. Incoming and outgoing chat distortion have separate local toggles. Action-bar status text stays unchanged."
+    },
+    {
+      "type": "patchouli:text",
+      "title": "Your HUD",
+      "text": "Your existing hotbar, hunger and health displays still work. Effect visuals are part of the rendered world, so hiding the vanilla HUD with F1 need not hide them. Use the effect settings themselves to change those visuals."
+    },
+    {
+      "type": "patchouli:text",
+      "title": "Client & Server",
+      "text": "Visuals, audio and chat options are personal. Dedicated-server generation, recipes, balance and trade pools come from the host or pack. Ask the pack operator when your world disagrees with the stock guide."
+    }
+  ]
+}

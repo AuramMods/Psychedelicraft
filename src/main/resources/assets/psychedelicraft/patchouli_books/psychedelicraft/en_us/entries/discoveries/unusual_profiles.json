@@ -1,0 +1,18 @@
+{
+  "name": "Unusual Effects",
+  "icon": "psychedelicraft:rift_jar",
+  "category": "psychedelicraft:discoveries",
+  "sortnum": 120,
+  "pages": [
+    {
+      "type": "patchouli:text",
+      "title": "Optional Discoveries",
+      "text": "The following page describes effects tied to Reality Rifts and Harmonium. Continue when you are ready for those late-game systems."
+    },
+    {
+      "type": "patchouli:text",
+      "title": "Zero, Power & Harmonium",
+      "text": "Zero distorts chat and adds digital effects. Power muffles sound and adds a dark overlay. Harmonium applies a color effect tied to the item. Read $(l:psychedelicraft:discoveries/rifts)Reality Rifts$(/l) or $(l:psychedelicraft:discoveries/harmonium)Harmonium$(/l) for the sources."
+    }
+  ]
+}

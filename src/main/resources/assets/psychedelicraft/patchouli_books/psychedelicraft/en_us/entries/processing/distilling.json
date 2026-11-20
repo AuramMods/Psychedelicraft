@@ -12,7 +12,7 @@
     {
       "type": "patchouli:spotlight",
       "item": "psychedelicraft:flask",
-      "text": "Place a compatible receiver directly against the spout, such as a flask or another native processing tank. Put the batch in the distillery. The outlet indicator tells you if the receiver is missing, ready, or blocked."
+      "text": "Place a compatible receiver directly against the spout, such as a flask or another native processing tank. Put the batch in the distillery using a filled vessel or the menu input. The outlet indicator tells you if the receiver is missing, ready, or blocked."
     },
     {
       "type": "patchouli:text",

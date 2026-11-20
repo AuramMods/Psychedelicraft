@@ -12,7 +12,7 @@
     {
       "type": "patchouli:spotlight",
       "item": "psychedelicraft:brown_magic_mushrooms",
-      "text": "Repeat with nine vanilla brown mushrooms for three magic brown mushrooms. Both colors have growth and targeting benefits alongside their own visual profile."
+      "text": "Repeat with nine vanilla brown mushrooms for three magic brown mushrooms. Both colors have $(l:psychedelicraft:effects/mushrooms)growth and targeting benefits$(/l) alongside their own visual profile."
     }
   ]
 }

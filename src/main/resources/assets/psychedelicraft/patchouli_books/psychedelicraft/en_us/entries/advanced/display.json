@@ -1,0 +1,23 @@
+{
+  "name": "Serve, Display & Store",
+  "icon": "psychedelicraft:bottle_rack",
+  "category": "psychedelicraft:advanced",
+  "sortnum": 30,
+  "pages": [
+    {
+      "type": "patchouli:crafting",
+      "recipe": "psychedelicraft:bottle_rack",
+      "text": "A rack holds nine tagged bottles, one per slot. Interact with the desired cell to insert or retrieve one. Horizontal hoppers can access the rack."
+    },
+    {
+      "type": "patchouli:text",
+      "title": "On the Counter",
+      "text": "Place a tagged vessel on a suitable solid surface to display it. Place another in the same spot to stack up to five. Use an empty hand to pick up the top item. Walk carefully or sneak near floor displays."
+    },
+    {
+      "type": "patchouli:text",
+      "title": "Display Props",
+      "text": "Bottles keep their liquid, name and dye in racks and on the counter. Tray and Bunsen burner are decorative catalog props. Use the actual drying or distilling mechanics when you need heat."
+    }
+  ]
+}

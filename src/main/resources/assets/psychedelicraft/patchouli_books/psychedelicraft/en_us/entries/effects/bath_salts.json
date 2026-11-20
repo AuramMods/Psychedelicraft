@@ -1,0 +1,18 @@
+{
+  "name": "Bath Salts",
+  "icon": "psychedelicraft:obsidian_dust",
+  "category": "psychedelicraft:effects",
+  "sortnum": 100,
+  "pages": [
+    {
+      "type": "patchouli:spotlight",
+      "item": "psychedelicraft:obsidian_dust",
+      "text": "Using the powder or the filled syringe adds the bath-salts profile. It changes vision and perception, with view/hand tremor and stronger contextual hallucinations."
+    },
+    {
+      "type": "patchouli:text",
+      "title": "Recovery",
+      "text": "High intensity can be lethal, and sleeping while the effect is active can also cause harm. Let it clear before using a bed. Find the recipe chain in $(l:psychedelicraft:preparations/obsidian)Obsidian & Bath Salts$(/l)."
+    }
+  ]
+}

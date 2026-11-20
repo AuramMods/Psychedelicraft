@@ -1,0 +1,23 @@
+{
+  "name": "Alcohol & Kava",
+  "icon": "psychedelicraft:wooden_mug",
+  "category": "psychedelicraft:effects",
+  "sortnum": 20,
+  "pages": [
+    {
+      "type": "patchouli:spotlight",
+      "item": "psychedelicraft:wooden_mug",
+      "text": "Alcohol varies with serving volume, brew family and stage. It softens most incoming damage by up to 20% and slows saturation loss from exhaustion by up to 50% at full strength."
+    },
+    {
+      "type": "patchouli:text",
+      "title": "Side Effects",
+      "text": "Alcohol can cause camera drift, double vision and slurred chat. Very high intensity risks poisoning, which still deals damage. A hangover can follow sleep. Stop taking servings and give the effect time to fall."
+    },
+    {
+      "type": "patchouli:text",
+      "title": "Kava",
+      "text": "Kava uses the same type of effect, including the visuals, chat changes and exhaustion behavior. It is a registered beverage with pack-dependent availability."
+    }
+  ]
+}

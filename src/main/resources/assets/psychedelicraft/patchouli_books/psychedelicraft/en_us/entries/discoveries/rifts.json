@@ -1,0 +1,28 @@
+{
+  "name": "Reality Rifts",
+  "icon": "psychedelicraft:rift_jar",
+  "category": "psychedelicraft:discoveries",
+  "sortnum": 60,
+  "pages": [
+    {
+      "type": "patchouli:text",
+      "title": "Optional Discovery",
+      "text": "Reality Rifts are rare native world events. Continue for mechanics and collection details. Watch a rift from a safe distance: critical rifts can hurt nearby creatures and spread Glitch blocks."
+    },
+    {
+      "type": "patchouli:crafting",
+      "recipe": "psychedelicraft:rift_jar",
+      "text": "Use a placed jar to open or close the lid. Sneak-use toggles collection and discharge. The jar retains its stored reserve if picked up."
+    },
+    {
+      "type": "patchouli:text",
+      "title": "Collect & Close",
+      "text": "Place a jar just beneath or near a rift, with the lid open and collection selected. Close it before it exceeds the capacity of one rift. An overfilled jar can break and release its contents."
+    },
+    {
+      "type": "patchouli:text",
+      "title": "Zero Matter",
+      "text": "A nearby rift or open discharging jar can add Zero and Power. Glitch blocks can vanish when touched or used. The server controls spawn frequency. Enable Rift Jars controls their creative listings."
+    }
+  ]
+}

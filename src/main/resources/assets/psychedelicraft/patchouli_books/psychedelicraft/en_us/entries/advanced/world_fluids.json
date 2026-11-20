@@ -1,0 +1,18 @@
+{
+  "name": "Brew in the World",
+  "icon": "psychedelicraft:filled_bucket",
+  "category": "psychedelicraft:advanced",
+  "sortnum": 100,
+  "pages": [
+    {
+      "type": "patchouli:text",
+      "title": "Place a Source",
+      "text": "A full bucket of a mod fluid can place its source and preserve the batch attributes. Refill a bucket from a source before switching brews. These fluids follow their own flow and source rules."
+    },
+    {
+      "type": "patchouli:text",
+      "title": "Water-Like Fluids",
+      "text": "Most drink fluids behave like water for swimming, boats and hydration. Some dense or injectable fluids behave differently. Custom water-like sources can work with a conduit under the normal structure rules."
+    }
+  ]
+}

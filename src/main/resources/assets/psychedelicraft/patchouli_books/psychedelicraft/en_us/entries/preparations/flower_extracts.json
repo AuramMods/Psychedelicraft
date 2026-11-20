@@ -27,7 +27,7 @@
     {
       "type": "patchouli:text",
       "title": "Serve or Dose",
-      "text": "Use a compatible drink vessel for flower extracts. A 10 mB syringe also accepts morning-glory extract. Belladonna and jimsonweed add atropine. Morning-glory extract adds LSD."
+      "text": "Use a compatible drink vessel for flower extracts. A 10 mB syringe also accepts morning-glory extract. Belladonna and jimsonweed add $(l:psychedelicraft:effects/atropine)atropine$(/l). Morning-glory extract adds $(l:psychedelicraft:effects/lsd)LSD$(/l)."
     }
   ]
 }

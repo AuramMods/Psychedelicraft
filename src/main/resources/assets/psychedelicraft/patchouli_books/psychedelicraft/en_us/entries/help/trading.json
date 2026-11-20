@@ -1,0 +1,18 @@
+{
+  "name": "Trade or Crop Missing",
+  "icon": "minecraft:emerald",
+  "category": "psychedelicraft:help",
+  "sortnum": 40,
+  "pages": [
+    {
+      "type": "patchouli:text",
+      "title": "Check the Villager",
+      "text": "Dealer offers vary by level and farmer offers vary by villager. A missing crop is not proof of a broken trade. Check several eligible villagers and ensure the workstation is reachable."
+    },
+    {
+      "type": "patchouli:text",
+      "title": "Check Pack Rules",
+      "text": "If you cannot open any trade menu, ask about the pack’s NPC interaction restrictions. Recipe viewers and biome tags can explain missing ingredients. For changes to generation, use fresh chunks after restarting the server."
+    }
+  ]
+}

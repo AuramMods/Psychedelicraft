@@ -1,0 +1,23 @@
+{
+  "name": "LSD & Reach",
+  "icon": "psychedelicraft:lsd_pill",
+  "category": "psychedelicraft:effects",
+  "sortnum": 80,
+  "pages": [
+    {
+      "type": "patchouli:spotlight",
+      "item": "psychedelicraft:lsd_square",
+      "text": "A dealer’s LSD pill, an LSA square or morning-glory extract can trigger the LSD profile. Effects change color, sound, perception and how far away you can interact with blocks."
+    },
+    {
+      "type": "patchouli:text",
+      "title": "Reach Curve",
+      "text": "Block reach rises smoothly with strength. It quickly approaches one extra block after onset, is roughly three extra blocks at moderate strength, and caps at seven extra blocks at full intensity."
+    },
+    {
+      "type": "patchouli:text",
+      "title": "Working at a Distance",
+      "text": "Use the extra block reach for placing, breaking and interacting while it lasts. Creature attack range follows its own attribute. Watch for random swings and jumps as the effect strengthens."
+    }
+  ]
+}

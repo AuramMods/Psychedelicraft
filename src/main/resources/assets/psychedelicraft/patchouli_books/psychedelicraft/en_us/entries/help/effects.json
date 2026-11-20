@@ -1,0 +1,18 @@
+{
+  "name": "An Effect Seems Different",
+  "icon": "minecraft:clock",
+  "category": "psychedelicraft:help",
+  "sortnum": 30,
+  "pages": [
+    {
+      "type": "patchouli:text",
+      "title": "Wait for Onset",
+      "text": "Hold use until the item finishes, then allow the effect to build. If a drink will not start, check the amount for one full serving. For flight you need both the active effect and saturation."
+    },
+    {
+      "type": "patchouli:text",
+      "title": "Client or Pack?",
+      "text": "Check Psychedelicraft’s local visuals and sound controls if the gameplay benefit works but perception looks muted. On a server, a pack can change recipes, trades and balancing. Test familiar defaults in a separate world."
+    }
+  ]
+}

@@ -1,0 +1,18 @@
+{
+  "name": "A Crop Will Not Grow",
+  "icon": "minecraft:bone_meal",
+  "category": "psychedelicraft:help",
+  "sortnum": 0,
+  "pages": [
+    {
+      "type": "patchouli:text",
+      "title": "Check the Soil",
+      "text": "Use farmland for ordinary seed crops. Coca starts on farmland, dirt or grass. Peyote needs regular or red sand. For vines, use live stems or grapes on plain lattice. Decorative crop lattice stays at its placed stage."
+    },
+    {
+      "type": "patchouli:text",
+      "title": "Check the Space",
+      "text": "Keep the upper blocks clear, give plants plenty of light and keep the area loaded. Try bonemeal on the living crop. For finding wild plants, use $(l:psychedelicraft:growing/finding_plants)Where to Look$(/l)."
+    }
+  ]
+}

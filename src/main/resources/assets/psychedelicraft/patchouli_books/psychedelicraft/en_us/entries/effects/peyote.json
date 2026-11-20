@@ -1,0 +1,23 @@
+{
+  "name": "Peyote Flight",
+  "icon": "psychedelicraft:dried_peyote",
+  "category": "psychedelicraft:effects",
+  "sortnum": 60,
+  "pages": [
+    {
+      "type": "patchouli:spotlight",
+      "item": "psychedelicraft:dried_peyote",
+      "text": "Active peyote lets you double-tap jump to fly in survival as long as you have saturation. It burns saturation only while you are flying. Stop flying when you want to conserve it."
+    },
+    {
+      "type": "patchouli:text",
+      "title": "As It Wears Off",
+      "text": "One point lasts about five seconds at full strength and as little as one second at low strength. Flight ends when the effect or saturation runs out. Land early, especially when far above the ground."
+    },
+    {
+      "type": "patchouli:text",
+      "title": "Visual Effects",
+      "text": "Terrain waves and watery screen distortion grow and fade with the effect. The client has separate controls for shader geometry and the peyote screen ripple. See $(l:psychedelicraft:advanced/client_settings)visual settings$(/l)."
+    }
+  ]
+}

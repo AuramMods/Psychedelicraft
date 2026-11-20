@@ -17,7 +17,7 @@
     {
       "type": "patchouli:spotlight",
       "item": "psychedelicraft:syringe",
-      "text": "A water bucket, powder and an empty syringe make one filled cocaine syringe. Use the powder on its own or use the syringe for the cocaine profile."
+      "text": "A water bucket, powder and an empty syringe make one filled cocaine syringe. Use the powder on its own or use the syringe for the $(l:psychedelicraft:effects/cocaine)cocaine profile$(/l)."
     }
   ]
 }

@@ -1,0 +1,18 @@
+{
+  "name": "Apparitions & Reggie",
+  "icon": "minecraft:ender_eye",
+  "category": "psychedelicraft:discoveries",
+  "sortnum": 80,
+  "pages": [
+    {
+      "type": "patchouli:text",
+      "title": "Optional Discovery",
+      "text": "Some profiles produce contextual hallucinations. Figures, groups or familiar mobs can appear to change. These manifestations belong to the affected player’s view. They do not add real hostile mobs to the world."
+    },
+    {
+      "type": "patchouli:text",
+      "title": "Reggie",
+      "text": "Reggie can appear as part of a contextual hallucination. His dialogue is local to the affected player. Check the visual settings if you prefer to reduce the surrounding effects."
+    }
+  ]
+}

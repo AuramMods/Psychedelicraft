@@ -17,7 +17,7 @@
     {
       "type": "patchouli:text",
       "title": "In Use",
-      "text": "The effect can sustain saturation-powered flight. Fresh joints stack, and a part-used joint occupies its own slot."
+      "text": "The effect can sustain $(l:psychedelicraft:effects/peyote)saturation-powered flight$(/l). Fresh joints stack, and a part-used joint occupies its own slot."
     }
   ]
 }

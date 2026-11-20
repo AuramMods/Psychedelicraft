@@ -1,0 +1,23 @@
+{
+  "name": "Harmonium",
+  "icon": "psychedelicraft:harmonium",
+  "category": "psychedelicraft:discoveries",
+  "sortnum": 70,
+  "pages": [
+    {
+      "type": "patchouli:text",
+      "title": "Optional Discovery",
+      "text": "Harmonium changes how colors look. Its dyed forms and dealer offers are hidden by default. In a local world, see Gameplay → Features → Enable Harmonium. On a server, check with the host."
+    },
+    {
+      "type": "patchouli:crafting",
+      "recipe": "psychedelicraft:harmonium",
+      "text": "The stock recipe combines glowstone dust with dried tobacco."
+    },
+    {
+      "type": "patchouli:text",
+      "title": "Change the Result",
+      "text": "Craft an existing Harmonium with dye to tint it. Use a pipe or bong with Harmonium in your inventory. Its stored dye controls the color effect. When enabled at startup, level-three dealers can stock dyed variants."
+    }
+  ]
+}

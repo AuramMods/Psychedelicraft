@@ -12,7 +12,7 @@
     {
       "type": "patchouli:text",
       "title": "Age a Fermented Brew",
-      "text": "Drain fermented liquid into a barrel. The barrel matures it over time. Check the stage in its tank tooltip and pull the brew at the style you want. Ordinary red grape wine gains age labels and becomes vinegar at stage 16."
+      "text": "Transfer fermented liquid into a barrel and check the style as it matures. Draw it into an empty vessel at the tap or use the menu slots. Red grape wine becomes vinegar at stage 16."
     },
     {
       "type": "patchouli:text",

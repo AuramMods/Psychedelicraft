@@ -12,12 +12,12 @@
     {
       "type": "patchouli:crafting",
       "recipe": "psychedelicraft:cigar",
-      "text": "A cigar has three draws and a larger saturation boost per draw."
+      "text": "A cigar has three draws and a larger $(l:psychedelicraft:effects/tobacco)saturation boost$(/l) per draw."
     },
     {
       "type": "patchouli:text",
       "title": "Another Route",
-      "text": "Carry dried tobacco to use a pipe or bong. Check farmer and dealer offers for leaves, seeds and smoking products."
+      "text": "Carry dried tobacco to use a pipe or bong. Check $(l:psychedelicraft:advanced/villagers)farmer and dealer offers$(/l) for leaves, seeds and smoking products."
     }
   ]
 }

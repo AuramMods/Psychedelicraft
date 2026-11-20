@@ -1,0 +1,18 @@
+{
+  "name": "Atropine",
+  "icon": "psychedelicraft:belladonna_berries",
+  "category": "psychedelicraft:effects",
+  "sortnum": 90,
+  "pages": [
+    {
+      "type": "patchouli:spotlight",
+      "item": "psychedelicraft:belladonna_berries",
+      "text": "Belladonna berries and the $(l:psychedelicraft:preparations/flower_extracts)belladonna and jimsonweed extracts$(/l) add atropine. It has a similar profile to LSD, including block reach, but builds and fades based on its own dose."
+    },
+    {
+      "type": "patchouli:text",
+      "title": "Strong Effects",
+      "text": "Watch for altered sound and color, view drift, and random movements. Very high atropine intensity can cause damage. Distillation greatly concentrates these in-game extracts."
+    }
+  ]
+}

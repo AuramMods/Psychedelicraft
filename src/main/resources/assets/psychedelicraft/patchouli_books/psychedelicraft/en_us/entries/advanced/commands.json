@@ -1,0 +1,23 @@
+{
+  "name": "Operator Reference",
+  "icon": "minecraft:command_block",
+  "category": "psychedelicraft:advanced",
+  "sortnum": 90,
+  "pages": [
+    {
+      "type": "patchouli:text",
+      "title": "Inspect a Player",
+      "text": "For operators, /drug <target> get lists active profiles. Add an effect ID after get to inspect just one. Tab-complete names, including the historical cocaine ID, psychedelicraft:coccaine."
+    },
+    {
+      "type": "patchouli:text",
+      "title": "Controlled Tests",
+      "text": "Use /drug <target> set <effect> <value> to set a strength, add to adjust it, and lock <effect> <true|false> to hold or release the profile. Use /vomit or /vomit <target> in a test world."
+    },
+    {
+      "type": "patchouli:text",
+      "title": "Apparition Tests",
+      "text": "Use /hallucinate <type> [targets] [position]. Tab completion lists the types. The result is local to the affected viewer. A console needs an explicit player target."
+    }
+  ]
+}

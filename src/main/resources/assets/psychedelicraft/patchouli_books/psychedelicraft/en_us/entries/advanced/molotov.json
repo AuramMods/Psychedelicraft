@@ -1,0 +1,18 @@
+{
+  "name": "Molotov Items",
+  "icon": "psychedelicraft:molotov_cocktail",
+  "category": "psychedelicraft:advanced",
+  "sortnum": 110,
+  "pages": [
+    {
+      "type": "patchouli:spotlight",
+      "item": "psychedelicraft:molotov_cocktail",
+      "text": "In the game, a mod bottle plus wool converts to a Molotov item and retains the liquid. Craft the item alone to recover the bottle and contents."
+    },
+    {
+      "type": "patchouli:text",
+      "title": "Use in a Test Area",
+      "text": "Held use followed by release throws the item. The in-game effect depends on the brew’s strength. Water and empty mixes have no blast. The mod’s Features setting controls creative visibility."
+    }
+  ]
+}

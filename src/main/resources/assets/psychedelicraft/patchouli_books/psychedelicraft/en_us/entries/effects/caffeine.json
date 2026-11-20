@@ -1,0 +1,23 @@
+{
+  "name": "Caffeine, Warmth & Sugar",
+  "icon": "psychedelicraft:coffee_beans",
+  "category": "psychedelicraft:effects",
+  "sortnum": 10,
+  "pages": [
+    {
+      "type": "patchouli:spotlight",
+      "item": "psychedelicraft:stone_cup",
+      "text": "Each 250 mB cup adds one point of saturation, up to the current food level. Active caffeine slightly boosts movement, attack speed and digging speed, and reduces saturation use from exhaustion."
+    },
+    {
+      "type": "patchouli:text",
+      "title": "Several Cups",
+      "text": "Caffeine builds with overlapping cups. At full strength the speed multiplier is 1.2× and saturation exhaustion cost is 60% of normal. Strong caffeine can stop you sleeping."
+    },
+    {
+      "type": "patchouli:text",
+      "title": "Warmth & Sugar",
+      "text": "Warm and hot coffee add a brief warmth effect. Caffeine also comes from its syringe. The sugar profile shares its speed and exhaustion behavior, with weaker breathing changes. Jolly Rancher gives sugar and is available from the creative catalog."
+    }
+  ]
+}

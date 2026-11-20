@@ -17,7 +17,7 @@
     {
       "type": "patchouli:text",
       "title": "From Wild to Magic",
-      "text": "Dry nine of one color on a $(l:psychedelicraft:processing/drying)drying table$(/l) for three matching magic mushrooms. Dealer stock at tier three can also supply them. They share growth and mob effects."
+      "text": "Dry nine of one color on a $(l:psychedelicraft:processing/drying)drying table$(/l) for three matching magic mushrooms. Dealer stock at tier three can also supply them. They share $(l:psychedelicraft:effects/mushrooms)growth and mob effects$(/l)."
     }
   ]
 }

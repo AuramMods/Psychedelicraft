@@ -1,0 +1,18 @@
+{
+  "name": "Nothing Is Drying",
+  "icon": "psychedelicraft:iron_drying_table",
+  "category": "psychedelicraft:help",
+  "sortnum": 10,
+  "pages": [
+    {
+      "type": "patchouli:text",
+      "title": "Check the Batch",
+      "text": "Use one matching item per slot in all nine inputs. Empty the output. Check the heat and keep rain off the table. Iron saves time, but it still needs heat and all nine inputs."
+    },
+    {
+      "type": "patchouli:text",
+      "title": "Check the Face",
+      "text": "Move the input hopper to the side. A hopper below should pull only the output. Horizontal access is for inputs. See $(l:psychedelicraft:processing/drying)Drying Tables$(/l) for timing and heat."
+    }
+  ]
+}

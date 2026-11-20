@@ -1,0 +1,23 @@
+{
+  "name": "How Effects Build",
+  "icon": "minecraft:clock",
+  "category": "psychedelicraft:effects",
+  "sortnum": 0,
+  "pages": [
+    {
+      "type": "patchouli:text",
+      "title": "From Use to Peak",
+      "text": "Amounts, brew stage and delivery method shape each dose. Effects can take time to start and then rise while the dose is absorbed. Wait before taking another dose if you want to judge the peak."
+    },
+    {
+      "type": "patchouli:text",
+      "title": "While Active",
+      "text": "Overlapping doses can raise the peak or keep an effect active longer. Its benefits and side effects scale with the active strength and fade as it falls. The same item can feel different depending on what is already active."
+    },
+    {
+      "type": "patchouli:text",
+      "title": "Where to Look",
+      "text": "These profiles change movement, mining, reach, targeting and perception directly. Gauge them from your ordinary food and health HUD, sounds and visual cues. Operators can inspect exact intensity."
+    }
+  ]
+}

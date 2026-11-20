@@ -1,0 +1,28 @@
+{
+  "name": "Loot & Village Supplies",
+  "icon": "minecraft:chest",
+  "category": "psychedelicraft:advanced",
+  "sortnum": 10,
+  "pages": [
+    {
+      "type": "patchouli:text",
+      "title": "Trade Routes",
+      "text": "Plains greenhouses can contain tall crops. Desert greenhouses can contain peyote and a drying-table workstation. Search plains vineyard pieces for grapes and established lattices."
+    },
+    {
+      "type": "patchouli:text",
+      "title": "Travel Chests",
+      "text": "Psychedelicraft adds supplies to several Overworld loot tables. Chests in abandoned mineshafts and dungeons can hold grapes, juniper berries, vessels and dried tobacco. Mineshafts can also hold smoking pipes."
+    },
+    {
+      "type": "patchouli:text",
+      "title": "Village Chests",
+      "text": "Check shepherd, tannery, temple, toolsmith and weaponsmith chests for supplies. Temples can hold grapes. Toolsmith chests can hold joints, cups and filled syringes."
+    },
+    {
+      "type": "patchouli:text",
+      "title": "Pack Rules",
+      "text": "Datapacks and the mod’s generation settings can change village structures and chest supplies. Chest loot is normally generated the first time it is opened. For exact sources in a pack, check its recipes and loot data."
+    }
+  ]
+}

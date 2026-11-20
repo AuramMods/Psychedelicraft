@@ -1,0 +1,18 @@
+{
+  "name": "Cannabis",
+  "icon": "psychedelicraft:hash_muffin",
+  "category": "psychedelicraft:effects",
+  "sortnum": 50,
+  "pages": [
+    {
+      "type": "patchouli:spotlight",
+      "item": "psychedelicraft:hash_muffin",
+      "text": "A muffin comes on more slowly than a draw. Tea, joints and smoking tools also contribute to the same profile. Read $(l:psychedelicraft:preparations/cannabis)the preparation recipes$(/l) to choose how you want to serve it."
+    },
+    {
+      "type": "patchouli:text",
+      "title": "Perception & Pace",
+      "text": "Expect slower movement and mining as intensity rises, along with color, movement and contextual hallucinations. At high intensity, ordinary chat can pick up extra words."
+    }
+  ]
+}

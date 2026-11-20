@@ -17,7 +17,7 @@
     {
       "type": "patchouli:spotlight",
       "item": "psychedelicraft:syringe",
-      "text": "Craft one obsidian dust, a lava bucket and an empty syringe for a filled bath-salts syringe. The powder can also be used on its own. See its in-game effects."
+      "text": "Craft one obsidian dust, a lava bucket and an empty syringe for a filled bath-salts syringe. The powder can also be used on its own. See $(l:psychedelicraft:effects/bath_salts)its in-game effects$(/l)."
     }
   ]
 }

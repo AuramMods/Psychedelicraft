@@ -1,0 +1,23 @@
+{
+  "name": "A Brew Will Not Move",
+  "icon": "psychedelicraft:flask",
+  "category": "psychedelicraft:help",
+  "sortnum": 20,
+  "pages": [
+    {
+      "type": "patchouli:text",
+      "title": "Check the Vessel",
+      "text": "Read the liquid ID, stage and amount in the tooltip. Match the vessel to the recipe and the fluid. Consider whether the destination is full, or already contains a different brew or warmth."
+    },
+    {
+      "type": "patchouli:text",
+      "title": "Check the Machine",
+      "text": "Let an active mash finish before draining. Distill fermented, unaged brew, with a compatible outlet at the spout. An outlet already holding slurry or a different stage can block the next output."
+    },
+    {
+      "type": "patchouli:text",
+      "title": "Coffee in the Furnace",
+      "text": "Use cherries for beans. Use a filled cup for heating coffee. A hot cup is already at the final warmth and cannot cook again. Use the $(l:psychedelicraft:preparations/coffee)coffee page$(/l) to check the sequence."
+    }
+  ]
+}

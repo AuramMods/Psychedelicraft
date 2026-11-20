@@ -1,0 +1,23 @@
+{
+  "name": "Sleep & Hangovers",
+  "icon": "minecraft:red_bed",
+  "category": "psychedelicraft:effects",
+  "sortnum": 110,
+  "pages": [
+    {
+      "type": "patchouli:text",
+      "title": "Fatigue",
+      "text": "The server gamerule doSleepDeprivation is off by default. When enabled, going without sleep can slow movement and digging, darken the view, cause eyelid blinks and eventually produce hallucinations."
+    },
+    {
+      "type": "patchouli:text",
+      "title": "Rest",
+      "text": "Sleep lowers fatigue. Some stimulants keep you awake until they wear down. Going to bed while intoxicated can produce the hangover advancement and a temporary fatigue aftereffect."
+    },
+    {
+      "type": "patchouli:text",
+      "title": "Recovery Signals",
+      "text": "Hunger, saturation and health still matter during an effect. If effects linger, let the last dose finish absorbing and wear off. The $(l:psychedelicraft:advanced/stomach)stomach page$(/l) explains what happens after vomiting."
+    }
+  ]
+}

@@ -1,0 +1,23 @@
+{
+  "name": "Stomach & Paper Bags",
+  "icon": "psychedelicraft:paper_bag",
+  "category": "psychedelicraft:advanced",
+  "sortnum": 40,
+  "pages": [
+    {
+      "type": "patchouli:crafting",
+      "recipe": "psychedelicraft:paper_bag",
+      "text": "The bag can store a single kind of tagged item. In your inventory, use the secondary click with the bag and item to put it in or take it out."
+    },
+    {
+      "type": "patchouli:text",
+      "title": "Pick Up & Empty",
+      "text": "Use the bag on eligible dropped items to collect them. Use it in the air to spill a stack, or sneak-use to spill one. A dispenser can dispense the contents item by item."
+    },
+    {
+      "type": "patchouli:text",
+      "title": "In-Game Recovery",
+      "text": "The mod tracks recent stomach contents. Vomiting can expel them and interrupt pending absorption. An eligible empty bag can help contain the mess. Active effects fade on their own timers."
+    }
+  ]
+}
