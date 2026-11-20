@@ -1,0 +1,13 @@
+{
+  "name": "Make a Field Guide",
+  "icon": "minecraft:book",
+  "category": "psychedelicraft:basics",
+  "sortnum": 10,
+  "pages": [
+    {
+      "type": "patchouli:crafting",
+      "recipe": "psychedelicraft:guide_book",
+      "text": "Combine a book and red dye anywhere you can craft. Hold the finished guide and use it to open it."
+    }
+  ]
+}
