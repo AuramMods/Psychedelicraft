@@ -38,7 +38,7 @@ and you may use this mod in modpacks.
 Installation
 ============
 
-Use Minecraft **1.20.1**, **Java 17** and **Forge 47.4.28**. The [delivery verification](docs/PORT_1201.md#delivery-verification) links the tested gameplay, automation, world generation, client effects and multiplayer behavior.
+Use Minecraft **1.20.1**, **Java 17** and **Forge 47.4.10 or later in the 47.x series**. Auram pins 47.4.10, and 47.4.28 remains supported. The [delivery verification](docs/PORT_1201.md#delivery-verification) links the tested gameplay, automation, world generation, client effects and multiplayer behavior.
 
 Build with a Java 17 JDK.
 
