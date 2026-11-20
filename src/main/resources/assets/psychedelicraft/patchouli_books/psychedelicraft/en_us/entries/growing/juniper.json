@@ -1,0 +1,33 @@
+{
+  "name": "Juniper",
+  "icon": "psychedelicraft:juniper_sapling",
+  "category": "psychedelicraft:growing",
+  "sortnum": 120,
+  "pages": [
+    {
+      "type": "patchouli:spotlight",
+      "item": "psychedelicraft:juniper_berries",
+      "text": "Look for forked junipers in forest or hill biomes. Use a free hand on fruiting leaves to pick one berry. Tree-grown leaves can fruit again. Break or let leaves decay for a chance at saplings."
+    },
+    {
+      "type": "patchouli:text",
+      "title": "Orchard",
+      "text": "Plant juniper saplings like ordinary trees, with room above. Leaves placed by hand are decorative and stay unfruited. Eat the berries or use them in $(l:psychedelicraft:preparations/mash_catalog)juniper mash$(/l)."
+    },
+    {
+      "type": "patchouli:crafting",
+      "recipe": "psychedelicraft:juniper_planks",
+      "text": "Use the wood for vanilla-style parts, signs and boats."
+    },
+    {
+      "type": "patchouli:crafting",
+      "recipe": "psychedelicraft:juniper_boat",
+      "text": "Add a chest to the boat for a floating inventory."
+    },
+    {
+      "type": "patchouli:smelting",
+      "recipe": "psychedelicraft:charcoal_from_juniper",
+      "text": "Log and wood forms also make charcoal."
+    }
+  ]
+}

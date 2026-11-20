@@ -1,0 +1,18 @@
+{
+  "name": "Peyote",
+  "icon": "psychedelicraft:peyote",
+  "category": "psychedelicraft:growing",
+  "sortnum": 60,
+  "pages": [
+    {
+      "type": "patchouli:spotlight",
+      "item": "psychedelicraft:peyote",
+      "text": "Look for small, round green buttons in sandy parts of deserts, badlands and other eligible dry or savanna biomes. Check desert greenhouses or a novice dealer for another source."
+    },
+    {
+      "type": "patchouli:text",
+      "title": "Sand Garden",
+      "text": "Place the peyote item directly on regular or red sand. Bonemeal advances the plant through four sizes. Break the largest plant for four peyote. Save one to replant and $(l:psychedelicraft:preparations/peyote)dry the rest$(/l)."
+    }
+  ]
+}

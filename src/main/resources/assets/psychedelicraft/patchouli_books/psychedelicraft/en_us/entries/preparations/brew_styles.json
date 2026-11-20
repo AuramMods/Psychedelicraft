@@ -1,0 +1,28 @@
+{
+  "name": "Brew Styles by Ingredient",
+  "icon": "psychedelicraft:wooden_mug",
+  "category": "psychedelicraft:preparations",
+  "sortnum": 120,
+  "pages": [
+    {
+      "type": "patchouli:text",
+      "title": "Cider & Mead",
+      "text": "Ferment apple mash for hard cider and distill it for brandy. Ferment or age honey wort for mead. Honey brandy comes from distillation before aging."
+    },
+    {
+      "type": "patchouli:text",
+      "title": "Grains & Fruit",
+      "text": "Ferment corn or banana mash for beer. Corn makes vodka when distilled and whiskey when aged after distilling. Ferment rice or pineapple mash for wine, or distill it for brandy. Banana beer also distills into brandy."
+    },
+    {
+      "type": "patchouli:text",
+      "title": "Milk & Tomato",
+      "text": "Fermented milk makes blaand and distills into arkhi. Tomato juice has unusual stage labels. One distillation on fermented juice makes beer. Check your tank tooltip as other stages can become vodka, mead or whiskey."
+    },
+    {
+      "type": "patchouli:text",
+      "title": "Agave & Other Brews",
+      "text": "Fermented agave makes mezcal after one distillation, then blanco tequila after two. Barrel-age blanco to make reposado. See $(l:psychedelicraft:preparations/brewing_examples)the worked batches$(/l) for wheat, grapes, cane and juniper."
+    }
+  ]
+}

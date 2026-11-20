@@ -1,0 +1,23 @@
+{
+  "name": "Mash Tub",
+  "icon": "psychedelicraft:mash_tub",
+  "category": "psychedelicraft:processing",
+  "sortnum": 30,
+  "pages": [
+    {
+      "type": "patchouli:crafting",
+      "recipe": "psychedelicraft:mash_tub",
+      "text": "Place the basin with room for all nine cells. If blocked, clear a wider patch. Use the center or a wall to open it."
+    },
+    {
+      "type": "patchouli:spotlight",
+      "item": "minecraft:water_bucket",
+      "text": "Load water into the tank with a vessel or pipe. Put the exact ingredients in separate ingredient slots. A valid match starts a short stew and converts the whole water volume into the mash."
+    },
+    {
+      "type": "patchouli:text",
+      "title": "After the Bubbles",
+      "text": "The tank locks transfers while working. When it finishes, serve the mash, leave it open to ferment, or move the batch to another compatible tank. Find exact inputs in the $(l:psychedelicraft:preparations/mash_catalog)mash catalogue$(/l)."
+    }
+  ]
+}

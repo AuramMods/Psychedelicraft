@@ -1,0 +1,28 @@
+{
+  "name": "Pipes & Bongs",
+  "icon": "psychedelicraft:smoking_pipe",
+  "category": "psychedelicraft:preparations",
+  "sortnum": 70,
+  "pages": [
+    {
+      "type": "patchouli:crafting",
+      "recipe": "psychedelicraft:pipe",
+      "text": "Pipe lasts 50 draws. Carry a compatible filling, then hold use with the pipe."
+    },
+    {
+      "type": "patchouli:crafting",
+      "recipe": "psychedelicraft:bong",
+      "text": "Bong lasts 128 draws and works with the same fillings."
+    },
+    {
+      "type": "patchouli:text",
+      "title": "Pick a Filling",
+      "text": "Both tools consume the first compatible item in inventory order. Fillings include dried cannabis buds or leaves, dried coca leaves, dried tobacco, dried peyote and Harmonium. Move your preferred filling to an earlier slot."
+    },
+    {
+      "type": "patchouli:text",
+      "title": "Use & Reuse",
+      "text": "A tool uses one filling per draw. Rolled items already contain their filling. Fresh cannabis and peyote joints stack to 64; a used joint separates from the stack until its second draw. Wait for the smoke cooldown."
+    }
+  ]
+}

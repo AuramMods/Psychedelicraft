@@ -1,0 +1,23 @@
+{
+  "name": "Barrels & Aging",
+  "icon": "psychedelicraft:oak_barrel",
+  "category": "psychedelicraft:processing",
+  "sortnum": 50,
+  "pages": [
+    {
+      "type": "patchouli:crafting",
+      "recipe": "psychedelicraft:oak_barrel",
+      "text": "Oak, birch, spruce, jungle, acacia and dark oak barrels work the same way."
+    },
+    {
+      "type": "patchouli:text",
+      "title": "Age a Fermented Brew",
+      "text": "Drain fermented liquid into a barrel. The barrel matures it over time. Check the stage in its tank tooltip and pull the brew at the style you want. Ordinary red grape wine gains age labels and becomes vinegar at stage 16."
+    },
+    {
+      "type": "patchouli:text",
+      "title": "Order Matters",
+      "text": "Decide whether to distill before aging. The distillery requires fermented brew with zero maturation. Age a distilled brew afterward when its style calls for it."
+    }
+  ]
+}

@@ -1,0 +1,18 @@
+{
+  "name": "Tobacco",
+  "icon": "psychedelicraft:tobacco_seeds",
+  "category": "psychedelicraft:growing",
+  "sortnum": 50,
+  "pages": [
+    {
+      "type": "patchouli:spotlight",
+      "item": "psychedelicraft:tobacco_seeds",
+      "text": "Look for broad stacked leaves in the tall-crop biomes. A farmer can stock seeds. Plant seeds on farmland, dirt or grass and keep the stalk well lit with room for its second section."
+    },
+    {
+      "type": "patchouli:text",
+      "title": "Bring Leaves Home",
+      "text": "Break mature sections for leaves and more seeds. Dry nine leaves at a time and use the dried leaves in $(l:psychedelicraft:preparations/tobacco)smoking recipes$(/l)."
+    }
+  ]
+}

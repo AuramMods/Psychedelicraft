@@ -1,0 +1,33 @@
+{
+  "name": "Distillery & Outlets",
+  "icon": "psychedelicraft:distillery",
+  "category": "psychedelicraft:processing",
+  "sortnum": 60,
+  "pages": [
+    {
+      "type": "patchouli:crafting",
+      "recipe": "psychedelicraft:distillery",
+      "text": "Craft a distillery from a flask and copper. A filled flask carries its liquid into the result."
+    },
+    {
+      "type": "patchouli:spotlight",
+      "item": "psychedelicraft:flask",
+      "text": "Place a compatible receiver directly against the spout, such as a flask or another native processing tank. Put the batch in the distillery. The outlet indicator tells you if the receiver is missing, ready, or blocked."
+    },
+    {
+      "type": "patchouli:text",
+      "title": "Provide Heat",
+      "text": "The block underneath controls speed. Lava runs at 7×, fire or a campfire at 3×, and magma at 2× by default. It can process at the base rate over ordinary blocks. Campfire tags count even when unlit."
+    },
+    {
+      "type": "patchouli:text",
+      "title": "Collect Spirits",
+      "text": "On a fermented, unaged brew, each completed stage advances the liquid left in the distillery and sends 1 mB of slurry to the receiver while volume permits. The tank tops out at 16 stages. Draw the spirit from the distillery."
+    },
+    {
+      "type": "patchouli:text",
+      "title": "Collect Concentrate",
+      "text": "With flower extract, 2 mB in the distillery yields 1 mB of the next concentration in the receiver. Return the first-pass concentrate for a second pass if needed. Empty the receiver between batches."
+    }
+  ]
+}

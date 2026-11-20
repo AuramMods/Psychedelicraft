@@ -1,0 +1,28 @@
+{
+  "name": "Coffee & Caffeine",
+  "icon": "psychedelicraft:coffee_beans",
+  "category": "psychedelicraft:preparations",
+  "sortnum": 0,
+  "pages": [
+    {
+      "type": "patchouli:smelting",
+      "recipe": "psychedelicraft:coffea_cherries_to_coffee_beans",
+      "text": "Use a regular furnace and $(l:psychedelicraft:growing/coffea)coffea cherries$(/l)."
+    },
+    {
+      "type": "patchouli:crafting",
+      "recipe": "psychedelicraft:stone_cup",
+      "text": "Combine an empty stone cup, a water bucket and two coffee beans in the crafting grid. Take the 250 mB cup of cold coffee. The empty bucket returns."
+    },
+    {
+      "type": "patchouli:spotlight",
+      "item": "psychedelicraft:stone_cup",
+      "text": "Use a regular furnace to heat the filled cup. A pass raises the warmth one step. Run it through twice for hot coffee. The cup still contains the same amount."
+    },
+    {
+      "type": "patchouli:spotlight",
+      "item": "psychedelicraft:syringe",
+      "text": "Two coffee beans plus an empty syringe produce one filled caffeine syringe. See what the caffeine profiles do."
+    }
+  ]
+}

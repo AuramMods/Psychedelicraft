@@ -1,0 +1,33 @@
+{
+  "name": "Mash Catalogue",
+  "icon": "psychedelicraft:mash_tub",
+  "category": "psychedelicraft:preparations",
+  "sortnum": 90,
+  "pages": [
+    {
+      "type": "patchouli:text",
+      "title": "Wheat, Hop & Potato",
+      "text": "Start with water in the tub for each recipe.$(br2)$(li)7 wheat → wheat wort$(li)5 wheat + 2 hop cones → beer wort$(li)7 potatoes → potato wort"
+    },
+    {
+      "type": "patchouli:text",
+      "title": "Fruit & Sugar Cane",
+      "text": "$(li)8 wine grapes → grape juice$(li)8 apples → apple juice$(li)7 sugar cane → sugar-cane wort$(li)7 tomatoes → tomato juice"
+    },
+    {
+      "type": "patchouli:text",
+      "title": "Agave, Honey & Juniper",
+      "text": "$(li)7 agave leaves → agave juice$(li)8 honeycombs or honey bottles → honey wort$(li)4 juniper berries + sugar + 2 grapes + wheat → juniper wort"
+    },
+    {
+      "type": "patchouli:text",
+      "title": "Pack Ingredients",
+      "text": "These recipes need items supplied by the corresponding common item tags. Check your pack’s recipe viewer.$(br2)$(li)7 corn → corn wort$(li)7 rice → rice wort$(li)8 bananas → banana mash$(li)8 pineapples → pineapple mash"
+    },
+    {
+      "type": "patchouli:text",
+      "title": "More Fluid Families",
+      "text": "Transfer milk from a milk bucket. Ferment it into blaand or distill it into arkhi. Kava is a separate registered drink fluid with no stock crop or mash recipe. Check pack-provided sources for fluids without stock recipes."
+    }
+  ]
+}

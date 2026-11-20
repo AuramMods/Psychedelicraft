@@ -1,0 +1,23 @@
+{
+  "name": "Lattices & Propagation",
+  "icon": "psychedelicraft:lattice",
+  "category": "psychedelicraft:growing",
+  "sortnum": 90,
+  "pages": [
+    {
+      "type": "patchouli:crafting",
+      "recipe": "psychedelicraft:lattice",
+      "text": "Place connected lattice beside a flower root, or click plain lattice with grapes."
+    },
+    {
+      "type": "patchouli:text",
+      "title": "Live & Decorative",
+      "text": "New vines grow along nearby connected plain lattices. Bonemeal helps. Crop lattices placed as items retain their pictured stage as decoration. For a farm, spread onto plain lattice from a live root or grapes."
+    },
+    {
+      "type": "patchouli:text",
+      "title": "Harvest Intact",
+      "text": "Use shears on fully grown live lattice crops for three or four items. Grapes reset to stage one and morning glory to stage two, leaving the lattice in place."
+    }
+  ]
+}

@@ -1,0 +1,33 @@
+{
+  "name": "Brew a First Batch",
+  "icon": "psychedelicraft:oak_barrel",
+  "category": "psychedelicraft:preparations",
+  "sortnum": 100,
+  "pages": [
+    {
+      "type": "patchouli:spotlight",
+      "item": "psychedelicraft:hop_cones",
+      "text": "For beer, add five wheat and two hop cones to a tub of water. Let the batch finish mashing and reach fermented beer in the tub. Draw a serving or move it into a barrel to age."
+    },
+    {
+      "type": "patchouli:spotlight",
+      "item": "psychedelicraft:wine_grapes",
+      "text": "For wine, mash eight grapes, ferment to wash, then age in a barrel until the wine reaches the style you want. For brandy, move the fermented wash through the distillery before aging."
+    },
+    {
+      "type": "patchouli:spotlight",
+      "item": "minecraft:sugar_cane",
+      "text": "For rum, mash seven cane, ferment to basi, then move the fermented brew into the distillery. Draw young rum and age it in a barrel for a different style."
+    },
+    {
+      "type": "patchouli:spotlight",
+      "item": "minecraft:wheat",
+      "text": "For other spirits, distill fermented wheat or potato for vodka. Age distilled wheat for wheat whiskey and potato for poteen. Distilled juniper makes gin."
+    },
+    {
+      "type": "patchouli:text",
+      "title": "Choose the Route",
+      "text": "The style comes from the fluid and its process stages. Look at the tooltip before transferring. Refer to $(l:psychedelicraft:processing/aging)barrel aging$(/l) and $(l:psychedelicraft:processing/distilling)the distillery$(/l) for machine conditions."
+    }
+  ]
+}

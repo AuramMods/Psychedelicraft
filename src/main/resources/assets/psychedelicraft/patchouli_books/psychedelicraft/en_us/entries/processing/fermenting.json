@@ -1,0 +1,23 @@
+{
+  "name": "Fermentation & Vinegar",
+  "icon": "psychedelicraft:flask",
+  "category": "psychedelicraft:processing",
+  "sortnum": 40,
+  "pages": [
+    {
+      "type": "patchouli:crafting",
+      "recipe": "psychedelicraft:flask",
+      "text": "Make a flask for storage, transfers, and building a distillery. Ferment in the open mash tub."
+    },
+    {
+      "type": "patchouli:text",
+      "title": "Watch the Stage",
+      "text": "The open mash tub ferments a brew through two stages. Durations depend on the brew, and the process meter shows the current countdown. Pour it out for drinking or move it to a barrel or distillery."
+    },
+    {
+      "type": "patchouli:text",
+      "title": "Avoid Sour Batches",
+      "text": "Fully fermented liquid left in an open tub eventually acetifies to vinegar. Decant promptly after the desired stage. Use a flask for storage or a barrel for controlled aging."
+    }
+  ]
+}

@@ -1,0 +1,18 @@
+{
+  "name": "Hop",
+  "icon": "psychedelicraft:hop_seeds",
+  "category": "psychedelicraft:growing",
+  "sortnum": 40,
+  "pages": [
+    {
+      "type": "patchouli:spotlight",
+      "item": "psychedelicraft:hop_cones",
+      "text": "Hop is a green climbing-looking stalk with pale cones. Search the tall-crop biomes in $(l:psychedelicraft:growing/finding_plants)Where to Look$(/l), plains greenhouses, and novice farmer offers."
+    },
+    {
+      "type": "patchouli:text",
+      "title": "Grow for Beer",
+      "text": "Plant hop seeds on bright farmland or suitable dirt. Leave room for the stalk above. Break the mature stalk for cones and seeds. Two cones and five wheat make a batch of $(l:psychedelicraft:preparations/brewing_examples)beer wort$(/l)."
+    }
+  ]
+}

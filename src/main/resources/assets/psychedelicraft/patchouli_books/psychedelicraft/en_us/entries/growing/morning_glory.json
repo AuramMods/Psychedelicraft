@@ -1,0 +1,23 @@
+{
+  "name": "Morning Glory",
+  "icon": "psychedelicraft:morning_glory",
+  "category": "psychedelicraft:growing",
+  "sortnum": 110,
+  "pages": [
+    {
+      "type": "patchouli:spotlight",
+      "item": "psychedelicraft:morning_glory",
+      "text": "Find blue flowers in flower forests, sunflower plains, meadows and lush caves. Break a wild flower for the blossom and a chance at mature seeds."
+    },
+    {
+      "type": "patchouli:crafting",
+      "recipe": "psychedelicraft:morning_glory_to_seeds",
+      "text": "Plant seeds in bright ordinary flower soil beside a plain lattice."
+    },
+    {
+      "type": "patchouli:text",
+      "title": "Keep the Root",
+      "text": "The stem colonizes nearby lattice. Leave it in place so connected vines stay rooted. Shear fully flowering lattice for more blossoms. Both flowers and seeds work for $(l:psychedelicraft:preparations/flower_extracts)extracts$(/l)."
+    }
+  ]
+}

@@ -1,0 +1,18 @@
+{
+  "name": "Agave",
+  "icon": "psychedelicraft:agave_leaf",
+  "category": "psychedelicraft:growing",
+  "sortnum": 70,
+  "pages": [
+    {
+      "type": "patchouli:spotlight",
+      "item": "psychedelicraft:agave_leaf",
+      "text": "Look for a low rosette of pointed leaves in dry Overworld biomes and desert village decoration. Use shears on a grown plant to get one or two leaves and leave it one stage smaller."
+    },
+    {
+      "type": "patchouli:text",
+      "title": "Propagate & Process",
+      "text": "An agave leaf plants another agave on a block with a sturdy center, including sand. Keep shears handy to avoid prickles. Use the leaves for $(l:psychedelicraft:preparations/agave)juice or agave mash$(/l)."
+    }
+  ]
+}

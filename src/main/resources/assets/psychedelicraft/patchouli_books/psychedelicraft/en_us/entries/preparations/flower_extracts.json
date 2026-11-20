@@ -1,0 +1,33 @@
+{
+  "name": "Flower Extracts",
+  "icon": "psychedelicraft:morning_glory",
+  "category": "psychedelicraft:preparations",
+  "sortnum": 60,
+  "pages": [
+    {
+      "type": "patchouli:spotlight",
+      "item": "psychedelicraft:morning_glory",
+      "text": "Mix three morning-glory flowers or seeds, a water bucket and an empty compatible vessel. The recipe yields up to 500 mB. Transfer to a flask for collection or a distillery for concentration."
+    },
+    {
+      "type": "patchouli:spotlight",
+      "item": "psychedelicraft:belladonna_seeds",
+      "text": "For belladonna or jimsonweed extract, use three seeds of that one species with a water bucket and vessel. Use a mod bottle for the full 500 mB and keep the species separate."
+    },
+    {
+      "type": "patchouli:text",
+      "title": "Concentrate",
+      "text": "Run an extract through the $(l:psychedelicraft:processing/distilling)distillery$(/l) and collect the 1 mB portions in the receiver. Run the first-pass output again for stage two. Every pass halves the available volume."
+    },
+    {
+      "type": "patchouli:spotlight",
+      "item": "psychedelicraft:lsd_square",
+      "text": "Craft paper with a drink vessel containing stage-two morning-glory extract. The recipe uses 1 mB and returns the vessel. The LSA square and the dealer’s LSD pill both add the LSD profile."
+    },
+    {
+      "type": "patchouli:text",
+      "title": "Serve or Dose",
+      "text": "Use a compatible drink vessel for flower extracts. A 10 mB syringe also accepts morning-glory extract. Belladonna and jimsonweed add atropine. Morning-glory extract adds LSD."
+    }
+  ]
+}

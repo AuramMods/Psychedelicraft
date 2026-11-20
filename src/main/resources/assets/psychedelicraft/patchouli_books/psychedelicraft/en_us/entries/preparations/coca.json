@@ -1,0 +1,23 @@
+{
+  "name": "Coca Preparations",
+  "icon": "psychedelicraft:dried_coca_leaves",
+  "category": "psychedelicraft:preparations",
+  "sortnum": 40,
+  "pages": [
+    {
+      "type": "patchouli:spotlight",
+      "item": "psychedelicraft:coca_leaves",
+      "text": "In a crafting grid, put two fresh leaves with a water bucket and a compatible empty vessel for up to 500 mB of coca tea. Use a mod bottle for the whole batch."
+    },
+    {
+      "type": "patchouli:crafting",
+      "recipe": "psychedelicraft:cocaine_powder",
+      "text": "Dry nine leaves for three dried coca leaves. Craft one dried leaf into one serving of powder, or use the dried leaf in a smoking tool."
+    },
+    {
+      "type": "patchouli:spotlight",
+      "item": "psychedelicraft:syringe",
+      "text": "A water bucket, powder and an empty syringe make one filled cocaine syringe. Use the powder on its own or use the syringe for the cocaine profile."
+    }
+  ]
+}

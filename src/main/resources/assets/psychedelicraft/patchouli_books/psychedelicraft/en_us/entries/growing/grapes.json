@@ -1,0 +1,18 @@
+{
+  "name": "Wine Grapes",
+  "icon": "psychedelicraft:wine_grapes",
+  "category": "psychedelicraft:growing",
+  "sortnum": 100,
+  "pages": [
+    {
+      "type": "patchouli:spotlight",
+      "item": "psychedelicraft:wine_grapes",
+      "text": "Look in plains village vineyards or check novice farmers for fruit. Use a grape on a plain lattice without sneaking. The grape stays in your hand, so one can start a row."
+    },
+    {
+      "type": "patchouli:text",
+      "title": "Keep the Vines",
+      "text": "Harvest ripe lattice with shears. Eat the grapes for food or put eight in the $(l:psychedelicraft:preparations/brewing_examples)mash tub$(/l) to start a wine batch."
+    }
+  ]
+}

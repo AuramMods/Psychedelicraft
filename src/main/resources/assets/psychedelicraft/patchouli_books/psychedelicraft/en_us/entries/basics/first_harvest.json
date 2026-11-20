@@ -1,0 +1,23 @@
+{
+  "name": "Your First Harvest",
+  "icon": "minecraft:wooden_hoe",
+  "category": "psychedelicraft:basics",
+  "sortnum": 20,
+  "pages": [
+    {
+      "type": "patchouli:text",
+      "title": "Start With Coffee",
+      "text": "Search open plains or forest edges for $(l:psychedelicraft:growing/coffea)coffea$(/l), a stalk with bright cherries. Check plains village greenhouses too. Plant a few cherries and smelt two for your first cup."
+    },
+    {
+      "type": "patchouli:text",
+      "title": "Set Up at Home",
+      "text": "Till soil beside water and leave room above tall crops. Put a furnace and a $(l:psychedelicraft:processing/drying)drying table$(/l) in a bright shelter. Nine identical ingredients make one drying batch."
+    },
+    {
+      "type": "patchouli:text",
+      "title": "A Second Project",
+      "text": "Bring home ordinary mushrooms to learn drying, or find hops and use wheat to make $(l:psychedelicraft:preparations/brewing_examples)your first beer$(/l). The production chapters show how to fill a cup, store a batch, and automate transfers."
+    }
+  ]
+}

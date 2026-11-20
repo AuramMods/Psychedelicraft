@@ -1,0 +1,18 @@
+{
+  "name": "Magic Mushroom Batches",
+  "icon": "psychedelicraft:red_magic_mushrooms",
+  "category": "psychedelicraft:preparations",
+  "sortnum": 80,
+  "pages": [
+    {
+      "type": "patchouli:spotlight",
+      "item": "psychedelicraft:red_magic_mushrooms",
+      "text": "Set out nine vanilla red mushrooms, one in each drying slot. Collect three magic red mushrooms, then hold use to eat one even when hunger is full."
+    },
+    {
+      "type": "patchouli:spotlight",
+      "item": "psychedelicraft:brown_magic_mushrooms",
+      "text": "Repeat with nine vanilla brown mushrooms for three magic brown mushrooms. Both colors have growth and targeting benefits alongside their own visual profile."
+    }
+  ]
+}

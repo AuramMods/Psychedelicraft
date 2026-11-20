@@ -1,0 +1,23 @@
+{
+  "name": "Red & Brown Mushrooms",
+  "icon": "minecraft:brown_mushroom",
+  "category": "psychedelicraft:growing",
+  "sortnum": 130,
+  "pages": [
+    {
+      "type": "patchouli:spotlight",
+      "item": "minecraft:red_mushroom",
+      "text": "Start with ordinary vanilla mushrooms. Look in dark forests, shady caves, swamps, mushroom fields, or the Nether. Keep red and brown mushrooms separate when drying."
+    },
+    {
+      "type": "patchouli:text",
+      "title": "Renewable Supply",
+      "text": "Grow them on mycelium, podzol or nylium, or in a dim area on suitable solid blocks. With room and a valid floor, bonemeal can grow a giant mushroom. Break the cap for regular mushrooms."
+    },
+    {
+      "type": "patchouli:text",
+      "title": "From Wild to Magic",
+      "text": "Dry nine of one color on a $(l:psychedelicraft:processing/drying)drying table$(/l) for three matching magic mushrooms. Dealer stock at tier three can also supply them. They share growth and mob effects."
+    }
+  ]
+}

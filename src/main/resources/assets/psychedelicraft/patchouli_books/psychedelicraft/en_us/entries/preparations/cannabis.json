@@ -1,0 +1,28 @@
+{
+  "name": "Cannabis Preparations",
+  "icon": "psychedelicraft:dried_cannabis_buds",
+  "category": "psychedelicraft:preparations",
+  "sortnum": 10,
+  "pages": [
+    {
+      "type": "patchouli:crafting",
+      "recipe": "psychedelicraft:joint",
+      "text": "Dry nine buds to make three dried buds, then use one per joint. Each joint has two draws."
+    },
+    {
+      "type": "patchouli:crafting",
+      "recipe": "psychedelicraft:hash_muffin",
+      "text": "Dried leaves make a muffin. It takes longer for the effects to build when eaten."
+    },
+    {
+      "type": "patchouli:spotlight",
+      "item": "psychedelicraft:cannabis_leaf",
+      "text": "For tea, craft two fresh leaves, a water bucket and a compatible empty vessel for 500 mB before the vessel’s capacity limit. Use a mod bottle for the whole batch."
+    },
+    {
+      "type": "patchouli:text",
+      "title": "Smoking Tools",
+      "text": "Both dried buds and dried leaves can also be loaded automatically by a $(l:psychedelicraft:preparations/smoking_tools)pipe or bong$(/l) when carried in your inventory."
+    }
+  ]
+}

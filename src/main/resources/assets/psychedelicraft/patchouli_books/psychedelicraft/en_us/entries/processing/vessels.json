@@ -1,0 +1,48 @@
+{
+  "name": "Vessels & Servings",
+  "icon": "psychedelicraft:glass_chalice",
+  "category": "psychedelicraft:processing",
+  "sortnum": 10,
+  "pages": [
+    {
+      "type": "patchouli:crafting",
+      "recipe": "psychedelicraft:stone_cup",
+      "text": "Stone cup holds and serves 250 mB. Use it for coffee."
+    },
+    {
+      "type": "patchouli:crafting",
+      "recipe": "psychedelicraft:wooden_mug",
+      "text": "Wooden mug holds 500 mB in two 250 mB servings. Suitable for many brews."
+    },
+    {
+      "type": "patchouli:crafting",
+      "recipe": "psychedelicraft:glass_chalice",
+      "text": "Glass chalice holds and serves 200 mB."
+    },
+    {
+      "type": "patchouli:crafting",
+      "recipe": "psychedelicraft:shot_glass",
+      "text": "Shot glass holds and serves 40 mB, with a shorter drinking animation."
+    },
+    {
+      "type": "patchouli:crafting",
+      "recipe": "psychedelicraft:bottle",
+      "text": "The mod bottle holds 2,000 mB and serves 250 mB at a time."
+    },
+    {
+      "type": "patchouli:crafting",
+      "recipe": "psychedelicraft:syringe",
+      "text": "A syringe holds 10 mB and works only with injectable fluids."
+    },
+    {
+      "type": "patchouli:text",
+      "title": "Vanilla Containers",
+      "text": "Glass bottle holds and serves 125 mB. A bowl holds and serves 50 mB. A bucket holds 1,000 mB for transport. Use a vessel with a full serving, then hold use until it finishes."
+    },
+    {
+      "type": "patchouli:text",
+      "title": "Know Your Cup",
+      "text": "Recipes and machines check vessel compatibility. A wooden mug refuses coca tea, cannabis tea, peyote juice, kava and flower extracts. For teas and extracts, use a suitable glass chalice or mod bottle."
+    }
+  ]
+}

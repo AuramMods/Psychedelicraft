@@ -1,0 +1,28 @@
+{
+  "name": "Where to Look",
+  "icon": "minecraft:compass",
+  "category": "psychedelicraft:growing",
+  "sortnum": 0,
+  "pages": [
+    {
+      "type": "patchouli:text",
+      "title": "Wild Patches",
+      "text": "Plains, tagged forests and hills, and very cold Overworld biomes can host the common tall crops. Try plains or forest edges where wild plants stand out. Coca is much easier to find in $(l:psychedelicraft:growing/coca)jungles$(/l)."
+    },
+    {
+      "type": "patchouli:text",
+      "title": "Places to Check",
+      "text": "Look in plains and desert village greenhouses and plains vineyards. These buildings are rolled during village generation, so check more than one village. Farmers and dealers can supply missing crops."
+    },
+    {
+      "type": "patchouli:text",
+      "title": "Modded Biomes",
+      "text": "The biome at the plant matters. A river beside a forest can have a different biome ID, and a forest-like name alone tells you little about its tags. Check a pack’s biome tags and worldGeneration settings."
+    },
+    {
+      "type": "patchouli:text",
+      "title": "New Terrain",
+      "text": "Biome modifiers run when new chunks generate. Changes to the common config take effect after a restart and in newly generated terrain. Any matching exclusion wins. All configured inclusion selectors must match to add a biome."
+    }
+  ]
+}

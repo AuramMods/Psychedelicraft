@@ -1,0 +1,18 @@
+{
+  "name": "Agave Preparations",
+  "icon": "psychedelicraft:agave_leaf",
+  "category": "psychedelicraft:preparations",
+  "sortnum": 50,
+  "pages": [
+    {
+      "type": "patchouli:spotlight",
+      "item": "psychedelicraft:agave_leaf",
+      "text": "Craft two leaves, an empty compatible vessel and a water bucket for up to 100 mB of juice. Choose a shot glass for a small serving or combine several batches in a larger vessel."
+    },
+    {
+      "type": "patchouli:text",
+      "title": "Make a Batch",
+      "text": "For a larger batch use seven leaves in the water-filled mash tub. Ferment it and distill once for mezcal, twice for blanco tequila. Age the blanco in a barrel for reposado. See $(l:psychedelicraft:preparations/brewing_examples)batch worked examples$(/l)."
+    }
+  ]
+}

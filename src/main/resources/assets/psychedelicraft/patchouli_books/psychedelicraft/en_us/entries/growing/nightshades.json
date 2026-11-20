@@ -1,0 +1,33 @@
+{
+  "name": "Nightshades & Tomatoes",
+  "icon": "psychedelicraft:belladonna_berries",
+  "category": "psychedelicraft:growing",
+  "sortnum": 80,
+  "pages": [
+    {
+      "type": "patchouli:spotlight",
+      "item": "psychedelicraft:belladonna_berries",
+      "text": "Search dark forest for belladonna, jungle or sparse jungle for jimsonweed, and regular forest for tomatoes. The bushes have eight growth stages. Plant on farmland or ordinary bush soil and give them light."
+    },
+    {
+      "type": "patchouli:text",
+      "title": "Shear at the Right Stage",
+      "text": "Use shears on a grown bush. Before the last stage you get one or two leaves. From the fully ripe bush you get berries, seed pods or tomatoes. Each harvest sets growth back by one stage."
+    },
+    {
+      "type": "patchouli:crafting",
+      "recipe": "psychedelicraft:belladonna_seeds",
+      "text": "Craft berries back into seeds or use them directly."
+    },
+    {
+      "type": "patchouli:crafting",
+      "recipe": "psychedelicraft:jimsonweed_seeds",
+      "text": "Seed pods make seeds for replanting or $(l:psychedelicraft:preparations/flower_extracts)extracts$(/l)."
+    },
+    {
+      "type": "patchouli:crafting",
+      "recipe": "psychedelicraft:tomato_seeds",
+      "text": "Replant a share of the harvest. Tomatoes are food and $(l:psychedelicraft:preparations/mash_catalog)mash ingredients$(/l)."
+    }
+  ]
+}

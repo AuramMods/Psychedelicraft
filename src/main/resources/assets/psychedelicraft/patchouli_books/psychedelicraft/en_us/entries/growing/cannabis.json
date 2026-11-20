@@ -1,0 +1,18 @@
+{
+  "name": "Cannabis",
+  "icon": "psychedelicraft:cannabis_seeds",
+  "category": "psychedelicraft:growing",
+  "sortnum": 10,
+  "pages": [
+    {
+      "type": "patchouli:spotlight",
+      "item": "psychedelicraft:cannabis_seeds",
+      "text": "Look for stacked, palmate green leaves in plains, forest or hill biomes and cold Overworld areas. Plains greenhouses and novice dealer stock are alternatives. Break a wild stalk for your first seeds."
+    },
+    {
+      "type": "patchouli:text",
+      "title": "Farm the Stalks",
+      "text": "Plant seeds in bright farmland and leave three blocks of headroom. Bonemeal advances growth. Break ripe sections for leaves and seeds, with buds from fully mature sections. Dry buds and leaves separately for $(l:psychedelicraft:preparations/cannabis)different uses$(/l)."
+    }
+  ]
+}

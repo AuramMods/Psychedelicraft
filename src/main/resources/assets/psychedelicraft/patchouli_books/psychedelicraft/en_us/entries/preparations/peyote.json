@@ -1,0 +1,23 @@
+{
+  "name": "Peyote Preparations",
+  "icon": "psychedelicraft:dried_peyote",
+  "category": "psychedelicraft:preparations",
+  "sortnum": 30,
+  "pages": [
+    {
+      "type": "patchouli:crafting",
+      "recipe": "psychedelicraft:peyote_joint",
+      "text": "Dry nine peyote for three dried pieces. Eat a dried piece, or combine one with two papers for a two-draw joint."
+    },
+    {
+      "type": "patchouli:spotlight",
+      "item": "psychedelicraft:dried_peyote",
+      "text": "Mix two dried peyote, a water bucket and a compatible empty vessel for up to 500 mB of peyote juice. Use a mod bottle for the full batch or a dry piece in a pipe or bong."
+    },
+    {
+      "type": "patchouli:text",
+      "title": "In Use",
+      "text": "The effect can sustain saturation-powered flight. Fresh joints stack, and a part-used joint occupies its own slot."
+    }
+  ]
+}

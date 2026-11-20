@@ -1,0 +1,38 @@
+{
+  "name": "Drying Tables",
+  "icon": "psychedelicraft:drying_table",
+  "category": "psychedelicraft:processing",
+  "sortnum": 0,
+  "pages": [
+    {
+      "type": "patchouli:crafting",
+      "recipe": "psychedelicraft:drying_table",
+      "text": "Set the wooden table in a bright, sheltered spot. The iron version uses the same inputs and outputs."
+    },
+    {
+      "type": "patchouli:crafting",
+      "recipe": "psychedelicraft:iron_drying_table",
+      "text": "At full heat, a batch takes 16 minutes on wood or 12 minutes on iron by default. Cooler spots take longer."
+    },
+    {
+      "type": "patchouli:text",
+      "title": "Run a Batch",
+      "text": "Right-click the table. Put one ingredient in each of the nine input slots and leave the output empty. Fill all nine with the same recipe ingredient. The stock recipes give three finished items. Take the output by hand for XP."
+    },
+    {
+      "type": "patchouli:text",
+      "title": "Find Heat",
+      "text": "Drying uses ambient biome temperature and the light at the table. A nearby light source, including fire, can help. Shelter it from rain, which resets exposed batches. Read the heat and progress in the menu."
+    },
+    {
+      "type": "patchouli:text",
+      "title": "Hoppers",
+      "text": "Feed the inputs from a horizontal face. Both vertical faces expose only the output. A hopper underneath takes finished items. Use a comparator for heat and weak redstone for progress."
+    },
+    {
+      "type": "patchouli:text",
+      "title": "Mushrooms & Leaves",
+      "text": "Dry red or brown mushrooms, coca, tobacco, peyote, belladonna leaves, jimsonweed leaves, cannabis leaves or cannabis buds. Keep each ingredient in a separate batch."
+    }
+  ]
+}

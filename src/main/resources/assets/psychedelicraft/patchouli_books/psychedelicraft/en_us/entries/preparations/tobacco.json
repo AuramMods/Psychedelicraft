@@ -1,0 +1,23 @@
+{
+  "name": "Tobacco Preparations",
+  "icon": "psychedelicraft:dried_tobacco",
+  "category": "psychedelicraft:preparations",
+  "sortnum": 20,
+  "pages": [
+    {
+      "type": "patchouli:crafting",
+      "recipe": "psychedelicraft:cigarette",
+      "text": "Dry nine fresh leaves for three dried tobacco. A cigarette has one draw."
+    },
+    {
+      "type": "patchouli:crafting",
+      "recipe": "psychedelicraft:cigar",
+      "text": "A cigar has three draws and a larger saturation boost per draw."
+    },
+    {
+      "type": "patchouli:text",
+      "title": "Another Route",
+      "text": "Carry dried tobacco to use a pipe or bong. Check farmer and dealer offers for leaves, seeds and smoking products."
+    }
+  ]
+}

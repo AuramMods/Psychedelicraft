@@ -1,0 +1,33 @@
+{
+  "name": "Moving Fluids",
+  "icon": "minecraft:bucket",
+  "category": "psychedelicraft:processing",
+  "sortnum": 20,
+  "pages": [
+    {
+      "type": "patchouli:text",
+      "title": "In the Crafting Grid",
+      "text": "Place one filled vessel and one compatible destination in a grid. Take the filled destination and retrieve any remainder in the source vessel or its empty container. Keep both vessels unstacked when working by hand."
+    },
+    {
+      "type": "patchouli:text",
+      "title": "Machine Slots",
+      "text": "Open a machine and use its vessel input and output slots. A filled input drains into the tank. An empty compatible output fills from the tank. The machine processes output first at up to 50 mB per game tick."
+    },
+    {
+      "type": "patchouli:text",
+      "title": "Fluid Identity",
+      "text": "Fluid name, amount and brew attributes travel with the liquid. Compatible batches can combine. Different fluid IDs or attributes, such as coffee warmth or brew stage, can prevent a merge. Inspect the tank tooltip."
+    },
+    {
+      "type": "patchouli:text",
+      "title": "Automation Faces",
+      "text": "East is the vessel input and west is the output. Top and bottom expose both. The other horizontal faces expose no vessel slots. Hoppers and Forge item handlers leave unfinished vessels in place; the menu lets you recover them."
+    },
+    {
+      "type": "patchouli:text",
+      "title": "Placed Machines",
+      "text": "Flasks and distilleries hold 8 buckets, barrels 16, and mash tubs 32. Their portable forms retain contents when broken. Keep solid drops and input/output vessels separate from the liquid tank."
+    }
+  ]
+}

@@ -1,0 +1,23 @@
+{
+  "name": "Obsidian & Bath Salts",
+  "icon": "psychedelicraft:obsidian_bottle",
+  "category": "psychedelicraft:preparations",
+  "sortnum": 110,
+  "pages": [
+    {
+      "type": "patchouli:spotlight",
+      "item": "minecraft:glass_bottle",
+      "text": "Put a lava bucket and a vanilla glass bottle in the grid to pour 125 mB of lava. Retrieve the leftover 875 mB of lava. Craft the lava glass with a water bucket to quench it into an obsidian bottle."
+    },
+    {
+      "type": "patchouli:spotlight",
+      "item": "psychedelicraft:obsidian_bottle",
+      "text": "Craft the obsidian bottle on its own into one obsidian dust. Nine dust pieces compact back into obsidian. The quench uses the glass bottle and returns the empty water bucket."
+    },
+    {
+      "type": "patchouli:spotlight",
+      "item": "psychedelicraft:syringe",
+      "text": "Craft one obsidian dust, a lava bucket and an empty syringe for a filled bath-salts syringe. The powder can also be used on its own. See its in-game effects."
+    }
+  ]
+}

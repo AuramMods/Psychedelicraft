@@ -1,0 +1,23 @@
+{
+  "name": "Coca",
+  "icon": "psychedelicraft:coca_seeds",
+  "category": "psychedelicraft:growing",
+  "sortnum": 20,
+  "pages": [
+    {
+      "type": "patchouli:spotlight",
+      "item": "psychedelicraft:coca_seeds",
+      "text": "Search jungles first. The jungle profile rolls one patch attempt per four eligible chunks on average and needs no nearby water. Ordinary tall-crop biomes use a rarer, water-dependent profile."
+    },
+    {
+      "type": "patchouli:text",
+      "title": "Identify & Replant",
+      "text": "Coca looks like a leafy sapling at first. It develops up to three stacked stalk sections. Break older stems for leaves and seeds, or buy seeds from a novice dealer. Plant in dirt, grass or farmland."
+    },
+    {
+      "type": "patchouli:text",
+      "title": "Harvest",
+      "text": "Allow bright light and room for stalks to extend. A placed seed must start on soil. The stalk builds upper sections on its own. Keep seeds for replanting and bring the leaves to $(l:psychedelicraft:preparations/coca)tea or drying$(/l)."
+    }
+  ]
+}

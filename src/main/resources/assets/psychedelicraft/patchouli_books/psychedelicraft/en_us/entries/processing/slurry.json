@@ -1,0 +1,18 @@
+{
+  "name": "Distillery Slurry",
+  "icon": "minecraft:dirt",
+  "category": "psychedelicraft:processing",
+  "sortnum": 70,
+  "pages": [
+    {
+      "type": "patchouli:text",
+      "title": "Clear the Outlet",
+      "text": "Drain slurry from the receiver before starting another kind of batch. Slurry and concentrate need separate receivers or an empty receiving tank. A full or incompatible outlet pauses distillation."
+    },
+    {
+      "type": "patchouli:text",
+      "title": "Reclaim Dirt",
+      "text": "Store at least 4,000 mB of slurry in one processing tank with room for its solid output. After the hardening countdown, collect one dirt. The default hardening time is 30 minutes."
+    }
+  ]
+}

@@ -1,0 +1,23 @@
+{
+  "name": "Coffea Cherries",
+  "icon": "psychedelicraft:coffea_cherries",
+  "category": "psychedelicraft:growing",
+  "sortnum": 30,
+  "pages": [
+    {
+      "type": "patchouli:spotlight",
+      "item": "psychedelicraft:coffea_cherries",
+      "text": "Look for bright berries on a two-section stalk in plains, forests, hills or cold Overworld biomes. Village greenhouses and crop trades can also supply cherries. The cherries themselves are planting stock."
+    },
+    {
+      "type": "patchouli:text",
+      "title": "Picking Cherries",
+      "text": "Plant cherries on farmland, dirt or grass in a bright area. Leave space for the upper section and break berry-laden sections. The upper section has fewer growth stages. Keep some cherries for planting."
+    },
+    {
+      "type": "patchouli:smelting",
+      "recipe": "psychedelicraft:coffea_cherries_to_coffee_beans",
+      "text": "Roast the rest in a regular furnace. See $(l:psychedelicraft:preparations/coffee)making a cup$(/l)."
+    }
+  ]
+}
