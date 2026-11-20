@@ -19,10 +19,16 @@ abstract class OculusModelSourceMixin {
                                                       String tessEvaluation, String fragment, @Coerce Object alphaTest,
                                                       boolean lines, boolean intensity, @Coerce Object inputs, @Coerce Object textures,
                                                       CallbackInfoReturnable<Map<?, String>> cir) throws IOException {
-        if (!name.startsWith("entities_") && !name.startsWith("hand_") && !name.startsWith("block_entity")
-                && !name.equals("moving_block")) return;
         var stages = cir.getReturnValue();
-        var patched = GeometryEffects.injectIrisModel(stages);
+        var patched = switch (name) {
+            case "shadow_entities_cutout", "shadow_beacon_beam", "shadow_particles", "shadow_clouds", "shadow_lightning" ->
+                    GeometryEffects.injectIrisShadowModel(stages);
+            case "moving_block", "be_translucent", "particles", "particles_trans", "weather", "glint",
+                    "sky_basic", "sky_basic_color", "sky_textured", "sky_textured_color", "clouds", "clouds_sodium" ->
+                    GeometryEffects.injectIrisModel(stages);
+            default -> name.startsWith("entities_") || name.startsWith("hand_") || name.startsWith("block_entity")
+                    ? GeometryEffects.injectIrisModel(stages) : stages;
+        };
         if (stages != patched) cir.setReturnValue(patched);
     }
 }

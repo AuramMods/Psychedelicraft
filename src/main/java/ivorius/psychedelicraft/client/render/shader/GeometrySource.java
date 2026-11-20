@@ -11,11 +11,14 @@ public final class GeometrySource {
     private static final Pattern IRIS_CHUNK_POSITION = Pattern.compile(
             "\\bvec4\\s+getVertexPosition\\s*\\(\\s*\\)\\s*\\{\\s*return\\s+"
                     + "(vec4\\(\\s*(?:modelOffset\\s*\\+\\s*)?_vert_position[^;]*\\));");
+    private static final Pattern IRIS_SHADOW_POSITION = Pattern.compile(
+            "(shadowModelViewInverse\\s*\\*\\s*shadowProjectionInverse\\s*\\*\\s*ftransform\\s*\\(\\s*\\))\\s*;");
+    static final String IRIS_SHADOW_STAGE = "\n// Psychedelicraft owns this Iris shadow stage\n";
     private GeometrySource(){}
     static String code(String source){return COMMENTS.matcher(source).replaceAll(match->{char[] chars=match.group().toCharArray();for(int i=0;i<chars.length;i++)if(chars[i]!='\r'&&chars[i]!='\n')chars[i]=' ';return new String(chars);});}
     static boolean declares(String code,String qualifier,String type,String name){return Pattern.compile("\\b"+qualifier+"\\s+"+type+"\\s+[^;{}]*\\b"+name+"\\b[^;{}]*;").matcher(code).find();}
     public static String combine(String source,String extension,boolean vertex){
-        String code=code(source);if(code.contains("void psychedelicraft_parent_main"))return source;
+        String code=code(source);if(code.contains("void psychedelicraft_parent_main")||source.endsWith(IRIS_SHADOW_STAGE))return source;
         var main=MAIN.matcher(code);if(!main.find())return source;
         String parent=renameMain(source,main);
         if(vertex){
@@ -65,6 +68,17 @@ public final class GeometrySource {
                 + source.substring(vertex.start(), vertex.start(1))
                 + "psychedelicraft_terrain_position(" + position + ")" + source.substring(vertex.end(1))
                 + "\n" + deformation;
+    }
+
+    static String deformIrisShadowModel(String source, String deformation) {
+        String code = code(source);
+        var position = IRIS_SHADOW_POSITION.matcher(code);
+        var main = MAIN.matcher(code);
+        if (!main.find() || !position.find(main.end())) return source;
+        return source.substring(0, main.start()) + "vec4 psychedelicraft_terrain_position(vec4 position);\n"
+                + source.substring(main.start(), position.start(1)) + "psychedelicraft_terrain_position("
+                + source.substring(position.start(1), position.end(1)) + ")" + source.substring(position.end(1))
+                + "\n" + deformation + IRIS_SHADOW_STAGE;
     }
 
     static String deformDistantTerrain(String source, String deformation) {

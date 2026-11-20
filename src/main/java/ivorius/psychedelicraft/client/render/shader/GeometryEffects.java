@@ -128,6 +128,19 @@ public final class GeometryEffects {
         patched.put(layout.fragment, GeometrySource.irisColorFragment(fragment, extension(false), !GeometrySource.irisModelVertexColor(vertex)));
         return patched;
     }
+
+    public static <K> Map<K, String> injectIrisShadowModel(Map<K, String> stages) throws IOException {
+        if (stages == null) return null;
+        var layout = identifyIrisStages(stages);
+        if (layout.vertex == null || layout.fragment == null || layout.intermediate) return stages;
+        String vertex = stages.get(layout.vertex);
+        String replacement = GeometrySource.deformIrisShadowModel(vertex, projectedDeformation());
+        if (vertex.equals(replacement)) return stages;
+        var patched = new LinkedHashMap<>(stages);
+        patched.put(layout.vertex, replacement);
+        patched.put(layout.fragment, stages.get(layout.fragment) + GeometrySource.IRIS_SHADOW_STAGE);
+        return patched;
+    }
     public static void register(ShaderInstance shader,List<Uniform> uniforms,List<String> samplers){
         add(shader,uniforms,"PS_Enabled",4,1);add(shader,uniforms,"PS_WorldTicks",4,1);add(shader,uniforms,"PS_WavesMatrix",6,3);
         add(shader,uniforms,"PS_ApparitionTint",7,4);
@@ -157,8 +170,17 @@ public final class GeometryEffects {
     }
 
     public static void applyIrisModel(String shaderName, GeometryProgram program) {
+        if (shaderName.startsWith("shadow_")) {
+            applyTerrain(program);
+            return;
+        }
         if (program.hasGeometry()) {
-            applyValues(shaderName, program::set, program.hasUniform(IRIS_BLOCK_ATLAS));
+            String material = switch (shaderName) {
+                case "sky_basic" -> "position";
+                case "sky_basic_color" -> "position_color";
+                default -> shaderName;
+            };
+            applyValues(material, program::set, program.hasUniform(IRIS_BLOCK_ATLAS));
             program.setMatrix("PS_ViewToWorld", viewToWorld);
         } else {
             float[] tint = ApparitionRender.tint();
