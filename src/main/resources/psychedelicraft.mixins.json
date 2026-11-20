@@ -31,6 +31,8 @@
     "client.ShaderBlendAccessor",
     "client.CoreProgramMixin",
     "client.GeometryShaderMixin",
+    "client.EmbeddiumShaderSourceMixin",
+    "client.EmbeddiumTerrainMixin",
     "client.OculusShaderTintMixin",
     "client.GameGeometryMixin",
     "client.HandGeometryMixin",

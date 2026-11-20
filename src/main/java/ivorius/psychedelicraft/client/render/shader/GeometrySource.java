@@ -13,7 +13,7 @@ public final class GeometrySource {
     public static String combine(String source,String extension,boolean vertex){
         String code=code(source);if(code.contains("void psychedelicraft_parent_main"))return source;
         var main=MAIN.matcher(code);if(!main.find())return source;
-        String parent=source.substring(0,main.start())+"void psychedelicraft_parent_main()"+source.substring(main.end());
+        String parent=renameMain(source,main);
         if(vertex){
             boolean position=declares(code,"in","vec3","Position"),model=declares(code,"uniform","mat4","ModelViewMat");
             String point=position?"Position":"vec3(0.0)";
@@ -36,5 +36,24 @@ public final class GeometrySource {
                     .replace("__PS_SURFACE_FALLBACK__",declares(code,"in","vec4","vertexColor")?"":color+".rgb = mix("+color+".rgb, PS_SurfaceColor, PS_SurfaceFractalStrength);");
         }
         return parent+"\n// Psychedelicraft geometry stage\n"+extension;
+    }
+
+    static String combineTerrain(String source, String extension, boolean vertex) {
+        var main = MAIN.matcher(code(source));
+        if (!main.find()) return source;
+        if (vertex) {
+            extension = extension.replace("__PS_VIEW_POSITION__",
+                            "(u_ModelViewMatrix * vec4(_vert_position + u_RegionOffset + _get_draw_translation(_draw_id), 1.0)).xyz")
+                    .replace("PS_SurfaceFractalSampler", "u_BlockTex")
+                    .replace("__PS_SURFACE_COLOR__", "v_Color.rgb = mix(v_Color.rgb, PS_SurfaceColor, PS_SurfaceFractalStrength);");
+        } else {
+            extension = extension.replace("__PS_FRAGMENT_COLOR__", "fragColor")
+                    .replace("__PS_SURFACE_FALLBACK__", "");
+        }
+        return renameMain(source, main) + "\n// Psychedelicraft terrain stage\n" + extension;
+    }
+
+    private static String renameMain(String source, java.util.regex.Matcher main) {
+        return source.substring(0, main.start()) + "void psychedelicraft_parent_main()" + source.substring(main.end());
     }
 }
