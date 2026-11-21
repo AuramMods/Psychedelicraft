@@ -239,7 +239,7 @@ public final class GeometryEffects {
         uniforms.set("PS_FractalFractureStrength",fracture);
         uniforms.set("PS_PeyoteStrength",peyote);
         uniforms.set("PS_NativeTerrainRadius",nativeTerrainRadius);
-        uniforms.set("PS_SurfaceFractalStrength",surface?net.minecraft.util.Mth.clamp(h.strength(Effect.SURFACE_FRACTALS),0,1):0);
+        uniforms.set("PS_SurfaceFractalStrength",surface ? 0.45F * net.minecraft.util.Mth.clamp(h.strength(Effect.SURFACE_FRACTALS),0,1) : 0);
         uniforms.set("PS_Pulses",pulse==null?0:pulse[0],pulse==null?0:pulse[1],pulse==null?0:pulse[2],pulse==null?0:pulse[3]);
         uniforms.set("PS_PulseShape",GeometryMaterial.pulseShape(phase,name,sphericalFog));
         var camera=active?client.gameRenderer.getMainCamera().getPosition():net.minecraft.world.phys.Vec3.ZERO;

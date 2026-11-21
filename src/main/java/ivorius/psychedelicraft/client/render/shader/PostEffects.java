@@ -141,7 +141,7 @@ public final class PostEffects {
     }
     private RenderTarget bloom(RenderTarget current,float strength,float[] color,float partial)throws IOException{
         for(int n=0;n<Mth.ceil(strength);n++)for(int axis=0;axis<2;axis++){
-            float alpha=color==null?Math.min(1,strength-n):Math.max(1,strength-n),pixels=color==null?2:1;int direction=axis;
+            float alpha=Math.min(1,strength-n),pixels=color==null?2:1;int direction=axis;
             current=draw(color==null?"ps_bloom":"ps_colored_bloom",current,partial,e->{set(e,"pixelSize",pixels/width,pixels/height);set(e,"vertical",direction);set(e,"totalAlpha",alpha);if(color!=null)set(e,"bloomColor",color[0],color[1],color[2]);});
         }
         return current;

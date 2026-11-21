@@ -27,7 +27,7 @@ void main() {
 
 	if (worldColorization.a > 0.0) {
 		vec3 c1 = outcolor;
-		vec3 c2 = worldColorization.rgb;
+		vec3 c2 = clamp(worldColorization.rgb, 0.0, 1.0);
 
 		float distR = sqrt((c1.r - c2.r) * (c1.r - c2.r));
 		float distG = sqrt((c1.g - c2.g) * (c1.g - c2.g));
@@ -47,16 +47,16 @@ void main() {
 		vec3 harmonizedColor;
 
 		if (harmonizeStrength < 1.0) {
-			harmonizedColor = mix(worldColorization.rgb, vec3(0.5), harmonizeStrength); // Max of 1.0
+			harmonizedColor = mix(c2, vec3(0.5), harmonizeStrength); // Max of 1.0
 		} else {
-			harmonizedColor = mix(vec3(0.5), vec3(1.0) - worldColorization.rgb, (harmonizeStrength - 1.0) * 0.5); // Max of 2.0
+			harmonizedColor = mix(vec3(0.5), vec3(1.0) - c2, (harmonizeStrength - 1.0) * 0.5); // Max of 2.0
 		}
 
     if (colorSafeMode != 0) { // Make sure we don't add brightness
       harmonizedColor *= incolor.rgb;
     }
 
-		outcolor = mix(outcolor, harmonizedColor, worldColorization.a);
+		outcolor = mix(outcolor, harmonizedColor, clamp(worldColorization.a, 0.0, 1.0) * 0.35);
 	}
 
 	fragColor = vec4(outcolor, incolor.a);

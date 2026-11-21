@@ -16,5 +16,5 @@ void main() {
   if (PS_Enabled <= 0.0) return;
   __PS_SURFACE_FALLBACK__
   float pulse = max(0.0, sin((PS_PulseDistance - PS_WorldTicks) / 5.0) - 0.4) * PS_Pulses.a;
-  __PS_FRAGMENT_COLOR__.rgb = mix(__PS_FRAGMENT_COLOR__.rgb, (__PS_FRAGMENT_COLOR__.rgb + 1.0) * PS_Pulses.rgb, pulse);
+  __PS_FRAGMENT_COLOR__.rgb = mix(__PS_FRAGMENT_COLOR__.rgb, clamp(PS_Pulses.rgb, 0.0, 1.0), pulse * 0.55);
 }

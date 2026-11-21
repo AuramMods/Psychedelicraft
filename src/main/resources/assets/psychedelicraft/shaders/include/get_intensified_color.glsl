@@ -1,22 +1,12 @@
 #version 150
 
 vec3 getIntensifiedColor(vec3 color) {
-    float s = 2.0;
-    float cR = 0.3086;
-    float cG = 0.6084;
-    float cB = 0.0820;
-
-    float rr = (1.0 - s) * cR + s;
-    float rg = (1.0 - s) * cG;
-    float rb = (1.0 - s) * cB;
-    float gr = (1.0 - s) * cR;
-    float gg = (1.0 - s) * cG + s;
-    float gb = (1.0 - s) * cB;
-    float br = (1.0 - s) * cR;
-    float bg = (1.0 - s) * cG;
-    float bb = (1.0 - s) * cB + s;
-
-    vec3 rVec = vec3(color.r * rr + color.g * rg + color.b * rb, color.r * gr + color.g * gg + color.b * gb, color.r * br + color.g * bg + color.b * bb);
-
-    return clamp(rVec * rVec * 10.0, 0.0, 1.0);
+    float luma = dot(color, vec3(0.2126, 0.7152, 0.0722));
+    float lowest = min(color.r, min(color.g, color.b));
+    float highest = max(color.r, max(color.g, color.b));
+    float darkLimit = luma / max(luma - lowest, 0.0001);
+    float lightLimit = (1.0 - luma) / max(highest - luma, 0.0001);
+    // Use part of the available chroma range so highlights and shadows retain detail.
+    float extraChroma = clamp((min(darkLimit, lightLimit) - 1.0) * 0.85, 0.0, 0.55);
+    return color + (color - vec3(luma)) * extraChroma;
 }

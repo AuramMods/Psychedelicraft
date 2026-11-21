@@ -23,6 +23,7 @@ float influenceFromColor(vec3 color1, vec3 color2) {
 void main() {
   vec4 texel = texture(DiffuseSampler, texCoord);
   vec3 newColor = texel.rgb;
+  vec3 tint = clamp(bloomColor, 0.0, 1.0);
   float bloomInfluence = 0.0;
 
   vec2 dirVec = vec2(
@@ -37,13 +38,13 @@ void main() {
     vec3 color3 = texture(DiffuseSampler, clamp(texCoord + 3.0 * activeDirVec, 0.0, 1.0)).rgb;
     vec3 color4 = texture(DiffuseSampler, clamp(texCoord + 4.0 * activeDirVec, 0.0, 1.0)).rgb;
 
-    bloomInfluence += influenceFromColor(color1, bloomColor) * 0.028 * 2.0;
-    bloomInfluence += influenceFromColor(color2, bloomColor) * 0.020 * 2.0;
-    bloomInfluence += influenceFromColor(color3, bloomColor) * 0.016 * 2.0;
-    bloomInfluence += influenceFromColor(color4, bloomColor) * 0.012 * 2.0;
+    bloomInfluence += influenceFromColor(color1, tint) * 0.028 * 2.0;
+    bloomInfluence += influenceFromColor(color2, tint) * 0.020 * 2.0;
+    bloomInfluence += influenceFromColor(color3, tint) * 0.016 * 2.0;
+    bloomInfluence += influenceFromColor(color4, tint) * 0.012 * 2.0;
   }
 
-  newColor = mix(newColor, bloomColor, clamp(bloomInfluence, 0.0, 1.0));
+  newColor = mix(newColor, tint, clamp(bloomInfluence, 0.0, 1.0));
 
-  fragColor = vec4(mix(texel.rgb, newColor, totalAlpha), texel.a);
+  fragColor = vec4(mix(texel.rgb, newColor, clamp(totalAlpha, 0.0, 1.0) * 0.6), texel.a);
 }

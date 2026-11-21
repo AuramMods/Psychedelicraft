@@ -28,7 +28,9 @@ void main() {
         bloomColor += texture(DiffuseSampler, clamp(texCoord + 4.0 * activeDirVec, 0.0, 1.0)).rgb * 0.012 * colorInfluence;
     }
 
-    newColor += bloomColor * bloomColor * bloomColor;
+    vec3 glow = bloomColor * bloomColor * bloomColor;
+    vec3 headroom = vec3(1.0) - clamp(texel.rgb, 0.0, 1.0);
+    newColor += headroom * (glow / (1.0 + glow)) * 0.5;
 
-    fragColor = vec4(mix(texel.rgb, newColor, totalAlpha), texel.a);
+    fragColor = vec4(mix(texel.rgb, newColor, clamp(totalAlpha, 0.0, 1.0)), texel.a);
 }
