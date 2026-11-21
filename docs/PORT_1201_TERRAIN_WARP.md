@@ -2,7 +2,7 @@
 
 Brown mushrooms reserve the original small waves after the active value reaches 0.15. A single mushroom reaches about 0.38 at peak. The reserved wave still uses the original category and effect ramps. The remaining slots keep the weighted rotation. Removing the unused shattering selection also frees a slot for an effect with a renderer.
 
-Peyote moves world vertices vertically with two slow waves centered on the player. The waves use the active intensity that flight reads. The Visuals and Shaders settings page has a separate Peyote Screen Distortion control. It defaults to enabled and works independently of the underwater distortion control.
+Peyote moves world vertices vertically with two slow waves centered on the player. The waves use the active intensity that flight reads. The Visuals and Shaders settings page has a separate Peyote Screen Distortion control, enabled by default.
 
 When Distant Horizons is present, nearby geometry and the LOD shaders evaluate the same blend using camera distance, absolute world position, and time. With Auram's five-chunk distance, the original waves start blending to the first broader band at 16 horizontal blocks and reach it fully at 64 blocks. Two further bands use four and sixteen times its wavelength. The higher wavelengths reduce undersampling on coarse meshes. The shared functions apply the displacement before AuramBSL projects the terrain or draws its shadows. The shader pack files and options come from Auram.
 

@@ -24,7 +24,7 @@ import java.util.function.Consumer;
 /** Native post passes use owned color targets; the final blit never clears the world's depth. */
 public final class PostEffects {
     private static final Logger LOGGER=LogUtils.getLogger();
-    private static final ResourceLocation HEAT=Psychedelicraft.id("textures/effect/heat_distortion_noise.png"),WATER=Psychedelicraft.id("textures/effect/water_distortion.png"),BITS=Psychedelicraft.id("textures/effect/bits.png");
+    private static final ResourceLocation HEAT=Psychedelicraft.id("textures/effect/heat_distortion_noise.png"),BITS=Psychedelicraft.id("textures/effect/bits.png");
     private final Map<Key,PostPass> passes=new HashMap<>();
     private final MotionHistory history=new MotionHistory();
     private final DistantDepth distantDepth = new DistantDepth();
@@ -75,7 +75,7 @@ public final class PostEffects {
         if (failed || !PSClientConfig.SHADERS_2D.get()) return false;
         var drugs=ClientDrugState.get(client.player);
         return h.contrastColor(drugs.getHarmonium()) != null || PSClientConfig.BLUR_NEAR.get() > 0 || PSClientConfig.BLUR_FAR.get() > 0
-                || environment.heatDistortion() > 0 || environment.waterDistortion((float)drugs.getActiveValue(DrugType.PEYOTE)) > 0
+                || environment.heatDistortion() > 0 || environment.peyoteDistortion((float)drugs.getActiveValue(DrugType.PEYOTE)) > 0
                 || drugs.getActiveValue(DrugType.ZERO) > 0;
     }
 
@@ -87,14 +87,14 @@ public final class PostEffects {
         float bloom=h.strength(Effect.BLOOM)+drugs.getModifier(Drug::bloomStrength),vision=drugs.blendStrength(0,Drug::doubleVision),power=(float)drugs.getActiveValue(DrugType.POWER),digital=(float)drugs.getActiveValue(DrugType.ZERO);
         float commonBlur=(float)PSClientConfig.PAUSE_BLUR.get().doubleValue()*pauseProgress*pauseProgress*pauseProgress+Math.max(0,(float)drugs.getActiveValue(DrugType.SLEEP_DEPRIVATION)-.7F)*partial*15;
         float horizontal=commonBlur+(float)drugs.getActiveValue(DrugType.BATH_SALTS)*(6+ticks%5),vertical=commonBlur+power;
-        float heat=environment.heatDistortion(),water=environment.waterDistortion((float)drugs.getActiveValue(DrugType.PEYOTE)),wet=environment.wetOverlay();
+        float heat=environment.heatDistortion(),peyote=environment.peyoteDistortion((float)drugs.getActiveValue(DrugType.PEYOTE));
         float nearBlur=PSClientConfig.BLUR_NEAR.get().floatValue(),farBlur=PSClientConfig.BLUR_FAR.get().floatValue();
         boolean colors=slow!=0||quick!=0||intensify!=0||desaturate!=0||inversion!=0;
         boolean focus=nearBlur>0||farBlur>0;
-        boolean post=PSClientConfig.SHADERS_2D.get()&&(colors||contrast!=null||colorBloom!=null||bloom>0||vision>0||horizontal>0||vertical>0||focus||heat>0||water>0||wet>0||digital>0);
+        boolean post=PSClientConfig.SHADERS_2D.get()&&(colors||contrast!=null||colorBloom!=null||bloom>0||vision>0||horizontal>0||vertical>0||focus||heat>0||peyote>0||digital>0);
         float motion=PSClientConfig.MOTION_BLUR.get()?drugs.blendStrength(0,Drug::motionBlur):0;
         if(!post&&motion<=0&&history.empty())return;
-        boolean needsDepth=contrast!=null||focus||heat>0||water>0||digital>0;
+        boolean needsDepth=contrast!=null||focus||heat>0||peyote>0||digital>0;
         try(var state=new PostRenderState(true, post && needsDepth ? 7 : 3)){
             if(motion>0){history.render(client,ticks,motion);lastPasses.add("motion_history");}else history.release();
             if(!post)return;
@@ -107,7 +107,7 @@ public final class PostEffects {
             }
             RenderTarget current=main;
             if(heat>0)current=distort(current,heat,ticks*.15F,partial);
-            if(water>0)current=distort(current,water,ticks*.03F,partial);
+            if(peyote>0)current=distort(current,peyote,ticks*.03F,partial);
             if(colors)current=draw("simple_effects",current,partial,e->{set(e,"ticks",ticks);set(e,"slowColorRotation",slow);set(e,"quickColorRotation",quick);set(e,"colorIntensification",intensify);set(e,"desaturation",desaturate);set(e,"inversion",inversion);});
             if(contrast!=null)current=draw("simple_effects_depth",current,partial,e->{set(e,"ticks",ticks);set(e,"colorSafeMode",0);set(e,"worldColorization",contrast[0],contrast[1],contrast[2],contrast[3]);});
             if(horizontal>0||vertical>0)current=draw("ps_blur",current,partial,e->{set(e,"pixelSize",1F/width,1F/height);set(e,"hBlur",horizontal);set(e,"vBlur",vertical);set(e,"repeats",Mth.ceil(Math.max(horizontal,vertical)));});
@@ -120,10 +120,8 @@ public final class PostEffects {
             }
             if(bloom>0)current=bloom(current,bloom,null,partial);
             if(colorBloom!=null)current=bloom(current,colorBloom[3],colorBloom,partial);
-            // The accepted implementation does not couple double vision to environmental water settings.
             if(vision>0)current=draw("double_vision",current,partial,e->{set(e,"totalAlpha",vision);set(e,"distance",Mth.sin(ticks/20)*.05F*vision);set(e,"stretch",1+vision);});
             if(power>0)current=draw("ps_blur_noise",current,partial,e->{set(e,"pixelSize",1F/width,1F/height);set(e,"strength",power*.6F);set(e,"seed",new Random((long)(ticks*1000)).nextFloat()*9+1);});
-            if(wet>0)current=draw("distortion_map",current,partial,e->{set(e,"totalAlpha",wet);set(e,"strength",wet*.2F);set(e,"texTranslation0",0,ticks*.005F);set(e,"texTranslation1",.5F,ticks*.007F);});
             if(digital>0){
                 float amount=ease(Math.min(digital*3,1))*.95F+digital*.05F;
                 float resolutionX=width*(1+(PSClientConfig.DIGITAL_X.get().floatValue()-1)*amount),resolutionY=height*(1+(PSClientConfig.DIGITAL_Y.get().floatValue()-1)*amount);
@@ -161,7 +159,6 @@ public final class PostEffects {
                 pass.addAuxAsset("PS_DistantOpaqueDepth", () -> distantDepth.opaqueTexture() == 0 ? depth.getDepthTextureId() : distantDepth.opaqueTexture(), width, height);
             }
             if(name.equals("heat_distortion"))texture(pass,"NoiseSampler",HEAT,128,128);
-            if(name.equals("distortion_map")){texture(pass,"OverlaySampler1",WATER,800,600);texture(pass,"OverlaySampler2",WATER,800,600);}
             if(name.equals("digital_depth"))texture(pass,"AsciiSampler",BITS,128,128);
             passes.put(key,pass);
         }

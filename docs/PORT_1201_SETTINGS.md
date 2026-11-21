@@ -150,14 +150,13 @@ The native gamerule `doSleepDeprivation` is also registered, with default `false
 | `visual.digitalEffectPixelRescaleY` | `0.05` | Accepted `visual.digitalEffectPixelRescaleY`; original client visual setting | `client/render/shader/PostEffects` | Native post/depth/resize/config: C19 |
 | `visual.doHeatDistortion` | `true` | Accepted `visual.doHeatDistortion`; original client visual setting | `client/render/EnvironmentEffects`, `PostEffects` | Native environmental/overlay/config: C19/C22 |
 | `visual.doMotionBlur` | `true` | Accepted `visual.doMotionBlur`; original client visual setting | `client/render/shader/PostEffects` | Native post/depth/resize/config: C19 |
-| `visual.doWaterDistortion` | `true` | Accepted `visual.doWaterDistortion`; original client visual setting | `client/render/EnvironmentEffects`, `PostEffects` | Native environmental/overlay/config: C19/C22 |
 | `visual.dofFocalBlurFar` | `0.0` | Accepted `visual.dofFocalBlurFar`; original client visual setting | `client/render/shader/PostEffects` | Native post/depth/resize/config: C19 |
 | `visual.dofFocalBlurNear` | `0.0` | Accepted `visual.dofFocalBlurNear`; original client visual setting | `client/render/shader/PostEffects` | Native post/depth/resize/config: C19 |
 | `visual.dofFocalPointFar` | `128.0` | Accepted `visual.dofFocalPointFar`; original client visual setting | `client/render/shader/PostEffects` | Native post/depth/resize/config: C19 |
 | `visual.dofFocalPointNear` | `0.2` | Accepted `visual.dofFocalPointNear`; original client visual setting | `client/render/shader/PostEffects` | Native post/depth/resize/config: C19 |
 | `visual.hurtOverlayEnabled` | `true` | Accepted `visual.hurtOverlayEnabled`; original client visual setting | `client/render/EnvironmentEffects`, `PostEffects` | Native environmental/overlay/config: C19/C22 |
 | `visual.pauseMenuBlur` | `0.0` | Accepted `visual.pauseMenuBlur`; original client visual setting | `client/render/shader/PostEffects` | Native post/depth/resize/config: C19 |
+| `visual.peyoteScreenDistortion` | `true` | Peyote screen distortion | `client/render/EnvironmentEffects`, `PostEffects` | Peyote-specific post effect |
 | `visual.shader2DEnabled` | `true` | Accepted `visual.shader2DEnabled`; original client visual setting | `client/render/shader/PostEffects` | Native post/depth/resize/config: C19 |
 | `visual.shader3DEnabled` | `true` | Accepted `visual.shader3DEnabled`; original client visual setting | `client/render/shader/GeometryEffects` | Native geometry/config: C20 |
 | `visual.sunFlareIntensity` | `0.25` | Accepted `visual.sunFlareIntensity`; original client visual setting | `client/render/ScreenOverlays` | Native sun flare/config: C22 |
-| `visual.waterOverlayEnabled` | `true` | Accepted `visual.waterOverlayEnabled`; original client visual setting | `client/render/EnvironmentEffects`, `PostEffects` | Native environmental/overlay/config: C19/C22 |

@@ -12,7 +12,7 @@
     {
       "type": "patchouli:text",
       "title": "Peyote & Shader Packs",
-      "text": "Use 3D Shaders for terrain deformation. Peyote Screen Distortion controls the watery ripple. Water Distortion controls the ordinary environment effect. Adjust these independently. AuramBSL with Oculus, Embeddium and Distant Horizons is the tested shader combination."
+      "text": "Use 3D Shaders for terrain deformation. Peyote Screen Distortion controls the watery ripple from peyote. AuramBSL with Oculus, Embeddium and Distant Horizons is the tested shader combination."
     },
     {
       "type": "patchouli:text",

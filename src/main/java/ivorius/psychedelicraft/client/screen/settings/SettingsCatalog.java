@@ -23,9 +23,9 @@ public final class SettingsCatalog {
         this.refreshCreative=refreshCreative;
         var visuals=page("visuals",OPTIONS+"visuals",
                 page("shaders",OPTIONS+"shaders",client(PSClientConfig.SHADERS_2D,"shaders_2d"),client(PSClientConfig.SHADERS_3D,"shaders_3d"),
-                        client(PSClientConfig.HEAT_DISTORTION,"heat_distortion"),client(PSClientConfig.WATER_DISTORTION,"water_distortion"),
+                        client(PSClientConfig.HEAT_DISTORTION,"heat_distortion"),
                         client(PSClientConfig.PEYOTE_DISTORTION,"peyote_distortion"),client(PSClientConfig.MOTION_BLUR,"motion_blur"),client(PSClientConfig.PAUSE_BLUR,"pause_menu_blur")),
-                page("overlays",OPTIONS+"overlays",client(PSClientConfig.WATER_OVERLAY,"water_overlay"),client(PSClientConfig.HURT_OVERLAY,"hurt_overlay"),client(PSClientConfig.SUN_FLARE,"sun_glare_intensity")),
+                page("overlays",OPTIONS+"overlays",client(PSClientConfig.HURT_OVERLAY,"hurt_overlay"),client(PSClientConfig.SUN_FLARE,"sun_glare_intensity")),
                 page("dof",OPTIONS+"dof",page("focus_near",OPTION+"focal_point.near",client(PSClientConfig.FOCUS_NEAR,"focal_point.distance"),client(PSClientConfig.BLUR_NEAR,"focal_point.blur")),
                         page("focus_far",OPTION+"focal_point.far",client(PSClientConfig.FOCUS_FAR,"focal_point.distance"),client(PSClientConfig.BLUR_FAR,"focal_point.blur"))),
                 page("digital",OPTIONS+"digital",client(PSClientConfig.DIGITAL_X,"pixel_scale_x"),client(PSClientConfig.DIGITAL_Y,"pixel_scale_y")));

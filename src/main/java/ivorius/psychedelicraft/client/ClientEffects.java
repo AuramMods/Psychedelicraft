@@ -17,6 +17,7 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.client.event.ClientPlayerNetworkEvent;
 import net.minecraftforge.client.event.RegisterClientReloadListenersEvent;
+import net.minecraftforge.client.event.RenderBlockScreenEffectEvent;
 import net.minecraftforge.client.event.RenderLevelStageEvent;
 import net.minecraftforge.event.TickEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
@@ -42,6 +43,11 @@ public final class ClientEffects {
     private static float pauseProgress;
 
     private ClientEffects() {}
+
+    @SubscribeEvent
+    public static void hideUnderwaterOverlay(RenderBlockScreenEffectEvent event) {
+        if (event.getOverlayType() == RenderBlockScreenEffectEvent.OverlayType.WATER) event.setCanceled(true);
+    }
 
     public static HallucinationManager hallucinations(){return hallucinations;}
     public static CameraEffects camera(){return camera;}
