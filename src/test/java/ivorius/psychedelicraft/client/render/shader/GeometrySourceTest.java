@@ -30,7 +30,12 @@ public class GeometrySourceTest {
     }
     @Test public void texturedFragmentKeepsDiscardLightingAndFogWithoutDoubleSurfaceMix()throws Exception{
         String original="#version 150\nin vec4 vertexColor; out vec4 colorOut; void main() { vec4 color=vertexColor; if(color.a<.1)discard; colorOut=color; }";
-        String actual=GeometrySource.combine(original,extension(false),false);assertTrue(actual.contains("if(color.a<.1)discard"));assertTrue(actual.contains("colorOut=color"));assertTrue(actual.contains("colorOut.rgb = mix(colorOut.rgb, (colorOut.rgb + 1.0)"));assertFalse(actual.contains("colorOut.rgb, PS_SurfaceColor"));assertFalse(actual.contains("__PS_"));
+        String actual=GeometrySource.combine(original,extension(false),false);
+        assertTrue(actual.contains("if(color.a<.1)discard"));
+        assertTrue(actual.contains("colorOut=color"));
+        assertTrue(actual.contains("colorOut.rgb = mix(colorOut.rgb, clamp(PS_Pulses.rgb, 0.0, 1.0), pulse *"));
+        assertFalse(actual.contains("colorOut.rgb, PS_SurfaceColor"));
+        assertFalse(actual.contains("__PS_"));
     }
     @Test public void uncoloredNativeMaterialsModulateBeforeTheirTextureAndFog()throws Exception{
         String original="#version 150\nuniform vec4 ColorModulator; out vec4 fragColor; void main() { fragColor = texture(Sampler0, uv) * ColorModulator; }";
