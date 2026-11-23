@@ -2,7 +2,6 @@ Psychedelicraft
 ============
 
 [![Current Version](https://img.shields.io/github/v/tag/Sollace/Psychedelicraft)](https://img.shields.io/github/v/tag/Sollace/Psychedelicraft)
-[![Build Status](https://github.com/AuramMods/Psychedelicraft/actions/workflows/gradle-build.yml/badge.svg?branch=codex%2F1.20.1-forge)](https://github.com/AuramMods/Psychedelicraft/actions/workflows/gradle-build.yml)
 ![Downloads](https://img.shields.io/github/downloads/Sollace/Psychedelicraft/total.svg?color=yellowgreen)
 ![License](https://img.shields.io/github/license/Sollace/Psychedelicraft)
 
@@ -39,6 +38,8 @@ Installation
 ============
 
 Use Minecraft **1.20.1**, **Java 17** and **Forge 47.4.10 or later in the 47.x series**. Auram pins 47.4.10, and 47.4.28 remains supported. The [delivery verification](docs/PORT_1201.md#delivery-verification) links the tested gameplay, automation, world generation, client effects and multiplayer behavior.
+
+Run builds, tests, and release packaging on the local development machine with the Gradle wrapper and its cache. GitHub Actions is disabled for this fork.
 
 Build with a Java 17 JDK.
 
