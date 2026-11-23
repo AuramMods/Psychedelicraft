@@ -2,7 +2,6 @@ Psychedelicraft
 ============
 
 [![Current Version](https://img.shields.io/github/v/tag/Sollace/Psychedelicraft)](https://img.shields.io/github/v/tag/Sollace/Psychedelicraft)
-[![Build Status](https://github.com/Sollace/Psychedelicraft/actions/workflows/gradle-build.yml/badge.svg)](https://github.com/Sollace/Psychedelicraft/actions/workflows/gradle-build.yml)
 ![Downloads](https://img.shields.io/github/downloads/Sollace/Psychedelicraft/total.svg?color=yellowgreen)
 ![License](https://img.shields.io/github/license/Sollace/Psychedelicraft)
 ![](https://img.shields.io/badge/api-fabric-orange.svg)
@@ -44,6 +43,8 @@ and you may use this mod in modpacks.
 
 Contributing
 ============
+
+Run builds, tests, and release packaging on the local development machine with the Gradle wrapper and its cache. GitHub Actions is disabled for this fork.
 
 1. JDK 17 is required. Install it using https://adoptium.net/?variant=openjdk17&jvmVariant=hotspot
 
