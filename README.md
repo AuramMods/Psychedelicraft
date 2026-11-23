@@ -2,7 +2,6 @@ Psychedelicraft
 ============
 
 [![Current Version](https://img.shields.io/github/v/tag/Sollace/Psychedelicraft)](https://img.shields.io/github/v/tag/Sollace/Psychedelicraft)
-[![Build Status](https://github.com/Sollace/Psychedelicraft/actions/workflows/gradle-build.yml/badge.svg)](https://github.com/Sollace/Psychedelicraft/actions/workflows/gradle-build.yml)
 ![Downloads](https://img.shields.io/github/downloads/Sollace/Psychedelicraft/total.svg?color=yellowgreen)
 ![License](https://img.shields.io/github/license/Sollace/Psychedelicraft)
 
@@ -58,6 +57,8 @@ Explosion drop decay follows the 1.20.1 defaults. `blockExplosionDropDecay` and 
 
 Contributing
 ============
+
+Run builds, tests, and release packaging on the local development machine with the Gradle wrapper and its cache. GitHub Actions is disabled for this fork.
 
 Use a JDK 8 installation for Gradle. The wrapper builds against Forge `14.23.5.2864` with the `20171003-1.12` MCP mappings.
 
